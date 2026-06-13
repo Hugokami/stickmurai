@@ -1,0 +1,9 @@
+{
+  "name": "Super Samurai Sticky",
+  "short_name": "Stickmurai",
+  "start_url": "/",
+  "display": "browser",
+  "orientation": "landscape",
+  "background_color": "#090a0f",
+  "theme_color": "#090a0f"
+}

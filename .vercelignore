@@ -1,0 +1,16 @@
+# Presentation Materials
+Super_Samurai_Sticky_Presentation.pptx
+Super_Samurai_Sticky_Presentation_JP.pptx
+
+# Raw Assets and Archives
+*.zip
+sound effects/
+space_background_pack/
+
+# Local Dev & Build Outputs
+node_modules/
+dist/
+.vercel/
+.git/
+.antigravitycli/
+android/

@@ -1,0 +1,23 @@
+{
+  "name": "stickmurai",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "build:android": "npm run build && powershell -Command \"if (Test-Path android/app/src/main/assets) { Remove-Item -Recurse -Force android/app/src/main/assets } ; New-Item -ItemType Directory -Path android/app/src/main/assets ; Copy-Item -Path dist/* -Destination android/app/src/main/assets -Recurse -Force\"",
+    "build:apk:debug": "npm run build:android && powershell -Command \"cd android ; .\\gradlew assembleDebug\"",
+    "build:apk:release": "npm run build:android && powershell -Command \"cd android ; .\\gradlew assembleRelease\""
+  },
+  "devDependencies": {
+    "qrcode": "^1.5.4",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.10"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.108.1",
+    "peerjs": "^1.5.5"
+  }
+}

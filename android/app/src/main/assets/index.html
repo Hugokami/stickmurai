@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <script>
+      (function() {
+        function showError(title, msg, stack) {
+          var div = document.getElementById('mobile-debug-log');
+          if (!div) {
+            div = document.createElement('div');
+            div.id = 'mobile-debug-log';
+            div.style.position = 'fixed';
+            div.style.top = '0';
+            div.style.left = '0';
+            div.style.width = '100vw';
+            div.style.height = '100vh';
+            div.style.background = 'rgba(0, 0, 0, 0.9)';
+            div.style.color = '#ff3333';
+            div.style.zIndex = '999999';
+            div.style.padding = '20px';
+            div.style.boxSizing = 'border-box';
+            div.style.fontFamily = 'monospace';
+            div.style.fontSize = '12px';
+            div.style.overflowY = 'auto';
+            div.style.whiteSpace = 'pre-wrap';
+            document.documentElement.appendChild(div);
+          }
+          div.innerText += '\n=== ' + title + ' ===\n' + msg + '\n' + (stack || '');
+        }
+        window.addEventListener('error', function(e) {
+          showError('UNHANDLED ERROR', e.message + ' at ' + e.filename + ':' + e.lineno + ':' + e.colno, e.error ? e.error.stack : '');
+        });
+        window.addEventListener('error', function(e) {
+          var target = e.target;
+          if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
+            showError('RESOURCE LOAD ERROR', 'Failed to load: ' + (target.src || target.href), '');
+          }
+        }, true);
+        window.addEventListener('unhandledrejection', function(e) {
+          showError('UNHANDLED REJECTION', e.reason, e.reason ? e.reason.stack : '');
+        });
+      })();
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="screen-orientation" content="landscape" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shojumaru&family=Outfit:wght@300;400;500;600;700;900&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
+    <title>Super Samurai Sticky</title>
+    <script type="module" src="/assets/index-DRPOmy72.js"></script>
+    <link rel="stylesheet" href="/assets/index-CnrqQ64X.css">
+  </head>
+  <body>
+    <!-- Rotate Device Prompt -->
+    <div id="rotate-prompt">
+      <div class="rotate-icon">📱</div>
+      <p><strong data-i18n="rotatePrompt">Please rotate your device to landscape mode for the best experience!</strong></p>
+    </div>
+
+    <div id="app">
+      <div id="vignette-overlay"></div>
+      <div id="speedlines-overlay"></div>
+      <div id="manga-cutin">
+        <div class="manga-slice"></div>
+        <div class="manga-character-wrap">
+          <video class="manga-character" src="stickmurai_animation.mp4" autoplay loop muted playsinline></video>
+        </div>
+      </div>
+      <canvas id="gameCanvas"></canvas>
+      <div id="ui-layer">
+        <div class="top-bars">
+          <div id="hearts-container">
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+            <span class="heart active">❤️</span>
+          </div>
+          <div class="bar-container flow-meter-container" id="flow-meter-container">
+            <div id="flow-meter-fill"></div>
+            <div class="flow-meter-glow"></div>
+            <span class="bar-label" data-i18n="flow">FLOW</span>
+          </div>
+          <div class="bar-container exp-meter-container">
+            <div id="exp-meter-fill"></div>
+            <span class="bar-label"><span data-i18n="expLvl">EXP Lvl</span> <span id="level-display">1</span></span>
+          </div>
+        </div>
+        <div id="score-display">Kills: 0</div>
+        <div id="objective-display" style="display: none;"></div>
+        <div id="combo-display">x1 Combo</div>
+        <button id="pause-btn">⏸</button>
+      </div>
+      
+      <!-- Mobile Controls -->
+      <div id="mobile-controls">
+        <div id="left-touch-zone"></div>
+        <div id="joystick-base">
+          <div id="joystick-knob"></div>
+        </div>
+        <div id="action-buttons">
+          <button id="btn-dash" class="action-btn">
+            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 5l7 7-7 7M4 5l7 7-7 7"/>
+            </svg>
+            <span class="btn-text" data-i18n="btnDash">DASH</span>
+            <span class="hotkey">SPACE</span>
+            <div class="cooldown-overlay" id="dash-cooldown-overlay"></div>
+            <div class="cooldown-text" id="dash-cooldown-text"></div>
+          </button>
+          
+          <button id="btn-attack" class="action-btn">
+            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
+              <path d="M2 22l6-6" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M12 21a9 9 0 0 0 9-9" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+            </svg>
+            <span class="btn-text" data-i18n="btnSlash">SLASH</span>
+            <span class="hotkey">LMB</span>
+            <div class="cooldown-overlay" id="attack-cooldown-overlay"></div>
+          </button>
+          
+          <button id="btn-enhance" class="action-btn">
+            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 2l4 4-2 2-4-4z"/>
+              <path d="M17 7L3 21v0a1 1 0 0 0 1 1h0L18 8" stroke-width="2" stroke-linecap="round"/>
+              <path d="M2 22l3-3" stroke-width="1.5"/>
+              <path d="M9 12c-2-2-1.5-5 0-7 2 2 .5 5 0 7zM14 7c-1-1.5-.5-3.5 0-5 1 1.5.5 3.5 0 5zM12 15c-1.5-1-.5-3.5 0-5 1 1.5.5 3.5 0 5z" fill="currentColor" stroke="none" opacity="0.85"/>
+            </svg>
+            <span class="btn-text" data-i18n="btnEnhance">ENHANCE</span>
+            <span class="hotkey">E</span>
+            <div class="cooldown-overlay" id="enhance-cooldown-overlay"></div>
+            <div class="cooldown-text" id="enhance-cooldown-text"></div>
+          </button>
+          
+          <button id="btn-ult" class="action-btn" style="display:none;">
+            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="9" stroke-width="2" stroke-dasharray="3 3"/>
+              <path d="M19 5L5 19M5 5l14 14" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+            <span class="btn-text" data-i18n="btnUlt">ULT</span>
+            <span class="hotkey">F</span>
+            <div class="cooldown-overlay" id="ult-cooldown-overlay"></div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Overlays -->
+      <div class="flash-overlay" id="flash-overlay"></div>
+      
+      <div id="game-over" class="overlay" style="display:none;">
+        <div class="menu-box" style="max-height: 90%; overflow-y: auto;">
+          <h2 id="game-over-title" class="death-title" data-i18n="death">DEATH</h2>
+          <div id="stats-summary" style="margin: 15px 0; color: #cbd8d6; text-align: left; font-size: 14px; line-height: 1.6; border: 1px solid rgba(255, 255, 255, 0.15); padding: 15px; border-radius: 8px; background: rgba(0, 0, 0, 0.4); font-family: monospace;"></div>
+          <button id="restart-btn" class="menu-btn" data-i18n="tryAgain">Try Again</button>
+        </div>
+      </div>
+
+      <div id="level-up-screen" class="overlay" style="display:none;">
+        <h2 data-i18n="levelUp">LEVEL UP!</h2>
+        <div class="power-choices" id="power-choices">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div id="ult-screen" class="overlay" style="display:none;">
+        <h2 style="color: #ffaa00; text-shadow: 0 0 20px #ffaa00;" data-i18n="chooseUlt">CHOOSE ULTIMATE</h2>
+        <div class="power-choices" id="ult-choices">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Loading Screen Overlay -->
+      <div id="loader-screen" class="overlay">
+        <div class="loader-bg-kanji">侍</div>
+        <div class="loader-grid-overlay"></div>
+        
+        <div class="loader-hud-container">
+          <div class="loader-hud-header">
+            <span class="hud-tag">SYS.LOAD_v2.0</span>
+            <span class="hud-status" id="loader-status">CONNECTING...</span>
+          </div>
+          
+          <div class="loader-character-wrap">
+            <img class="loader-stickman-img" id="loader-stickman-img" src="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0001.png" alt="Loading character..." />
+            <div class="character-ground-line"></div>
+          </div>
+          
+          <div class="loader-progress-wrap">
+            <div class="loader-info-row">
+              <span id="loader-text" class="loader-title-text">LOADING RESOURCES</span>
+              <span id="loader-percent-text" class="loader-percent-num">0%</span>
+            </div>
+            <div class="loader-bar-container">
+              <div id="loader-fill"></div>
+              <div class="loader-bar-flare" id="loader-bar-flare"></div>
+            </div>
+          </div>
+          
+          <div class="loader-tips-container">
+            <div class="tips-label">// COMBAT INTEL //</div>
+            <div id="loader-tip" class="tips-content">Initializing blade calibrations...</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="main-menu" class="overlay" style="display:none;">
+        <div class="menu-box main-menu-box">
+          <div class="menu-left">
+            <h1 class="game-title" data-i18n="title">SUPER<br>SAMURAI<br>STICKY</h1>
+            <div class="menu-buttons">
+              <button id="start-btn" class="menu-btn" data-i18n="play">Play</button>
+              <button id="level-mode-btn" class="menu-btn" style="border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);" data-i18n="playLevel">Level Mode</button>
+              <button id="zen-btn" class="menu-btn" style="border-color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);" data-i18n="playZen">Zen Mode</button>
+              <button id="open-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
+            </div>
+          </div>
+          <div class="menu-right">
+            <div class="guide-box">
+              <h3 data-i18n="guideTitle">Combat Guide & Techniques</h3>
+              <ul>
+                <li data-i18n="guideMove"><strong>Movement:</strong> Use WASD / Arrow Keys on Desktop, or the Virtual Joystick on Mobile devices.</li>
+                <li data-i18n="guideSlash"><strong>Slash (Basic Attack):</strong> Left-click / LMB on Desktop or tap SLASH on Mobile. Auto-aims toward targets.</li>
+                <li data-i18n="guideDodge"><strong>Dodge / Dash:</strong> Press SPACEBAR on Desktop or tap DASH on Mobile. Full invulnerability frames.</li>
+                <li data-i18n="guidePerfect"><strong>Perfect Dodge:</strong> Dash right as an enemy lunges to trigger a screen flash, a combo boost, and 2s of invulnerability.</li>
+                <li data-i18n="guideParry"><strong>Parrying:</strong> Hold SLASH to charge, and release it at the exact moment of an incoming attack to Parry.</li>
+                <li data-i18n="guideIaijutsu"><strong>Iaijutsu Shockwave:</strong> Hold SLASH and release at full charge to unleash a piercing crescent projectile.</li>
+                <li data-i18n="guideFlow"><strong>Flow Awakening (Ultimate):</strong> Defeat enemies to fill the FLOW meter. Press F Key or ULT to enter time-slowed state.</li>
+                <li data-i18n="guideProg"><strong>Progression & Leveling:</strong> Gain EXP to level up and choose powerful character upgrades.</li>
+                <li data-i18n="guideDifficulty"><strong>Difficulty Modes:</strong> Select your challenge before starting.</li>
+                <li data-i18n="guideAutoAim"><strong>Auto-Aim:</strong> Basic attacks automatically target the closest enemy within 600px range.</li>
+                <li data-i18n="comboSwift"><strong>Combo - Swift Counter:</strong> Dash + Slash immediately. Teleports behind the target for a quick slash.</li>
+                <li data-i18n="comboThunder"><strong>Combo - Thunderclap & Flash:</strong> Dash + Slash during Storm God or with Raijin Step. Slashes through targets with lightning.</li>
+                <li data-i18n="comboDragon"><strong>Combo - Rising Dragon:</strong> Slash + Slash + release charge early. Launches enemies into the air.</li>
+                <li data-i18n="comboMirror"><strong>Combo - Mirror Strike:</strong> Fully charged Iaijutsu Slash while invisible (from Decoy active passive). Teleports clones to strike.</li>
+              </ul>
+            </div>
+            <div id="high-scores-box" style="background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 12px; padding: 15px; width: 100%; text-align: left; box-sizing: border-box; margin-top: 10px; font-family: 'Space Mono', monospace;">
+              <h3 style="margin-top: 0; color: #ffd700; font-size: 16px; border-bottom: 1px dashed rgba(255, 215, 0, 0.3); padding-bottom: 5px; font-family: 'Shojumaru', cursive;" data-i18n="highScoresTitle">HIGH RECORDS</h3>
+              <div id="high-scores-content" style="color: #cbd8d6; font-size: 12px; line-height: 1.6;">
+                <!-- Filled by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="settings-screen" class="overlay" style="display:none;">
+        <div class="menu-box" style="max-height: 90%; overflow-y: auto;">
+          <h2 data-i18n="settingsTitle">SETTINGS</h2>
+          <div class="settings-grid">
+            <div class="setting-row">
+              <label data-i18n="language">Language</label>
+              <select id="language-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="en">English</option>
+                <option value="ja">日本語</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label data-i18n="graphicsMode">Graphics</label>
+              <select id="graphics-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="high">High Quality</option>
+                <option value="low">Performance</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label data-i18n="screenShakeMode">Screen Shake</label>
+              <select id="shake-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="on" data-i18n="shakeOn">Standard</option>
+                <option value="reduced" data-i18n="shakeReduced">Reduced</option>
+                <option value="off" data-i18n="shakeOff">Off</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label data-i18n="autoUlt">Flow Auto Activation</label>
+              <select id="auto-ult-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="on" data-i18n="autoUltOn">On</option>
+                <option value="off" data-i18n="autoUltOff">Off</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label data-i18n="screenFlash">Screen Flash / Invert</label>
+              <select id="screen-flash-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="on" data-i18n="settingsOn">On</option>
+                <option value="off" data-i18n="settingsOff">Off</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label data-i18n="weatherEffects">Weather & Petals</label>
+              <select id="weather-effects-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="on" data-i18n="settingsOn">On</option>
+                <option value="off" data-i18n="settingsOff">Off</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label data-i18n="speedLines">Speed Lines</label>
+              <select id="speed-lines-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="on" data-i18n="settingsOn">On</option>
+                <option value="off" data-i18n="settingsOff">Off</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label data-i18n="floatingText">Floating Numbers</label>
+              <select id="floating-text-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="on" data-i18n="settingsOn">On</option>
+                <option value="off" data-i18n="settingsOff">Off</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <label data-i18n="groundScars">Ground Slash Marks</label>
+              <select id="ground-scars-select" style="padding: 5px; font-family: 'Noto Sans JP'; font-size: 16px; background: #333; color: white; border: 1px solid #801010; border-radius: 4px;">
+                <option value="on" data-i18n="settingsOn">On</option>
+                <option value="off" data-i18n="settingsOff">Off</option>
+              </select>
+            </div>
+
+            <div class="setting-row">
+              <label data-i18n="musicVol">Music Volume</label>
+              <input type="range" id="bgm-volume" min="0" max="1" step="0.1" value="0.5">
+            </div>
+          </div>
+          <h3 style="color: #ff3355; margin-top: 20px; font-size: 18px; font-family: 'Shojumaru', cursive; border-bottom: 1px solid rgba(255, 51, 85, 0.2); width: 100%; padding-bottom: 5px; text-transform: uppercase;" data-i18n="controlsTitle">KEYBOARD BINDINGS</h3>
+          <div id="keybinds-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; width: 100%; max-width: 320px; margin-top: 10px; font-family: 'Space Mono', monospace; font-size: 13px; text-align: left; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 14px 18px; box-sizing: border-box;">
+            <!-- Key rebinding buttons populated dynamically by JS -->
+          </div>
+          <button id="close-settings-btn" class="menu-btn" data-i18n="back">Back</button>
+        </div>
+      </div>
+
+      <div id="skill-select-screen" class="overlay" style="display:none;">
+        <div class="menu-box skill-select-box" style="max-width: 800px; width: 90vw; padding: 25px;">
+          <h2 id="skill-select-title" style="color: #ffffff; font-family: 'Orbitron', sans-serif; letter-spacing: 1.5px; font-size: 24px; margin: 0 0 20px 0; text-align: center;" data-i18n="selectSkillTitle">SELECT ACTIVE SKILL</h2>
+          <div class="skill-choices" id="pregame-skill-choices" style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
+            <!-- Populated by JS -->
+          </div>
+          <div class="pregame-difficulty-container" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
+            <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 14px;" data-i18n="difficulty">Difficulty</label>
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
+              <button class="menu-btn diff-btn" id="diff-easy-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="difficultyEasy">Easy</button>
+              <button class="menu-btn diff-btn" id="diff-normal-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="difficultyNormal">Normal</button>
+              <button class="menu-btn diff-btn" id="diff-hard-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="difficultyHard">Hard</button>
+              <button class="menu-btn diff-btn" id="diff-insane-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="difficultyInsane">Insane</button>
+            </div>
+          </div>
+          <!-- Time Mode Options -->
+          <div id="pregame-time-options" style="margin-bottom: 20px; display: none; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
+            <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 14px;" data-i18n="timeLimit">Time Limit</label>
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
+              <button class="menu-btn time-opt-btn" id="time-infinite-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="timeInfinite">Infinite</button>
+              <button class="menu-btn time-opt-btn" id="time-3m-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">3 Min</button>
+              <button class="menu-btn time-opt-btn" id="time-5m-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">5 Min</button>
+              <button class="menu-btn time-opt-btn" id="time-10m-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">10 Min</button>
+            </div>
+          </div>
+          <!-- Level Mode Options -->
+          <div id="pregame-level-options" style="margin-bottom: 20px; display: none; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
+            <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 14px;" data-i18n="targetLevel">Target Level</label>
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
+              <button class="menu-btn lvl-opt-btn" id="lvl-5-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">Lvl 5</button>
+              <button class="menu-btn lvl-opt-btn" id="lvl-10-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">Lvl 10</button>
+              <button class="menu-btn lvl-opt-btn" id="lvl-15-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">Lvl 15</button>
+            </div>
+          </div>
+          <div style="display: flex; gap: 15px; justify-content: center; width: 100%;">
+            <button id="skill-back-btn" class="menu-btn" style="border-color: #666; max-width: 150px; margin: 0;" data-i18n="back">Back</button>
+            <button id="start-run-btn" class="menu-btn" style="max-width: 200px; margin: 0; box-shadow: 0 0 15px rgba(255, 51, 85, 0.3);" data-i18n="play">Play</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="pause-screen" class="overlay" style="display:none;">
+        <div class="menu-box pause-menu-box">
+          <div class="menu-left">
+            <h2 data-i18n="paused" style="margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(255, 51, 85, 0.4);">PAUSED</h2>
+            <div style="font-size: 11px; color: rgba(255, 255, 255, 0.4); margin-bottom: 20px; font-family: 'Outfit', sans-serif; letter-spacing: 1px; font-weight: 500;">[ ESC / P TO RESUME ]</div>
+            <div class="menu-buttons">
+              <button id="resume-btn" class="menu-btn" data-i18n="resume">Resume Game</button>
+              <button id="pause-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
+              <button id="quit-btn" class="menu-btn exit-btn" data-i18n="quit">Quit to Menu</button>
+            </div>
+          </div>
+          <div class="menu-right">
+            <div class="guide-box">
+              <h3 style="color: #00ffff; text-shadow: 0 0 10px rgba(0, 255, 255, 0.45); font-family: 'Orbitron', sans-serif; letter-spacing: 1px;" data-i18n="activeUpgradesTitle">ACTIVE UPGRADES</h3>
+              <div id="pause-upgrades-list" style="margin-top: 15px; max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 4px;">
+                <!-- Populated dynamically by JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
