@@ -452,8 +452,9 @@ export class Projectile {
         if (e.state === 'dead') return;
         const dx = this.x - e.x;
         const dy = this.y - e.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < pullRadius) {
+        const distSq = dx * dx + dy * dy;
+        if (distSq < pullRadius * pullRadius) {
+          const dist = Math.sqrt(distSq) || 0.001;
           if (dist > 10) {
             const pullRatio = Math.min(1, pullSpeed * dt / dist);
             e.x += dx * pullRatio;
@@ -471,8 +472,9 @@ export class Projectile {
         if (e.state === 'dead') return;
         const dx = this.x - e.x;
         const dy = this.y - e.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < pullRadius) {
+        const distSq = dx * dx + dy * dy;
+        if (distSq < pullRadius * pullRadius) {
+          const dist = Math.sqrt(distSq) || 0.001;
           if (dist > 10) {
             const pullRatio = Math.min(1, pullSpeed * dt / dist);
             e.x += dx * pullRatio;
@@ -486,7 +488,8 @@ export class Projectile {
         if (p.isEnemy) {
           const dx = this.x - p.x;
           const dy = this.y - p.y;
-          if (Math.hypot(dx, dy) < 180) {
+          const distSq = dx * dx + dy * dy;
+          if (distSq < 180 * 180) {
             p.isEnemy = false;
             p.angle = this.angle + (Math.random() - 0.5) * 0.4;
             const deflectSpeed = 2000;
@@ -507,8 +510,9 @@ export class Projectile {
         if (e.state === 'dead') return;
         const dx = this.x - e.x;
         const dy = this.y - e.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < pullRadius) {
+        const distSq = dx * dx + dy * dy;
+        if (distSq < pullRadius * pullRadius) {
+          const dist = Math.sqrt(distSq) || 0.001;
           if (dist > 10) {
             const pullRatio = Math.min(1, pullSpeed * dt / dist);
             e.x += dx * pullRatio;
@@ -1187,7 +1191,7 @@ export class Collectible {
     // Pull to player logic
     const dx = globals.player.x - this.x;
     const dy = globals.player.y - this.y;
-    const dist = Math.hypot(dx, dy);
+    const distSq = dx * dx + dy * dy;
     
     let baseRadius = 120;
     let pullSpeed = 450;
@@ -1200,7 +1204,8 @@ export class Collectible {
     
     const magRadius = globals.playerStats.magneticDrawLevel ? Math.max(800, baseRadius) : baseRadius;
     
-    if (dist < magRadius && globals.player.state !== 'dead') {
+    if (distSq < magRadius * magRadius && globals.player.state !== 'dead') {
+      const dist = Math.sqrt(distSq) || 0.001;
       const actualPullSpeed = globals.playerStats.magneticDrawLevel ? Math.max(1000, pullSpeed) : pullSpeed;
       let force;
       if (isPlayerDashing && this.type === 'exp') {

@@ -1987,11 +1987,11 @@ function update(realDt: number) {
   }
 
   if (globals.flowState === 'awakened') {
-    globals.flow -= (globals.playerStats.flowMax / 7.0) * realDt;
+    globals.flow -= (globals.playerStats.flowMax / 6.0) * realDt;
     updateUI();
     if (globals.flow <= 0) { globals.flow = 0; globals.flowState = 'normal'; }
   } else if (globals.flowState === 'storm_god') {
-    globals.flow -= (globals.playerStats.flowMax / 7.0) * realDt;
+    globals.flow -= (globals.playerStats.flowMax / 12.0) * realDt;
     updateUI();
     if (globals.flow <= 0) { globals.flow = 0; globals.flowState = 'normal'; }
   }
@@ -2090,9 +2090,11 @@ function update(realDt: number) {
       let exploded = false;
       for (const e of globals.enemies) {
         if (e.state === 'dead') continue;
-        const dist = Math.hypot(e.x - petal.x, e.y - petal.y);
+        const dx = e.x - petal.x;
+        const dy = e.y - petal.y;
         const enemyHitRadius = (e.scaleMult - 1) * 60;
-        if (dist < petal.radius + enemyHitRadius) {
+        const radiusSum = petal.radius + enemyHitRadius;
+        if (dx * dx + dy * dy < radiusSum * radiusSum) {
           exploded = true;
           hitEnemy(e, 1);
           playSound(sfx.slash, 0.15);
@@ -2745,19 +2747,21 @@ function update(realDt: number) {
   globals.projectiles.forEach(proj => {
     if (proj.isDeflected) {
       let targetEnemy: Enemy | null = null;
-      let minDistance = Infinity;
+      let minDistanceSq = Infinity;
       for (const e of globals.enemies) {
         if (e.state === 'dead') continue;
-        const d = Math.hypot(e.x - proj.x, e.y - proj.y);
-        if (d < minDistance) {
-          minDistance = d;
+        const dx = e.x - proj.x;
+        const dy = e.y - proj.y;
+        const dSq = dx * dx + dy * dy;
+        if (dSq < minDistanceSq) {
+          minDistanceSq = dSq;
           targetEnemy = e;
         }
       }
       if (targetEnemy) {
         const dx = targetEnemy.x - proj.x;
         const dy = targetEnemy.y - proj.y;
-        const dist = Math.hypot(dx, dy);
+        const dist = Math.sqrt(minDistanceSq) || 0.001;
         if (dist > 10) {
           const speed = globals.galeVortexActive ? 2400 : 1600;
           const targetVx = (dx / dist) * speed;
@@ -2791,12 +2795,14 @@ function update(realDt: number) {
           if (globals.galeVortexActive && proj.shooter && proj.shooter.state !== 'dead') {
             targetEnemy = proj.shooter;
           } else {
-            let minDistance = Infinity;
+            let minDistanceSq = Infinity;
             for (const e of globals.enemies) {
               if (e.state === 'dead') continue;
-              const d = Math.hypot(e.x - proj.x, e.y - proj.y);
-              if (d < minDistance) {
-                minDistance = d;
+              const edx = e.x - proj.x;
+              const edy = e.y - proj.y;
+              const edSq = edx * edx + edy * edy;
+              if (edSq < minDistanceSq) {
+                minDistanceSq = edSq;
                 targetEnemy = e;
               }
             }

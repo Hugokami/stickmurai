@@ -345,17 +345,14 @@ export function draw() {
     e.draw(ctx, globals.camera.x, globals.camera.y, alpha, tint);
   });
   
-  if (globals.sakuraPetals && globals.weatherEffectsEnabled === 'on') {
+  if (globals.sakuraPetals && globals.weatherEffectsEnabled === 'on' && globals.sakuraPetals.length > 0) {
+    ctx.fillStyle = '#ffb7c5';
     globals.sakuraPetals.forEach(petal => {
-      ctx.save();
       const px = petal.x - globals.camera.x + globals.vw/2;
       const py = petal.y - globals.camera.y + globals.vh/2;
-      ctx.fillStyle = '#ffb7c5';
-      // Removed shadowBlur to prevent lag
       ctx.beginPath();
       ctx.ellipse(px, py, 11, 6, Math.PI / 4, 0, Math.PI * 2);
       ctx.fill();
-      ctx.restore();
     });
   }
 

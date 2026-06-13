@@ -288,9 +288,13 @@ export class Enemy extends Entity {
     let currentTarget: { x: number, y: number } = this.target;
     if (globals.gameMode === 'pvp' && pvpManager.subMode === 'insane_survival') {
       const remotePlayer = globals.enemies[0];
-      const distToLocal = this.target.state !== 'dead' ? Math.hypot(this.target.x - this.x, this.target.y - this.y) : Infinity;
-      const distToRemote = (remotePlayer && remotePlayer.state !== 'dead') ? Math.hypot(remotePlayer.x - this.x, remotePlayer.y - this.y) : Infinity;
-      if (distToRemote < distToLocal) {
+      const dxLocal = this.target.x - this.x;
+      const dyLocal = this.target.y - this.y;
+      const distToLocalSq = this.target.state !== 'dead' ? (dxLocal * dxLocal + dyLocal * dyLocal) : Infinity;
+      const dxRemote = remotePlayer ? remotePlayer.x - this.x : 0;
+      const dyRemote = remotePlayer ? remotePlayer.y - this.y : 0;
+      const distToRemoteSq = (remotePlayer && remotePlayer.state !== 'dead') ? (dxRemote * dxRemote + dyRemote * dyRemote) : Infinity;
+      if (distToRemoteSq < distToLocalSq) {
         currentTarget = remotePlayer;
       } else {
         currentTarget = this.target;
@@ -299,11 +303,13 @@ export class Enemy extends Entity {
     
     if (globals.decoys && globals.decoys.length > 0) {
       let nearestDecoy = null;
-      let minDist = Infinity;
+      let minDistSq = Infinity;
       for (const decoy of globals.decoys) {
-        const d = Math.hypot(decoy.x - this.x, decoy.y - this.y);
-        if (d < minDist) {
-          minDist = d;
+        const ddx = decoy.x - this.x;
+        const ddy = decoy.y - this.y;
+        const dSq = ddx * ddx + ddy * ddy;
+        if (dSq < minDistSq) {
+          minDistSq = dSq;
           nearestDecoy = decoy;
         }
       }
@@ -313,7 +319,7 @@ export class Enemy extends Entity {
     }
 
     const dx = currentTarget.x - this.x; const dy = currentTarget.y - this.y;
-    const dist = Math.hypot(dx, dy);
+    const distSq = dx * dx + dy * dy;
     
     if (this.state !== 'charge' && this.state !== 'attack') {
       this.dir = dx < 0 ? -1 : 1;
@@ -379,7 +385,8 @@ export class Enemy extends Entity {
       speed *= 0.7;
     }
 
-    if (dist > attackRange) {
+    if (distSq > attackRange * attackRange) {
+      const dist = Math.sqrt(distSq) || 0.001;
       this.vx = (dx / dist) * speed; this.vy = (dy / dist) * speed; this.setState('walk');
     } else {
       this.vx = 0; this.vy = 0; this.setState('charge');
@@ -391,11 +398,13 @@ export class Enemy extends Entity {
     let currentTarget: any = this.target;
     if (globals.decoys && globals.decoys.length > 0) {
       let nearestDecoy = null;
-      let minDist = Infinity;
+      let minDistSq = Infinity;
       for (const decoy of globals.decoys) {
-        const d = Math.hypot(decoy.x - this.x, decoy.y - this.y);
-        if (d < minDist) {
-          minDist = d;
+        const ddx = decoy.x - this.x;
+        const ddy = decoy.y - this.y;
+        const dSq = ddx * ddx + ddy * ddy;
+        if (dSq < minDistSq) {
+          minDistSq = dSq;
           nearestDecoy = decoy;
         }
       }
