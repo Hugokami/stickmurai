@@ -1,6 +1,7 @@
 import { pvpManager } from './pvpIaijutsuManager';
 import { supabase } from './supabaseClient';
 import { globals } from './globals';
+import { pauseBgm } from './audio';
 
 let userUid: string | null = null;
 let userProfile: any = null;
@@ -19,7 +20,7 @@ const isFriendOnline = (friend: any) => {
   return diffMs < 30000; // 30 seconds threshold
 };
 
-async function updatePresence(status: 'online' | 'busy' | 'offline' | 'queued') {
+async function updatePresence(status: string) {
   if (!userUid) return;
   try {
     await supabase
@@ -87,20 +88,19 @@ export function initPvPLobby(onStartMatch: () => void) {
       if (pvpLobbyScreen) pvpLobbyScreen.style.display = 'flex';
       showStep('select');
       
-      // Trigger Supabase Auth
-      await initSupabaseAuth();
+      if (!userUid) {
+        await initSupabaseAuth();
+      } else {
+        await loadProfile();
+        await loadFriends();
+        updatePresence('online');
+      }
     });
   }
 
   // Back to main menu
   if (cancelBtn) {
     cancelBtn.addEventListener('click', async () => {
-      if (heartbeatInterval) clearInterval(heartbeatInterval);
-      await updatePresence('offline');
-      
-      if (invitesChannel) supabase.removeChannel(invitesChannel);
-      if (friendsSubscription) supabase.removeChannel(friendsSubscription);
-      
       pvpManager.disconnect();
       if (pvpLobbyScreen) pvpLobbyScreen.style.display = 'none';
       if (mainMenu) mainMenu.style.display = 'flex';
@@ -160,6 +160,29 @@ export function initPvPLobby(onStartMatch: () => void) {
           .update({ status: 'accepted' })
           .eq('id', inviteId);
           
+        // Hide standard single player/main menu screens/HUDs if open
+        const mainMenuEl = document.getElementById('main-menu');
+        if (mainMenuEl) mainMenuEl.style.display = 'none';
+        const pvpLobbyScreenEl = document.getElementById('pvp-lobby-screen');
+        if (pvpLobbyScreenEl) pvpLobbyScreenEl.style.display = 'flex';
+        
+        const gameOverScreen = document.getElementById('game-over');
+        if (gameOverScreen) gameOverScreen.style.display = 'none';
+        const pauseScreen = document.getElementById('pause-screen');
+        if (pauseScreen) pauseScreen.style.display = 'none';
+        const skillSelectScreen = document.getElementById('skill-select-screen');
+        if (skillSelectScreen) skillSelectScreen.style.display = 'none';
+        const uiLayer = document.getElementById('ui-layer');
+        if (uiLayer) uiLayer.style.display = 'none';
+        const settingsScreen = document.getElementById('settings-screen');
+        if (settingsScreen) settingsScreen.style.display = 'none';
+        const mobileControls = document.getElementById('mobile-controls');
+        if (mobileControls) mobileControls.style.display = 'none';
+        
+        // Stop any running BGM and reset game state to mainmenu
+        globals.gameState = 'mainmenu';
+        pauseBgm();
+
         showStep('ready');
         await pvpManager.joinMatch(peerId);
       } catch (err: any) {
@@ -215,6 +238,18 @@ export function initPvPLobby(onStartMatch: () => void) {
   }
 
   pvpManager.onConnectionOpened = () => {
+    if (queueInterval) {
+      clearInterval(queueInterval);
+      queueInterval = null;
+    }
+    const findBtn = document.getElementById('pvp-find-match-btn');
+    const queueStatus = document.getElementById('pvp-queue-status');
+    if (findBtn) {
+      findBtn.innerText = 'Find Match';
+      findBtn.style.borderColor = '#10b981';
+    }
+    if (queueStatus) queueStatus.style.display = 'none';
+
     showStep('ready');
     updateReadyStatusDisplay();
     
@@ -907,6 +942,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     }
     
     queueTimeElapsed = 0;
+    let myQueueStatus = 'queued';
     
     try {
       const peerId = await pvpManager.hostMatch();
@@ -931,12 +967,12 @@ export function initPvPLobby(onStartMatch: () => void) {
           qTimer.innerText = `${mins}:${secs}`;
         }
         
-        await updatePresence('queued');
+        await updatePresence(myQueueStatus);
         
+        // Fetch all active profiles in the same queue mode
         const { data: candidates, error } = await supabase
           .from('profiles')
           .select('*')
-          .eq('status', 'queued')
           .eq('queue_mode', selectedMode)
           .neq('id', userUid);
           
@@ -948,33 +984,70 @@ export function initPvPLobby(onStartMatch: () => void) {
         const activeCandidates = (candidates || []).filter(c => {
           const lastSeenDate = new Date(c.last_seen);
           const diffMs = Date.now() - lastSeenDate.getTime();
-          return diffMs < 30000;
+          return diffMs < 30000 && c.status !== 'offline';
         });
         
-        if (activeCandidates.length > 0) {
-          const opponent = activeCandidates[0];
+        // 1. Check if we already designated an opponent, and check if they accepted
+        if (myQueueStatus.startsWith('queued:')) {
+          const targetOpponentId = myQueueStatus.split(':')[1];
+          const opponent = activeCandidates.find(c => c.id === targetOpponentId);
+          
+          if (opponent) {
+            // If the opponent is busy, or matched back with us, we are good to transition!
+            if (opponent.status === 'busy' || opponent.status === 'queued:' + userUid) {
+              clearInterval(queueInterval);
+              queueInterval = null;
+              
+              if (queueStatus) queueStatus.innerText = 'Opponent found! Connecting...';
+              
+              await updatePresence('busy');
+              // Host just stays as host and waits for connection
+              showStep('ready');
+              return;
+            }
+            // Otherwise, we keep waiting
+            return;
+          } else {
+            // Opponent must have timed out or cancelled, reset our queue status
+            myQueueStatus = 'queued';
+            await updatePresence('queued');
+          }
+        }
+        
+        // 2. Check if there is any host that has selected us
+        const matchedHost = activeCandidates.find(c => c.status === 'queued:' + userUid);
+        if (matchedHost) {
           clearInterval(queueInterval);
           queueInterval = null;
           
           if (queueStatus) queueStatus.innerText = 'Opponent found! Connecting...';
           
-          const myShortId = userProfile.short_id;
-          const oppShortId = opponent.short_id;
-          
-          if (myShortId < oppShortId) {
-            await updatePresence('busy');
-          } else {
-            await updatePresence('busy');
-            pvpManager.disconnect();
-            try {
-              showStep('ready');
-              await pvpManager.joinMatch(opponent.peer_id);
-            } catch (err: any) {
-              alert('Matchmaking connection failed: ' + err.message);
-              stopQueue();
-            }
+          await updatePresence('busy');
+          pvpManager.disconnect();
+          try {
+            showStep('ready');
+            await pvpManager.joinMatch(matchedHost.peer_id);
+          } catch (err: any) {
+            alert('Matchmaking connection failed: ' + err.message);
+            stopQueue();
           }
+          return;
         }
+        
+        // 3. Otherwise, look for someone who is simply 'queued'
+        const queuedOpponent = activeCandidates.find(c => c.status === 'queued');
+        if (queuedOpponent) {
+          const myShortId = userProfile.short_id;
+          const oppShortId = queuedOpponent.short_id;
+          
+          // Determine roles: Host has smaller short_id
+          if (myShortId < oppShortId) {
+            myQueueStatus = 'queued:' + queuedOpponent.id;
+            await updatePresence(myQueueStatus);
+          }
+          // Client does nothing, waits for host's status to update to 'queued:' + userUid
+        }
+        
       }, 3000);
       
     } catch (err: any) {
@@ -1164,6 +1237,11 @@ export function initPvPLobby(onStartMatch: () => void) {
       }
     });
   }
+
+  // Trigger Supabase login and invite subscription on startup in the background
+  initSupabaseAuth().catch(err => {
+    console.error("Failed to initialize social auth on startup:", err);
+  });
 }
 
 /**
