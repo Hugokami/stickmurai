@@ -7,6 +7,7 @@ let userUid: string | null = null;
 let userProfile: any = null;
 let friends: any[] = [];
 let invitesChannel: any = null;
+let alertsChannel: any = null;
 let friendsSubscription: any = null;
 let heartbeatInterval: any = null;
 let activeIncomingInviteId: string | null = null;
@@ -16,18 +17,19 @@ let activeIncomingInviteSenderPeerId: string | null = null;
 const isFriendOnline = (friend: any) => {
   if (friend.status === 'offline') return false;
   const lastSeenDate = new Date(friend.last_seen);
-  const diffMs = Date.now() - lastSeenDate.getTime();
-  return diffMs < 30000; // 30 seconds threshold
+  const diffMs = Math.abs(Date.now() - lastSeenDate.getTime());
+  return diffMs < 120000; // 2 minutes threshold to robustly handle clock drifts
 };
 
-async function updatePresence(status: string) {
+async function updatePresence(status: string, extraFields: Record<string, any> = {}) {
   if (!userUid) return;
   try {
     await supabase
       .from('profiles')
       .update({
         status: status,
-        last_seen: new Date().toISOString()
+        last_seen: new Date().toISOString(),
+        ...extraFields
       })
       .eq('id', userUid);
   } catch (e) {
@@ -38,7 +40,7 @@ async function updatePresence(status: string) {
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
     if (userUid) {
-      supabase.from('profiles').update({ status: 'offline' }).eq('id', userUid);
+      supabase.from('profiles').update({ status: 'offline', queue_mode: null, peer_id: null }).eq('id', userUid);
     }
   });
 }
@@ -810,6 +812,28 @@ export function initPvPLobby(onStartMatch: () => void) {
       if (error) throw error;
       await updatePresence('busy');
       
+      // INSTANT BROADCAST SEND
+      const senderName = userProfile?.display_name || 'Ronin';
+      const sendChannel = supabase.channel(`alerts:${friendUid}`);
+      sendChannel.subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          sendChannel.send({
+            type: 'broadcast',
+            event: 'invite',
+            payload: {
+              id: invite.id,
+              sender_id: userUid,
+              sender_name: senderName,
+              sender_peer_id: peerId
+            }
+          });
+          // Cleanup this temporary channel after a short delay
+          setTimeout(() => {
+            supabase.removeChannel(sendChannel);
+          }, 3000);
+        }
+      });
+
       const inviteChannel = supabase
         .channel(`invite_${invite.id}`)
         .on('postgres_changes', {
@@ -843,7 +867,25 @@ export function initPvPLobby(onStartMatch: () => void) {
   function subscribeToInvites() {
     if (!userUid) return;
     if (invitesChannel) supabase.removeChannel(invitesChannel);
+    if (alertsChannel) supabase.removeChannel(alertsChannel);
     
+    // 1. Instant Broadcast Channel
+    alertsChannel = supabase
+      .channel(`alerts:${userUid}`)
+      .on('broadcast', { event: 'invite' }, async (response: any) => {
+        const invite = response.payload;
+        if (invitePopup) {
+          const inviteText = document.getElementById('pvp-invite-text');
+          if (inviteText) inviteText.textContent = `${invite.sender_name} has challenged you to a duel!`;
+          invitePopup.style.display = 'flex';
+          
+          activeIncomingInviteId = invite.id;
+          activeIncomingInviteSenderPeerId = invite.sender_peer_id;
+        }
+      })
+      .subscribe();
+
+    // 2. Database Fallback (Postgres Changes)
     invitesChannel = supabase
       .channel('incoming_invites')
       .on('postgres_changes', {
@@ -854,6 +896,9 @@ export function initPvPLobby(onStartMatch: () => void) {
       }, async (payload: any) => {
         const invite = payload.new;
         if (invite.status !== 'pending') return;
+        
+        // If we already received and registered this invite, skip
+        if (activeIncomingInviteId === invite.id) return;
         
         const { data: sender } = await supabase
           .from('profiles')
@@ -983,8 +1028,8 @@ export function initPvPLobby(onStartMatch: () => void) {
         
         const activeCandidates = (candidates || []).filter(c => {
           const lastSeenDate = new Date(c.last_seen);
-          const diffMs = Date.now() - lastSeenDate.getTime();
-          return diffMs < 30000 && c.status !== 'offline';
+          const diffMs = Math.abs(Date.now() - lastSeenDate.getTime());
+          return diffMs < 120000 && (c.status.startsWith('queued') || c.status === 'busy');
         });
         
         // 1. Check if we already designated an opponent, and check if they accepted
@@ -1000,7 +1045,7 @@ export function initPvPLobby(onStartMatch: () => void) {
               
               if (queueStatus) queueStatus.innerText = 'Opponent found! Connecting...';
               
-              await updatePresence('busy');
+              await updatePresence('busy', { queue_mode: null });
               // Host just stays as host and waits for connection
               showStep('ready');
               return;
@@ -1022,7 +1067,7 @@ export function initPvPLobby(onStartMatch: () => void) {
           
           if (queueStatus) queueStatus.innerText = 'Opponent found! Connecting...';
           
-          await updatePresence('busy');
+          await updatePresence('busy', { queue_mode: null });
           pvpManager.disconnect();
           try {
             showStep('ready');
@@ -1072,7 +1117,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     if (queueStatus) queueStatus.style.display = 'none';
     
     pvpManager.disconnect();
-    await updatePresence('online');
+    await updatePresence('online', { queue_mode: null, peer_id: null });
   }
 
   // --- Leaderboard Queries & Rendering ---
