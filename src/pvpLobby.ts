@@ -378,20 +378,54 @@ export function initPvPLobby(onStartMatch: () => void) {
     const authStatusEl = document.getElementById('pvp-auth-status');
     try {
       let { data: { session } } = await supabase.auth.getSession();
+      
+      // Verify session profile validity
+      if (session && session.user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (!error && data) {
+          userUid = session.user.id;
+          userProfile = data;
+        } else {
+          console.warn('Session user profile invalid or missing in DB. Signing out to recreate:', error);
+          await supabase.auth.signOut();
+          session = null;
+          userUid = null;
+          userProfile = null;
+        }
+      }
+      
       if (!session) {
         const { data, error } = await supabase.auth.signInAnonymously();
         if (error) throw error;
         session = data.session;
+        if (session && session.user) {
+          userUid = session.user.id;
+          // Query profile (trigger handles creation instantly)
+          const { data: pData, error: pErr } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userUid)
+            .single();
+            
+          if (pErr) throw pErr;
+          userProfile = pData;
+        }
       }
       
-      if (session && session.user) {
-        userUid = session.user.id;
+      if (session && session.user && userProfile) {
         if (authStatusEl) {
           authStatusEl.textContent = 'ONLINE';
           authStatusEl.style.color = '#10b981';
         }
         
-        await loadProfile();
+        if (nameInput) nameInput.value = userProfile.display_name;
+        if (uidDisplay) uidDisplay.textContent = `UID: ${userProfile.short_id}`;
+        
         setupPresenceHeartbeat();
         await loadFriends();
         subscribeToInvites();
@@ -815,7 +849,9 @@ export function initPvPLobby(onStartMatch: () => void) {
       // INSTANT BROADCAST SEND
       const senderName = userProfile?.display_name || 'Ronin';
       const sendChannel = supabase.channel(`alerts:${friendUid}`);
-      sendChannel.subscribe((status) => {
+      console.log(`[Invites] Sending broadcast to Alerts channel alerts:${friendUid}...`);
+      sendChannel.subscribe((status, err) => {
+        console.log(`[Invites] Broadcast channel alerts:${friendUid} status: ${status}`, err || '');
         if (status === 'SUBSCRIBED') {
           sendChannel.send({
             type: 'broadcast',
@@ -826,6 +862,10 @@ export function initPvPLobby(onStartMatch: () => void) {
               sender_name: senderName,
               sender_peer_id: peerId
             }
+          }).then((res) => {
+            console.log(`[Invites] Broadcast invite sent successfully to alerts:${friendUid}:`, res);
+          }).catch((sendErr) => {
+            console.error(`[Invites] Broadcast invite failed to send:`, sendErr);
           });
           // Cleanup this temporary channel after a short delay
           setTimeout(() => {
@@ -834,15 +874,18 @@ export function initPvPLobby(onStartMatch: () => void) {
         }
       });
 
+      // DB changes subscription for status updates (accept/decline) - Filterless
       const inviteChannel = supabase
         .channel(`invite_${invite.id}`)
         .on('postgres_changes', {
           event: 'UPDATE',
           schema: 'public',
-          table: 'invites',
-          filter: `id=eq.${invite.id}`
+          table: 'invites'
         }, async (payload: any) => {
           const updated = payload.new;
+          if (updated.id !== invite.id) return;
+          console.log(`[Invites] Received DB status update for invite ${invite.id}:`, updated.status);
+          
           if (updated.status === 'accepted') {
             supabase.removeChannel(inviteChannel);
             if (waitingInfo) waitingInfo.remove();
@@ -854,7 +897,9 @@ export function initPvPLobby(onStartMatch: () => void) {
             await updatePresence('online');
           }
         })
-        .subscribe();
+        .subscribe((status, err) => {
+          console.log(`[Invites] DB invite status listener subscription: ${status}`, err || '');
+        });
         
     } catch (err: any) {
       alert('Failed to invite friend: ' + err.message);
@@ -870,10 +915,12 @@ export function initPvPLobby(onStartMatch: () => void) {
     if (alertsChannel) supabase.removeChannel(alertsChannel);
     
     // 1. Instant Broadcast Channel
+    console.log(`[Invites] Subscribing to instant alerts channel alerts:${userUid}...`);
     alertsChannel = supabase
       .channel(`alerts:${userUid}`)
       .on('broadcast', { event: 'invite' }, async (response: any) => {
         const invite = response.payload;
+        console.log('[Invites] Received instant broadcast invitation:', invite);
         if (invitePopup) {
           const inviteText = document.getElementById('pvp-invite-text');
           if (inviteText) inviteText.textContent = `${invite.sender_name} has challenged you to a duel!`;
@@ -883,22 +930,26 @@ export function initPvPLobby(onStartMatch: () => void) {
           activeIncomingInviteSenderPeerId = invite.sender_peer_id;
         }
       })
-      .subscribe();
+      .subscribe((status, err) => {
+        console.log(`[Invites] Alerts channel alerts:${userUid} subscription status: ${status}`, err || '');
+      });
 
-    // 2. Database Fallback (Postgres Changes)
+    // 2. Database Fallback (Postgres Changes) - Filterless in DB, checked in JS
+    console.log('[Invites] Subscribing to database fallbacks channel...');
     invitesChannel = supabase
       .channel('incoming_invites')
       .on('postgres_changes', {
         event: 'INSERT',
         schema: 'public',
-        table: 'invites',
-        filter: `receiver_id=eq.${userUid}`
+        table: 'invites'
       }, async (payload: any) => {
         const invite = payload.new;
+        if (invite.receiver_id !== userUid) return;
         if (invite.status !== 'pending') return;
         
-        // If we already received and registered this invite, skip
+        // If we already received and registered this invite via broadcast, skip
         if (activeIncomingInviteId === invite.id) return;
+        console.log('[Invites] Received fallback database invitation:', invite);
         
         const { data: sender } = await supabase
           .from('profiles')
@@ -917,7 +968,9 @@ export function initPvPLobby(onStartMatch: () => void) {
           activeIncomingInviteSenderPeerId = invite.sender_peer_id;
         }
       })
-      .subscribe();
+      .subscribe((status, err) => {
+        console.log(`[Invites] Database fallbacks subscription status: ${status}`, err || '');
+      });
   }
 
   function subscribeToFriendsPresence() {
