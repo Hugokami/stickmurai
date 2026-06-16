@@ -3385,6 +3385,36 @@ function initPvpGame() {
           pvpManager.rallyCount = msg.rallyCount;
           
           startPvpRound();
+        } else if (msg.state === 'game_over') {
+          pvpManager.matchState = 'game_over';
+          pvpManager.p1Lives = msg.p1Lives;
+          pvpManager.p2Lives = msg.p2Lives;
+          
+          const p1Dead = pvpManager.p1Lives <= 0;
+          const winnerName = p1Dead ? pvpManager.p2Name : pvpManager.p1Name;
+          
+          const emoteTray = document.getElementById('pvp-emote-tray');
+          if (emoteTray) emoteTray.style.display = 'none';
+
+          // Record match results locally based on role
+          const localWinner = !p1Dead ? (pvpManager.role === 'host') : (pvpManager.role === 'client');
+          recordMatchResult(localWinner);
+
+          localRematchReady = false;
+          remoteRematchReady = false;
+
+          const winnerTitle = document.getElementById('pvp-winner-title');
+          if (winnerTitle) {
+            winnerTitle.innerText = `${winnerName} WINS!`;
+          }
+          updateRematchStatusText();
+
+          showRoundBanner('DUEL OVER', `${winnerName} WINS!`, 3000).then(() => {
+            const gameOverScreen = document.getElementById('pvp-game-over-screen');
+            if (gameOverScreen) {
+              gameOverScreen.style.display = 'flex';
+            }
+          });
         }
       }
     }
@@ -3593,6 +3623,8 @@ async function startPvpRound() {
 function handlePvpRoundResolution() {
   pvpManager.matchState = 'round_end';
   globals.pvpShockwaves = [];
+
+  if (pvpManager.role === 'client') return; // Client awaits Host authority via sync_game_state
 
   setTimeout(async () => {
     const p1Dead = pvpManager.p1Lives <= 0;

@@ -254,6 +254,7 @@ export function initPvPLobby(onStartMatch: () => void) {
 
     showStep('ready');
     updateReadyStatusDisplay();
+    updatePresence('busy');
     
     // Update Ready Room display
     const readyModeDisplay = document.getElementById('pvp-ready-mode-display');
@@ -805,11 +806,6 @@ export function initPvPLobby(onStartMatch: () => void) {
   }
 
   async function sendInvite(friendUid: string) {
-    const dropdown = document.getElementById('pvp-mode-select-dropdown') as HTMLSelectElement;
-    if (dropdown) {
-      pvpManager.subMode = dropdown.value as any;
-    }
-    
     // Show waiting UI
     const container = document.getElementById('pvp-friends-container');
     let waitingInfo = document.getElementById('pvp-invite-waiting');
@@ -827,6 +823,11 @@ export function initPvPLobby(onStartMatch: () => void) {
     
     try {
       const peerId = await pvpManager.hostMatch();
+      
+      const dropdown = document.getElementById('pvp-mode-select-dropdown') as HTMLSelectElement;
+      if (dropdown) {
+        pvpManager.subMode = dropdown.value as any;
+      }
       
       if (waitingInfo) {
         waitingInfo.textContent = 'WAITING FOR OPPONENT...';
@@ -1044,6 +1045,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     
     try {
       const peerId = await pvpManager.hostMatch();
+      pvpManager.subMode = selectedMode as any;
       
       await supabase
         .from('profiles')
@@ -1178,18 +1180,43 @@ export function initPvPLobby(onStartMatch: () => void) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('display_name, short_id, pvp_wins, pvp_losses')
+        .select('id, display_name, short_id, pvp_wins, pvp_losses')
         .order('pvp_wins', { ascending: false })
-        .limit(5);
+        .limit(10);
         
       if (error) throw error;
-      renderLeaderboard(data || []);
+      
+      let userRecord: any = null;
+      
+      if (userUid && data && userProfile) {
+        const inTop10 = data.some(r => r.id === userUid);
+        if (!inTop10) {
+          // Query count of players with strictly more wins to determine user's exact rank
+          const { count, error: countErr } = await supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true })
+            .gt('pvp_wins', userProfile.pvp_wins || 0);
+            
+          if (!countErr && count !== null) {
+            userRecord = {
+              id: userUid,
+              display_name: userProfile.display_name,
+              short_id: userProfile.short_id,
+              pvp_wins: userProfile.pvp_wins || 0,
+              pvp_losses: userProfile.pvp_losses || 0,
+              customRank: count + 1
+            };
+          }
+        }
+      }
+      
+      renderLeaderboard(data || [], userRecord);
     } catch (err) {
       console.error('Failed to load leaderboard:', err);
     }
   }
 
-  function renderLeaderboard(records: any[]) {
+  function renderLeaderboard(records: any[], userRecord: any | null) {
     const container = document.getElementById('pvp-leaderboard-container');
     if (!container) return;
     
@@ -1200,19 +1227,32 @@ export function initPvPLobby(onStartMatch: () => void) {
     
     container.innerHTML = '';
     
-    records.forEach((record, index) => {
+    function createRow(record: any, rank: number, isMe: boolean) {
       const row = document.createElement('div');
       row.style.display = 'flex';
       row.style.justifyContent = 'space-between';
       row.style.alignItems = 'center';
-      row.style.background = 'rgba(255,255,255,0.03)';
       row.style.padding = '8px 12px';
       row.style.borderRadius = '6px';
-      row.style.border = '1px solid rgba(255,255,255,0.05)';
+      row.style.gap = '10px';
       
-      if (index === 0) row.style.border = '1px solid rgba(255, 215, 0, 0.4)';
-      else if (index === 1) row.style.border = '1px solid rgba(192, 192, 192, 0.4)';
-      else if (index === 2) row.style.border = '1px solid rgba(205, 127, 50, 0.4)';
+      if (isMe) {
+        row.style.background = 'rgba(16, 185, 129, 0.08)';
+        row.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+      } else {
+        row.style.background = 'rgba(255,255,255,0.03)';
+        row.style.border = '1px solid rgba(255,255,255,0.05)';
+      }
+      
+      if (!isMe) {
+        if (rank === 1) row.style.border = '1px solid rgba(255, 215, 0, 0.4)';
+        else if (rank === 2) row.style.border = '1px solid rgba(192, 192, 192, 0.4)';
+        else if (rank === 3) row.style.border = '1px solid rgba(205, 127, 50, 0.4)';
+      } else {
+        if (rank === 1) row.style.boxShadow = '0 0 10px rgba(255, 215, 0, 0.2)';
+        else if (rank === 2) row.style.boxShadow = '0 0 10px rgba(192, 192, 192, 0.2)';
+        else if (rank === 3) row.style.boxShadow = '0 0 10px rgba(205, 127, 50, 0.2)';
+      }
       
       const rankNameCol = document.createElement('div');
       rankNameCol.style.display = 'flex';
@@ -1220,14 +1260,14 @@ export function initPvPLobby(onStartMatch: () => void) {
       rankNameCol.style.gap = '8px';
       
       const rankSpan = document.createElement('span');
-      rankSpan.textContent = `#${index + 1}`;
+      rankSpan.textContent = `#${rank}`;
       rankSpan.style.fontFamily = 'monospace';
       rankSpan.style.fontSize = '14px';
       rankSpan.style.fontWeight = 'bold';
       
-      if (index === 0) rankSpan.style.color = '#ffd700';
-      else if (index === 1) rankSpan.style.color = '#c0c0c0';
-      else if (index === 2) rankSpan.style.color = '#cd7f32';
+      if (rank === 1) rankSpan.style.color = '#ffd700';
+      else if (rank === 2) rankSpan.style.color = '#c0c0c0';
+      else if (rank === 3) rankSpan.style.color = '#cd7f32';
       else rankSpan.style.color = 'rgba(255,255,255,0.4)';
       
       const nameCol = document.createElement('div');
@@ -1236,8 +1276,8 @@ export function initPvPLobby(onStartMatch: () => void) {
       nameCol.style.textAlign = 'left';
       
       const nameSpan = document.createElement('span');
-      nameSpan.textContent = record.display_name;
-      nameSpan.style.color = '#fff';
+      nameSpan.textContent = record.display_name + (isMe ? ' (You)' : '');
+      nameSpan.style.color = isMe ? '#10b981' : '#fff';
       nameSpan.style.fontSize = '13px';
       nameSpan.style.fontFamily = 'Orbitron';
       
@@ -1254,30 +1294,68 @@ export function initPvPLobby(onStartMatch: () => void) {
       rankNameCol.appendChild(nameCol);
       
       const statsCol = document.createElement('div');
-      statsCol.style.fontFamily = 'monospace';
-      statsCol.style.fontSize = '12px';
+      statsCol.style.display = 'flex';
+      statsCol.style.flexDirection = 'column';
+      statsCol.style.alignItems = 'flex-end';
+      statsCol.style.gap = '2px';
+      
+      const wlContainer = document.createElement('div');
+      wlContainer.style.fontFamily = 'monospace';
+      wlContainer.style.fontSize = '12px';
       
       const winsSpan = document.createElement('span');
       winsSpan.textContent = `${record.pvp_wins || 0} W`;
       winsSpan.style.color = '#10b981';
       
-      const separator = document.createElement('span');
-      separator.textContent = ' - ';
-      separator.style.color = 'rgba(255,255,255,0.2)';
+      const sep = document.createElement('span');
+      sep.textContent = ' - ';
+      sep.style.color = 'rgba(255,255,255,0.2)';
       
       const lossesSpan = document.createElement('span');
       lossesSpan.textContent = `${record.pvp_losses || 0} L`;
       lossesSpan.style.color = '#ef4444';
       
-      statsCol.appendChild(winsSpan);
-      statsCol.appendChild(separator);
-      statsCol.appendChild(lossesSpan);
+      wlContainer.appendChild(winsSpan);
+      wlContainer.appendChild(sep);
+      wlContainer.appendChild(lossesSpan);
+      
+      const wrSpan = document.createElement('span');
+      const wins = record.pvp_wins || 0;
+      const losses = record.pvp_losses || 0;
+      const total = wins + losses;
+      const wr = total > 0 ? Math.round((wins / total) * 100) : 0;
+      wrSpan.textContent = `${wr}% WR`;
+      wrSpan.style.fontSize = '9px';
+      wrSpan.style.color = 'rgba(255,255,255,0.35)';
+      wrSpan.style.fontFamily = 'Orbitron';
+      
+      statsCol.appendChild(wlContainer);
+      statsCol.appendChild(wrSpan);
       
       row.appendChild(rankNameCol);
       row.appendChild(statsCol);
-      
+      return row;
+    }
+    
+    records.forEach((record, index) => {
+      const isMe = userUid && record.id === userUid;
+      const row = createRow(record, index + 1, !!isMe);
       container.appendChild(row);
     });
+    
+    if (userRecord) {
+      const divider = document.createElement('div');
+      divider.style.textAlign = 'center';
+      divider.style.color = 'rgba(255,255,255,0.15)';
+      divider.style.fontSize = '11px';
+      divider.style.margin = '8px 0';
+      divider.style.fontFamily = 'monospace';
+      divider.textContent = '• • • • • • • • • • • •';
+      container.appendChild(divider);
+      
+      const userRow = createRow(userRecord, userRecord.customRank, true);
+      container.appendChild(userRow);
+    }
   }
 
   // --- Tab Switchers ---
