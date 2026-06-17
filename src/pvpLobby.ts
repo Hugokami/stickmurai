@@ -890,6 +890,8 @@ export function initPvPLobby(onStartMatch: () => void) {
           if (updated.status === 'accepted') {
             supabase.removeChannel(inviteChannel);
             if (waitingInfo) waitingInfo.remove();
+            showStep('ready');
+            updateReadyStatusDisplay();
           } else if (updated.status === 'declined') {
             alert('Your duel invitation was declined.');
             supabase.removeChannel(inviteChannel);
