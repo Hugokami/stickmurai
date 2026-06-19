@@ -162,12 +162,16 @@ function updateLoaderProgress() {
           clearInterval(loaderStickmanInterval);
         }
         
-        loaderScreen.classList.add('fade-out');
-        setTimeout(() => {
-          loaderScreen.classList.add('hidden');
-          const mainMenu = document.getElementById('main-menu');
-          if (mainMenu) mainMenu.style.display = 'flex';
-        }, 500);
+        const proceedToMenu = () => {
+          loaderScreen.classList.add('fade-out');
+          setTimeout(() => {
+            loaderScreen.classList.add('hidden');
+            const mainMenu = document.getElementById('main-menu');
+            if (mainMenu) mainMenu.style.display = 'flex';
+          }, 500);
+        };
+
+        tryEnterFullscreen(proceedToMenu);
       };
       loaderScreen.addEventListener('click', onContinue);
       loaderScreen.addEventListener('touchstart', onContinue);
@@ -176,6 +180,85 @@ function updateLoaderProgress() {
 }
 
 function t(key: string): string { return i18n[globals.currentLang]?.[key] || key; }
+
+function tryEnterFullscreen(onComplete: () => void) {
+  const docEl = document.documentElement as any;
+  const requestFS = docEl.requestFullscreen || 
+                    docEl.webkitRequestFullscreen || 
+                    docEl.mozRequestFullScreen || 
+                    docEl.msRequestFullscreen;
+
+  if (requestFS) {
+    try {
+      const res = requestFS.call(docEl);
+      if (res && typeof res.then === 'function') {
+        res.then(() => {
+          onComplete();
+        }).catch((err: any) => {
+          console.warn("Fullscreen request rejected:", err);
+          showFullscreenPrompt(onComplete);
+        });
+      } else {
+        onComplete();
+      }
+    } catch (err) {
+      console.warn("Fullscreen request crashed:", err);
+      showFullscreenPrompt(onComplete);
+    }
+  } else {
+    showFullscreenPrompt(onComplete);
+  }
+}
+
+function showFullscreenPrompt(onComplete: () => void) {
+  const prompt = document.getElementById('fullscreen-prompt');
+  if (!prompt) {
+    onComplete();
+    return;
+  }
+  
+  prompt.style.display = 'flex';
+  
+  const btnYes = document.getElementById('fs-btn-yes');
+  const btnNo = document.getElementById('fs-btn-no');
+  
+  const handleYes = () => {
+    prompt.style.display = 'none';
+    cleanup();
+    const docEl = document.documentElement as any;
+    const requestFS = docEl.requestFullscreen || 
+                      docEl.webkitRequestFullscreen || 
+                      docEl.mozRequestFullScreen || 
+                      docEl.msRequestFullscreen;
+    if (requestFS) {
+      try {
+        requestFS.call(docEl).catch((err: any) => {
+          console.warn("Fullscreen retry failed:", err);
+        }).finally(() => {
+          onComplete();
+        });
+      } catch (err) {
+        onComplete();
+      }
+    } else {
+      onComplete();
+    }
+  };
+  
+  const handleNo = () => {
+    prompt.style.display = 'none';
+    cleanup();
+    onComplete();
+  };
+  
+  const cleanup = () => {
+    btnYes?.removeEventListener('click', handleYes);
+    btnNo?.removeEventListener('click', handleNo);
+  };
+  
+  btnYes?.addEventListener('click', handleYes);
+  btnNo?.addEventListener('click', handleNo);
+}
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
@@ -781,7 +864,7 @@ export function triggerStormGodLightning(x: number, y: number) {
     if (e.state === 'dead') return;
     const dist = Math.hypot(e.x - x, e.y - y);
     if (dist < radius) {
-      hitEnemy(e, 10);
+      hitEnemy(e, 6);
       e.stunTimer = Math.max(e.stunTimer || 0, 3.0); // 3.0s stun
       hitEnemies.push(e);
       const hitSparks = lowGraphics ? 1 : 3;
@@ -800,7 +883,7 @@ export function triggerStormGodLightning(x: number, y: number) {
   for (const nextEnemy of otherEnemies) {
     if (chainCount >= maxChains) break;
     
-    hitEnemy(nextEnemy, 4);
+    hitEnemy(nextEnemy, 2);
     nextEnemy.stunTimer = Math.max(nextEnemy.stunTimer || 0, 2.0);
     
     const ex = nextEnemy.x;
@@ -887,13 +970,149 @@ function triggerLightningDischarge(sx: number, sy: number, ex: number, ey: numbe
     if (e.state === 'dead') return;
     const d = distToSegment(e.x, e.y, sx, sy, ex, ey);
     if (d < 250) {
-      hitEnemy(e, 18);
+      hitEnemy(e, 10);
       e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
       for (let j = 0; j < 8; j++) {
         globals.particles.push(Particle.acquire(e.x, e.y, '#fbbf24', 300, 0.4, 2.5));
       }
     }
   });
+}
+
+function fireFullyChargedIaijutsu(angle: number) {
+  globals.lastIaijutsuFireTime = performance.now();
+  globals.lastIaijutsuAngle = angle;
+  globals.invertScreenTimer = 0.25;
+
+  globals.screenShake = Math.max(globals.screenShake, 20 * 1.8);
+  
+  if (globals.decoyInvisibilityTimer > 0) {
+    executeMirrorStrike(angle, 12);
+  } else {
+    let enhancedType = '';
+    let projDmg = 6;
+    let txtColor = '#00ffff';
+    let txtLabel = t('iaijutsuText');
+    
+    if (globals.flowState === 'awakened') {
+      enhancedType = 'shadow_awakening';
+      projDmg = 11;
+      txtColor = '#aa66ff';
+      txtLabel = "🔥 SHADOW IAIJUTSU! 🔥";
+    } else if (globals.flowState === 'storm_god') {
+      enhancedType = 'storm_god';
+      projDmg = 12;
+      txtColor = '#fbbf24';
+      txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
+    } else if (globals.zenFieldActiveTimer > 0 && globals.flowState !== 'omnislash') {
+      enhancedType = 'zen_field';
+      projDmg = 12;
+      txtColor = '#22d3ee';
+      txtLabel = "🌀 CHRONO IAIJUTSU! 🌀";
+    } else if (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) {
+      enhancedType = 'dragon';
+      projDmg = 14;
+      txtColor = '#ff4400';
+      txtLabel = "🔥 DRAGON IAIJUTSU! 🔥";
+    } else if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
+      enhancedType = 'shield';
+      projDmg = 10;
+      txtColor = '#00ffc8';
+      txtLabel = "🌀 TORNADO IAIJUTSU! 🌀";
+    } else if (globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
+      enhancedType = 'firewheel';
+      projDmg = 11;
+      txtColor = '#ff8800';
+      txtLabel = "🔥 INFERNO IAIJUTSU! 🔥";
+    } else if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
+      enhancedType = 'gravity';
+      projDmg = 9;
+      txtColor = '#c084fc';
+      txtLabel = "🌌 GRAVITY IAIJUTSU! 🌌";
+    } else if (globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0) {
+      enhancedType = 'parry';
+      projDmg = 10;
+      txtColor = '#ffd700';
+      txtLabel = "🛡️ PARRY IAIJUTSU! 🛡️";
+    } else if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
+      enhancedType = 'decoy';
+      projDmg = 12;
+      txtColor = '#a855f7';
+      txtLabel = "👤 DECOY IAIJUTSU! 👤";
+    } else if (globals.selectedSkill === 'dash' && globals.enhanceActiveTimer > 0) {
+      enhancedType = 'storm_god';
+      projDmg = 12;
+      txtColor = '#fbbf24';
+      txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
+    }
+
+    if (enhancedType === 'dragon' || enhancedType === 'firewheel') {
+      playSynthesizedFirewheel();
+    } else if (enhancedType === 'storm_god') {
+      playSynthesizedThunder();
+    }
+
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 40, txtLabel, txtColor, 28));
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, txtColor));
+    globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, projDmg, true, false, enhancedType));
+  }
+
+  if (globals.playerStats.judgementCutLevel && globals.playerStats.judgementCutLevel > 0) {
+    let targetX = globals.player.x + Math.cos(angle) * 400;
+    let targetY = globals.player.y + Math.sin(angle) * 400;
+    let closestEnemy: Enemy | null = null;
+    let minDistance = Infinity;
+    for (const e of globals.enemies) {
+      if (e.state === 'dead') continue;
+      const dist = Math.hypot(e.x - globals.player.x, e.y - globals.player.y);
+      const enemyAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
+      let angleDiff = Math.abs(enemyAngle - angle);
+      if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
+      if (angleDiff < Math.PI / 3 && dist < minDistance && dist < 600) {
+        minDistance = dist;
+        closestEnemy = e;
+      }
+    }
+    if (closestEnemy) {
+      targetX = closestEnemy.x;
+      targetY = closestEnemy.y;
+    } else if (!globals.joystickActive && !globals.useMobileIaijutsuAimAngle) {
+      const dist = Math.min(600, Math.hypot(globals.mouse.x - globals.width/2, globals.mouse.y - globals.height/2));
+      targetX = globals.player.x + Math.cos(angle) * dist;
+      targetY = globals.player.y + Math.sin(angle) * dist;
+    }
+    
+    globals.judgementDomes.push({
+      x: targetX,
+      y: targetY,
+      timer: 1.5,
+      maxLife: 1.5,
+      ticks: 0,
+      hitEnemies: new Set<any>()
+    });
+  }
+
+  const chargeSlashSparkCount = globals.graphicsSettings === 'low' ? 5 : 20;
+  for (let i = 0; i < chargeSlashSparkCount; i++) {
+    const pAngle = angle + (Math.random() - 0.5) * 0.5;
+    const pSpeed = 800 + Math.random() * 600;
+    let p = Particle.acquire(globals.player.x, globals.player.y, '#00ffff', 0, 0.4, 3 + Math.random() * 3);
+    p.vx = Math.cos(pAngle) * pSpeed;
+    p.vy = Math.sin(pAngle) * pSpeed;
+    globals.particles.push(p);
+  }
+
+  for (let i = 0; i < 3; i++) {
+    const dist = (i + 1) * 80;
+    const shadowX = globals.player.x + Math.cos(angle) * dist;
+    const shadowY = globals.player.y + Math.sin(angle) * dist;
+    const afterimg = Afterimage.acquire(globals.player, '#00ffff');
+    afterimg.x = shadowX;
+    afterimg.y = shadowY;
+    afterimg.life = 0.4 - (i * 0.1);
+    afterimg.maxLife = 0.4;
+    globals.afterimages.push(afterimg);
+  }
 }
 
 function executeSwiftCounter() {
@@ -1149,7 +1368,7 @@ function triggerChainLightning(startEnemy: Enemy) {
       globals.particles.push(Particle.acquire(px + perpX, py + perpY, '#fbbf24', 0, 0.25, 2.0));
     }
     
-    hitEnemy(closest, 4);
+    hitEnemy(closest, 2);
     closest.stunTimer = Math.max(closest.stunTimer || 0, 1.5);
     
     hitSet.add(closest);
@@ -1991,7 +2210,7 @@ function update(realDt: number) {
     updateUI();
     if (globals.flow <= 0) { globals.flow = 0; globals.flowState = 'normal'; }
   } else if (globals.flowState === 'storm_god') {
-    globals.flow -= (globals.playerStats.flowMax / 12.0) * realDt;
+    globals.flow -= (globals.playerStats.flowMax / 8.0) * realDt;
     updateUI();
     if (globals.flow <= 0) { globals.flow = 0; globals.flowState = 'normal'; }
   }
@@ -2220,6 +2439,9 @@ function update(realDt: number) {
           if (isCharging) {
             globals.riposteTimer = 0.4;
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "RIPOSTE READY!", "#ff0055", 22));
+            if (isFullyCharged) {
+              fireFullyChargedIaijutsu(Math.atan2(dy, dx));
+            }
           }
 
           const isPerfect = (e.state === 'attack' && e.stateTime < 0.18) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08);
@@ -2419,139 +2641,7 @@ function update(realDt: number) {
       }
       
       if (attackPower >= 1.7) {
-        globals.lastIaijutsuFireTime = performance.now();
-        globals.lastIaijutsuAngle = angle;
-        globals.invertScreenTimer = 0.25;
-
-        globals.screenShake = Math.max(globals.screenShake, 20 * attackPower);
-        
-        if (globals.decoyInvisibilityTimer > 0) {
-          executeMirrorStrike(angle, 12);
-        } else {
-          let enhancedType = '';
-          let projDmg = 6;
-          let txtColor = '#00ffff';
-          let txtLabel = t('iaijutsuText');
-          
-          if (globals.flowState === 'awakened') {
-            enhancedType = 'shadow_awakening';
-            projDmg = 11;
-            txtColor = '#aa66ff';
-            txtLabel = "🔥 SHADOW IAIJUTSU! 🔥";
-          } else if (globals.flowState === 'storm_god') {
-            enhancedType = 'storm_god';
-            projDmg = 12;
-            txtColor = '#fbbf24';
-            txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
-          } else if (globals.zenFieldActiveTimer > 0 && globals.flowState !== 'omnislash') {
-            enhancedType = 'zen_field';
-            projDmg = 12;
-            txtColor = '#22d3ee';
-            txtLabel = "🌀 CHRONO IAIJUTSU! 🌀";
-          } else if (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) {
-            enhancedType = 'dragon';
-            projDmg = 14;
-            txtColor = '#ff4400';
-            txtLabel = "🔥 DRAGON IAIJUTSU! 🔥";
-          } else if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
-            enhancedType = 'shield';
-            projDmg = 10;
-            txtColor = '#00ffc8';
-            txtLabel = "🌀 TORNADO IAIJUTSU! 🌀";
-          } else if (globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
-            enhancedType = 'firewheel';
-            projDmg = 11;
-            txtColor = '#ff8800';
-            txtLabel = "🔥 INFERNO IAIJUTSU! 🔥";
-          } else if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
-            enhancedType = 'gravity';
-            projDmg = 9;
-            txtColor = '#c084fc';
-            txtLabel = "🌌 GRAVITY IAIJUTSU! 🌌";
-          } else if (globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0) {
-            enhancedType = 'parry';
-            projDmg = 10;
-            txtColor = '#ffd700';
-            txtLabel = "🛡️ PARRY IAIJUTSU! 🛡️";
-          } else if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
-            enhancedType = 'decoy';
-            projDmg = 12;
-            txtColor = '#a855f7';
-            txtLabel = "👤 DECOY IAIJUTSU! 👤";
-          } else if (globals.selectedSkill === 'dash' && globals.enhanceActiveTimer > 0) {
-            enhancedType = 'storm_god';
-            projDmg = 12;
-            txtColor = '#fbbf24';
-            txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
-          }
-
-          if (enhancedType === 'dragon' || enhancedType === 'firewheel') {
-            playSynthesizedFirewheel();
-          } else if (enhancedType === 'storm_god') {
-            playSynthesizedThunder();
-          }
-
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 40, txtLabel, txtColor, 28));
-          globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, txtColor));
-          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, projDmg, true, false, enhancedType));
-        }
-
-        if (globals.playerStats.judgementCutLevel && globals.playerStats.judgementCutLevel > 0) {
-          let targetX = globals.player.x + Math.cos(angle) * 400;
-          let targetY = globals.player.y + Math.sin(angle) * 400;
-          let closestEnemy: Enemy | null = null;
-          let minDistance = Infinity;
-          for (const e of globals.enemies) {
-            if (e.state === 'dead') continue;
-            const dist = Math.hypot(e.x - globals.player.x, e.y - globals.player.y);
-            const enemyAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
-            let angleDiff = Math.abs(enemyAngle - angle);
-            if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
-            if (angleDiff < Math.PI / 3 && dist < minDistance && dist < 600) {
-              minDistance = dist;
-              closestEnemy = e;
-            }
-          }
-          if (closestEnemy) {
-            targetX = closestEnemy.x;
-            targetY = closestEnemy.y;
-          } else if (!globals.joystickActive && !globals.useMobileIaijutsuAimAngle) {
-            const dist = Math.min(600, Math.hypot(globals.mouse.x - globals.width/2, globals.mouse.y - globals.height/2));
-            targetX = globals.player.x + Math.cos(angle) * dist;
-            targetY = globals.player.y + Math.sin(angle) * dist;
-          }
-          
-          globals.judgementDomes.push({
-            x: targetX,
-            y: targetY,
-            timer: 1.5,
-            maxLife: 1.5,
-            ticks: 0,
-            hitEnemies: new Set<any>()
-          });
-        }
-
-        const chargeSlashSparkCount = globals.graphicsSettings === 'low' ? 5 : 20;
-        for (let i = 0; i < chargeSlashSparkCount; i++) {
-          const pAngle = angle + (Math.random() - 0.5) * 0.5;
-          const pSpeed = 800 + Math.random() * 600;
-          let p = Particle.acquire(globals.player.x, globals.player.y, '#00ffff', 0, 0.4, 3 + Math.random() * 3);
-          p.vx = Math.cos(pAngle) * pSpeed;
-          p.vy = Math.sin(pAngle) * pSpeed;
-          globals.particles.push(p);
-        }
-
-        for (let i = 0; i < 3; i++) {
-          const dist = (i + 1) * 80;
-          const shadowX = globals.player.x + Math.cos(angle) * dist;
-          const shadowY = globals.player.y + Math.sin(angle) * dist;
-          const afterimg = Afterimage.acquire(globals.player, '#00ffff');
-          afterimg.x = shadowX;
-          afterimg.y = shadowY;
-          afterimg.life = 0.4 - (i * 0.1);
-          afterimg.maxLife = 0.4;
-          globals.afterimages.push(afterimg);
-        }
+        fireFullyChargedIaijutsu(angle);
       }
 
       globals.slashes.push(Slash.acquire(

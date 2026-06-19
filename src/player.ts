@@ -950,50 +950,68 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     
     ctx.restore();
 
-    // Draw Enso (Zen ink brush stroke circle) under the player's feet
+    // Render a permanent, semi-transparent neon ellipse ring and radial gradient glowing aura
     if (colorTint === 'none' && this.state !== 'dead') {
       ctx.save();
       const px = this.x - cx + globals.vw/2;
-      const py = this.y - cy + globals.vh/2 + (this.yOffset || 0) - 10;
-      
-      const isHost = pvpManager.role === 'host';
-      const brushColor = ((globals.gameMode as string) === 'pvp')
-        ? (this.isPvpRemote ? (isHost ? 'rgba(255, 170, 0, 0.45)' : 'rgba(0, 229, 255, 0.45)') 
-                             : (isHost ? 'rgba(0, 229, 255, 0.45)' : 'rgba(255, 170, 0, 0.45)'))
-        : 'rgba(56, 189, 248, 0.45)'; // Indigo/sky blue ink wash
+      const py = this.y - cy + globals.vh/2 + (this.yOffset || 0);
 
-      // Primary calligraphic brush stroke (Enso - incomplete circle)
-      ctx.strokeStyle = brushColor;
-      ctx.lineWidth = 3.0;
-      ctx.lineCap = 'round';
+      // Determine player's primary color
+      let playerColor = '#00ffff'; // Cyan for single player
+      let rgbaColor = 'rgba(0, 255, 255, ';
+      if ((globals.gameMode as string) === 'pvp') {
+        const isHost = pvpManager.role === 'host';
+        if (this.isPvpRemote) {
+          playerColor = isHost ? '#ffaa00' : '#00ffff';
+        } else {
+          playerColor = isHost ? '#00ffff' : '#ffaa00';
+        }
+      }
+      if (playerColor === '#ffaa00') {
+        rgbaColor = 'rgba(255, 170, 0, ';
+      }
+
+      // 1. Radial Gradient Glowing Aura (behind the player)
+      const auraGrad = ctx.createRadialGradient(px, py - 10, 5, px, py - 10, 45);
+      auraGrad.addColorStop(0, rgbaColor + '0.35)');
+      auraGrad.addColorStop(0.5, rgbaColor + '0.12)');
+      auraGrad.addColorStop(1, rgbaColor + '0)');
+      
+      ctx.fillStyle = auraGrad;
       ctx.beginPath();
-      // Draw as a slight ellipse for perspective (rotated slightly for organic feel)
-      ctx.ellipse(px, py + 32, 18, 6, -0.05, 0, Math.PI * 1.85);
+      ctx.arc(px, py - 10, 45, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 2. Permanent, Semi-transparent Neon Ellipse Ring (directly at the feet)
+      // Layer 1: Outer soft glow
+      ctx.strokeStyle = rgbaColor + '0.15)';
+      ctx.lineWidth = 7;
+      ctx.beginPath();
+      ctx.ellipse(px, py + 22, 22, 7, 0, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Secondary faint overlapping sweep
-      ctx.strokeStyle = brushColor.replace('0.45', '0.18');
+      // Layer 2: Medium glow
+      ctx.strokeStyle = rgbaColor + '0.4)';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.ellipse(px, py + 22, 22, 7, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Layer 3: Sharp core
+      ctx.strokeStyle = playerColor;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.ellipse(px, py + 30, 22, 7, 0.05, 0.1 * Math.PI, Math.PI * 1.95);
+      ctx.ellipse(px, py + 22, 22, 7, 0, 0, Math.PI * 2);
       ctx.stroke();
-      
+
       ctx.restore();
     }
 
     // Apply unique color tints to the stick figure sprite
     let finalTint = colorTint;
     if (colorTint === 'none') {
-      if ((globals.gameMode as string) === 'pvp') {
-        const isHost = pvpManager.role === 'host';
-        if (this.isPvpRemote) {
-          finalTint = isHost ? '#ffaa00' : '#00ffff';
-        } else {
-          finalTint = isHost ? '#00ffff' : '#ffaa00';
-        }
-      } else {
-        finalTint = '#38bdf8'; // Indigo Sky Blue (Aizome) for single-player
-      }
+      // Revert to default white stick figure sprite for all modes
+      finalTint = 'none';
     }
 
     // Call super.draw to use the animated sprites
