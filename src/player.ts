@@ -950,7 +950,53 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     
     ctx.restore();
 
+    // Draw Enso (Zen ink brush stroke circle) under the player's feet
+    if (colorTint === 'none' && this.state !== 'dead') {
+      ctx.save();
+      const px = this.x - cx + globals.vw/2;
+      const py = this.y - cy + globals.vh/2 + (this.yOffset || 0) - 10;
+      
+      const isHost = pvpManager.role === 'host';
+      const brushColor = ((globals.gameMode as string) === 'pvp')
+        ? (this.isPvpRemote ? (isHost ? 'rgba(255, 170, 0, 0.45)' : 'rgba(0, 229, 255, 0.45)') 
+                             : (isHost ? 'rgba(0, 229, 255, 0.45)' : 'rgba(255, 170, 0, 0.45)'))
+        : 'rgba(56, 189, 248, 0.45)'; // Indigo/sky blue ink wash
+
+      // Primary calligraphic brush stroke (Enso - incomplete circle)
+      ctx.strokeStyle = brushColor;
+      ctx.lineWidth = 3.0;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      // Draw as a slight ellipse for perspective (rotated slightly for organic feel)
+      ctx.ellipse(px, py + 32, 18, 6, -0.05, 0, Math.PI * 1.85);
+      ctx.stroke();
+
+      // Secondary faint overlapping sweep
+      ctx.strokeStyle = brushColor.replace('0.45', '0.18');
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.ellipse(px, py + 30, 22, 7, 0.05, 0.1 * Math.PI, Math.PI * 1.95);
+      ctx.stroke();
+      
+      ctx.restore();
+    }
+
+    // Apply unique color tints to the stick figure sprite
+    let finalTint = colorTint;
+    if (colorTint === 'none') {
+      if ((globals.gameMode as string) === 'pvp') {
+        const isHost = pvpManager.role === 'host';
+        if (this.isPvpRemote) {
+          finalTint = isHost ? '#ffaa00' : '#00ffff';
+        } else {
+          finalTint = isHost ? '#00ffff' : '#ffaa00';
+        }
+      } else {
+        finalTint = '#38bdf8'; // Indigo Sky Blue (Aizome) for single-player
+      }
+    }
+
     // Call super.draw to use the animated sprites
-    super.draw(ctx, cx, cy, alpha, colorTint);
+    super.draw(ctx, cx, cy, alpha, finalTint);
   }
 }
