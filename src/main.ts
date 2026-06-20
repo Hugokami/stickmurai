@@ -3004,6 +3004,10 @@ function update(realDt: number) {
   const cullDist = 950;
   for (let i = 0; i < globals.enemies.length; i++) {
     const e = globals.enemies[i];
+    if (e.isPvpRemote) {
+      e.update(dt);
+      continue;
+    }
     if (e.state === 'dead') {
       e.update(dt);
       continue;
@@ -3046,7 +3050,7 @@ function update(realDt: number) {
       }
     }
   }
-  inplaceFilter(globals.enemies, e => e.state !== 'dead' || e.deadTimer < 3.0);
+  inplaceFilter(globals.enemies, e => e.isPvpRemote || e.state !== 'dead' || (e.deadTimer !== undefined && e.deadTimer < 3.0));
   
   for (let i = 0; i < globals.slashes.length; i++) {
     globals.slashes[i].update(realDt);
@@ -3136,6 +3140,7 @@ function update(realDt: number) {
 
   globals.camera.x += (globals.player.x - globals.camera.x) * 5 * realDt; globals.camera.y += (globals.player.y - globals.camera.y) * 5 * realDt;
   if (globals.screenShake > 0) {
+    if (globals.screenShake > 45) globals.screenShake = 45;
     let shakeMult = globals.graphicsSettings === 'low' ? 0.12 : 0.4;
     if (globals.screenShakeEnabled === 'reduced') {
       shakeMult *= 0.35;
@@ -3144,7 +3149,7 @@ function update(realDt: number) {
     }
     globals.camera.x += (Math.random() - 0.5) * globals.screenShake * shakeMult;
     globals.camera.y += (Math.random() - 0.5) * globals.screenShake * shakeMult;
-    globals.screenShake *= 0.9;
+    globals.screenShake *= Math.pow(0.001, realDt / 0.25);
     if (globals.screenShake < 0.5) globals.screenShake = 0;
   }
 
@@ -3241,25 +3246,52 @@ function checkAndStartRematch() {
     remoteRematchReady = false;
 
     if (pvpManager.role === 'host') {
-      pvpManager.p1Lives = pvpManager.subMode === 'sudden_death' ? 1 : 3;
-      pvpManager.p2Lives = pvpManager.subMode === 'sudden_death' ? 1 : 3;
-      pvpManager.round = 1;
-      pvpManager.rallyCount = 0;
-      pvpManager.roundStartTurn = pvpManager.roundStartTurn === 'left' ? 'right' : 'left';
-      pvpManager.currentTurn = pvpManager.roundStartTurn;
+      if (pvpManager.subMode === 'insane_survival') {
+        globals.p1Kills = 0;
+        globals.p2Kills = 0;
+        globals.timeModeTimeRemaining = 180;
+        globals.lives = 5;
+        globals.maxLives = 5;
+        pvpManager.p1Lives = 5;
+        pvpManager.p2Lives = 5;
+        pvpManager.matchState = 'playing';
 
-      pvpManager.send({
-        type: 'sync_game_state',
-        state: 'banner',
-        turn: pvpManager.currentTurn,
-        p1Lives: pvpManager.p1Lives,
-        p2Lives: pvpManager.p2Lives,
-        round: pvpManager.round,
-        rallyCount: pvpManager.rallyCount,
-        subMode: pvpManager.subMode
-      });
-      
-      startPvpRound();
+        pvpManager.send({
+          type: 'sync_game_state',
+          state: 'playing',
+          p1Lives: 5,
+          p2Lives: 5,
+          p1Kills: 0,
+          p2Kills: 0,
+          timeRemaining: 180,
+          subMode: 'insane_survival',
+          turn: pvpManager.currentTurn || 'left',
+          round: pvpManager.round || 1,
+          rallyCount: pvpManager.rallyCount || 0
+        });
+        
+        startPvpRound();
+      } else {
+        pvpManager.p1Lives = pvpManager.subMode === 'sudden_death' ? 1 : 3;
+        pvpManager.p2Lives = pvpManager.subMode === 'sudden_death' ? 1 : 3;
+        pvpManager.round = 1;
+        pvpManager.rallyCount = 0;
+        pvpManager.roundStartTurn = pvpManager.roundStartTurn === 'left' ? 'right' : 'left';
+        pvpManager.currentTurn = pvpManager.roundStartTurn;
+
+        pvpManager.send({
+          type: 'sync_game_state',
+          state: 'banner',
+          turn: pvpManager.currentTurn,
+          p1Lives: pvpManager.p1Lives,
+          p2Lives: pvpManager.p2Lives,
+          round: pvpManager.round,
+          rallyCount: pvpManager.rallyCount,
+          subMode: pvpManager.subMode
+        });
+        
+        startPvpRound();
+      }
     }
   }
 }
@@ -3723,6 +3755,19 @@ function handlePvpRoundResolution() {
     if (p1Dead || p2Dead) {
       pvpManager.matchState = 'game_over';
       const winnerName = p1Dead ? pvpManager.p2Name : pvpManager.p1Name;
+      
+      if (pvpManager.role === 'host') {
+        pvpManager.send({
+          type: 'sync_game_state',
+          state: 'game_over',
+          p1Lives: pvpManager.p1Lives,
+          p2Lives: pvpManager.p2Lives,
+          round: pvpManager.round,
+          rallyCount: pvpManager.rallyCount,
+          subMode: pvpManager.subMode,
+          turn: pvpManager.currentTurn
+        });
+      }
       
       // Hide mobile emote tray on game over
       const emoteTray = document.getElementById('pvp-emote-tray');
@@ -4346,7 +4391,41 @@ function runPvpStep(realDt: number) {
       Particle.release(p);
     }
   }
+  const maxParticles = globals.graphicsSettings === 'low' ? 30 : (isMobile ? 80 : 120);
+  if (particleWriteIndex > maxParticles) {
+    const toReleaseCount = particleWriteIndex - maxParticles;
+    for (let i = 0; i < toReleaseCount; i++) {
+      Particle.release(globals.particles[i]);
+    }
+    for (let i = 0; i < maxParticles; i++) {
+      globals.particles[i] = globals.particles[i + toReleaseCount];
+    }
+    particleWriteIndex = maxParticles;
+  }
   globals.particles.length = particleWriteIndex;
+
+  let afterimageWriteIndex = 0;
+  for (let i = 0; i < globals.afterimages.length; i++) {
+    const a = globals.afterimages[i];
+    a.update(realDt);
+    if (a.life > 0) {
+      globals.afterimages[afterimageWriteIndex++] = a;
+    } else {
+      Afterimage.release(a);
+    }
+  }
+  const maxAfterimages = globals.graphicsSettings === 'low' ? 6 : (isMobile ? 12 : 20);
+  if (afterimageWriteIndex > maxAfterimages) {
+    const toReleaseCount = afterimageWriteIndex - maxAfterimages;
+    for (let i = 0; i < toReleaseCount; i++) {
+      Afterimage.release(globals.afterimages[i]);
+    }
+    for (let i = 0; i < maxAfterimages; i++) {
+      globals.afterimages[i] = globals.afterimages[i + toReleaseCount];
+    }
+    afterimageWriteIndex = maxAfterimages;
+  }
+  globals.afterimages.length = afterimageWriteIndex;
 
   let floatingTextWriteIndex = 0;
   for (let i = 0; i < globals.floatingTexts.length; i++) {
@@ -4366,9 +4445,10 @@ function runPvpStep(realDt: number) {
 
   // Screen shake decay
   if (globals.screenShake > 0) {
+    if (globals.screenShake > 45) globals.screenShake = 45;
     globals.camera.x += (Math.random() - 0.5) * globals.screenShake;
     globals.camera.y += (Math.random() - 0.5) * globals.screenShake;
-    globals.screenShake *= 0.9;
+    globals.screenShake *= Math.pow(0.001, realDt / 0.25);
     if (globals.screenShake < 0.5) globals.screenShake = 0;
   }
 

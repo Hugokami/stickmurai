@@ -214,10 +214,8 @@ export class Player extends Entity {
         // Reset attack cooldown on dash so combos trigger instantly and reliably!
         this.attackCooldown = 0;
 
-        if ((globals.flowState as string) === 'awakened') {
-          this.dashCooldown = 0;
-        } else if ((globals.flowState as string) === 'storm_god') {
-          this.dashCooldown = 0.15;
+        if ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god') {
+          this.dashCooldown = 0.2;
         } else {
           this.dashCooldown = globals.playerStats.dashCooldownBase;
         }
@@ -533,7 +531,7 @@ export class Player extends Entity {
 
   /* warning: don't change performance shadows check or it lags like crazy on older mobile browsers */
 draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint = 'none') {
-    if (globals.invulnTimer > 0 && Math.floor(performance.now() / 100) % 2 === 0 && colorTint === 'none') return;
+    if (!this.isPvpRemote && globals.invulnTimer > 0 && Math.floor(performance.now() / 100) % 2 === 0 && colorTint === 'none') return;
     
     // petal barrier
     if (globals.petalArmorActive) {
