@@ -15,6 +15,8 @@
       #loader-screen.hidden { display: none !important; }
     </style>
 
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -26,10 +28,13 @@
     <title>Super Samurai Sticky</title>
   </head>
   <body style="background:#090a0f;margin:0;padding:0;">
-    <!-- Rotate Device Prompt -->
+    <!-- Rotate & Fullscreen Device Prompt -->
     <div id="rotate-prompt">
       <div class="rotate-icon">📱</div>
-      <p><strong data-i18n="rotatePrompt">Please rotate your device to landscape mode for the best experience!</strong></p>
+      <h2 style="font-family: 'Shojumaru', cursive; color: #ffd700; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: clamp(20px, 4vw, 32px);">LANDSCAPE & FULLSCREEN</h2>
+      <p id="rotate-message" style="margin-bottom: 15px;"><strong data-i18n="rotatePrompt">Rotate and enter full screen?</strong></p>
+      <button id="fs-enter-btn" class="menu-btn" style="display: none; border-color: #ffd700; color: #ffd700; margin-top: 10px; font-size: 14px; padding: 10px 20px; width: auto; max-width: none;">CONFIRM</button>
+      <p id="ios-pwa-tip" style="display: none; font-size: 11px; color: #8a8d9a; margin-top: 15px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4; max-width: 320px;">Tip: For actual fullscreen with no browser bars on iOS, tap <span style="font-size: 15px;">⎋</span> (Share) -> Add to Home Screen.</p>
     </div>
 
     <div id="app">
@@ -112,7 +117,7 @@
                 <path d="M0,0 C-2,-4 -6,-4 -6,0 C-6,4 -2,6 2,6 C6,6 8,2 8,0" fill="currentColor" transform="rotate(240)"/>
               </g>
             </svg>
-            <span class="btn-text" data-i18n="btnEnhance">ENHANCE</span>
+            <span class="btn-text">ENHANCE</span>
             <span class="hotkey">E</span>
             <div class="cooldown-overlay" id="enhance-cooldown-overlay"></div>
             <div class="cooldown-text" id="enhance-cooldown-text"></div>

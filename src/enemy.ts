@@ -454,27 +454,26 @@ export class Enemy extends Entity {
     
     // HP bar above enemy
     if (this.state !== 'dead' && this.hp < this.maxHp) {
-      ctx.save();
-      ctx.translate(rx, ry);
       const barW = 50 * this.scaleMult;
       const barH = 5;
-      const barY = -60 * this.scaleMult;
+      const barY = ry - 60 * this.scaleMult;
+      const barX = rx - barW / 2;
+      
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-      ctx.fillRect(-barW/2, barY, barW, barH);
+      ctx.fillRect(barX, barY, barW, barH);
       
       // catchup orange bar
       ctx.fillStyle = '#ffa500';
       const delayRatio = (this.hpDelayed || this.hp) / this.maxHp;
-      ctx.fillRect(-barW/2, barY, barW * delayRatio, barH);
+      ctx.fillRect(barX, barY, barW * delayRatio, barH);
       
       // health red bar
       ctx.fillStyle = '#ff3333';
-      ctx.fillRect(-barW/2, barY, barW * (this.hp / this.maxHp), barH);
+      ctx.fillRect(barX, barY, barW * (this.hp / this.maxHp), barH);
       
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
-      ctx.strokeRect(-barW/2, barY, barW, barH);
-      ctx.restore();
+      ctx.strokeRect(barX, barY, barW, barH);
     }
 
     let tint = this.hitFlash > 0 ? '#ffffff' : this.colorTint;

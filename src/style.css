@@ -116,12 +116,6 @@ canvas.inverted {
   100% { transform: rotate(0deg); }
 }
 
-@media (max-width: 900px) and (orientation: portrait) {
-  #rotate-prompt {
-    display: flex;
-  }
-}
-
 /* ui layer (hud & panels) */
 #ui-layer {
   position: absolute;

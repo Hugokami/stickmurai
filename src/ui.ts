@@ -921,6 +921,7 @@ export function updateStaticText() {
   
   document.documentElement.lang = globals.currentLang;
   updateUI();
+  updateEnhanceButton();
   if (globals.comboTimer > 0) {
     updateComboDisplay();
   }

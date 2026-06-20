@@ -4,7 +4,8 @@ import { globals } from './globals';
 
 export const i18n: Record<string, Record<string, string>> = {
   en: {
-    rotatePrompt: "Please rotate your device to landscape mode for the best experience!",
+    rotatePrompt: "Rotate and enter full screen?",
+    rotateInstruction: "Please physically rotate your device to landscape mode.",
     flow: "FLOW",
     expLvl: "EXP Lvl",
     btnDash: "DASH",
@@ -155,7 +156,8 @@ export const i18n: Record<string, Record<string, string>> = {
     settingsOff: "Off"
   },
   ja: {
-    rotatePrompt: "最適な体験のためにデバイスを横向きにしてください！",
+    rotatePrompt: "画面を回転して全画面表示にしますか？",
+    rotateInstruction: "デバイスを横向き（ランドスケープ）に回転させてください。",
     flow: "気 (FLOW)",
     expLvl: "レベル",
     btnDash: "回避",

@@ -255,6 +255,8 @@ export class Player extends Entity {
             speedlines.classList.add('active');
             setTimeout(() => { speedlines.classList.remove('active'); }, 250);
           }
+
+          callbacks.triggerFlowingCounterReset?.();
         }
         let angle: number;
         if (globals.useMobileDashAimAngle || (globals.mobileDashAimActive && (globals.flowState === 'awakened' || globals.flowState === 'storm_god'))) {
@@ -534,7 +536,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     if (!this.isPvpRemote && globals.invulnTimer > 0 && Math.floor(performance.now() / 100) % 2 === 0 && colorTint === 'none') return;
     
     // petal barrier
-    if (globals.petalArmorActive) {
+    if (!this.isPvpRemote && globals.petalArmorActive) {
       ctx.save();
       ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
       ctx.strokeStyle = 'rgba(255, 183, 197, 0.7)';
@@ -547,7 +549,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // wind shield
-    if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
+    if (!this.isPvpRemote && globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
       ctx.save();
       ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
       const time = globals.galeVortexActive ? (performance.now() / 50) : (performance.now() / 150);
@@ -585,7 +587,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // firewheel arcs
-    if (globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
+    if (!this.isPvpRemote && globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
       ctx.save();
       ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
       const time = performance.now() / 150;
@@ -628,7 +630,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
 
 
     // aura effect
-    if ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god' || globals.enhanceActiveTimer > 0) {
+    if (!this.isPvpRemote && ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god' || globals.enhanceActiveTimer > 0)) {
       const time = performance.now() / 1000;
       
       let auraColor = 'rgba(255, 100, 0, ';

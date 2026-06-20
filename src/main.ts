@@ -70,6 +70,7 @@ callbacks.addFlow = addFlow;
 callbacks.updateUI = updateUI;
 callbacks.updateEnhanceButton = updateEnhanceButton;
 callbacks.updateComboDisplay = updateComboDisplay;
+callbacks.triggerFlowingCounterReset = triggerFlowingCounterReset;
 callbacks.triggerElementalExplosion = triggerElementalExplosion;
 (callbacks as any).triggerStormGodLightning = triggerStormGodLightning;
 (callbacks as any).triggerVortexShatter = triggerVortexShatter;
@@ -188,6 +189,28 @@ function tryEnterFullscreen(onComplete: () => void) {
                     docEl.mozRequestFullScreen || 
                     docEl.msRequestFullscreen;
 
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  const isPWA = (navigator as any).standalone || 
+                window.matchMedia('(display-mode: standalone)').matches || 
+                window.matchMedia('(display-mode: fullscreen)').matches;
+
+  // On iOS Safari (not PWA), standard Fullscreen API is not supported on document elements.
+  // Do not prompt the user as it will always fail and annoy them.
+  if (isIOS && !isPWA) {
+    onComplete();
+    return;
+  }
+
+  // If already in fullscreen, proceed directly
+  const isCurrentlyFS = !!(document.fullscreenElement || 
+                           (document as any).webkitFullscreenElement || 
+                           (document as any).mozFullScreenElement || 
+                           (document as any).msFullscreenElement);
+  if (isCurrentlyFS) {
+    onComplete();
+    return;
+  }
+
   if (requestFS) {
     try {
       const res = requestFS.call(docEl);
@@ -206,7 +229,7 @@ function tryEnterFullscreen(onComplete: () => void) {
       showFullscreenPrompt(onComplete);
     }
   } else {
-    showFullscreenPrompt(onComplete);
+    onComplete();
   }
 }
 
@@ -262,7 +285,153 @@ function showFullscreenPrompt(onComplete: () => void) {
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
+function checkOrientationAndFullscreen() {
+  if (!isMobile) return;
+
+  const rotatePrompt = document.getElementById('rotate-prompt');
+  const fsEnterBtn = document.getElementById('fs-enter-btn') as HTMLButtonElement;
+  const rotateMessage = document.getElementById('rotate-message');
+  const iosPwaTip = document.getElementById('ios-pwa-tip');
+
+  if (!rotatePrompt) return;
+
+  const isPortrait = window.innerHeight > window.innerWidth;
+  const fsApproved = localStorage.getItem('stickmurai_fs_approved') === 'true';
+  const isCurrentlyFS = !!(document.fullscreenElement || 
+                           (document as any).webkitFullscreenElement || 
+                           (document as any).mozFullScreenElement || 
+                           (document as any).msFullscreenElement);
+  
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+  const isPWA = (navigator as any).standalone || 
+                window.matchMedia('(display-mode: standalone)').matches || 
+                window.matchMedia('(display-mode: fullscreen)').matches;
+  
+  const docEl = document.documentElement as any;
+  const supportsFS = !!(docEl.requestFullscreen || 
+                       docEl.webkitRequestFullscreen || 
+                       docEl.mozRequestFullScreen || 
+                       docEl.msRequestFullscreen);
+
+  const canGoFullscreen = supportsFS && !isPWA;
+
+  if (isPortrait) {
+    rotatePrompt.style.display = 'flex';
+    if (rotateMessage) {
+      if (!fsApproved) {
+        rotateMessage.innerHTML = '<strong data-i18n="rotatePrompt">' + t('rotatePrompt') + '</strong>';
+        if (fsEnterBtn) {
+          fsEnterBtn.style.display = 'inline-block';
+          fsEnterBtn.innerText = globals.currentLang === 'ja' ? '確認' : 'CONFIRM';
+          if (!fsEnterBtn.dataset.bound) {
+            fsEnterBtn.dataset.bound = 'true';
+            const enterFS = () => {
+              localStorage.setItem('stickmurai_fs_approved', 'true');
+              const requestFS = docEl.requestFullscreen || 
+                                docEl.webkitRequestFullscreen || 
+                                docEl.mozRequestFullScreen || 
+                                docEl.msRequestFullscreen;
+              if (requestFS) {
+                requestFS.call(docEl).catch((err: any) => {
+                  console.warn("Fullscreen request rejected:", err);
+                });
+              }
+              if (screen.orientation && (screen.orientation as any).lock) {
+                (screen.orientation as any).lock('landscape').catch((err: any) => {
+                  console.warn("Orientation lock rejected:", err);
+                });
+              }
+              checkOrientationAndFullscreen();
+            };
+            fsEnterBtn.addEventListener('click', enterFS);
+            fsEnterBtn.addEventListener('touchstart', (e) => {
+              e.preventDefault();
+              enterFS();
+            });
+          }
+        }
+      } else {
+        rotateMessage.innerHTML = '<strong data-i18n="rotateInstruction">' + t('rotateInstruction') + '</strong>';
+        if (fsEnterBtn) fsEnterBtn.style.display = 'none';
+      }
+    }
+    if (iosPwaTip && isIOS && !isPWA) {
+      iosPwaTip.style.display = 'block';
+    } else if (iosPwaTip) {
+      iosPwaTip.style.display = 'none';
+    }
+  } else {
+    if (canGoFullscreen && !fsApproved && !isCurrentlyFS) {
+      rotatePrompt.style.display = 'flex';
+      if (rotateMessage) {
+        rotateMessage.innerHTML = '<strong data-i18n="rotatePrompt">' + t('rotatePrompt') + '</strong>';
+      }
+      if (fsEnterBtn) {
+        fsEnterBtn.style.display = 'inline-block';
+        fsEnterBtn.innerText = globals.currentLang === 'ja' ? '確認' : 'CONFIRM';
+        if (!fsEnterBtn.dataset.bound) {
+          fsEnterBtn.dataset.bound = 'true';
+          const enterFS = () => {
+            localStorage.setItem('stickmurai_fs_approved', 'true');
+            const requestFS = docEl.requestFullscreen || 
+                              docEl.webkitRequestFullscreen || 
+                              docEl.mozRequestFullScreen || 
+                              docEl.msRequestFullscreen;
+            if (requestFS) {
+              requestFS.call(docEl).catch((err: any) => {
+                console.warn("Fullscreen request rejected:", err);
+              });
+            }
+            if (screen.orientation && (screen.orientation as any).lock) {
+              (screen.orientation as any).lock('landscape').catch((err: any) => {
+                console.warn("Orientation lock rejected:", err);
+              });
+            }
+            rotatePrompt.style.display = 'none';
+          };
+          fsEnterBtn.addEventListener('click', enterFS);
+          fsEnterBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            enterFS();
+          });
+        }
+      }
+      if (iosPwaTip) iosPwaTip.style.display = 'none';
+    } else {
+      rotatePrompt.style.display = 'none';
+      if (canGoFullscreen && !isCurrentlyFS && fsApproved) {
+        const triggerFSOnGesture = () => {
+          const requestFS = docEl.requestFullscreen || 
+                            docEl.webkitRequestFullscreen || 
+                            docEl.mozRequestFullScreen || 
+                            docEl.msRequestFullscreen;
+          if (requestFS) {
+            requestFS.call(docEl).catch((err: any) => {
+              console.warn("Auto-fullscreen on gesture rejected:", err);
+            });
+          }
+          if (screen.orientation && (screen.orientation as any).lock) {
+            (screen.orientation as any).lock('landscape').catch((err: any) => {
+              console.warn("Orientation lock on gesture rejected:", err);
+            });
+          }
+          document.removeEventListener('click', triggerFSOnGesture);
+          document.removeEventListener('touchstart', triggerFSOnGesture);
+        };
+        document.addEventListener('click', triggerFSOnGesture);
+        document.addEventListener('touchstart', triggerFSOnGesture);
+      }
+    }
+  }
+}
+
 function startApp() {
+  if (isMobile) {
+    checkOrientationAndFullscreen();
+    window.addEventListener('resize', checkOrientationAndFullscreen);
+    window.addEventListener('orientationchange', checkOrientationAndFullscreen);
+  }
+
   const canvasElement = document.getElementById('gameCanvas') as HTMLCanvasElement;
   
   // Initialize Sub-systems
@@ -696,7 +865,11 @@ function spawnEnemy() {
 function triggerFlowingCounterReset() {
   if (globals.flowingCounterActive && globals.player) {
     const wasOnCooldown = globals.player.dashCooldown > 0 || (globals.selectedSkill === 'dash' && globals.enhanceCooldown > 0);
-    globals.player.dashCooldown = 0;
+    if ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god') {
+      globals.player.dashCooldown = 0.2;
+    } else {
+      globals.player.dashCooldown = 0;
+    }
     if (globals.selectedSkill === 'dash') {
       globals.enhanceCooldown = 0;
     }
@@ -847,7 +1020,7 @@ function checkPlayerHit(enemy: Enemy) {
 
     updateUI();
 
-    if (globals.lives <= 0) {
+    if (globals.lives <= 0 && globals.gameMode !== 'pvp') {
       triggerGameOver(false);
     }
   }
@@ -1594,7 +1767,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   let finalDmg = dmg;
   if (isCrit) {
     finalDmg = dmg * 2;
-    globals.screenShake += 8;
+    globals.screenShake = Math.max(globals.screenShake, 14);
     globals.hitStop = Math.max(globals.hitStop, 0.08); // small crunchy hitstop
     globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 35, `CRIT! 💥 -${finalDmg}`, '#ffaa00', 26));
     
@@ -1606,7 +1779,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       globals.particles.push(Particle.acquire(e.x, e.y, '#ffd700', spd, 0.35, 3, ang));
     }
   } else {
-    globals.screenShake += 3;
+    globals.screenShake = Math.max(globals.screenShake, 6);
     globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 30, `-${finalDmg}`, '#ff5555', 18));
   }
   
@@ -1869,6 +2042,8 @@ function update(realDt: number) {
           globals.invulnTimer = 1.6; // generous i-frames
           globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, t('dodgeText'), "neon-#00ffff", 30));
           globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+          
+          triggerFlowingCounterReset();
         }
 
         let angle;
@@ -2279,7 +2454,7 @@ function update(realDt: number) {
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, "REAPER'S DEBT! -1 HP", "#ff3333", 24));
       updateUI();
       
-      if (globals.lives <= 0) {
+      if (globals.lives <= 0 && globals.gameMode !== 'pvp') {
         triggerGameOver(false);
       }
     }
@@ -3076,7 +3251,7 @@ function update(realDt: number) {
       Particle.release(p);
     }
   }
-  const maxParticles = globals.graphicsSettings === 'low' ? 30 : (isMobile ? 80 : 120);
+  const maxParticles = globals.graphicsSettings === 'low' ? 15 : (isMobile ? 40 : 85);
   if (particleWriteIndex > maxParticles) {
     const toReleaseCount = particleWriteIndex - maxParticles;
     for (let i = 0; i < toReleaseCount; i++) {
@@ -3099,7 +3274,7 @@ function update(realDt: number) {
       Afterimage.release(a);
     }
   }
-  const maxAfterimages = globals.graphicsSettings === 'low' ? 6 : (isMobile ? 12 : 20);
+  const maxAfterimages = globals.graphicsSettings === 'low' ? 4 : (isMobile ? 8 : 15);
   if (afterimageWriteIndex > maxAfterimages) {
     const toReleaseCount = afterimageWriteIndex - maxAfterimages;
     for (let i = 0; i < toReleaseCount; i++) {
@@ -3138,7 +3313,13 @@ function update(realDt: number) {
   }
   inplaceFilter(globals.delayedActions, a => a.delay > 0);
 
-  globals.camera.x += (globals.player.x - globals.camera.x) * 5 * realDt; globals.camera.y += (globals.player.y - globals.camera.y) * 5 * realDt;
+  const camDx = globals.player.x - globals.camera.x;
+  const camDy = globals.player.y - globals.camera.y;
+  const camDist = Math.sqrt(camDx * camDx + camDy * camDy);
+  const followSpeed = 5 + Math.min(30, camDist / 10);
+  const step = Math.min(1.0, followSpeed * realDt);
+  globals.camera.x += camDx * step;
+  globals.camera.y += camDy * step;
   if (globals.screenShake > 0) {
     if (globals.screenShake > 45) globals.screenShake = 45;
     let shakeMult = globals.graphicsSettings === 'low' ? 0.12 : 0.4;
@@ -3149,7 +3330,7 @@ function update(realDt: number) {
     }
     globals.camera.x += (Math.random() - 0.5) * globals.screenShake * shakeMult;
     globals.camera.y += (Math.random() - 0.5) * globals.screenShake * shakeMult;
-    globals.screenShake *= Math.pow(0.001, realDt / 0.25);
+    globals.screenShake *= Math.pow(0.0001, realDt / 0.15);
     if (globals.screenShake < 0.5) globals.screenShake = 0;
   }
 
@@ -3254,11 +3435,11 @@ function checkAndStartRematch() {
         globals.maxLives = 5;
         pvpManager.p1Lives = 5;
         pvpManager.p2Lives = 5;
-        pvpManager.matchState = 'playing';
+        pvpManager.matchState = 'banner';
 
         pvpManager.send({
           type: 'sync_game_state',
-          state: 'playing',
+          state: 'banner',
           p1Lives: 5,
           p2Lives: 5,
           p1Kills: 0,
@@ -3476,10 +3657,12 @@ function initPvpGame() {
           if (winnerTitle) {
             winnerTitle.innerText = `${winnerName} WINS!`;
           }
-          const gameOverScreen = document.getElementById('pvp-game-over-screen');
-          if (gameOverScreen) {
-            gameOverScreen.style.display = 'flex';
-          }
+          showRoundBanner('SURVIVAL OVER', `${winnerName} WINS!`, 3000).then(() => {
+            const gameOverScreen = document.getElementById('pvp-game-over-screen');
+            if (gameOverScreen) {
+              gameOverScreen.style.display = 'flex';
+            }
+          });
         } else if (msg.state === 'banner') {
           const gameOverScreen = document.getElementById('pvp-game-over-screen');
           if (gameOverScreen) gameOverScreen.style.display = 'none';
@@ -3973,6 +4156,7 @@ function handlePvpSurvivalDeathResolution(deadPlayer: 'host' | 'client') {
   
   setTimeout(async () => {
     pvpManager.matchState = 'game_over';
+    broadcastSurvivalState();
     
     const winnerName = deadPlayer === 'host' ? pvpManager.p2Name : pvpManager.p1Name;
     const emoteTray = document.getElementById('pvp-emote-tray');
@@ -4023,6 +4207,7 @@ function handlePvpSurvivalTimeoutResolution() {
   
   setTimeout(async () => {
     pvpManager.matchState = 'game_over';
+    broadcastSurvivalState();
     
     let winnerName = 'NO ONE';
     if (winner === 'host') {
@@ -4391,7 +4576,7 @@ function runPvpStep(realDt: number) {
       Particle.release(p);
     }
   }
-  const maxParticles = globals.graphicsSettings === 'low' ? 30 : (isMobile ? 80 : 120);
+  const maxParticles = globals.graphicsSettings === 'low' ? 15 : (isMobile ? 40 : 85);
   if (particleWriteIndex > maxParticles) {
     const toReleaseCount = particleWriteIndex - maxParticles;
     for (let i = 0; i < toReleaseCount; i++) {
@@ -4414,7 +4599,7 @@ function runPvpStep(realDt: number) {
       Afterimage.release(a);
     }
   }
-  const maxAfterimages = globals.graphicsSettings === 'low' ? 6 : (isMobile ? 12 : 20);
+  const maxAfterimages = globals.graphicsSettings === 'low' ? 4 : (isMobile ? 8 : 15);
   if (afterimageWriteIndex > maxAfterimages) {
     const toReleaseCount = afterimageWriteIndex - maxAfterimages;
     for (let i = 0; i < toReleaseCount; i++) {
@@ -4448,7 +4633,7 @@ function runPvpStep(realDt: number) {
     if (globals.screenShake > 45) globals.screenShake = 45;
     globals.camera.x += (Math.random() - 0.5) * globals.screenShake;
     globals.camera.y += (Math.random() - 0.5) * globals.screenShake;
-    globals.screenShake *= Math.pow(0.001, realDt / 0.25);
+    globals.screenShake *= Math.pow(0.0001, realDt / 0.15);
     if (globals.screenShake < 0.5) globals.screenShake = 0;
   }
 

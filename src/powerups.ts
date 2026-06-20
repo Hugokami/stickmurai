@@ -94,8 +94,15 @@ export function triggerLevelUp() {
       { nameKey: "puZenRestoreName", descKey: "puZenRestoreDesc", apply: () => { globals.lives = Math.min(3, globals.lives + 1); callbacks.updateUI(); return 0; } }
     ];
   } else {
-    // Filter powerups dynamically based on chosen skill
+    // Filter powerups dynamically based on chosen skill and uniqueness
     availablePowers = availablePowers.filter(power => {
+      // Filter out unique one-time upgrades that are already acquired
+      if (power.nameKey === 'puFrostName' && globals.frostStanceActive) return false;
+      if (power.nameKey === 'puVoidName' && globals.voidStanceActive) return false;
+      if (power.nameKey === 'puFlowingCounterName' && globals.flowingCounterActive) return false;
+      if (power.nameKey === 'puGaleVortexName' && globals.galeVortexActive) return false;
+      if (power.nameKey === 'puBladeEchoesName' && globals.bladeEchoesActive) return false;
+
       if (power.skill) {
         return power.skill === globals.selectedSkill;
       }

@@ -148,7 +148,7 @@ export function draw() {
 
   for (let i = 0; i < globals.enemies.length; i++) {
     const e = globals.enemies[i];
-    if (e.x >= minX && e.x <= maxX && e.y >= minY && e.y <= maxY) {
+    if (e.isPvpRemote || (e.x >= minX && e.x <= maxX && e.y >= minY && e.y <= maxY)) {
       visibleEntities.push(e);
     }
   }

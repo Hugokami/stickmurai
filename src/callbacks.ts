@@ -20,6 +20,7 @@ export const callbacks = {
   updateUI: () => {},
   updateEnhanceButton: () => {},
   updateComboDisplay: () => {},
+  triggerFlowingCounterReset: () => {},
   triggerElementalExplosion: (_x: number, _y: number, _wasChilled: boolean, _wasBurning: boolean) => {},
   triggerPvPEmote: (_id: number) => {},
   revivePlayer: () => {},
