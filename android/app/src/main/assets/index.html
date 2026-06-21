@@ -2,64 +2,41 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script>
-      (function() {
-        function showError(title, msg, stack) {
-          var div = document.getElementById('mobile-debug-log');
-          if (!div) {
-            div = document.createElement('div');
-            div.id = 'mobile-debug-log';
-            div.style.position = 'fixed';
-            div.style.top = '0';
-            div.style.left = '0';
-            div.style.width = '100vw';
-            div.style.height = '100vh';
-            div.style.background = 'rgba(0, 0, 0, 0.9)';
-            div.style.color = '#ff3333';
-            div.style.zIndex = '999999';
-            div.style.padding = '20px';
-            div.style.boxSizing = 'border-box';
-            div.style.fontFamily = 'monospace';
-            div.style.fontSize = '12px';
-            div.style.overflowY = 'auto';
-            div.style.whiteSpace = 'pre-wrap';
-            document.documentElement.appendChild(div);
-          }
-          div.innerText += '\n=== ' + title + ' ===\n' + msg + '\n' + (stack || '');
-        }
-        window.addEventListener('error', function(e) {
-          showError('UNHANDLED ERROR', e.message + ' at ' + e.filename + ':' + e.lineno + ':' + e.colno, e.error ? e.error.stack : '');
-        });
-        window.addEventListener('error', function(e) {
-          var target = e.target;
-          if (target && (target.tagName === 'SCRIPT' || target.tagName === 'LINK')) {
-            showError('RESOURCE LOAD ERROR', 'Failed to load: ' + (target.src || target.href), '');
-          }
-        }, true);
-        window.addEventListener('unhandledrejection', function(e) {
-          showError('UNHANDLED REJECTION', e.reason, e.reason ? e.reason.stack : '');
-        });
-      })();
-    </script>
+
+    <style>
+      /* Critical inline CSS - guarantees dark background even if external CSS fails */
+      html, body { margin: 0; padding: 0; background: #090a0f !important; overflow: hidden; width: 100%; height: 100%; color: #f3f4f6; font-family: sans-serif; }
+      #app { position: fixed; top: 0; bottom: 0; left: 0; right: 0; background: #090a0f; }
+      #loader-screen { position: fixed !important; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: #090a0f !important; display: flex !important; flex-direction: column; justify-content: center; align-items: center; z-index: 9999 !important; opacity: 1 !important; animation: none !important; -webkit-animation: none !important; cursor: pointer !important; }
+      #gameCanvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; display: block; }
+      /* Override .overlay opacity animation which starts at 0 and can stick on iOS */
+      #loader-screen.overlay { opacity: 1 !important; animation: none !important; -webkit-animation: none !important; }
+      #loader-screen.fade-out { opacity: 0 !important; pointer-events: none !important; }
+      #loader-screen.hidden { display: none !important; }
+    </style>
+
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="screen-orientation" content="landscape" />
-    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shojumaru&family=Outfit:wght@300;400;500;600;700;900&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
     <title>Super Samurai Sticky</title>
-    <script type="module" src="/assets/index-DRPOmy72.js"></script>
-    <link rel="stylesheet" href="/assets/index-CnrqQ64X.css">
+    <script type="module" src="/assets/index-CF5hJCwC.js"></script>
+    <link rel="stylesheet" href="/assets/index-ClskO-Kj.css">
   </head>
-  <body>
-    <!-- Rotate Device Prompt -->
+  <body style="background:#090a0f;margin:0;padding:0;">
+    <!-- Rotate & Fullscreen Device Prompt -->
     <div id="rotate-prompt">
       <div class="rotate-icon">📱</div>
-      <p><strong data-i18n="rotatePrompt">Please rotate your device to landscape mode for the best experience!</strong></p>
+      <h2 style="font-family: 'Shojumaru', cursive; color: #ffd700; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: clamp(20px, 4vw, 32px);">LANDSCAPE & FULLSCREEN</h2>
+      <p id="rotate-message" style="margin-bottom: 15px;"><strong data-i18n="rotatePrompt">Rotate and enter full screen?</strong></p>
+      <button id="fs-enter-btn" class="menu-btn" style="display: none; border-color: #ffd700; color: #ffd700; margin-top: 10px; font-size: 14px; padding: 10px 20px; width: auto; max-width: none;">CONFIRM</button>
+      <p id="ios-pwa-tip" style="display: none; font-size: 11px; color: #8a8d9a; margin-top: 15px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4; max-width: 320px;">Tip: For actual fullscreen with no browser bars on iOS, tap <span style="font-size: 15px;">⎋</span> (Share) -> Add to Home Screen.</p>
     </div>
 
     <div id="app">
@@ -107,8 +84,12 @@
         </div>
         <div id="action-buttons">
           <button id="btn-dash" class="action-btn">
-            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M13 5l7 7-7 7M4 5l7 7-7 7"/>
+            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M2 17c4-1 8-4 12-4c5 0 8 2 8 2" stroke-width="2"/>
+              <path d="M4 12c5-2 10-5 15-3c3 1 4 2.5 4 2.5" stroke-width="2"/>
+              <path d="M3 6c6-3 12-4 17 0" stroke-width="1.5"/>
+              <path d="M1 9h3" stroke-width="2"/>
+              <path d="M8 15h4" stroke-width="1.5"/>
             </svg>
             <span class="btn-text" data-i18n="btnDash">DASH</span>
             <span class="hotkey">SPACE</span>
@@ -118,9 +99,11 @@
           
           <button id="btn-attack" class="action-btn">
             <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
-              <path d="M2 22l6-6" stroke-width="1.5" stroke-linecap="round"/>
-              <path d="M12 21a9 9 0 0 0 9-9" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="2 2"/>
+              <path d="M4 19A9 9 0 1 1 20 8" stroke="currentColor" stroke-width="2.5" stroke-dasharray="0.5 0.5" opacity="0.3"/>
+              <path d="M5 17A8 8 0 0 1 17 5" stroke="currentColor" stroke-width="3"/>
+              <line x1="2" y1="22" x2="22" y2="2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="7" cy="17" r="2" fill="currentColor"/>
+              <path d="M20 4l2-2" stroke="currentColor" stroke-width="1.5"/>
             </svg>
             <span class="btn-text" data-i18n="btnSlash">SLASH</span>
             <span class="hotkey">LMB</span>
@@ -128,22 +111,29 @@
           </button>
           
           <button id="btn-enhance" class="action-btn">
-            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M18 2l4 4-2 2-4-4z"/>
-              <path d="M17 7L3 21v0a1 1 0 0 0 1 1h0L18 8" stroke-width="2" stroke-linecap="round"/>
-              <path d="M2 22l3-3" stroke-width="1.5"/>
-              <path d="M9 12c-2-2-1.5-5 0-7 2 2 .5 5 0 7zM14 7c-1-1.5-.5-3.5 0-5 1 1.5.5 3.5 0 5zM12 15c-1.5-1-.5-3.5 0-5 1 1.5.5 3.5 0 5z" fill="currentColor" stroke="none" opacity="0.85"/>
+            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+              <g transform="translate(12,12) scale(0.9)">
+                <path d="M0,0 C2,-4 6,-4 6,0 C6,4 2,6 -2,6 C-6,6 -8,2 -8,0" fill="currentColor"/>
+                <path d="M0,0 C-4,2 -4,6 0,6 C4,6 6,2 6,-2 C6,-6 2,-8 0,-8" fill="currentColor" transform="rotate(120)"/>
+                <path d="M0,0 C-2,-4 -6,-4 -6,0 C-6,4 -2,6 2,6 C6,6 8,2 8,0" fill="currentColor" transform="rotate(240)"/>
+              </g>
             </svg>
-            <span class="btn-text" data-i18n="btnEnhance">ENHANCE</span>
+            <span class="btn-text">ENHANCE</span>
             <span class="hotkey">E</span>
             <div class="cooldown-overlay" id="enhance-cooldown-overlay"></div>
             <div class="cooldown-text" id="enhance-cooldown-text"></div>
           </button>
           
           <button id="btn-ult" class="action-btn" style="display:none;">
-            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9" stroke-width="2" stroke-dasharray="3 3"/>
-              <path d="M19 5L5 19M5 5l14 14" stroke-width="2.5" stroke-linecap="round"/>
+            <svg class="skill-icon" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 12 C10 8 10 4 12 2 C14 4 14 8 12 12" />
+              <path d="M12 12 C10 8 10 4 12 2 C14 4 14 8 12 12" transform="rotate(72 12 12)" />
+              <path d="M12 12 C10 8 10 4 12 2 C14 4 14 8 12 12" transform="rotate(144 12 12)" />
+              <path d="M12 12 C10 8 10 4 12 2 C14 4 14 8 12 12" transform="rotate(216 12 12)" />
+              <path d="M12 12 C10 8 10 4 12 2 C14 4 14 8 12 12" transform="rotate(288 12 12)" />
+              <circle cx="12" cy="12" r="2" fill="#000" stroke="currentColor" stroke-width="0.5"/>
+              <circle cx="12" cy="12" r="10.5" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="3 2"/>
             </svg>
             <span class="btn-text" data-i18n="btnUlt">ULT</span>
             <span class="hotkey">F</span>
@@ -159,7 +149,10 @@
         <div class="menu-box" style="max-height: 90%; overflow-y: auto;">
           <h2 id="game-over-title" class="death-title" data-i18n="death">DEATH</h2>
           <div id="stats-summary" style="margin: 15px 0; color: #cbd8d6; text-align: left; font-size: 14px; line-height: 1.6; border: 1px solid rgba(255, 255, 255, 0.15); padding: 15px; border-radius: 8px; background: rgba(0, 0, 0, 0.4); font-family: monospace;"></div>
+          <!-- Honor Revive Button -->
+          <button id="ad-revive-btn" class="menu-btn" style="border-color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25); display: none; margin-bottom: 10px; color: #ffd700;">HONOR REVIVE</button>
           <button id="restart-btn" class="menu-btn" data-i18n="tryAgain">Try Again</button>
+          <button id="game-over-quit-btn" class="menu-btn exit-btn" data-i18n="quit" style="margin-top: 10px;">Quit to Menu</button>
         </div>
       </div>
 
@@ -177,15 +170,33 @@
         </div>
       </div>
 
-      <!-- Loading Screen Overlay -->
+      <!-- Loading Screen Overlay - Traditional Japanese Theme -->
       <div id="loader-screen" class="overlay">
-        <div class="loader-bg-kanji">侍</div>
-        <div class="loader-grid-overlay"></div>
+        <!-- Parallax Sakura Container -->
+        <div id="sakura-container"></div>
+        
+        <!-- Glowing background mist -->
+        <div class="loader-bg-mist"></div>
+        
+        <!-- Rotating Enso Brush Circle & Glowing Kanji -->
+        <div class="loader-enso-wrap">
+          <svg class="loader-enso-svg" viewBox="0 0 100 100">
+            <path class="loader-enso-path" d="M 50,12 A 38,38 0 1,1 24,24 C 26,19 38,10 47,12" fill="none" stroke-linecap="round" />
+          </svg>
+          <div class="loader-kanji-bg">侍</div>
+          <!-- Katana slash line -->
+          <div class="katana-slash-line"></div>
+          <!-- Spark embers container -->
+          <div class="embers-container" id="loader-embers"></div>
+        </div>
         
         <div class="loader-hud-container">
+          <!-- Traditional Red Hanko Seal -->
+          <div class="loader-hanko-seal">武士</div>
+
           <div class="loader-hud-header">
-            <span class="hud-tag">SYS.LOAD_v2.0</span>
-            <span class="hud-status" id="loader-status">CONNECTING...</span>
+            <span class="hud-tag" data-i18n="loaderTitle">SAMURAI AWAKENING</span>
+            <span class="hud-status" id="loader-status">DRAWING BLADE...</span>
           </div>
           
           <div class="loader-character-wrap">
@@ -195,18 +206,31 @@
           
           <div class="loader-progress-wrap">
             <div class="loader-info-row">
-              <span id="loader-text" class="loader-title-text">LOADING RESOURCES</span>
+              <span id="loader-text" class="loader-title-text" data-i18n="loaderCalibrating">HONING BLADE FLOW</span>
               <span id="loader-percent-text" class="loader-percent-num">0%</span>
             </div>
             <div class="loader-bar-container">
               <div id="loader-fill"></div>
-              <div class="loader-bar-flare" id="loader-bar-flare"></div>
+              <!-- Glowing flare leading the progress bar -->
+              <div id="loader-bar-flare"></div>
             </div>
           </div>
           
           <div class="loader-tips-container">
-            <div class="tips-label">// COMBAT INTEL //</div>
-            <div id="loader-tip" class="tips-content">Initializing blade calibrations...</div>
+            <div class="tips-label" data-i18n="loaderIntel">// SAMURAI CODE //</div>
+            <div id="loader-tip" class="tips-content">Honing blade alignments...</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Fullscreen Prompt Overlay -->
+      <div id="fullscreen-prompt" class="overlay" style="display:none; z-index: 10000; background: rgba(9, 10, 15, 0.95); flex-direction: column; justify-content: center; align-items: center; gap: 20px;">
+        <div class="menu-box" style="text-align: center; max-width: 400px; width: 90vw; border-color: #ffd700; box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);">
+          <h2 style="font-family: 'Shojumaru', cursive; color: #ffd700; margin-bottom: 15px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);">FULLSCREEN MODE</h2>
+          <p style="color: #cbd5e1; font-family: 'Orbitron', sans-serif; font-size: 13px; margin-bottom: 25px; line-height: 1.6; text-transform: uppercase; letter-spacing: 1px;" data-i18n="fsPromptText">Enter full screen mode for the best samurai experience?</p>
+          <div style="display: flex; gap: 15px; width: 100%;">
+            <button id="fs-btn-no" class="menu-btn exit-btn" style="flex: 1; margin: 0; padding: 10px 0;">NO</button>
+            <button id="fs-btn-yes" class="menu-btn" style="flex: 1; margin: 0; border-color: #ffd700; color: #ffd700; padding: 10px 0; box-shadow: 0 0 15px rgba(255, 215, 0, 0.1);">YES</button>
           </div>
         </div>
       </div>
@@ -219,6 +243,7 @@
               <button id="start-btn" class="menu-btn" data-i18n="play">Play</button>
               <button id="level-mode-btn" class="menu-btn" style="border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);" data-i18n="playLevel">Level Mode</button>
               <button id="zen-btn" class="menu-btn" style="border-color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);" data-i18n="playZen">Zen Mode</button>
+              <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">Iaijutsu PvP</button>
               <button id="open-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
             </div>
           </div>
@@ -236,6 +261,7 @@
                 <li data-i18n="guideProg"><strong>Progression & Leveling:</strong> Gain EXP to level up and choose powerful character upgrades.</li>
                 <li data-i18n="guideDifficulty"><strong>Difficulty Modes:</strong> Select your challenge before starting.</li>
                 <li data-i18n="guideAutoAim"><strong>Auto-Aim:</strong> Basic attacks automatically target the closest enemy within 600px range.</li>
+                <li data-i18n="guidePvP"><strong>Iaijutsu PvP:</strong> Enter the PvP Lobby, copy your unique Ronin UID, add friends by their UID, and invite them directly to a 1v1 duel. No code sharing required!</li>
                 <li data-i18n="comboSwift"><strong>Combo - Swift Counter:</strong> Dash + Slash immediately. Teleports behind the target for a quick slash.</li>
                 <li data-i18n="comboThunder"><strong>Combo - Thunderclap & Flash:</strong> Dash + Slash during Storm God or with Raijin Step. Slashes through targets with lightning.</li>
                 <li data-i18n="comboDragon"><strong>Combo - Rising Dragon:</strong> Slash + Slash + release charge early. Launches enemies into the air.</li>
@@ -340,6 +366,26 @@
           <div class="skill-choices" id="pregame-skill-choices" style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
             <!-- Populated by JS -->
           </div>
+          
+          <!-- Stance Blessing Options -->
+          <div id="pregame-blessing-options" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
+            <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 13px; letter-spacing: 1.5px;">Stance Blessing (Optional)</label>
+            <div style="display: flex; gap: 12px; justify-content: center; width: 100%; max-width: 500px; flex-wrap: wrap;">
+              <div class="blessing-card" id="blessing-swift-btn">
+                <div class="blessing-badge">⚡</div>
+                <h4>Swift Strike</h4>
+                <p>+10% Attack Speed</p>
+                <span class="blessing-cost-text">(Watch Ad to Unlock)</span>
+              </div>
+              <div class="blessing-card" id="blessing-fortune-btn">
+                <div class="blessing-badge">🎁</div>
+                <h4>Fortune</h4>
+                <p>Random Start Upgrade</p>
+                <span class="blessing-cost-text">(Watch Ad to Unlock)</span>
+              </div>
+            </div>
+          </div>
+
           <div class="pregame-difficulty-container" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
             <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 14px;" data-i18n="difficulty">Difficulty</label>
             <div style="display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
@@ -393,6 +439,194 @@
                 <!-- Populated dynamically by JS -->
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PvP Lobby Screen -->
+      <div id="pvp-lobby-screen" class="overlay" style="display:none;">
+        <div class="menu-box pvp-menu-box" style="max-width: 500px; width: 95vw; max-height: 90vh; overflow-y: auto;">
+          <h2 id="pvp-lobby-title" style="color: #f59e0b; text-shadow: 0 0 15px rgba(245, 158, 11, 0.35); font-family: 'Orbitron', sans-serif; margin-bottom: 15px;">IAIJUTSU SHOWDOWN</h2>
+          
+          <!-- Step 1: Social & Matchmaking Overlay -->
+          <div id="pvp-step-select" style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+            <!-- Profile Card -->
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(245,158,11,0.25); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #9ca3af; font-size: 12px; font-family: 'Orbitron';">MY PROFILE</span>
+                <span id="pvp-auth-status" style="color: #10b981; font-size: 11px; font-family: monospace;">CONNECTING...</span>
+              </div>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="pvp-name-input" placeholder="Loading Ronin..." maxlength="15" style="background: #222; color: white; border: 1px solid rgba(255,255,255,0.15); padding: 8px; border-radius: 4px; font-size: 14px; flex: 1; font-family: 'Orbitron';">
+                <button id="pvp-name-save-btn" class="menu-btn" style="margin: 0; padding: 8px 12px; font-size: 12px; border-color: #f59e0b;">Save</button>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05);">
+                <span id="pvp-uid-display" style="font-family: monospace; font-size: 12px; color: #a7f3d0; word-break: break-all;">UID: Loading...</span>
+                <button id="pvp-uid-copy-btn" style="background: none; border: 1px solid rgba(245,158,11,0.4); color: #f59e0b; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-family: 'Orbitron'; cursor: pointer;">Copy</button>
+              </div>
+            </div>
+
+            <!-- Rules select -->
+            <div style="text-align: center;">
+              <label for="pvp-mode-select-dropdown" style="color: #9ca3af; font-size: 11px; font-family: 'Orbitron', sans-serif; display: block; margin-bottom: 6px;">SELECT GAME RULES</label>
+              <select id="pvp-mode-select-dropdown" style="background: #222; color: #f59e0b; border: 1px solid rgba(245,158,11,0.4); padding: 10px; border-radius: 6px; font-family: 'Orbitron', sans-serif; font-size: 13px; width: 100%; text-align: center; box-sizing: border-box; cursor: pointer; outline: none;">
+                <option value="classic">CLASSIC DUEL (3 Lives)</option>
+                <option value="sudden_death">SUDDEN DEATH (1 Life, Fast Start)</option>
+                <option value="hyper_speed">HYPER SPEED (3 Lives, Rapid Acceleration)</option>
+                <option value="storm_god">STORM GOD (3 Lives, Sky Lightning Storms)</option>
+                <option value="insane_survival">INSANE CO-OP SURVIVAL (Insane Difficulty, AI Waves)</option>
+              </select>
+            </div>
+
+            <!-- Matchmaking / Find Match -->
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px;">
+              <button id="pvp-find-match-btn" class="menu-btn" style="border-color: #10b981; margin: 0; padding: 10px; font-size: 13px; box-shadow: 0 0 10px rgba(16,185,129,0.15);">Find Match</button>
+              <div id="pvp-queue-status" style="display: none; font-size: 12px; color: #10b981; font-family: 'Orbitron'; text-align: center;">
+                Searching for opponents... <span id="pvp-queue-timer">00:00</span>
+              </div>
+            </div>
+
+            <!-- Social Tabs Header -->
+            <div style="display: flex; gap: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; margin-top: 5px;">
+              <button id="pvp-tab-friends" style="flex: 1; background: rgba(255,255,255,0.1); border: 1px solid rgba(245,158,11,0.4); color: #f59e0b; padding: 6px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron'; font-size: 11px;">Friends</button>
+              <button id="pvp-tab-requests" style="flex: 1; background: transparent; border: 1px solid transparent; color: #9ca3af; padding: 6px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron'; font-size: 11px;">Requests (0)</button>
+              <button id="pvp-tab-leaderboard" style="flex: 1; background: transparent; border: 1px solid transparent; color: #9ca3af; padding: 6px; border-radius: 4px; cursor: pointer; font-family: 'Orbitron'; font-size: 11px;">Top Duelists</button>
+            </div>
+
+            <!-- Tab Content: Friends -->
+            <div id="pvp-content-friends" style="display: flex; flex-direction: column; gap: 10px;">
+              <!-- Add Friend -->
+              <div style="background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px;">
+                <span style="color: #9ca3af; font-size: 12px; font-family: 'Orbitron';">ADD FRIEND</span>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text" id="pvp-friend-uid-input" placeholder="Paste Friend UID..." style="background: #111; color: white; border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 4px; font-size: 12px; flex: 1; font-family: monospace;">
+                  <button id="pvp-add-friend-btn" class="menu-btn" style="margin: 0; padding: 8px 12px; font-size: 12px; border-color: #10b981;">Add</button>
+                </div>
+              </div>
+
+              <!-- Friends List -->
+              <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 150px; max-height: 250px; overflow-y: auto;">
+                <span style="color: #9ca3af; font-size: 12px; font-family: 'Orbitron'; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">FRIENDS</span>
+                <div id="pvp-friends-container" style="display: flex; flex-direction: column; gap: 8px;">
+                  <!-- Populated dynamically -->
+                  <div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">No friends added yet. Share your UID!</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Requests -->
+            <div id="pvp-content-requests" style="display: none; flex-direction: column; gap: 10px;">
+              <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 150px; max-height: 250px; overflow-y: auto;">
+                <span style="color: #9ca3af; font-size: 12px; font-family: 'Orbitron'; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px;">PENDING REQUESTS</span>
+                <div id="pvp-requests-container" style="display: flex; flex-direction: column; gap: 8px;">
+                  <!-- Populated dynamically -->
+                  <div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">No pending requests.</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tab Content: Leaderboard -->
+            <div id="pvp-content-leaderboard" style="display: none; flex-direction: column; gap: 10px;">
+              <div style="background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-height: 150px; max-height: 250px; overflow-y: auto;">
+                <span style="color: #ffd700; font-size: 12px; font-family: 'Orbitron'; border-bottom: 1px solid rgba(255,215,0,0.2); padding-bottom: 4px;">TOP DUELISTS</span>
+                <div id="pvp-leaderboard-container" style="display: flex; flex-direction: column; gap: 8px;">
+                  <!-- Populated dynamically -->
+                  <div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">Loading leaderboard...</div>
+                </div>
+              </div>
+            </div>
+
+            <button id="pvp-cancel-btn" class="menu-btn exit-btn">Back to Menu</button>
+          </div>
+
+          <!-- Step 4: Ready Room -->
+          <div id="pvp-step-ready" style="display: none; flex-direction: column; gap: 15px; width: 100%; text-align: center;">
+            <div id="pvp-ready-mode-display" style="color: #f59e0b; font-family: 'Orbitron'; font-size: 14px; font-weight: bold; padding: 8px; border: 1px solid rgba(245,158,11,0.2); background: rgba(245,158,11,0.05); border-radius: 6px; text-transform: uppercase;">MODE: CLASSIC DUEL</div>
+            <div style="display: flex; justify-content: space-around; margin: 15px 0;">
+              <div>
+                <h4 style="color: #00ffff; margin-bottom: 5px; font-family: 'Orbitron';">Host (P1)</h4>
+                <div id="pvp-p1-status" style="background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 4px; font-size: 12px; border: 1px solid rgba(255,255,255,0.1);">Waiting...</div>
+              </div>
+              <div style="border-left: 1px dashed rgba(255, 255, 255, 0.15);"></div>
+              <div>
+                <h4 style="color: #ffaa00; margin-bottom: 5px; font-family: 'Orbitron';">Client (P2)</h4>
+                <div id="pvp-p2-status" style="background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 4px; font-size: 12px; border: 1px solid rgba(255,255,255,0.1);">Waiting...</div>
+              </div>
+            </div>
+            <div id="pvp-ping-display" style="font-size: 12px; color: #9ca3af; font-family: monospace; margin: 10px 0;">Ping: -- ms</div>
+            <button id="pvp-ready-btn" class="menu-btn" style="border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);">Ready Up</button>
+            <button id="pvp-ready-leave-btn" class="menu-btn exit-btn">Disconnect</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PvP Invitation Popup Modal -->
+      <div id="pvp-invite-popup" class="overlay" style="display:none; z-index: 9500;">
+        <div class="menu-box pvp-menu-box" style="max-width: 400px; text-align: center; padding: 25px;">
+          <h3 style="color: #f59e0b; font-family: 'Orbitron'; margin-bottom: 15px;">DUEL CHALLENGE!</h3>
+          <p id="pvp-invite-text" style="color: white; font-size: 15px; margin-bottom: 25px;">Ronin-XYZ has invited you to a duel!</p>
+          <div style="display: flex; gap: 15px; justify-content: center; width: 100%;">
+            <button id="pvp-invite-decline-btn" class="menu-btn exit-btn" style="margin: 0; flex: 1;">Decline</button>
+            <button id="pvp-invite-accept-btn" class="menu-btn" style="border-color: #10b981; margin: 0; flex: 1;">Accept</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PvP In-game HUD Overlay -->
+      <div id="pvp-hud" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 100;">
+        <div class="pvp-hud-top" style="position: absolute; top: 20px; left: 5%; right: 5%; display: flex; justify-content: space-between; align-items: center;">
+          <!-- P1 Left Health -->
+          <div class="pvp-player-hud pvp-left-hud">
+            <span class="pvp-player-name" style="color: #00ffff; font-family: 'Shojumaru', cursive; font-size: 16px; display: block; margin-bottom: 5px;">P1 (Left)</span>
+            <div id="pvp-p1-hearts" class="pvp-hearts" style="font-size: 24px; letter-spacing: 2px;">❤️❤️❤️</div>
+          </div>
+          
+          <!-- Match Info Center -->
+          <div class="pvp-hud-center" style="display: flex; flex-direction: column; align-items: center; text-align: center; font-family: 'Orbitron', sans-serif;">
+            <div id="pvp-round-indicator" style="color: #f59e0b; font-size: 18px; font-weight: 700; letter-spacing: 2px; text-shadow: 0 0 10px rgba(245,158,11,0.4);">ROUND 1</div>
+            <div id="pvp-rally-counter" style="color: #9ca3af; font-size: 13px; margin-top: 4px; font-weight: 600;">RALLY: 0 (1.0x Speed)</div>
+          </div>
+          
+          <!-- P2 Right Health -->
+          <div class="pvp-player-hud pvp-right-hud" style="text-align: right;">
+            <span class="pvp-player-name" style="color: #ffaa00; font-family: 'Shojumaru', cursive; font-size: 16px; display: block; margin-bottom: 5px;">P2 (Right)</span>
+            <div id="pvp-p2-hearts" class="pvp-hearts" style="font-size: 24px; letter-spacing: 2px;">❤️❤️❤️</div>
+          </div>
+        </div>
+        
+        <!-- Big Round Start/End Banner -->
+        <div id="pvp-banner" style="display: none; position: absolute; top: 30%; left: 0; width: 100%; text-align: center; pointer-events: none;">
+          <h1 id="pvp-banner-title" style="font-family: 'Shojumaru', cursive; font-size: 48px; color: #ff3355; text-shadow: 0 0 20px rgba(255,51,85,0.6); margin: 0; letter-spacing: 4px;">ROUND 1</h1>
+          <p id="pvp-banner-subtitle" style="font-family: 'Orbitron', sans-serif; font-size: 16px; color: #cbd8d6; margin-top: 10px; text-transform: uppercase; letter-spacing: 2px; font-weight: 700;">READY...</p>
+        </div>
+
+        <!-- Dynamic Turn Indicator -->
+        <div id="pvp-turn-badge" style="position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); padding: 8px 20px; border-radius: 20px; font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; letter-spacing: 1.5px; border: 1px solid rgba(255,255,255,0.15); background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(5px); transition: all 0.3s ease;">
+          YOUR TURN: CHARGE
+        </div>
+
+        <!-- Parry Cooldown Anti-spam Overlay -->
+        <div id="pvp-cooldown-indicator" style="display: none; position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%); font-family: 'Orbitron', sans-serif; font-size: 12px; color: #ff3355; text-shadow: 0 0 5px #ff3355; font-weight: 700; letter-spacing: 1px; animation: flash-red 0.5s infinite;">
+          PARRY LOCKOUT!
+        </div>
+
+        <!-- Mobile Emote Tray -->
+        <div id="pvp-emote-tray" style="position: absolute; left: max(20px, env(safe-area-inset-left)); top: 50%; transform: translateY(-50%); display: none; flex-direction: column; gap: 10px; pointer-events: auto; z-index: 105;">
+          <button class="pvp-emote-btn" data-emote="1" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.7); border: 2px solid #f59e0b; color: white; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5);">👍</button>
+          <button class="pvp-emote-btn" data-emote="2" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.7); border: 2px solid #f59e0b; color: white; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5);">😮</button>
+          <button class="pvp-emote-btn" data-emote="3" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.7); border: 2px solid #f59e0b; color: white; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5);">💀</button>
+          <button class="pvp-emote-btn" data-emote="4" style="width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.7); border: 2px solid #f59e0b; color: white; font-size: 18px; cursor: pointer; display: flex; justify-content: center; align-items: center; box-shadow: 0 0 10px rgba(0,0,0,0.5);">⚔️</button>
+        </div>
+      </div>
+      
+      <!-- PvP Game Over Screen -->
+      <div id="pvp-game-over-screen" class="overlay" style="display:none; z-index: 110;">
+        <div class="menu-box pvp-menu-box" style="max-width: 450px; width: 90vw; text-align: center;">
+          <h2 id="pvp-winner-title" style="color: #ff3355; text-shadow: 0 0 15px rgba(255,51,85,0.4); font-family: 'Shojumaru', cursive; font-size: 28px; margin-bottom: 20px;">PLAYER 1 WINS!</h2>
+          <p style="color: #9ca3af; font-family: 'Orbitron', sans-serif; font-size: 14px; margin-bottom: 30px;" id="pvp-rematch-status">Rematch? (0/2 Ready)</p>
+          <div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
+            <button id="pvp-rematch-btn" class="menu-btn" style="border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);">Rematch</button>
+            <button id="pvp-rematch-quit-btn" class="menu-btn exit-btn">Quit to Menu</button>
           </div>
         </div>
       </div>

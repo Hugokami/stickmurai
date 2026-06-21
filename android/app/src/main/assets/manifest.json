@@ -2,8 +2,15 @@
   "name": "Super Samurai Sticky",
   "short_name": "Stickmurai",
   "start_url": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#0d0d12",
-  "theme_color": "#0d0d12"
+  "background_color": "#090a0f",
+  "theme_color": "#090a0f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
 }
