@@ -989,8 +989,8 @@ function checkPlayerHit(enemy: Enemy) {
       if (other.state === 'dead') return;
       const dx = other.x - globals.player.x;
       const dy = other.y - globals.player.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 220) {
+      const distSq = dx * dx + dy * dy;
+      if (distSq < 220 * 220) {
         const pushAngle = Math.atan2(dy, dx);
         other.vx = Math.cos(pushAngle) * 700;
         other.vy = Math.sin(pushAngle) * 700;
@@ -1035,8 +1035,9 @@ export function triggerStormGodLightning(x: number, y: number) {
 
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
-    const dist = Math.hypot(e.x - x, e.y - y);
-    if (dist < radius) {
+    const dx = e.x - x;
+    const dy = e.y - y;
+    if (dx * dx + dy * dy < radius * radius) {
       hitEnemy(e, 6);
       e.stunTimer = Math.max(e.stunTimer || 0, 3.0); // 3.0s stun
       hitEnemies.push(e);
@@ -1050,7 +1051,11 @@ export function triggerStormGodLightning(x: number, y: number) {
   let chainCount = 0;
   const otherEnemies = globals.enemies
     .filter(e => e.state !== 'dead' && !hitEnemies.includes(e))
-    .sort((a, b) => Math.hypot(a.x - x, a.y - y) - Math.hypot(b.x - x, b.y - y));
+    .sort((a, b) => {
+      const da = (a.x - x) * (a.x - x) + (a.y - y) * (a.y - y);
+      const db = (b.x - x) * (b.x - x) + (b.y - y) * (b.y - y);
+      return da - db;
+    });
 
   const maxChains = lowGraphics ? 2 : 4;
   for (const nextEnemy of otherEnemies) {
@@ -1097,8 +1102,8 @@ function triggerVortexShatter(x: number, y: number) {
     if (e.state === 'dead') return;
     const dx = x - e.x;
     const dy = y - e.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist < 350) {
+    const distSq = dx * dx + dy * dy;
+    if (distSq < 350 * 350) {
       e.x = x;
       e.y = y;
       hitEnemy(e, 8);
@@ -2180,11 +2185,12 @@ function update(realDt: number) {
           if (e.state === 'dead') return;
           const dx = e.x - globals.player.x;
           const dy = e.y - globals.player.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 220) {
+          const distSq = dx * dx + dy * dy;
+          if (distSq < 220 * 220) {
             hitEnemy(e, 3 + 2 * (globals.playerStats.shieldPulseLevel || 0));
             // pull enemies slightly toward player center
-            if (dist > 10) {
+            if (distSq > 100) {
+              const dist = Math.sqrt(distSq);
               const pullAmt = 50;
               const ratio = Math.min(1, pullAmt / dist);
               e.x -= dx * ratio;
@@ -2228,14 +2234,13 @@ function update(realDt: number) {
       firewheelTickTimer += realDt;
       if (firewheelTickTimer >= 0.3) {
         firewheelTickTimer = 0;
+        const rangeSq = (200 * (1 + 0.25 * (globals.playerStats.firewheelRangeLevel || 0))) ** 2;
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
           const dx = e.x - globals.player.x;
           const dy = e.y - globals.player.y;
-          const dist = Math.hypot(dx, dy);
-          const range = 200 * (1 + 0.25 * (globals.playerStats.firewheelRangeLevel || 0));
           
-          if (dist < range) {
+          if (dx * dx + dy * dy < rangeSq) {
             hitEnemy(e, 4);
             e.burnTimer = 4.0;
             e.burnBonusDmg = globals.playerStats.firewheelBlazeLevel || 0;
@@ -2252,15 +2257,19 @@ function update(realDt: number) {
             
             if (globals.playerStats.firewheelEchoLevel && globals.playerStats.firewheelEchoLevel > 0) {
               const echoDmg = globals.playerStats.firewheelEchoLevel;
-              globals.enemies.forEach(other => {
-                if (other === e || other.state === 'dead') return;
+              let echoTargetsCount = 0;
+              for (let idx = 0; idx < globals.enemies.length; idx++) {
+                const other = globals.enemies[idx];
+                if (other === e || other.state === 'dead') continue;
                 const odx = other.x - e.x;
                 const ody = other.y - e.y;
-                if (odx * odx + ody * ody < 120 * 120) {
+                if (odx * odx + ody * ody < 14400) { // 120 * 120
                   hitEnemy(other, echoDmg);
                   globals.particles.push(Particle.acquire(other.x, other.y, '#ffd700', 100, 0.3, 1.5));
+                  echoTargetsCount++;
+                  if (echoTargetsCount >= 4) break; 
                 }
-              });
+              }
             }
           }
         });
@@ -2272,6 +2281,7 @@ function update(realDt: number) {
   if (globals.gravityWellTimer > 0) {
     globals.gravityWellTimer -= realDt;
     const pullRadius = 300 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
+    const pullRadiusSq = pullRadius * pullRadius;
     const pullSpeed = 700;
     const tickDmg = 2 + 2 * (globals.playerStats.gravityDamageLevel || 0);
     
@@ -2297,7 +2307,7 @@ function update(realDt: number) {
       if (proj.isEnemy && proj.life > 0) {
         const dx = globals.gravityWellX - proj.x;
         const dy = globals.gravityWellY - proj.y;
-        if (dx * dx + dy * dy < pullRadius * pullRadius) {
+        if (dx * dx + dy * dy < pullRadiusSq) {
           proj.life = 0; // devour
           for (let i = 0; i < 4; i++) {
             globals.particles.push(Particle.acquire(proj.x, proj.y, '#8a2be2', 100, 0.25, 1.5));
@@ -2311,9 +2321,10 @@ function update(realDt: number) {
       if (e.state === 'dead') return;
       const dx = globals.gravityWellX - e.x;
       const dy = globals.gravityWellY - e.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < pullRadius) {
-        if (dist > 10) {
+      const distSq = dx * dx + dy * dy;
+      if (distSq < pullRadiusSq) {
+        if (distSq > 100) {
+          const dist = Math.sqrt(distSq);
           const pullRatio = Math.min(1, pullSpeed * realDt / dist);
           e.x += dx * pullRatio;
           e.y += dy * pullRatio;
@@ -2328,7 +2339,7 @@ function update(realDt: number) {
         if (e.state === 'dead') return;
         const dx = globals.gravityWellX - e.x;
         const dy = globals.gravityWellY - e.y;
-        if (dx * dx + dy * dy < pullRadius * pullRadius) {
+        if (dx * dx + dy * dy < pullRadiusSq) {
           hitEnemy(e, tickDmg);
           for(let i=0; i<4; i++) {
             globals.particles.push(Particle.acquire(e.x, e.y, '#9400d3', 100, 0.3, 1.5));
@@ -2363,7 +2374,7 @@ function update(realDt: number) {
           if (e.state === 'dead') return;
           const dx = globals.gravityWellX - e.x;
           const dy = globals.gravityWellY - e.y;
-          if (dx * dx + dy * dy < pullRadius * pullRadius) {
+          if (dx * dx + dy * dy < pullRadiusSq) {
             hitEnemy(e, explosionDmg);
             globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 60, `COLLAPSE -${explosionDmg}`, '#ff00ff', 24));
           }
@@ -2412,8 +2423,7 @@ function update(realDt: number) {
         if (e.state === 'dead') return;
         const dx = e.x - globals.player.x;
         const dy = e.y - globals.player.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 260) {
+        if (dx * dx + dy * dy < 260 * 260) {
           const pushAngle = Math.atan2(dy, dx);
           e.vx = Math.cos(pushAngle) * 800;
           e.vy = Math.sin(pushAngle) * 800;
@@ -2510,7 +2520,7 @@ function update(realDt: number) {
       c.update(realDt);
       const dx = globals.player.x - c.x;
       const dy = globals.player.y - c.y;
-      if (Math.hypot(dx, dy) < 40 && globals.player.state !== 'dead') {
+      if (dx * dx + dy * dy < 1600 && globals.player.state !== 'dead') {
         c.life = 0; // consume
         if (c.type === 'exp') {
           globals.exp += c.value;
@@ -2561,8 +2571,9 @@ function update(realDt: number) {
 
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
-          const dist = Math.hypot(e.x - dome.x, e.y - dome.y);
-          if (dist < radius) {
+          const dx = e.x - dome.x;
+          const dy = e.y - dome.y;
+          if (dx * dx + dy * dy < radius * radius) {
             hitEnemy(e, 0.5);
           }
         });

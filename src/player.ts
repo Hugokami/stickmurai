@@ -48,9 +48,19 @@ export class Player extends Entity {
     if ((globals.gameMode as string) === 'pvp') {
       if (pvpManager.subMode === 'insane_survival') {
         if (this.isPvpRemote) {
-          // Direct coordinate and state synchronization for remote player
-          this.x = pvpManager.remoteState.x;
-          this.y = pvpManager.remoteState.y;
+          // Dynamic smooth interpolation (lerp) for remote player movement to prevent stutter
+          const dx = pvpManager.remoteState.x - this.x;
+          const dy = pvpManager.remoteState.y - this.y;
+          const distSq = dx * dx + dy * dy;
+          if (distSq > 400 * 400) {
+            // Snap if teleported or too far to prevent rubber-banding
+            this.x = pvpManager.remoteState.x;
+            this.y = pvpManager.remoteState.y;
+          } else {
+            const t = Math.min(1, 0.25 * 60 * dt);
+            this.x += dx * t;
+            this.y += dy * t;
+          }
           this.dir = pvpManager.remoteState.dir || 1;
           this.setState(pvpManager.remoteState.state || 'idle');
           this.chargeTimer = pvpManager.remoteState.chargeProgress;

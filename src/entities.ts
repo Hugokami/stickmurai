@@ -103,8 +103,8 @@ export class Entity {
     const img = currentAnim[this.animFrame];
     if (!img || !img.complete || img.naturalWidth === 0) return;
     
-    const rx = this.x - cx + globals.vw/2;
-    const ry = this.y - cy + globals.vh/2 + (this.yOffset || 0);
+    const rx = Math.round(this.x - cx + globals.vw/2);
+    const ry = Math.round(this.y - cy + globals.vh/2 + (this.yOffset || 0));
     const scale = 0.5 * this.scaleMult;
     const buffer = Math.max(img.width, img.height) * scale + 60;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
@@ -244,8 +244,8 @@ export class Particle {
     this.life -= dt; this.vx *= this.friction; this.vy *= this.friction;
   }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    const rx = this.x - cx + globals.vw/2;
-    const ry = this.y - cy + globals.vh/2;
+    const rx = Math.round(this.x - cx + globals.vw/2);
+    const ry = Math.round(this.y - cy + globals.vh/2);
     const buffer = 40;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
