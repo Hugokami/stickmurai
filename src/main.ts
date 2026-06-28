@@ -763,18 +763,20 @@ function initGame() {
   // Apply pre-game Stance Blessings
   if (globals.activeBlessing === 'swift_strike') {
     globals.playerStats.attackCooldownBase *= 0.9; // +10% Attack Speed (90% cooldown)
+    globals.chosenPowerUps.push('blessingSwiftName');
     globals.delayedActions.push({
-      time: 0.1,
-      action: () => {
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, "Swift Strike Stance!", "#ffd700", 24));
+      delay: 0.1,
+      run: () => {
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '神速の構え！' : 'Swift Strike Stance!', "#ffd700", 24));
       }
     });
   } else if (globals.activeBlessing === 'fortune') {
     const grantedUpgradeName = applyRandomStartUpgrade();
     globals.delayedActions.push({
-      time: 0.1,
-      action: () => {
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, `Fortune Blessing: ${grantedUpgradeName}!`, "#00ffff", 24));
+      delay: 0.1,
+      run: () => {
+        const text = globals.currentLang === 'ja' ? `招福の加護: ${grantedUpgradeName}!` : `Fortune Blessing: ${grantedUpgradeName}!`;
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, text, "#00ffff", 24));
       }
     });
   }

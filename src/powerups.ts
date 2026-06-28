@@ -186,7 +186,9 @@ const ultOptions = [
 
         // get targets
         const targets = globals.enemies.filter(e => e.state !== 'dead');
-        const finalDelay = (targets.length * 0.06) + 0.15;
+        const maxVisuals = 10;
+        const staggerInterval = 0.015;
+        const finalDelay = (Math.min(targets.length, maxVisuals) * staggerInterval) + 0.15;
 
         // freeze time slow-mo disabled to prevent laggy feel
         globals.timeSlowDuration = 0; 
@@ -225,33 +227,38 @@ const ultOptions = [
        // slash all targetable active enemies
        targets.forEach((e, idx) => {
          // stagger cross cuts
-         const slashDelay = idx * 0.06;
+         const slashDelay = idx * staggerInterval;
          globals.delayedActions.push({
            delay: slashDelay,
            run: () => {
              if (e.state === 'dead') return;
              
-             playSound(sfx.slash, 1.2);
-             
-             // spawn 3 cut lines (including a horizontal sweep)
-             globals.slashes.push(Slash.acquire(e.x, e.y, Math.PI / 4, 2.5 * e.scaleMult, true));
-             globals.slashes.push(Slash.acquire(e.x, e.y, -Math.PI / 4, 2.5 * e.scaleMult, true));
-             globals.slashes.push(Slash.acquire(e.x, e.y, 0, 3.0 * e.scaleMult, true));
-             
-             // blast wave
-             globals.shockwaves.push(new Shockwave(e.x, e.y, 'rgba(255, 30, 70, 0.5)'));
-
-             // sparks
-             for (let i = 0; i < 6; i++) {
-               const angle = Math.random() * Math.PI * 2;
-               const speed = 200 + Math.random() * 300;
-               globals.particles.push(Particle.acquire(e.x, e.y, i % 2 === 0 ? '#ff1e46' : '#00ffff', speed, 0.4, 2 + Math.random() * 2, angle));
-             }
-
-             // hit target for 16 DMG
+             // hit target for 16 DMG (always applied)
              callbacks.hitEnemy(e, 16);
              
-             globals.screenShake = Math.max(globals.screenShake, 18);
+             // limit heavy canvas and sound context resources to prevent lag
+             if (idx < maxVisuals) {
+               if (idx % 2 === 0) {
+                 playSound(sfx.slash, 1.2);
+               }
+               
+               // spawn 3 cut lines (including a horizontal sweep)
+               globals.slashes.push(Slash.acquire(e.x, e.y, Math.PI / 4, 2.5 * e.scaleMult, true));
+               globals.slashes.push(Slash.acquire(e.x, e.y, -Math.PI / 4, 2.5 * e.scaleMult, true));
+               globals.slashes.push(Slash.acquire(e.x, e.y, 0, 3.0 * e.scaleMult, true));
+               
+               // blast wave
+               globals.shockwaves.push(new Shockwave(e.x, e.y, 'rgba(255, 30, 70, 0.5)'));
+
+               // sparks
+               for (let i = 0; i < 4; i++) {
+                 const angle = Math.random() * Math.PI * 2;
+                 const speed = 200 + Math.random() * 300;
+                 globals.particles.push(Particle.acquire(e.x, e.y, i % 2 === 0 ? '#ff1e46' : '#00ffff', speed, 0.4, 1.5 + Math.random() * 1.5, angle));
+               }
+               
+               globals.screenShake = Math.max(globals.screenShake, 18);
+             }
            }
          });
        });
@@ -431,7 +438,7 @@ export function applyRandomStartUpgrade(): string {
     const randomPower = availablePowers[Math.floor(Math.random() * availablePowers.length)];
     randomPower.apply();
     const name = t(randomPower.nameKey);
-    globals.chosenPowerUps.push(name);
+    globals.chosenPowerUps.push(randomPower.nameKey);
     return name;
   }
   return "None";
