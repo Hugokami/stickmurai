@@ -7,6 +7,12 @@ import { Enemy } from './enemy';
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
 
+let lastRenderTime = performance.now();
+let frostStanceVisualScale = 0;
+let voidStanceVisualScale = 0;
+let petalArmorVisualScale = 0;
+let riposteVisualScale = 0;
+
 const visibleEntities: Entity[] = [];
 const depthCompare = (a: Entity, b: Entity) => a.y - b.y;
 
@@ -98,6 +104,23 @@ export function draw() {
   if (canvas.style.filter !== 'none' && canvas.style.filter !== '') {
     canvas.style.filter = 'none';
   }
+
+  const now = performance.now();
+  const dt = Math.min(0.1, (now - lastRenderTime) / 1000);
+  lastRenderTime = now;
+
+  // Stance visual scale smooth transitions
+  const targetFrost = globals.frostStanceActive ? 1 : 0;
+  frostStanceVisualScale += (targetFrost - frostStanceVisualScale) * Math.min(1, 12 * dt);
+
+  const targetVoid = globals.voidStanceActive ? 1 : 0;
+  voidStanceVisualScale += (targetVoid - voidStanceVisualScale) * Math.min(1, 12 * dt);
+
+  const targetPetal = globals.petalArmorActive ? 1 : 0;
+  petalArmorVisualScale += (targetPetal - petalArmorVisualScale) * Math.min(1, 12 * dt);
+
+  const targetRiposte = (globals.riposteTimer > 0) ? 1 : 0;
+  riposteVisualScale += (targetRiposte - riposteVisualScale) * Math.min(1, 12 * dt);
 
   ctx.clearRect(0, 0, globals.width, globals.height);
   drawBackground(ctx);
@@ -262,48 +285,48 @@ export function draw() {
       const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
       const auraTime = performance.now() / 1000;
 
-      if (globals.riposteTimer > 0) {
+      if (riposteVisualScale > 0.01) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 0, 85, 0.7)';
+        ctx.strokeStyle = `rgba(255, 0, 85, ${0.7 * riposteVisualScale})`;
         ctx.lineWidth = 3;
-        // Removed shadowBlur to prevent lag
         ctx.beginPath();
-        ctx.arc(px, py + 10, 32 + Math.sin(auraTime * 20) * 4, 0, Math.PI * 2);
+        const r = (32 + Math.sin(auraTime * 20) * 4) * (0.6 + 0.4 * riposteVisualScale);
+        ctx.arc(px, py + 10, r, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
 
-      if (globals.frostStanceActive) {
+      if (frostStanceVisualScale > 0.01) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(0, 229, 255, 0.4)';
+        ctx.strokeStyle = `rgba(0, 229, 255, ${0.4 * frostStanceVisualScale})`;
         ctx.lineWidth = 2.0;
-        // Removed shadowBlur to prevent lag
         ctx.beginPath();
-        ctx.arc(px, py + 10, 28 + Math.sin(auraTime * 6) * 2, 0, Math.PI * 2);
+        const r = (28 + Math.sin(auraTime * 6) * 2) * (0.6 + 0.4 * frostStanceVisualScale);
+        ctx.arc(px, py + 10, r, 0, Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
 
-      if (globals.voidStanceActive) {
+      if (voidStanceVisualScale > 0.01) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(192, 132, 252, 0.4)';
+        ctx.strokeStyle = `rgba(192, 132, 252, ${0.4 * voidStanceVisualScale})`;
         ctx.lineWidth = 2.0;
-        // Removed shadowBlur to prevent lag
         ctx.beginPath();
         ctx.setLineDash([4, 6]);
-        ctx.arc(px, py + 10, 24, -auraTime * 2, -auraTime * 2 + Math.PI * 2);
+        const r = 24 * (0.6 + 0.4 * voidStanceVisualScale);
+        ctx.arc(px, py + 10, r, -auraTime * 2, -auraTime * 2 + Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }
 
-      if (globals.petalArmorActive) {
+      if (petalArmorVisualScale > 0.01) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 183, 197, 0.65)';
+        ctx.strokeStyle = `rgba(255, 183, 197, ${0.65 * petalArmorVisualScale})`;
         ctx.lineWidth = 1.8;
-        // Removed shadowBlur to prevent lag
         ctx.beginPath();
         ctx.setLineDash([6, 8]);
-        ctx.arc(px, py + 10, 32, auraTime, auraTime + Math.PI * 2);
+        const r = 32 * (0.6 + 0.4 * petalArmorVisualScale);
+        ctx.arc(px, py + 10, r, auraTime, auraTime + Math.PI * 2);
         ctx.stroke();
         ctx.restore();
       }

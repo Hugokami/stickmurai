@@ -886,8 +886,12 @@ export class Slash {
     ctx.save();
     ctx.translate(rx, ry);
     ctx.rotate(this.angle);
-    ctx.scale(this.sizeMult, this.sizeMult);
     const p = Math.max(0, this.life / this.maxLife); // 1.0 down to 0.0
+
+    // Rapid scale-up on entrance (first 22% of lifetime, which is when p is between 1.0 and 0.78)
+    const entranceProgress = Math.min(1, (1 - p) / 0.22);
+    const entranceScale = 1 - Math.pow(1 - entranceProgress, 3); // cubic ease out
+    ctx.scale(this.sizeMult * entranceScale, this.sizeMult * entranceScale);
 
     // Non-linear easing for smoother expansion and snap
     const easeOutCubic = 1 - Math.pow(p, 3);

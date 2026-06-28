@@ -29,6 +29,11 @@ export class Player extends Entity {
   pvpParryActiveTimer = 0;
   pvpParryCooldownTimer = 0;
 
+  // Visual scale transition fields for smooth animations
+  shieldVisualScale = 0;
+  firewheelVisualScale = 0;
+  auraVisualScale = 0;
+
   constructor() {
     super();
     this.type = 'sword';
@@ -45,6 +50,16 @@ export class Player extends Entity {
   }
   
   update(dt: number) {
+    // Stance/Skill visual scale transitions
+    const targetShield = (!this.isPvpRemote && globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) ? 1 : 0;
+    this.shieldVisualScale += (targetShield - this.shieldVisualScale) * Math.min(1, 12 * dt);
+
+    const targetFirewheel = (!this.isPvpRemote && globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) ? 1 : 0;
+    this.firewheelVisualScale += (targetFirewheel - this.firewheelVisualScale) * Math.min(1, 12 * dt);
+
+    const targetAura = (!this.isPvpRemote && ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god' || globals.enhanceActiveTimer > 0)) ? 1 : 0;
+    this.auraVisualScale += (targetAura - this.auraVisualScale) * Math.min(1, 12 * dt);
+
     if ((globals.gameMode as string) === 'pvp') {
       if (pvpManager.subMode === 'insane_survival') {
         if (this.isPvpRemote) {
@@ -559,16 +574,16 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // wind shield
-    if (!this.isPvpRemote && globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
+    if (this.shieldVisualScale > 0.01) {
       ctx.save();
       ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
       const time = globals.galeVortexActive ? (performance.now() / 50) : (performance.now() / 150);
-      const radius = 120;
+      const radius = 120 * (0.6 + 0.4 * this.shieldVisualScale);
       
       // Glow background
       const grad = ctx.createRadialGradient(0, 0, radius - 40, 0, 0, radius + 20);
       grad.addColorStop(0, 'rgba(0, 255, 200, 0)');
-      grad.addColorStop(0.7, 'rgba(0, 255, 200, 0.15)');
+      grad.addColorStop(0.7, `rgba(0, 255, 200, ${0.15 * this.shieldVisualScale})`);
       grad.addColorStop(1, 'rgba(0, 255, 200, 0)');
       ctx.fillStyle = grad;
       ctx.beginPath();
@@ -576,7 +591,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.fill();
 
       // Draw spinning wind arcs
-      ctx.strokeStyle = 'rgba(0, 255, 200, 0.6)';
+      ctx.strokeStyle = `rgba(0, 255, 200, ${0.6 * this.shieldVisualScale})`;
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
       for (let i = 0; i < 3; i++) {
@@ -587,7 +602,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       }
 
       // Inner faint ring
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 * this.shieldVisualScale})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(0, 0, radius - 20, 0, Math.PI * 2);
@@ -597,16 +612,16 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // firewheel arcs
-    if (!this.isPvpRemote && globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
+    if (this.firewheelVisualScale > 0.01) {
       ctx.save();
       ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
       const time = performance.now() / 150;
-      const radius = 150 * (1 + 0.25 * (globals.playerStats.firewheelRangeLevel || 0));
+      const radius = 150 * (1 + 0.25 * (globals.playerStats.firewheelRangeLevel || 0)) * (0.6 + 0.4 * this.firewheelVisualScale);
       
       // Glow background
       const grad = ctx.createRadialGradient(0, 0, radius - 40, 0, 0, radius + 20);
       grad.addColorStop(0, 'rgba(255, 68, 0, 0)');
-      grad.addColorStop(0.7, 'rgba(255, 68, 0, 0.15)');
+      grad.addColorStop(0.7, `rgba(255, 68, 0, ${0.15 * this.firewheelVisualScale})`);
       grad.addColorStop(1, 'rgba(255, 68, 0, 0)');
       ctx.fillStyle = grad;
       ctx.beginPath();
@@ -616,9 +631,8 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       // Draw spinning fire arcs
       ctx.lineWidth = 4;
       ctx.lineCap = 'round';
-      // Removed shadowBlur to prevent lag
 
-      const colors = ['rgba(255, 68, 0, 0.7)', 'rgba(255, 170, 0, 0.7)', 'rgba(255, 230, 0, 0.7)'];
+      const colors = [`rgba(255, 68, 0, ${0.7 * this.firewheelVisualScale})`, `rgba(255, 170, 0, ${0.7 * this.firewheelVisualScale})`, `rgba(255, 230, 0, ${0.7 * this.firewheelVisualScale})`];
       for (let i = 0; i < 3; i++) {
         ctx.strokeStyle = colors[i];
         ctx.beginPath();
@@ -629,7 +643,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       }
 
       // Inner faint ring
-      ctx.strokeStyle = 'rgba(255, 100, 0, 0.3)';
+      ctx.strokeStyle = `rgba(255, 100, 0, ${0.3 * this.firewheelVisualScale})`;
       ctx.lineWidth = 1;
       ctx.beginPath();
       ctx.arc(0, 0, radius - 20, 0, Math.PI * 2);
@@ -640,7 +654,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
 
 
     // aura effect
-    if (!this.isPvpRemote && ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god' || globals.enhanceActiveTimer > 0)) {
+    if (this.auraVisualScale > 0.01) {
       const time = performance.now() / 1000;
       
       let auraColor = 'rgba(255, 100, 0, ';
@@ -658,14 +672,14 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
         const ringAlpha = 1 - (ringSize / 120);
         ctx.beginPath();
         ctx.arc(0, -20, ringSize, 0, Math.PI * 2);
-        ctx.strokeStyle = auraColor + ringAlpha * 0.4 + ')';
+        ctx.strokeStyle = auraColor + (ringAlpha * 0.4 * this.auraVisualScale) + ')';
         ctx.lineWidth = 2;
         ctx.stroke();
       }
 
       // inner glow
       const grad = ctx.createRadialGradient(0, -20, 0, 0, -20, 70);
-      grad.addColorStop(0, auraColor + '0.4)');
+      grad.addColorStop(0, auraColor + (0.4 * this.auraVisualScale) + ')');
       grad.addColorStop(1, auraColor + '0)');
       ctx.fillStyle = grad;
       ctx.beginPath();

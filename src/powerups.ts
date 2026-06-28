@@ -113,9 +113,11 @@ export function triggerLevelUp() {
   const shuffled = [...availablePowers].sort(() => 0.5 - Math.random());
   const choices = shuffled.slice(0, 3);
   
-  choices.forEach(power => {
+  choices.forEach((power, index) => {
     const card = document.createElement('div');
     card.className = 'power-card';
+    card.style.animation = 'power-card-entrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) both, card-glow-pulse 3s infinite alternate';
+    card.style.animationDelay = `${index * 0.08}s, ${index * 0.08 + 0.45}s`;
     
     let category = 'basic';
     const nk = power.nameKey;
@@ -359,9 +361,11 @@ export function activateAwakening() {
     }];
   }
   
-  optionsToUse.forEach(ult => {
+  optionsToUse.forEach((ult, index) => {
     const card = document.createElement('div');
     card.className = 'power-card';
+    card.style.animation = 'power-card-entrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) both, card-glow-pulse 3s infinite alternate';
+    card.style.animationDelay = `${index * 0.08}s, ${index * 0.08 + 0.45}s`;
     
     let category = 'basic';
     const nk = ult.nameKey;
