@@ -117,7 +117,20 @@ class PvpIaijutsuManager {
 
       // We use PeerJS cloud service for connection brokerage
       this.peer = new Peer(code, {
-        debug: 1
+        host: '0.peerjs.com',
+        port: 443,
+        path: '/',
+        secure: true,
+        debug: 1,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' }
+          ]
+        }
       });
 
       this.peer.on('open', (id) => {
@@ -164,7 +177,20 @@ class PvpIaijutsuManager {
       // Generate a random client peer ID to avoid collision
       const clientPeerId = 'CLIENT-' + Math.random().toString(36).substring(2, 8).toUpperCase();
       this.peer = new Peer(clientPeerId, {
-        debug: 1
+        host: '0.peerjs.com',
+        port: 443,
+        path: '/',
+        secure: true,
+        debug: 1,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' }
+          ]
+        }
       });
 
       this.peer.on('open', () => {
@@ -294,6 +320,9 @@ class PvpIaijutsuManager {
         } else {
           this.p1Name = msg.displayName;
         }
+        if (this.onReadyStateChanged) {
+          this.onReadyStateChanged();
+        }
         break;
 
       case 'sub_mode_sync':
@@ -315,8 +344,16 @@ class PvpIaijutsuManager {
    * Broadcasts a message packet to the connected peer.
    */
   public send(msg: PvpMessage) {
-    if (this.conn && this.conn.open) {
-      this.conn.send(msg);
+    if (this.conn) {
+      const rawChannel = (this.conn as any).dataChannel;
+      const isChannelOpen = this.conn.open || (rawChannel && rawChannel.readyState === 'open');
+      if (isChannelOpen) {
+        try {
+          this.conn.send(msg);
+        } catch (e) {
+          console.error("Failed to send WebRTC data packet:", e);
+        }
+      }
     }
   }
 
