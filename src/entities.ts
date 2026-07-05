@@ -933,9 +933,27 @@ export class Slash {
     }
   }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    const rx = this.x - cx + globals.vw/2;
+    let offsetX = 0;
+    let offsetY = 0;
+    let dir = 1;
+    if (this.owner && this.owner.subType === 'player') {
+      dir = this.owner.dir || 1;
+      const state = this.owner.state;
+      if (state === 'idle' || state === 'charge') {
+        offsetX = -15 * dir;
+        offsetY = 22;
+      } else if (state === 'attack') {
+        offsetX = -5 * dir;
+        offsetY = 20;
+      } else { // walk/run/dash
+        offsetX = -0.5 * dir;
+        offsetY = 17;
+      }
+    }
+
+    const rx = this.x - cx + globals.vw/2 + offsetX;
     const yOff = (this.owner && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
-    const ry = this.y - cy + globals.vh/2 + yOff;
+    const ry = this.y - cy + globals.vh/2 + yOff + offsetY - 17;
     const buffer = 260 * this.sizeMult;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
@@ -978,7 +996,8 @@ export class Slash {
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.save();
       ctx.translate(rx, ry);
-      ctx.rotate(this.angle);
+      ctx.scale(dir, 1);
+      ctx.rotate(dir === -1 ? Math.PI - this.angle : this.angle);
       
       // Center the slash arc on the player
       const scale = 2.5 * this.sizeMult;

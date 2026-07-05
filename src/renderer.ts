@@ -293,8 +293,18 @@ export function draw() {
       }
 
       // stance effects
-      const px = globals.player.x - globals.camera.x + globals.vw/2;
-      const py = globals.player.y - globals.camera.y + globals.vh/2 + (globals.player.yOffset || 0) - 10;
+      let offsetX = 0;
+      let offsetY = 17;
+      if (globals.player.state === 'idle' || globals.player.state === 'charge') {
+        offsetX = -15 * globals.player.dir;
+        offsetY = 22;
+      } else if (globals.player.state === 'attack') {
+        offsetX = -5 * globals.player.dir;
+        offsetY = 20;
+      }
+
+      const px = globals.player.x - globals.camera.x + globals.vw/2 + offsetX;
+      const py = globals.player.y - globals.camera.y + globals.vh/2 + (globals.player.yOffset || 0) + offsetY - 17;
       const auraFrame = Math.floor((performance.now() / 60) % 16);
 
       if (riposteVisualScale > 0.01) {
@@ -302,7 +312,7 @@ export function draw() {
         ctx.globalAlpha = riposteVisualScale * 0.7;
         const img = vfxAnims.auras.fire[auraFrame];
         if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.3 / 2, py + 10 - img.height * 1.3 / 2, img.width * 1.3, img.height * 1.3);
+          ctx.drawImage(img, px - img.width * 1.3 / 2, py - img.height * 1.3 / 2, img.width * 1.3, img.height * 1.3);
         }
         ctx.restore();
       }
@@ -312,7 +322,7 @@ export function draw() {
         ctx.globalAlpha = frostStanceVisualScale * 0.6;
         const img = vfxAnims.auras.ice[auraFrame];
         if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.25 / 2, py + 10 - img.height * 1.25 / 2, img.width * 1.25, img.height * 1.25);
+          ctx.drawImage(img, px - img.width * 1.25 / 2, py - img.height * 1.25 / 2, img.width * 1.25, img.height * 1.25);
         }
         ctx.restore();
       }
@@ -322,7 +332,7 @@ export function draw() {
         ctx.globalAlpha = voidStanceVisualScale * 0.6;
         const img = vfxAnims.auras.arcane[auraFrame];
         if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.2 / 2, py + 10 - img.height * 1.2 / 2, img.width * 1.2, img.height * 1.2);
+          ctx.drawImage(img, px - img.width * 1.2 / 2, py - img.height * 1.2 / 2, img.width * 1.2, img.height * 1.2);
         }
         ctx.restore();
       }
@@ -332,7 +342,7 @@ export function draw() {
         ctx.globalAlpha = petalArmorVisualScale * 0.7;
         const img = vfxAnims.auras.poison[auraFrame];
         if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.4 / 2, py + 10 - img.height * 1.4 / 2, img.width * 1.4, img.height * 1.4);
+          ctx.drawImage(img, px - img.width * 1.4 / 2, py - img.height * 1.4 / 2, img.width * 1.4, img.height * 1.4);
         }
         ctx.restore();
       }
@@ -342,7 +352,7 @@ export function draw() {
         ctx.globalAlpha = 0.75;
         const img = vfxAnims.auras.holy[auraFrame];
         if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.5 / 2, py + 10 - img.height * 1.5 / 2, img.width * 1.5, img.height * 1.5);
+          ctx.drawImage(img, px - img.width * 1.5 / 2, py - img.height * 1.5 / 2, img.width * 1.5, img.height * 1.5);
         }
         ctx.restore();
       }
