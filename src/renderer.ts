@@ -96,7 +96,7 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
       let startX = offsetX > 0 ? offsetX - imgW : offsetX;
       
       const midY = (globals.height - imgH) / 2;
-      const offsetY = midY - (globals.camera.y * layer.speed * 0.4 * globals.gameZoom);
+      const offsetY = midY - (globals.camera.y * 0.3 * globals.gameZoom);
       
       for(let x = startX; x < globals.width + imgW; x += imgW) {
         ctx.drawImage(img, x, offsetY, imgW, imgH);
