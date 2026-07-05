@@ -2,6 +2,9 @@ import { pvpManager } from './pvpIaijutsuManager';
 import { supabase } from './supabaseClient';
 import { globals } from './globals';
 import { pauseBgm } from './audio';
+import { i18n } from './assets';
+
+const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
 
 let userUid: string | null = null;
 let userProfile: any = null;
@@ -114,7 +117,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     uidCopyBtn.addEventListener('click', () => {
       if (userProfile && userProfile.short_id) {
         navigator.clipboard.writeText(userProfile.short_id.toString());
-        alert('Your UID has been copied to clipboard!');
+        alert(t('alertUidCopied'));
       }
     });
   }
@@ -188,7 +191,7 @@ export function initPvPLobby(onStartMatch: () => void) {
         showStep('ready');
         await pvpManager.joinMatch(peerId);
       } catch (err: any) {
-        alert('Failed to connect: ' + err.message);
+        alert(t('alertFailedToConnect') + err.message);
         await updatePresence('online');
       }
     });
@@ -230,11 +233,11 @@ export function initPvPLobby(onStartMatch: () => void) {
   // Network Event Subscriptions
   function getModeDisplayName(mode: string): string {
     switch (mode) {
-      case 'classic': return 'CLASSIC DUEL (3 Lives)';
-      case 'sudden_death': return 'SUDDEN DEATH (1 Life)';
-      case 'hyper_speed': return 'HYPER SPEED (3 Lives)';
-      case 'storm_god': return 'STORM GOD (3 Lives)';
-      case 'insane_survival': return 'INSANE CO-OP SURVIVAL';
+      case 'classic': return t('pvpClassicDuel');
+      case 'sudden_death': return t('pvpSuddenDeath');
+      case 'hyper_speed': return t('pvpHyperSpeed');
+      case 'storm_god': return t('pvpStormGod');
+      case 'insane_survival': return t('pvpCoopSurvival');
       default: return (mode || '').toUpperCase();
     }
   }
@@ -247,7 +250,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     const findBtn = document.getElementById('pvp-find-match-btn');
     const queueStatus = document.getElementById('pvp-queue-status');
     if (findBtn) {
-      findBtn.innerText = 'Find Match';
+      findBtn.innerText = t('pvpFindMatch');
       findBtn.style.borderColor = '#10b981';
     }
     if (queueStatus) queueStatus.style.display = 'none';
@@ -259,7 +262,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     // Update Ready Room display
     const readyModeDisplay = document.getElementById('pvp-ready-mode-display');
     if (readyModeDisplay) {
-      readyModeDisplay.innerText = `MODE: ${getModeDisplayName(pvpManager.subMode)}`;
+      readyModeDisplay.innerText = `${t('pvpReadyRoomMode')}${getModeDisplayName(pvpManager.subMode)}`;
     }
     
     // Exchange names!
@@ -286,10 +289,10 @@ export function initPvPLobby(onStartMatch: () => void) {
 
   pvpManager.onConnectionClosed = async () => {
     if (pvpManager.matchState !== 'lobby') {
-      alert('Opponent disconnected. Returning to main menu.');
+      alert(t('alertOpponentDisconnected'));
       window.location.reload(); 
     } else {
-      alert('Connection closed by remote peer.');
+      alert(t('alertConnectionClosed'));
       showStep('select');
       await updatePresence('online');
     }
@@ -341,7 +344,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     if (msg.type === 'sub_mode_sync') {
       const readyModeDisplay = document.getElementById('pvp-ready-mode-display');
       if (readyModeDisplay) {
-        readyModeDisplay.innerText = `MODE: ${getModeDisplayName(msg.subMode)}`;
+        readyModeDisplay.innerText = `${t('pvpReadyRoomMode')}${getModeDisplayName(msg.subMode)}`;
       }
     }
     if (msg.type === 'sync_game_state' && pvpManager.role === 'client') {
@@ -359,16 +362,16 @@ export function initPvPLobby(onStartMatch: () => void) {
     const p2Ready = isHost ? remoteReady : localReady;
 
     if (p1Status) {
-      p1Status.innerText = p1Ready ? 'READY' : 'WAITING';
+      p1Status.innerText = p1Ready ? t('pvpReady') : t('pvpWaiting');
       p1Status.className = 'pvp-status-badge ' + (p1Ready ? 'ready' : 'waiting');
     }
     if (p2Status) {
-      p2Status.innerText = p2Ready ? 'READY' : 'WAITING';
+      p2Status.innerText = p2Ready ? t('pvpReady') : t('pvpWaiting');
       p2Status.className = 'pvp-status-badge ' + (p2Ready ? 'ready' : 'waiting');
     }
 
     if (readyBtn) {
-      readyBtn.innerText = localReady ? 'Cancel Ready' : 'Ready Up';
+      readyBtn.innerText = localReady ? t('pvpCancelReady') : t('pvpReadyUp');
       readyBtn.style.borderColor = localReady ? '#ff3355' : '#10b981';
     }
   }
@@ -420,7 +423,7 @@ export function initPvPLobby(onStartMatch: () => void) {
       
       if (session && session.user && userProfile) {
         if (authStatusEl) {
-          authStatusEl.textContent = 'ONLINE';
+          authStatusEl.textContent = t('pvpOnline');
           authStatusEl.style.color = '#10b981';
         }
         
@@ -436,7 +439,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     } catch (err: any) {
       console.error('Supabase Auth failed:', err);
       if (authStatusEl) {
-        authStatusEl.textContent = 'ERROR';
+        authStatusEl.textContent = t('pvpError');
         authStatusEl.style.color = '#ef4444';
       }
     }
@@ -462,9 +465,9 @@ export function initPvPLobby(onStartMatch: () => void) {
       .update({ display_name: newName.trim() })
       .eq('id', userUid);
     if (error) {
-      alert('Failed to update display name: ' + error.message);
+      alert(t('alertFailedUpdateName') + error.message);
     } else {
-      alert('Profile name updated successfully!');
+      alert(t('alertProfileNameUpdated'));
       await loadProfile();
     }
   }
@@ -521,7 +524,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     
     const requestsTab = document.getElementById('pvp-tab-requests');
     if (requestsTab) {
-      requestsTab.textContent = `Requests (${fetchedRequests.length})`;
+      requestsTab.textContent = `${t('pvpRequests')} (${fetchedRequests.length})`;
     }
   }
 
@@ -530,7 +533,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     if (!container) return;
     
     if (friends.length === 0) {
-      container.innerHTML = `<div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">No friends added yet. Share your UID!</div>`;
+      container.innerHTML = `<div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">${t('pvpNoFriends')}</div>`;
       return;
     }
     
@@ -541,7 +544,9 @@ export function initPvPLobby(onStartMatch: () => void) {
       if (!friendProfile) continue;
       
       const online = isFriendOnline(friendProfile);
-      const statusText = online ? (friendProfile.status === 'busy' ? 'In-Game' : 'Online') : 'Offline';
+      const statusText = online ? 
+        (friendProfile.status === 'busy' ? (globals.currentLang === 'ja' ? '対戦中' : 'In-Game') : (globals.currentLang === 'ja' ? 'オンライン' : 'Online')) : 
+        (globals.currentLang === 'ja' ? 'オフライン' : 'Offline');
       const statusColor = online ? (friendProfile.status === 'busy' ? '#ef4444' : '#10b981') : '#6b7280';
       const statusDot = online ? (friendProfile.status === 'busy' ? '🔴' : '🟢') : '⚫';
       
@@ -582,7 +587,7 @@ export function initPvPLobby(onStartMatch: () => void) {
       
       // Invite button
       const inviteBtn = document.createElement('button');
-      inviteBtn.textContent = 'Invite';
+      inviteBtn.textContent = t('pvpInvite');
       inviteBtn.style.padding = '4px 10px';
       inviteBtn.style.fontSize = '11px';
       inviteBtn.style.borderRadius = '4px';
@@ -625,7 +630,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     if (!container) return;
     
     if (requests.length === 0) {
-      container.innerHTML = `<div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">No pending requests.</div>`;
+      container.innerHTML = `<div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">${t('pvpNoRequests')}</div>`;
       return;
     }
     
@@ -670,7 +675,7 @@ export function initPvPLobby(onStartMatch: () => void) {
       actionsCol.style.gap = '8px';
       
       const acceptBtn = document.createElement('button');
-      acceptBtn.textContent = 'Accept';
+      acceptBtn.textContent = t('pvpAccept');
       acceptBtn.style.padding = '4px 10px';
       acceptBtn.style.fontSize = '11px';
       acceptBtn.style.borderRadius = '4px';
@@ -682,7 +687,7 @@ export function initPvPLobby(onStartMatch: () => void) {
       acceptBtn.addEventListener('click', () => acceptFriendRequest(req.user_id));
       
       const declineBtn = document.createElement('button');
-      declineBtn.textContent = 'Decline';
+      declineBtn.textContent = t('pvpDecline');
       declineBtn.style.padding = '4px 10px';
       declineBtn.style.fontSize = '11px';
       declineBtn.style.borderRadius = '4px';
@@ -714,10 +719,10 @@ export function initPvPLobby(onStartMatch: () => void) {
         
       if (updateErr) throw updateErr;
       
-      alert('Friend request accepted!');
+      alert(t('alertFriendReqAccepted'));
       await loadFriends();
     } catch (err: any) {
-      alert('Failed to accept request: ' + err.message);
+      alert(t('alertFailedAcceptReq') + err.message);
     }
   }
 
@@ -732,10 +737,10 @@ export function initPvPLobby(onStartMatch: () => void) {
         
       if (deleteErr) throw deleteErr;
       
-      alert('Friend request declined.');
+      alert(t('alertFriendReqDeclined'));
       await loadFriends();
     } catch (err: any) {
-      alert('Failed to decline request: ' + err.message);
+      alert(t('alertFailedDeclineReq') + err.message);
     }
   }
 
@@ -744,11 +749,11 @@ export function initPvPLobby(onStartMatch: () => void) {
     const targetShortId = parseInt(friendUid.trim(), 10);
     
     if (isNaN(targetShortId)) {
-      alert('Please enter a valid 8-digit numeric UID.');
+      alert(t('alertEnterValidUid'));
       return;
     }
     if (userProfile && targetShortId === userProfile.short_id) {
-      alert('You cannot add yourself as a friend.');
+      alert(t('alertCannotAddSelf'));
       return;
     }
     
@@ -760,14 +765,14 @@ export function initPvPLobby(onStartMatch: () => void) {
       .single();
       
     if (error || !profile) {
-      alert('Ronin UID not found.');
+      alert(t('alertUidNotFound'));
       return;
     }
     
     // Check if already friends
     const exists = friends.some(f => f.profile && f.profile.id === profile.id);
     if (exists) {
-      alert('You are already friends with this Ronin.');
+      alert(t('alertAlreadyFriends'));
       return;
     }
     
@@ -781,16 +786,17 @@ export function initPvPLobby(onStartMatch: () => void) {
       });
       
     if (insertErr) {
-      alert('Failed to add friend: ' + insertErr.message);
+      alert(t('alertFailedAddFriend') + insertErr.message);
     } else {
-      alert(`Friend request sent to ${profile.display_name}!`);
+      alert(t('alertFriendReqSent').replace('{name}', profile.display_name));
       await loadFriends();
     }
   }
 
   async function removeFriend(friendUid: string) {
     if (!userUid) return;
-    if (!confirm('Are you sure you want to remove this friend?')) return;
+    const confirmMsg = globals.currentLang === 'ja' ? 'このフレンドを削除してもよろしいですか？' : 'Are you sure you want to remove this friend?';
+    if (!confirm(confirmMsg)) return;
     
     const { error } = await supabase
       .from('friendships')
@@ -798,9 +804,9 @@ export function initPvPLobby(onStartMatch: () => void) {
       .or(`and(user_id.eq.${userUid},friend_id.eq.${friendUid}),and(user_id.eq.${friendUid},friend_id.eq.${userUid})`);
       
     if (error) {
-      alert('Failed to remove friend: ' + error.message);
+      alert(t('alertFailedRemoveFriend') + error.message);
     } else {
-      alert('Friend removed successfully.');
+      alert(t('alertFriendRemoved'));
       await loadFriends();
     }
   }
@@ -893,7 +899,7 @@ export function initPvPLobby(onStartMatch: () => void) {
             showStep('ready');
             updateReadyStatusDisplay();
           } else if (updated.status === 'declined') {
-            alert('Your duel invitation was declined.');
+            alert(t('alertDuelInviteDeclined'));
             supabase.removeChannel(inviteChannel);
             if (waitingInfo) waitingInfo.remove();
             pvpManager.disconnect();
@@ -905,7 +911,7 @@ export function initPvPLobby(onStartMatch: () => void) {
         });
         
     } catch (err: any) {
-      alert('Failed to invite friend: ' + err.message);
+      alert(t('alertFailedInviteFriend') + err.message);
       if (waitingInfo) waitingInfo.remove();
       pvpManager.disconnect();
       await updatePresence('online');
@@ -926,7 +932,7 @@ export function initPvPLobby(onStartMatch: () => void) {
         console.log('[Invites] Received instant broadcast invitation:', invite);
         if (invitePopup) {
           const inviteText = document.getElementById('pvp-invite-text');
-          if (inviteText) inviteText.textContent = `${invite.sender_name} has challenged you to a duel!`;
+          if (inviteText) inviteText.textContent = t('pvpChallengeMsg').replace('{name}', invite.sender_name);
           invitePopup.style.display = 'flex';
           
           activeIncomingInviteId = invite.id;
@@ -964,7 +970,7 @@ export function initPvPLobby(onStartMatch: () => void) {
         
         if (invitePopup) {
           const inviteText = document.getElementById('pvp-invite-text');
-          if (inviteText) inviteText.textContent = `${senderName} has challenged you to a duel!`;
+          if (inviteText) inviteText.textContent = t('pvpChallengeMsg').replace('{name}', senderName);
           invitePopup.style.display = 'flex';
           
           activeIncomingInviteId = invite.id;
@@ -1034,12 +1040,12 @@ export function initPvPLobby(onStartMatch: () => void) {
     const queueStatus = document.getElementById('pvp-queue-status');
     
     if (findBtn) {
-      findBtn.innerText = 'Cancel Queue';
+      findBtn.innerText = t('pvpCancelQueue');
       findBtn.style.borderColor = '#ef4444';
     }
     if (queueStatus) {
       queueStatus.style.display = 'block';
-      queueStatus.innerHTML = `Searching for opponents... <span id="pvp-queue-timer">00:00</span>`;
+      queueStatus.innerHTML = `${t('pvpSearching')}<span id="pvp-queue-timer">00:00</span>`;
     }
     
     queueTimeElapsed = 0;
@@ -1100,7 +1106,7 @@ export function initPvPLobby(onStartMatch: () => void) {
               clearInterval(queueInterval);
               queueInterval = null;
               
-              if (queueStatus) queueStatus.innerText = 'Opponent found! Connecting...';
+              if (queueStatus) queueStatus.innerText = t('pvpFoundConnecting');
               
               await updatePresence('busy', { queue_mode: null });
               // Host just stays as host and waits for connection
@@ -1122,7 +1128,7 @@ export function initPvPLobby(onStartMatch: () => void) {
           clearInterval(queueInterval);
           queueInterval = null;
           
-          if (queueStatus) queueStatus.innerText = 'Opponent found! Connecting...';
+          if (queueStatus) queueStatus.innerText = t('pvpFoundConnecting');
           
           await updatePresence('busy', { queue_mode: null });
           pvpManager.disconnect();
@@ -1130,7 +1136,7 @@ export function initPvPLobby(onStartMatch: () => void) {
             showStep('ready');
             await pvpManager.joinMatch(matchedHost.peer_id);
           } catch (err: any) {
-            alert('Matchmaking connection failed: ' + err.message);
+            alert(t('alertMatchmakingFailed') + err.message);
             stopQueue();
           }
           return;
@@ -1153,7 +1159,7 @@ export function initPvPLobby(onStartMatch: () => void) {
       }, 3000);
       
     } catch (err: any) {
-      alert('Failed to enter matchmaking: ' + err.message);
+      alert(t('alertFailedMatchmaking') + err.message);
       stopQueue();
     }
   }
@@ -1168,7 +1174,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     const queueStatus = document.getElementById('pvp-queue-status');
     
     if (findBtn) {
-      findBtn.innerText = 'Find Match';
+      findBtn.innerText = t('pvpFindMatch');
       findBtn.style.borderColor = '#10b981';
     }
     if (queueStatus) queueStatus.style.display = 'none';
@@ -1223,7 +1229,7 @@ export function initPvPLobby(onStartMatch: () => void) {
     if (!container) return;
     
     if (records.length === 0) {
-      container.innerHTML = `<div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">No records yet.</div>`;
+      container.innerHTML = `<div style="color: rgba(255,255,255,0.4); font-size: 12px; text-align: center; margin-top: 20px;">${t('pvpNoRecords')}</div>`;
       return;
     }
     
@@ -1278,7 +1284,8 @@ export function initPvPLobby(onStartMatch: () => void) {
       nameCol.style.textAlign = 'left';
       
       const nameSpan = document.createElement('span');
-      nameSpan.textContent = record.display_name + (isMe ? ' (You)' : '');
+      const youSuffix = globals.currentLang === 'ja' ? ' (自分)' : ' (You)';
+      nameSpan.textContent = record.display_name + (isMe ? youSuffix : '');
       nameSpan.style.color = isMe ? '#10b981' : '#fff';
       nameSpan.style.fontSize = '13px';
       nameSpan.style.fontFamily = 'Orbitron';
@@ -1306,7 +1313,8 @@ export function initPvPLobby(onStartMatch: () => void) {
       wlContainer.style.fontSize = '12px';
       
       const winsSpan = document.createElement('span');
-      winsSpan.textContent = `${record.pvp_wins || 0} W`;
+      const winsSuffix = globals.currentLang === 'ja' ? ' 勝' : ' W';
+      winsSpan.textContent = `${record.pvp_wins || 0}${winsSuffix}`;
       winsSpan.style.color = '#10b981';
       
       const sep = document.createElement('span');
@@ -1314,7 +1322,8 @@ export function initPvPLobby(onStartMatch: () => void) {
       sep.style.color = 'rgba(255,255,255,0.2)';
       
       const lossesSpan = document.createElement('span');
-      lossesSpan.textContent = `${record.pvp_losses || 0} L`;
+      const lossesSuffix = globals.currentLang === 'ja' ? ' 敗' : ' L';
+      lossesSpan.textContent = `${record.pvp_losses || 0}${lossesSuffix}`;
       lossesSpan.style.color = '#ef4444';
       
       wlContainer.appendChild(winsSpan);
@@ -1326,7 +1335,8 @@ export function initPvPLobby(onStartMatch: () => void) {
       const losses = record.pvp_losses || 0;
       const total = wins + losses;
       const wr = total > 0 ? Math.round((wins / total) * 100) : 0;
-      wrSpan.textContent = `${wr}% WR`;
+      const wrText = globals.currentLang === 'ja' ? `勝率 ${wr}%` : `${wr}% WR`;
+      wrSpan.textContent = wrText;
       wrSpan.style.fontSize = '9px';
       wrSpan.style.color = 'rgba(255,255,255,0.35)';
       wrSpan.style.fontFamily = 'Orbitron';
@@ -1437,23 +1447,25 @@ export function updatePvpHud() {
   // Set custom player names!
   const p1NameEl = document.querySelector('.pvp-left-hud .pvp-player-name') as HTMLElement;
   const p2NameEl = document.querySelector('.pvp-right-hud .pvp-player-name') as HTMLElement;
-  if (p1NameEl) p1NameEl.innerText = pvpManager.p1Name || 'Host';
-  if (p2NameEl) p2NameEl.innerText = pvpManager.p2Name || 'Guest';
+  const defaultP1 = globals.currentLang === 'ja' ? 'ホスト' : 'Host';
+  const defaultP2 = globals.currentLang === 'ja' ? 'ゲスト' : 'Guest';
+  if (p1NameEl) p1NameEl.innerText = pvpManager.p1Name || defaultP1;
+  if (p2NameEl) p2NameEl.innerText = pvpManager.p2Name || defaultP2;
 
   if (roundIndicator) {
     let modeLabel = '';
-    if (pvpManager.subMode === 'sudden_death') modeLabel = ' (SUDDEN DEATH)';
-    else if (pvpManager.subMode === 'hyper_speed') modeLabel = ' (HYPER SPEED)';
-    else if (pvpManager.subMode === 'storm_god') modeLabel = ' (STORM GOD)';
-    else if (pvpManager.subMode === 'insane_survival') modeLabel = ' (CO-OP SURVIVAL)';
-    roundIndicator.innerText = `ROUND ${pvpManager.round}${modeLabel}`;
+    if (pvpManager.subMode === 'sudden_death') modeLabel = ` (${t('pvpSuddenDeathShort')})`;
+    else if (pvpManager.subMode === 'hyper_speed') modeLabel = ` (${t('pvpHyperSpeedShort')})`;
+    else if (pvpManager.subMode === 'storm_god') modeLabel = ` (${t('pvpStormGodShort')})`;
+    else if (pvpManager.subMode === 'insane_survival') modeLabel = ` (${t('pvpCoopSurvivalShort')})`;
+    roundIndicator.innerText = `${t('pvpRound')} ${pvpManager.round}${modeLabel}`;
   }
   
   if (rallyCounter) {
     if (pvpManager.subMode === 'insane_survival') {
       const p1Kills = (globals as any).p1Kills || 0;
       const p2Kills = (globals as any).p2Kills || 0;
-      rallyCounter.innerText = `KILLS - ${pvpManager.p1Name}: ${p1Kills} | ${pvpManager.p2Name}: ${p2Kills}`;
+      rallyCounter.innerText = `${t('pvpKills')} - ${pvpManager.p1Name}: ${p1Kills} | ${pvpManager.p2Name}: ${p2Kills}`;
     } else {
       let baseMult = 1.0;
       let scaleFactor = 0.15;
@@ -1465,7 +1477,7 @@ export function updatePvpHud() {
         scaleFactor = 0.35;
       }
       const mult = (baseMult + pvpManager.rallyCount * scaleFactor).toFixed(2);
-      rallyCounter.innerText = `RALLY: ${pvpManager.rallyCount} (${mult}x Speed)`;
+      rallyCounter.innerText = `${t('pvpRally')} ${pvpManager.rallyCount} (${mult}x ${t('pvpSpeed')})`;
     }
   }
 }
@@ -1509,19 +1521,19 @@ export function updateTurnBadge() {
   const hasFriendly = document.getElementById('pvp-hud')?.dataset.hasFriendly === 'true';
 
   if (activeShockwaves) {
-    badge.innerText = 'DEFEND: TIMED PARRY!';
+    badge.innerText = t('pvpDefendTimedParry');
     badge.style.color = '#ffaa00';
     badge.style.borderColor = '#ffaa00';
   } else if (hasFriendly) {
-    badge.innerText = 'WAITING FOR OPPONENT...';
+    badge.innerText = t('pvpWaitingForOpponent');
     badge.style.color = '#9ca3af';
     badge.style.borderColor = 'rgba(255,255,255,0.15)';
   } else if (isMyTurn) {
-    badge.innerText = 'YOUR TURN: CHARGE [HOLD SLASH]';
+    badge.innerText = t('pvpYourTurn');
     badge.style.color = '#10b981';
     badge.style.borderColor = '#10b981';
   } else {
-    badge.innerText = 'WAITING FOR OPPONENT...';
+    badge.innerText = t('pvpWaitingForOpponent');
     badge.style.color = '#9ca3af';
     badge.style.borderColor = 'rgba(255,255,255,0.15)';
   }

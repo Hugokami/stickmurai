@@ -1,13 +1,14 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { Entity, Particle, FloatingText, Projectile } from './entities';
+import { Entity, Particle, FloatingText, Projectile, AnimatedEffect } from './entities';
 import { Player } from './player';
 import { playSound, sfx } from './audio';
+import { vfxAnims } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer';
+export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer';
 
 export class Enemy extends Entity {
   target!: Player;
@@ -86,26 +87,33 @@ export class Enemy extends Entity {
     
     if (globals.gameMode === 'zen') {
       const roll = Math.random();
-      if (roll < 0.40) this.subType = 'musketeer';
-      else if (roll < 0.52) this.subType = 'samurai';
-      else if (roll < 0.64) this.subType = 'ronin';
-      else if (roll < 0.76) this.subType = 'brawler';
-      else if (roll < 0.84) this.subType = 'berserker';
-      else if (roll < 0.88) this.subType = 'giant';
-      else if (roll < 0.92) this.subType = 'assassin';
-      else if (roll < 0.96 && globals.score > 20) this.subType = 'oni_boss';
+      if (roll < 0.30) this.subType = 'musketeer';
+      else if (roll < 0.40) this.subType = 'samurai';
+      else if (roll < 0.50) this.subType = 'ronin';
+      else if (roll < 0.60) this.subType = 'brawler';
+      else if (roll < 0.70) this.subType = 'berserker';
+      else if (roll < 0.75) this.subType = 'giant';
+      else if (roll < 0.80) this.subType = 'assassin';
+      else if (roll < 0.85) this.subType = 'pyromancer';
+      else if (roll < 0.90) this.subType = 'glacial_sentinel';
+      else if (roll < 0.95) this.subType = 'astromancer';
+      else if (roll < 0.97 && globals.score > 20) this.subType = 'oni_boss';
       else if (globals.score > 40) this.subType = 'shogun_boss';
-      else this.subType = 'musketeer';
+      else this.subType = 'necromancer';
     } else {
       const roll = Math.random();
-      if (roll < 0.20) this.subType = 'brawler';
-      else if (roll < 0.35) this.subType = 'samurai';
-      else if (roll < 0.50) this.subType = 'ronin';
-      else if (roll < 0.65) this.subType = 'berserker';
-      else if (roll < 0.75) this.subType = 'giant';
-      else if (roll < 0.85) this.subType = 'assassin';
-      else if (roll < 0.95) this.subType = 'musketeer';
-      else if (roll < 0.98 && globals.score > 20) this.subType = 'oni_boss'; // Bosses spawn later
+      if (roll < 0.15) this.subType = 'brawler';
+      else if (roll < 0.30) this.subType = 'samurai';
+      else if (roll < 0.40) this.subType = 'ronin';
+      else if (roll < 0.50) this.subType = 'berserker';
+      else if (roll < 0.58) this.subType = 'giant';
+      else if (roll < 0.66) this.subType = 'assassin';
+      else if (roll < 0.76) this.subType = 'musketeer';
+      else if (roll < 0.82 && globals.score > 5) this.subType = 'pyromancer';
+      else if (roll < 0.88 && globals.score > 8) this.subType = 'glacial_sentinel';
+      else if (roll < 0.94 && globals.score > 12) this.subType = 'astromancer';
+      else if (roll < 0.97 && globals.score > 18) this.subType = 'necromancer';
+      else if (roll < 0.99 && globals.score > 20) this.subType = 'oni_boss';
       else if (globals.score > 40) this.subType = 'shogun_boss';
       else this.subType = 'brawler'; // Fallback
     }
@@ -152,6 +160,30 @@ export class Enemy extends Entity {
       this.scaleMult = 1; this.hp = this.maxHp = 2; this.expValue = 2;
       this.colorTint = '#dddddd'; // White/Grey
       this.speed = 200;
+    } else if (this.subType === 'pyromancer') {
+      this.type = 'fighter';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.5;
+      this.scaleMult = 1.2; this.hp = this.maxHp = 8; this.expValue = 4;
+      this.colorTint = '#ff4400';
+      this.speed = 180;
+    } else if (this.subType === 'glacial_sentinel') {
+      this.type = 'sword';
+      this.lungeSpeed = 1000; this.chargeTimeMax = 1.1; this.lungeDuration = 0.7;
+      this.scaleMult = 1.4; this.hp = this.maxHp = 12; this.expValue = 5;
+      this.colorTint = '#60a5fa';
+      this.speed = 220;
+    } else if (this.subType === 'astromancer') {
+      this.type = 'fighter';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.0; this.lungeDuration = 0.5;
+      this.scaleMult = 1.1; this.hp = this.maxHp = 6; this.expValue = 5;
+      this.colorTint = '#f43f5e';
+      this.speed = 250;
+    } else if (this.subType === 'necromancer') {
+      this.type = 'fighter';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.4; this.lungeDuration = 0.6;
+      this.scaleMult = 1.5; this.hp = this.maxHp = 20; this.expValue = 8;
+      this.colorTint = '#a855f7';
+      this.speed = 170;
     } else if (this.subType === 'oni_boss') {
       this.type = 'fighter';
       this.lungeSpeed = 1200; this.chargeTimeMax = 1.1; this.lungeDuration = 0.8;
@@ -333,10 +365,14 @@ export class Enemy extends Entity {
 
       if (this.stateTime > this.chargeTimeMax) {
         this.setState('attack');
-        if (this.subType !== 'musketeer') {
+        if (this.subType !== 'musketeer' && this.subType !== 'pyromancer' && this.subType !== 'astromancer' && this.subType !== 'necromancer') {
           playSound(sfx.enemySlash, 0.3);
         }
         this.attackLanded = false;
+        
+        // Trigger custom spells
+        this.triggerCustomSpellCast(currentTarget);
+        
         let curLungeSpeed = this.lungeSpeed;
         if (this.chillTimer > 0) {
           curLungeSpeed *= 0.7;
@@ -348,7 +384,6 @@ export class Enemy extends Entity {
     }
 
     if (this.state === 'attack') {
-      // Smooth deceleration over the full lunge duration
       const t = this.stateTime / this.lungeDuration;
       const decay = Math.max(0, 1 - t);
       let curLungeSpeed = this.lungeSpeed;
@@ -359,20 +394,20 @@ export class Enemy extends Entity {
       this.vy = Math.sin(this.targetAngle) * curLungeSpeed * decay;
       
       if (!this.attackLanded) {
-          if (this.subType === 'musketeer') {
-            const proj = Projectile.acquire(this.x, this.y, this.targetAngle, true);
-            (proj as any).shooter = this;
-            globals.projectiles.push(proj);
-            this.attackLanded = true;
-         } else {
-           const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
-           const enemyHitRadius = (this.scaleMult - 1) * 60; 
-           const threshold = 140 + enemyHitRadius;
-           if (dxHit*dxHit + dyHit*dyHit < threshold * threshold) {
-             this.executeAttack(); 
-             this.attackLanded = true; 
-           }
-         }
+        if (this.subType === 'musketeer') {
+          const proj = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+          (proj as any).shooter = this;
+          globals.projectiles.push(proj);
+          this.attackLanded = true;
+        } else {
+          const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
+          const enemyHitRadius = (this.scaleMult - 1) * 60; 
+          const threshold = 140 + enemyHitRadius;
+          if (dxHit*dxHit + dyHit*dyHit < threshold * threshold) {
+            this.executeAttack(); 
+            this.attackLanded = true; 
+          }
+        }
       }
       if (this.stateTime > this.lungeDuration) { this.setState('idle'); this.attackLanded = false; }
       return;
@@ -380,9 +415,32 @@ export class Enemy extends Entity {
     
     let speed = this.speed, attackRange = 250 * this.scaleMult;
     if (this.subType === 'musketeer') { attackRange = 500; }
+    if (this.subType === 'pyromancer') { attackRange = 450; }
+    if (this.subType === 'glacial_sentinel') { attackRange = 200; }
+    if (this.subType === 'astromancer') { attackRange = 600; }
+    if (this.subType === 'necromancer') { attackRange = 500; }
 
     if (this.chillTimer > 0) {
       speed *= 0.7;
+    }
+
+    // Teleport logic for Astromancer when player gets too close
+    if (this.subType === 'astromancer' && distSq < 220 * 220 && this.state !== 'charge' && this.state !== 'attack' && Math.random() < 0.05) {
+      const tpAngle = Math.random() * Math.PI * 2;
+      const tpDist = 400 + Math.random() * 150;
+      const targetX = this.x + Math.cos(tpAngle) * tpDist;
+      const targetY = this.y + Math.sin(tpAngle) * tpDist;
+      
+      const tpOut = new AnimatedEffect(this.x, this.y, vfxAnims.starcaller.vfx1, 0.4, 1.5);
+      globals.animatedEffects.push(tpOut);
+      
+      this.x = targetX;
+      this.y = targetY;
+      
+      const tpIn = new AnimatedEffect(this.x, this.y, vfxAnims.starcaller.vfx1, 0.4, 1.5);
+      globals.animatedEffects.push(tpIn);
+      this.vx = 0; this.vy = 0;
+      return;
     }
 
     if (distSq > attackRange * attackRange) {
@@ -412,9 +470,139 @@ export class Enemy extends Entity {
         currentTarget = nearestDecoy;
       }
     }
-    
     if (currentTarget === this.target) {
       callbacks.checkPlayerHit(this);
+    }
+  }
+
+  triggerCustomSpellCast(currentTarget: any) {
+    if (this.subType === 'pyromancer') {
+      if (Math.random() < 0.4) {
+        // Fire burning fireball projectile
+        const proj = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+        (proj as any).shooter = this;
+        (proj as any).colorTint = '#ff4400';
+        globals.projectiles.push(proj);
+        this.attackLanded = true;
+      } else {
+        // Fire pillar ground eruption
+        const tx = currentTarget.x;
+        const ty = currentTarget.y;
+        
+        // Spawn ground warning indicator (VFX1 is fire rune, lasts 0.6s)
+        const warnEffect = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx1, 0.6, 1.8);
+        globals.animatedEffects.push(warnEffect);
+        
+        // Spawn vertical fire column after 0.6s
+        globals.delayedActions.push({
+          delay: 0.6,
+          run: () => {
+            const firePillar = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx2, 0.8, 2.0);
+            globals.animatedEffects.push(firePillar);
+            
+            // Check if player is near
+            const pdx = globals.player.x - tx;
+            const pdy = globals.player.y - ty;
+            const dist = Math.hypot(pdx, pdy);
+            if (dist < 120 && globals.player.state !== 'dead') {
+              callbacks.checkPlayerHit(this, 2); // 2 damage
+            }
+          }
+        });
+        this.attackLanded = true;
+      }
+    } else if (this.subType === 'glacial_sentinel') {
+      if (Math.random() < 0.45) {
+        // Ice spikes wave
+        const startX = this.x;
+        const startY = this.y;
+        const dirX = Math.cos(this.targetAngle);
+        const dirY = Math.sin(this.targetAngle);
+        
+        for (let i = 1; i <= 4; i++) {
+          const stepDist = i * 85;
+          const ix = startX + dirX * stepDist;
+          const iy = startY + dirY * stepDist;
+          
+          globals.delayedActions.push({
+            delay: i * 0.1,
+            run: () => {
+              const spike = new AnimatedEffect(ix, iy, vfxAnims.frostKnight.vfx3, 0.6, 1.5);
+              globals.animatedEffects.push(spike);
+              
+              // Deal slow and minor damage
+              const pdx = globals.player.x - ix;
+              const pdy = globals.player.y - iy;
+              if (Math.hypot(pdx, pdy) < 70 && globals.player.state !== 'dead') {
+                globals.player.chillTimer = 3.0; // Chill player
+                callbacks.checkPlayerHit(this, 1);
+              }
+            }
+          });
+        }
+        this.attackLanded = true;
+      } else {
+        // Temporary Ice Shield + standard lunge
+        const shieldFx = new AnimatedEffect(this.x, this.y, vfxAnims.frostKnight.vfx2, 1.0, 1.8);
+        globals.animatedEffects.push(shieldFx);
+        (this as any).iceShieldActive = true;
+        globals.delayedActions.push({
+          delay: 1.0,
+          run: () => {
+            (this as any).iceShieldActive = false;
+          }
+        });
+      }
+    } else if (this.subType === 'astromancer') {
+      // Meteor drops from sky
+      const tx = currentTarget.x;
+      const ty = currentTarget.y;
+      
+      // Spawn star rune warning
+      const starRune = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx1, 0.5, 1.5);
+      globals.animatedEffects.push(starRune);
+      
+      globals.delayedActions.push({
+        delay: 0.5,
+        run: () => {
+          // Fall meteor (VFX3 is constellation/blast)
+          const blast = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx3, 0.7, 1.6);
+          globals.animatedEffects.push(blast);
+          
+          const pdx = globals.player.x - tx;
+          const pdy = globals.player.y - ty;
+          if (Math.hypot(pdx, pdy) < 100 && globals.player.state !== 'dead') {
+            callbacks.checkPlayerHit(this, 2);
+          }
+        }
+      });
+      this.attackLanded = true;
+    } else if (this.subType === 'necromancer') {
+      // Necromancer summons skeleton minions or fires tracking void skulls
+      if (Math.random() < 0.5 && globals.enemies.length < 15) {
+        // Portal effect
+        const portal = new AnimatedEffect(this.x, this.y - 40, vfxAnims.warlock.vfx1, 0.8, 2.0);
+        globals.animatedEffects.push(portal);
+        
+        globals.delayedActions.push({
+          delay: 0.8,
+          run: () => {
+            const minion = new Enemy(this.x + (Math.random() - 0.5) * 100, this.y, this.target);
+            minion.subType = 'brawler';
+            minion.hp = minion.maxHp = 3;
+            minion.colorTint = '#a855f7'; // Purple tainted
+            globals.enemies.push(minion);
+          }
+        });
+      } else {
+        // Homing Shadow Skull projectile
+        const skullProj = Projectile.acquire(this.x, this.y - 20, this.targetAngle, true);
+        (skullProj as any).shooter = this;
+        (skullProj as any).isHoming = true;
+        (skullProj as any).colorTint = '#a855f7';
+        globals.projectiles.push(skullProj);
+      }
+      this.attackLanded = true;
     }
   }
 

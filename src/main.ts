@@ -29,12 +29,14 @@ import {
   Decoy,
   Collectible,
   LightningBeam,
-  PvPShockwave
+  PvPShockwave,
+  AnimatedEffect
 } from './entities';
 import { pvpManager } from './pvpIaijutsuManager';
 import { initPvPLobby, updatePvpHud, showRoundBanner, updateTurnBadge, recordMatchResult } from './pvpLobby';
 import { Player } from './player';
 import { Enemy } from './enemy';
+import { vfxAnims } from './assets';
 
 let localRematchReady = false;
 let remoteRematchReady = false;
@@ -887,7 +889,7 @@ function triggerFlowingCounterReset() {
   }
 }
 
-function checkPlayerHit(enemy: Enemy) {
+function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   if (globals.invulnTimer > 0) return;
 
   if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
@@ -1008,7 +1010,7 @@ function checkPlayerHit(enemy: Enemy) {
   
   if (globals.player.state !== 'dead') {
     playSynthesizedHurt();
-    globals.lives--;
+    globals.lives -= damageAmount;
     globals.invulnTimer = 0.5;
     globals.screenShake = 20;
     
@@ -1742,6 +1744,15 @@ export function revivePlayer() {
 /* hack: had to separate awakening execution hits from standard normal hits */
 function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if (e.state === 'dead') return;
+  if ((e as any).iceShieldActive) {
+    (e as any).iceShieldActive = false;
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, globals.currentLang === 'ja' ? '防ぐ！' : 'BLOCKED!', '#60a5fa', 22));
+    playSynthesizedParry();
+    for (let i = 0; i < 10; i++) {
+      globals.particles.push(Particle.acquire(e.x, e.y, '#60a5fa', 200, 0.4, 2 + Math.random() * 2));
+    }
+    return;
+  }
   if ((e as any).isPvpRemote && pvpManager.subMode === 'insane_survival') return;
 
   if (globals.gameMode === 'pvp' && pvpManager.subMode === 'insane_survival') {
@@ -1846,6 +1857,20 @@ function killEnemy(e: Enemy) {
   addCombo();
   globals.runStats.kills++;
   checkVampireHeal(e);
+
+  if (e.subType === 'pyromancer') {
+    const fireExp = new AnimatedEffect(e.x, e.y, vfxAnims.explosions.fire, 0.7, 2.0);
+    globals.animatedEffects.push(fireExp);
+    // Deal splash damage to player if close
+    const dx = globals.player.x - e.x;
+    const dy = globals.player.y - e.y;
+    if (Math.hypot(dx, dy) < 140 && globals.player.state !== 'dead') {
+      callbacks.checkPlayerHit(e, 1);
+    }
+  } else if (e.subType === 'necromancer') {
+    const voidExp = new AnimatedEffect(e.x, e.y, vfxAnims.warlock.vfx3, 0.8, 2.2);
+    globals.animatedEffects.push(voidExp);
+  }
   
   const killSparkCount = globals.graphicsSettings === 'low' ? 6 : 20;
   for(let i=0; i<killSparkCount; i++) {
@@ -3409,16 +3434,16 @@ function updateRematchStatusText() {
   if (!statusEl) return;
   
   const readyCount = (localRematchReady ? 1 : 0) + (remoteRematchReady ? 1 : 0);
-  statusEl.innerText = `Rematch? (${readyCount}/2 Ready)`;
+  statusEl.innerText = t('pvpRematchStatus').replace('{count}', readyCount.toString());
   
   const rematchBtn = document.getElementById('pvp-rematch-btn');
   if (rematchBtn) {
     if (localRematchReady) {
-      rematchBtn.innerText = 'Ready!';
+      rematchBtn.innerText = t('pvpRematchBtnReady');
       rematchBtn.style.borderColor = '#10b981';
       rematchBtn.setAttribute('disabled', 'true');
     } else {
-      rematchBtn.innerText = 'Rematch';
+      rematchBtn.innerText = t('pvpRematchBtn');
       rematchBtn.style.borderColor = '#10b981';
       rematchBtn.removeAttribute('disabled');
     }
@@ -3668,9 +3693,9 @@ function initPvpGame() {
           
           const winnerTitle = document.getElementById('pvp-winner-title');
           if (winnerTitle) {
-            winnerTitle.innerText = `${winnerName} WINS!`;
+            winnerTitle.innerText = t('pvpWins').replace('{name}', winnerName);
           }
-          showRoundBanner('SURVIVAL OVER', `${winnerName} WINS!`, 3000).then(() => {
+          showRoundBanner(t('pvpSurvivalOver'), t('pvpWins').replace('{name}', winnerName), 3000).then(() => {
             const gameOverScreen = document.getElementById('pvp-game-over-screen');
             if (gameOverScreen) {
               gameOverScreen.style.display = 'flex';
@@ -3723,11 +3748,11 @@ function initPvpGame() {
 
           const winnerTitle = document.getElementById('pvp-winner-title');
           if (winnerTitle) {
-            winnerTitle.innerText = `${winnerName} WINS!`;
+            winnerTitle.innerText = t('pvpWins').replace('{name}', winnerName);
           }
           updateRematchStatusText();
 
-          showRoundBanner('DUEL OVER', `${winnerName} WINS!`, 3000).then(() => {
+          showRoundBanner(t('pvpDuelOver'), t('pvpWins').replace('{name}', winnerName), 3000).then(() => {
             const gameOverScreen = document.getElementById('pvp-game-over-screen');
             if (gameOverScreen) {
               gameOverScreen.style.display = 'flex';
@@ -3803,7 +3828,7 @@ function initPvpGame() {
         globals.floatingTexts.push(FloatingText.acquire(
           opp.x,
           opp.y - 80,
-          msg.isPerfect ? "PERFECT PARRY!" : "PARRY!",
+          msg.isPerfect ? t('pvpPerfectParryFloating') : t('pvpParryFloating'),
           msg.isPerfect ? "neon-#ffaa00" : "#ffd700",
           msg.isPerfect ? 32 : 24
         ));
@@ -3834,7 +3859,7 @@ function initPvpGame() {
           globals.particles.push(Particle.acquire(opp.x, opp.y, '#ff3355', speed, 0.5, 3, angle));
         }
 
-        globals.floatingTexts.push(FloatingText.acquire(opp.x, opp.y - 80, "CRITICAL HIT!", "#ff3355", 30));
+        globals.floatingTexts.push(FloatingText.acquire(opp.x, opp.y - 80, t('pvpCriticalHitFloating'), "#ff3355", 30));
       }
       
       if (pvpManager.role === 'host') {
@@ -3932,7 +3957,7 @@ async function startPvpRound() {
   globals.mobileParryJustPressed = false;
   globals.mobileDashJustPressed = false;
 
-  await showRoundBanner(`ROUND ${pvpManager.round}`, 'READY...', 1500);
+  await showRoundBanner(`${t('pvpRound')} ${pvpManager.round}`, t('pvpReadyBanner'), 1500);
   
   pvpManager.matchState = 'playing';
   updateTurnBadge();
@@ -3983,12 +4008,12 @@ function handlePvpRoundResolution() {
       // Update rematch screen winner name
       const winnerTitle = document.getElementById('pvp-winner-title');
       if (winnerTitle) {
-        winnerTitle.innerText = `${winnerName} WINS!`;
+        winnerTitle.innerText = t('pvpWins').replace('{name}', winnerName);
       }
       updateRematchStatusText();
 
       // Show banner first
-      await showRoundBanner('DUEL OVER', `${winnerName} WINS!`, 3000);
+      await showRoundBanner(t('pvpDuelOver'), t('pvpWins').replace('{name}', winnerName), 3000);
 
       // Show rematch screen overlay
       const gameOverScreen = document.getElementById('pvp-game-over-screen');
@@ -4186,11 +4211,11 @@ function handlePvpSurvivalDeathResolution(deadPlayer: 'host' | 'client') {
     
     const winnerTitle = document.getElementById('pvp-winner-title');
     if (winnerTitle) {
-      winnerTitle.innerText = `${winnerName} WINS!`;
+      winnerTitle.innerText = t('pvpWins').replace('{name}', winnerName);
     }
     updateRematchStatusText();
     
-    await showRoundBanner('SURVIVAL OVER', `${winnerName} WINS!`, 3000);
+    await showRoundBanner(t('pvpSurvivalOver'), t('pvpWins').replace('{name}', winnerName), 3000);
     
     const gameOverScreen = document.getElementById('pvp-game-over-screen');
     if (gameOverScreen) {
@@ -4245,11 +4270,11 @@ function handlePvpSurvivalTimeoutResolution() {
     
     const winnerTitle = document.getElementById('pvp-winner-title');
     if (winnerTitle) {
-      winnerTitle.innerText = winner === 'draw' ? 'DRAW!' : `${winnerName} WINS!`;
+      winnerTitle.innerText = winner === 'draw' ? t('pvpDraw') : t('pvpWins').replace('{name}', winnerName);
     }
     updateRematchStatusText();
     
-    await showRoundBanner('TIME UP!', winner === 'draw' ? 'DRAW!' : `${winnerName} WINS!`, 3000);
+    await showRoundBanner(t('pvpTimeUp'), winner === 'draw' ? t('pvpDraw') : t('pvpWins').replace('{name}', winnerName), 3000);
     
     const gameOverScreen = document.getElementById('pvp-game-over-screen');
     if (gameOverScreen) {
@@ -4461,7 +4486,7 @@ function runPvpStep(realDt: number) {
           globals.floatingTexts.push(FloatingText.acquire(
             player.x,
             player.y - 80,
-            isPerfect ? "PERFECT PARRY!" : "PARRY!",
+            isPerfect ? t('pvpPerfectParryFloating') : t('pvpParryFloating'),
             isPerfect ? "neon-#ffaa00" : "#ffd700",
             isPerfect ? 32 : 24
           ));
@@ -4526,7 +4551,7 @@ function runPvpStep(realDt: number) {
             globals.particles.push(Particle.acquire(player.x, player.y, '#ff3355', speed, 0.5, 3, angle));
           }
 
-          globals.floatingTexts.push(FloatingText.acquire(player.x, player.y - 80, "CRITICAL HIT!", "#ff3355", 30));
+          globals.floatingTexts.push(FloatingText.acquire(player.x, player.y - 80, t('pvpCriticalHitFloating'), "#ff3355", 30));
 
           if (pvpManager.role === 'host') {
             pvpManager.p1Lives--;

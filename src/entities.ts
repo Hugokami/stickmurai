@@ -1,5 +1,5 @@
 import { globals } from './globals';
-import { anims } from './assets';
+import { anims, vfxAnims } from './assets';
 import { callbacks } from './callbacks';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -441,6 +441,21 @@ export class Projectile {
     }
   }
   update(dt: number) {
+    if ((this as any).isHoming && globals.player && globals.player.state !== 'dead') {
+      const dx = globals.player.x - this.x;
+      const dy = globals.player.y - this.y;
+      const targetAngle = Math.atan2(dy, dx);
+      
+      let diff = targetAngle - this.angle;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      
+      this.angle += diff * Math.min(1.0, 3.5 * dt);
+      const homingSpeed = 550;
+      this.vx = Math.cos(this.angle) * homingSpeed;
+      this.vy = Math.sin(this.angle) * homingSpeed;
+    }
+
     this.x += this.vx * dt; this.y += this.vy * dt;
     this.life -= dt;
     
@@ -585,14 +600,38 @@ export class Projectile {
     ctx.rotate(this.angle);
     
     if (this.isEnemy) {
-      ctx.beginPath();
-      ctx.arc(0, 0, 15, 0, Math.PI*2);
-      ctx.fillStyle = '#ff0000';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(0, 0, 10, 0, Math.PI*2);
-      ctx.fillStyle = '#ffff00';
-      ctx.fill();
+      const tint = (this as any).colorTint;
+      if (tint === '#ff4400') {
+        const frameIdx = Math.floor((performance.now() / 60) % 12);
+        const img = vfxAnims.fireMage.vfx3[frameIdx];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.scale(2.0, 2.0);
+          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+        }
+      } else if (tint === '#a855f7') {
+        const frameIdx = Math.floor((performance.now() / 60) % 13);
+        const img = vfxAnims.warlock.vfx2[frameIdx];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.scale(1.8, 1.8);
+          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+        }
+      } else if (tint === '#f43f5e') {
+        const frameIdx = Math.floor((performance.now() / 65) % 8);
+        const img = vfxAnims.starcaller.vfx2[frameIdx];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.scale(2.2, 2.2);
+          ctx.drawImage(img, -img.width / 2, -img.height / 2);
+        }
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI*2);
+        ctx.fillStyle = '#ff0000';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI*2);
+        ctx.fillStyle = '#ffff00';
+        ctx.fill();
+      }
     } else if (this.isDeflected) {
       ctx.beginPath();
       ctx.arc(0, 0, 15, 0, Math.PI*2);
@@ -882,184 +921,95 @@ export class Slash {
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
     }
-    
-    ctx.save();
-    ctx.translate(rx, ry);
-    ctx.rotate(this.angle);
-    const p = Math.max(0, this.life / this.maxLife); // 1.0 down to 0.0
 
-    // Rapid scale-up on entrance (first 22% of lifetime, which is when p is between 1.0 and 0.78)
-    const entranceProgress = Math.min(1, (1 - p) / 0.22);
-    const entranceScale = 1 - Math.pow(1 - entranceProgress, 3); // cubic ease out
-    ctx.scale(this.sizeMult * entranceScale, this.sizeMult * entranceScale);
-
-    // Non-linear easing for smoother expansion and snap
-    const easeOutCubic = 1 - Math.pow(p, 3);
-    const easeInQuad = p * p;
-
-    // slash radius expansion using easeOutCubic
-    const midRadius = 130 + 45 * easeOutCubic;
-    const halfWidth = 35 * easeInQuad; // gets thinner as it fades
-
-    const isCircular = this.isCircular || false;
-    const startAngle = isCircular ? 0 : -Math.PI / 2.2;
-    const endAngle = isCircular ? Math.PI * 2 : Math.PI / 2.2;
-    const angleRange = endAngle - startAngle;
-
-    const steps = isCircular ? 60 : 30;
-    
-    // backing shadow
-    ctx.beginPath();
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const angle = startAngle + angleRange * t;
-      const factor = isCircular ? 1.0 : Math.sin(t * Math.PI); // 0 -> 1 -> 0
-      const r = midRadius + halfWidth * factor * 1.2;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    for (let i = steps; i >= 0; i--) {
-      const t = i / steps;
-      const angle = startAngle + angleRange * t;
-      const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
-      const r = midRadius - halfWidth * factor * 1.2;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
-      ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.fillStyle = `rgba(18, 18, 25, ${easeInQuad * 0.45})`;
-    ctx.fill();
-
-    
-    ctx.beginPath();
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const angle = startAngle + angleRange * t;
-      const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
-      const r = midRadius + halfWidth * factor;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    for (let i = steps; i >= 0; i--) {
-      const t = i / steps;
-      const angle = startAngle + angleRange * t;
-      const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
-      const r = midRadius - halfWidth * factor;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
-      ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-
+    // Determine color and anim set
+    let frames = vfxAnims.slashes.slash1.color1; // Default: cyan/wind
     const isUlt = globals.flowState === 'awakened';
-    let gradColor1 = 'rgba(255, 30, 70, ';
-    let gradColor2 = 'rgba(255, 100, 150, ';
-    let glowColor = '#ff1e46';
-    
+
     if (this.colorTint) {
       if (this.colorTint.includes('136, 51, 255')) {
         // Purple shadow clone slash
-        gradColor1 = 'rgba(136, 51, 255, ';
-        gradColor2 = 'rgba(200, 100, 255, ';
-        glowColor = '#8833ff';
+        frames = vfxAnims.slashes.slash1.color4;
       } else if (this.colorTint.includes('255, 0, 85')) {
         // Riposte crimson/pink circular slash
-        gradColor1 = 'rgba(255, 0, 85, ';
-        gradColor2 = 'rgba(255, 100, 150, ';
-        glowColor = '#ff0055';
+        frames = vfxAnims.slashes.slash2.color2; // red/pinkish
       } else if (this.colorTint.includes('255, 183, 197') || this.colorTint.includes('sakura')) {
         // Sakura pink slash
-        gradColor1 = 'rgba(255, 183, 197, ';
-        gradColor2 = 'rgba(255, 220, 230, ';
-        glowColor = '#ffb7c5';
-      } else {
-        // Cyan clone slash (or other overrides)
-        gradColor1 = 'rgba(0, 255, 255, ';
-        gradColor2 = 'rgba(200, 255, 255, ';
-        glowColor = '#00ffff';
+        frames = vfxAnims.slashes.slash1.color5; // pink
+      } else if (this.colorTint.includes('0, 255, 255')) {
+        // Cyan clone slash
+        frames = vfxAnims.slashes.slash1.color1;
       }
     } else if (isUlt) {
-      gradColor1 = 'rgba(0, 255, 255, ';
-      gradColor2 = 'rgba(200, 255, 255, ';
-      glowColor = '#00ffff';
+      // Ultimate golden/cyan slash
+      frames = vfxAnims.slashes.slash3.color1;
     } else if (this.isEnhanced) {
-      gradColor1 = 'rgba(255, 120, 0, ';
-      gradColor2 = 'rgba(255, 200, 50, ';
-      glowColor = '#ff7800';
+      // Fire/Enhanced slash
+      frames = vfxAnims.slashes.slash2.color2; // Fire red
+    } else if (globals.frostStanceActive) {
+      frames = vfxAnims.slashes.slash3.color3; // Ice blue
+    } else if (globals.voidStanceActive) {
+      frames = vfxAnims.slashes.slash1.color4; // Purple/void
     }
 
-    ctx.save();
-    if (!isMobile && globals.graphicsSettings !== 'low') {
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = glowColor;
-    }
-    const grad = ctx.createRadialGradient(0, 0, midRadius - halfWidth, 0, 0, midRadius + halfWidth);
-    grad.addColorStop(0, gradColor1 + '0)');
-    grad.addColorStop(0.5, gradColor2 + easeInQuad + ')');
-    grad.addColorStop(1, gradColor1 + '0)');
-    ctx.fillStyle = grad;
-    ctx.fill();
-    ctx.restore();
+    const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
+    const frameIdx = Math.floor(progress * frames.length);
+    const img = frames[frameIdx];
 
-    // white edge line
-    ctx.beginPath();
-    for (let i = 0; i <= steps; i++) {
-      const t = i / steps;
-      const angle = startAngle + angleRange * t;
-      const x = Math.cos(angle) * midRadius;
-      const y = Math.sin(angle) * midRadius;
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.strokeStyle = `rgba(255, 255, 255, ${easeInQuad * 0.95})`;
-    ctx.lineWidth = 2.5 * easeInQuad;
-    ctx.stroke();
-
-    // extra sparks for polish
-    if (Math.random() < 0.5) {
-      const sparkAngle = startAngle + Math.random() * angleRange;
-      const sx = Math.cos(sparkAngle) * midRadius;
-      const sy = Math.sin(sparkAngle) * midRadius;
-      const absoluteAngle = this.angle + sparkAngle + Math.PI / 2; // tangent direction
-      const sparkColor = this.isEnhanced ? '#ffd700' : '#ffffff';
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.save();
+      ctx.translate(rx, ry);
+      ctx.rotate(this.angle);
       
-      globals.particles.push(Particle.acquire(
-        this.x + sx * this.sizeMult,
-        this.y + sy * this.sizeMult,
-        sparkColor,
-        600,
-        0.25 + Math.random() * 0.15,
-        1.5 + Math.random() * 1.5,
-        absoluteAngle + (Math.random() - 0.5) * 0.3
-      ));
+      // Center the slash arc on the player
+      const scale = 2.5 * this.sizeMult;
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.restore();
     }
+  }
+}
 
-    // ink splatters
-    if (Math.random() < 0.4) {
-      const splashAngle = (Math.random() - 0.5) * Math.PI * p;
-      const splashDist = midRadius + (Math.random() - 0.5) * 50;
-      const sx = Math.cos(splashAngle) * splashDist;
-      const sy = Math.sin(splashAngle) * splashDist;
+export class AnimatedEffect {
+  x: number;
+  y: number;
+  frames: HTMLImageElement[];
+  life: number;
+  maxLife: number;
+  scale: number;
+  rotation: number;
+
+  constructor(x: number, y: number, frames: HTMLImageElement[], duration = 0.4, scale = 1.0, rotation = 0) {
+    this.x = x;
+    this.y = y;
+    this.frames = frames;
+    this.maxLife = duration;
+    this.life = duration;
+    this.scale = scale;
+    this.rotation = rotation;
+  }
+
+  update(dt: number) {
+    this.life -= dt;
+  }
+
+  draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
+    if (this.life <= 0 || this.frames.length === 0) return;
+    const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
+    const frameIdx = Math.floor(progress * this.frames.length);
+    const img = this.frames[frameIdx];
+    
+    if (img && img.complete && img.naturalWidth > 0) {
+      const rx = Math.round(this.x - cx + globals.vw/2);
+      const ry = Math.round(this.y - cy + globals.vh/2);
       
-      // ink particles
-      for (let j = 0; j < 3; j++) {
-        const vx = Math.cos(splashAngle + Math.PI/2) * (300 + Math.random()*200);
-        const vy = Math.sin(splashAngle + Math.PI/2) * (300 + Math.random()*200);
-        globals.particles.push(Particle.acquire(
-          this.x + sx,
-          this.y + sy,
-          `rgba(20, 20, 25, ${p})`,
-          Math.hypot(vx, vy),
-          0.3 + Math.random() * 0.2,
-          Math.random() * 6 + 4,
-          Math.atan2(vy, vx)
-        ));
-      }
+      ctx.save();
+      ctx.translate(rx, ry);
+      ctx.rotate(this.rotation);
+      ctx.scale(this.scale, this.scale);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.restore();
     }
-
-    ctx.restore();
   }
 }
 

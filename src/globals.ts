@@ -102,6 +102,7 @@ export const globals = {
   judgementDomes: [] as any[],
   lightningBeams: [] as any[],
   pvpShockwaves: [] as any[],
+  animatedEffects: [] as any[],
   playerPosHistory: [] as { x: number, y: number, state: string, animFrame: number, dir: number }[],
   delayedActions: [] as any[],
   windForces: [] as any[],

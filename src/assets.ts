@@ -155,7 +155,93 @@ export const i18n: Record<string, Record<string, string>> = {
     floatingText: "Floating Numbers",
     groundScars: "Ground Slash Marks",
     settingsOn: "On",
-    settingsOff: "Off"
+    settingsOff: "Off",
+    pvpLobbyTitle: "IAIJUTSU SHOWDOWN",
+    pvpMyProfile: "MY PROFILE",
+    pvpLoadingRonin: "Loading Ronin...",
+    pvpSave: "Save",
+    pvpUidDisplay: "UID: Loading...",
+    pvpCopy: "Copy",
+    pvpSelectRules: "SELECT GAME RULES",
+    pvpClassicDuel: "CLASSIC DUEL (3 Lives)",
+    pvpSuddenDeath: "SUDDEN DEATH (1 Life, Fast Start)",
+    pvpHyperSpeed: "HYPER SPEED (3 Lives, Rapid Acceleration)",
+    pvpStormGod: "STORM GOD (3 Lives, Sky Lightning Storms)",
+    pvpCoopSurvival: "INSANE CO-OP SURVIVAL (Insane Difficulty, AI Waves)",
+    pvpSuddenDeathShort: "SUDDEN DEATH",
+    pvpHyperSpeedShort: "HYPER SPEED",
+    pvpStormGodShort: "STORM GOD",
+    pvpCoopSurvivalShort: "CO-OP SURVIVAL",
+    pvpFindMatch: "Find Match",
+    pvpCancelQueue: "Cancel Queue",
+    pvpSearching: "Searching for opponents... ",
+    pvpFoundConnecting: "Opponent found! Connecting...",
+    pvpFriends: "Friends",
+    pvpRequests: "Requests",
+    pvpTopDuelists: "Top Duelists",
+    pvpAddFriend: "ADD FRIEND",
+    pvpFriendUidPlaceholder: "Paste Friend UID...",
+    pvpAdd: "Add",
+    pvpNoFriends: "No friends added yet. Share your UID!",
+    pvpPendingRequests: "PENDING REQUESTS",
+    pvpNoRequests: "No pending requests.",
+    pvpNoRecords: "No records yet.",
+    pvpLoadingLeaderboard: "Loading leaderboard...",
+    pvpBackToMenu: "Back to Menu",
+    pvpReadyRoomMode: "MODE: ",
+    pvpHost: "Host (P1)",
+    pvpClient: "Client (P2)",
+    pvpWaiting: "WAITING",
+    pvpReady: "READY",
+    pvpReadyUp: "Ready Up",
+    pvpCancelReady: "Cancel Ready",
+    pvpDisconnect: "Disconnect",
+    pvpDuelChallenge: "DUEL CHALLENGE!",
+    pvpDecline: "Decline",
+    pvpAccept: "Accept",
+    pvpDefendTimedParry: "DEFEND: TIMED PARRY!",
+    pvpWaitingForOpponent: "WAITING FOR OPPONENT...",
+    pvpYourTurn: "YOUR TURN: CHARGE [HOLD SLASH]",
+    pvpParryLockout: "PARRY LOCKOUT!",
+    pvpWins: "WINS!",
+    pvpRematch: "Rematch",
+    pvpRematchStatus: "Rematch? ({count}/2 Ready)",
+    pvpQuitToMenu: "Quit to Menu",
+    pvpRound: "ROUND",
+    pvpReadyText: "READY...",
+    pvpRally: "RALLY:",
+    pvpSpeed: "Speed",
+    pvpKills: "KILLS",
+    pvpConnecting: "CONNECTING...",
+    pvpConnected: "CONNECTED",
+    pvpError: "ERROR",
+    pvpOnline: "ONLINE",
+    pvpChallengeMsg: "{name} has challenged you to a duel!",
+    pvpInvite: "Invite",
+    
+    // Alert strings
+    alertUidCopied: "Your UID has been copied to clipboard!",
+    alertFailedToConnect: "Failed to connect: ",
+    alertOpponentDisconnected: "Opponent disconnected. Returning to main menu.",
+    alertConnectionClosed: "Connection closed by remote peer.",
+    alertFailedUpdateName: "Failed to update display name: ",
+    alertProfileNameUpdated: "Profile name updated successfully!",
+    alertFriendReqAccepted: "Friend request accepted!",
+    alertFailedAcceptReq: "Failed to accept request: ",
+    alertFriendReqDeclined: "Friend request declined.",
+    alertFailedDeclineReq: "Failed to decline request: ",
+    alertEnterValidUid: "Please enter a valid 8-digit numeric UID.",
+    alertCannotAddSelf: "You cannot add yourself as a friend.",
+    alertUidNotFound: "Ronin UID not found.",
+    alertAlreadyFriends: "You are already friends with this Ronin.",
+    alertFailedAddFriend: "Failed to add friend: ",
+    alertFriendReqSent: "Friend request sent to {name}!",
+    alertFailedRemoveFriend: "Failed to remove friend: ",
+    alertFriendRemoved: "Friend removed successfully.",
+    alertDuelInviteDeclined: "Your duel invitation was declined.",
+    alertFailedInviteFriend: "Failed to invite friend: ",
+    alertMatchmakingFailed: "Matchmaking connection failed: ",
+    alertFailedMatchmaking: "Failed to enter matchmaking: "
   },
   ja: {
     rotatePrompt: "画面を回転して全画面表示にしますか？",
@@ -309,7 +395,93 @@ export const i18n: Record<string, Record<string, string>> = {
     floatingText: "ダメージ数値表示",
     groundScars: "地面の斬撃痕",
     settingsOn: "オン",
-    settingsOff: "オフ"
+    settingsOff: "オフ",
+    pvpLobbyTitle: "居合・対戦ロビー",
+    pvpMyProfile: "マイプロフィール",
+    pvpLoadingRonin: "浪人を読み込み中...",
+    pvpSave: "保存",
+    pvpUidDisplay: "UID: 読み込み中...",
+    pvpCopy: "コピー",
+    pvpSelectRules: "ゲームルールの選択",
+    pvpClassicDuel: "クラシック決闘 (ライフ 3)",
+    pvpSuddenDeath: "サドンデス (ライフ 1, 高速開始)",
+    pvpHyperSpeed: "ハイスピード決闘 (ライフ 3, 急加速)",
+    pvpStormGod: "雷神の暴風 (ライフ 3, 落雷発生)",
+    pvpCoopSurvival: "悪夢 of 共同生存モード (インセイン難易度, AI群れ)",
+    pvpSuddenDeathShort: "サドンデス",
+    pvpHyperSpeedShort: "ハイスピード",
+    pvpStormGodShort: "雷神の暴風",
+    pvpCoopSurvivalShort: "共同生存",
+    pvpFindMatch: "対戦相手を探す",
+    pvpCancelQueue: "マッチングをキャンセル",
+    pvpSearching: "対戦相手を検索中... ",
+    pvpFoundConnecting: "対戦相手が見つかりました！接続中...",
+    pvpFriends: "フレンド",
+    pvpRequests: "リクエスト",
+    pvpTopDuelists: "上位決闘者",
+    pvpAddFriend: "フレンド追加",
+    pvpFriendUidPlaceholder: "フレンドのUIDを貼り付け...",
+    pvpAdd: "追加",
+    pvpNoFriends: "フレンドがまだ追加されていません。UIDを共有しましょう！",
+    pvpPendingRequests: "保留中のリクエスト",
+    pvpNoRequests: "保留中のリクエストはありません。",
+    pvpNoRecords: "まだ対戦記録がありません。",
+    pvpLoadingLeaderboard: "リーダーボードを読み込み中...",
+    pvpBackToMenu: "メニューに戻る",
+    pvpReadyRoomMode: "モード: ",
+    pvpHost: "ホスト (P1)",
+    pvpClient: "クライアント (P2)",
+    pvpWaiting: "待機中",
+    pvpReady: "準備完了",
+    pvpReadyUp: "準備完了",
+    pvpCancelReady: "準備取消",
+    pvpDisconnect: "切断する",
+    pvpDuelChallenge: "決闘の申し込み！",
+    pvpDecline: "辞退",
+    pvpAccept: "受諾",
+    pvpDefendTimedParry: "防御: タイミングよく弾け！",
+    pvpWaitingForOpponent: "相手の行動を待っています...",
+    pvpYourTurn: "あなたのターン: 攻撃長押しでチャージ",
+    pvpParryLockout: "パリィ不可！",
+    pvpWins: "勝利！",
+    pvpRematch: "再戦",
+    pvpRematchStatus: "再戦？ ({count}/2 準備完了)",
+    pvpQuitToMenu: "タイトルへ",
+    pvpRound: "ラウンド",
+    pvpReadyText: "尋常に...",
+    pvpRally: "ラリー:",
+    pvpSpeed: "速度",
+    pvpKills: "討伐数",
+    pvpConnecting: "接続中...",
+    pvpConnected: "接続完了",
+    pvpError: "エラー",
+    pvpOnline: "接続完了",
+    pvpChallengeMsg: "{name}から決闘の申し込みが届きました！",
+    pvpInvite: "招待",
+    
+    // Alert strings
+    alertUidCopied: "UIDがクリップボードにコピーされました！",
+    alertFailedToConnect: "接続に失敗しました: ",
+    alertOpponentDisconnected: "対戦相手の接続が切れました。メインメニューに戻ります。",
+    alertConnectionClosed: "対戦相手によって接続が切断されました。",
+    alertFailedUpdateName: "表示名の更新に失敗しました: ",
+    alertProfileNameUpdated: "プロフィール名が正常に更新されました！",
+    alertFriendReqAccepted: "フレンドリクエストを受諾しました！",
+    alertFailedAcceptReq: "リクエストの受諾に失敗しました: ",
+    alertFriendReqDeclined: "フレンドリクエストを辞退しました。",
+    alertFailedDeclineReq: "リクエストの辞退に失敗しました: ",
+    alertEnterValidUid: "有効な8桁の数値のUIDを入力してください。",
+    alertCannotAddSelf: "自分自身をフレンドに追加することはできません。",
+    alertUidNotFound: "浪人UIDが見つかりません。",
+    alertAlreadyFriends: "この浪人とは既にフレンドです。",
+    alertFailedAddFriend: "フレンドの追加に失敗しました: ",
+    alertFriendReqSent: "{name}にフレンドリクエストを送信しました！",
+    alertFailedRemoveFriend: "フレンドの削除に失敗しました: ",
+    alertFriendRemoved: "フレンドを削除しました。",
+    alertDuelInviteDeclined: "決闘への招待が辞退されました。",
+    alertFailedInviteFriend: "フレンドへの招待に失敗しました: ",
+    alertMatchmakingFailed: "マッチングの接続に失敗しました: ",
+    alertFailedMatchmaking: "マッチングへの参加に失敗しました: "
   }
 };
 
@@ -419,3 +591,91 @@ export const skillsData = [
   { id: 'parry_master', nameKey: 'skillParryMasterName', descKey: 'skillParryMasterDesc' },
   { id: 'decoy_illusion', nameKey: 'skillDecoyName', descKey: 'skillDecoyDesc' }
 ];
+
+function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0) {
+  const frames: HTMLImageElement[] = [];
+  for (let i = 0; i < count; i++) {
+    const frameNum = startIdx + i;
+    const numStr = padSize > 0 ? frameNum.toString().padStart(padSize, '0') : frameNum.toString();
+    const img = new Image();
+    registerAssetToLoad(img);
+    img.src = encodeURI(pathPattern.replace('{N}', numStr));
+    frames.push(img);
+  }
+  return frames;
+}
+
+export const vfxAnims = {
+  slashes: {
+    slash1: {
+      color1: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color1/Frames/Slash_color1_frame{N}.png', 9, 1),
+      color2: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color2/Frames/Slash_color2_frame{N}.png', 9, 1),
+      color3: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color3/Frames/Slash_color3_frame{N}.png', 9, 1),
+      color4: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color4/Frames/Slash_color4_frame{N}.png', 9, 1),
+      color5: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color5/Frames/Slash_color5_frame{N}.png', 9, 1),
+    },
+    slash2: {
+      color1: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color1/Frames/Slash2_color1_frame{N}.png', 7, 1),
+      color2: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color2/Frames/Slash2_color2_frame{N}.png', 7, 1),
+      color3: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color3/Frames/Slash2_color3_frame{N}.png', 7, 1),
+      color4: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color4/Frames/Slash2_color4_frame{N}.png', 7, 1),
+      color5: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color5/Frames/Slash2_color5_frame{N}.png', 7, 1),
+    },
+    slash3: {
+      color1: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color1/Frames/Slash3_color1_frame{N}.png', 9, 1),
+      color2: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color2/Frames/Slash3_color2_frame{N}.png', 9, 1),
+      color3: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color3/Frames/Slash3_color3_frame{N}.png', 9, 1),
+      color4: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color4/Frames/Slash3_color4_frame{N}.png', 9, 1),
+      color5: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color5/Frames/Slash3_color5_frame{N}.png', 9, 1),
+    }
+  },
+  auras: {
+    arcane: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/arcane/128/frames/frame_{N}.png', 16, 0, 3),
+    fire: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/fire/128/frames/frame_{N}.png', 16, 0, 3),
+    ice: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/ice/128/frames/frame_{N}.png', 16, 0, 3),
+    poison: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/poison/128/frames/frame_{N}.png', 16, 0, 3),
+    holy: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/holy/128/frames/frame_{N}.png', 16, 0, 3)
+  },
+  explosions: {
+    arcane: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/arcane/128/frames/frame_{N}.png', 16, 0, 3),
+    fire: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/fire/128/frames/frame_{N}.png', 16, 0, 3),
+    ice: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/ice/128/frames/frame_{N}.png', 16, 0, 3),
+    poison: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/poison/128/frames/frame_{N}.png', 16, 0, 3),
+    holy: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/holy/128/frames/frame_{N}.png', 16, 0, 3)
+  },
+  impacts: {
+    arcane: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/arcane/128/frames/frame_{N}.png', 16, 0, 3),
+    fire: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/fire/128/frames/frame_{N}.png', 16, 0, 3),
+    ice: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/ice/128/frames/frame_{N}.png', 16, 0, 3),
+    poison: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/poison/128/frames/frame_{N}.png', 16, 0, 3),
+    holy: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/holy/128/frames/frame_{N}.png', 16, 0, 3)
+  },
+  heals: {
+    arcane: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/arcane/128/frames/frame_{N}.png', 16, 0, 3),
+    fire: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/fire/128/frames/frame_{N}.png', 16, 0, 3),
+    ice: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/ice/128/frames/frame_{N}.png', 16, 0, 3),
+    poison: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/poison/128/frames/frame_{N}.png', 16, 0, 3),
+    holy: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/holy/128/frames/frame_{N}.png', 16, 0, 3)
+  },
+  fireMage: {
+    vfx1: loadVfxFrames('vfx/Pixel Art VFX - Fire Mage - FREE Version/VFX1/frames/FireMage_skill1_frame{N}.png', 7, 1),
+    vfx2: loadVfxFrames('vfx/Pixel Art VFX - Fire Mage - FREE Version/VFX2/frames/FireMage_skill2_frame{N}.png', 12, 1),
+    vfx3: loadVfxFrames('vfx/Pixel Art VFX - Fire Mage - FREE Version/VFX3/frames/FireMage_skill3_frame{N}.png', 12, 1)
+  },
+  frostKnight: {
+    vfx1: loadVfxFrames('vfx/Pixel Art VFX - Frost Knight - FREE Version/VFX1/frames/FrostKnight_skill1_frame{N}.png', 14, 1),
+    vfx2: loadVfxFrames('vfx/Pixel Art VFX - Frost Knight - FREE Version/VFX2/frames/FrostKnight_skill2_frame{N}.png', 9, 1),
+    vfx3: loadVfxFrames('vfx/Pixel Art VFX - Frost Knight - FREE Version/VFX3/Frames/FrostKnight_skill3_frame{N}.png', 11, 1)
+  },
+  starcaller: {
+    vfx1: loadVfxFrames('vfx/Pixel Art VFX - Starcaller - FREE Version/VFX 1/Frames/Starcaller_spell_1_frame_{N}.png', 7, 1),
+    vfx2: loadVfxFrames('vfx/Pixel Art VFX - Starcaller - FREE Version/VFX 2/Frames/Starcaller_spell_2_frame_{N}.png', 8, 1),
+    vfx3: loadVfxFrames('vfx/Pixel Art VFX - Starcaller - FREE Version/VFX 3/Frames/Starcaller_spell_3_frame_{N}.png', 15, 1)
+  },
+  warlock: {
+    vfx1: loadVfxFrames('vfx/Pixel Art VFX - Warlock - FREE Version/VFX1/Frames/Warlock_skill1_frame{N}.png', 8, 1),
+    vfx2: loadVfxFrames('vfx/Pixel Art VFX - Warlock - FREE Version/VFX2/Frames/Warlock_skill2_frame{N}.png', 13, 1),
+    vfx3: loadVfxFrames('vfx/Pixel Art VFX - Warlock - FREE Version/VFX3/Frames/Warlock_skill3_frame{N}.png', 8, 1)
+  }
+};
+

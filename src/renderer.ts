@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { bgLayers, bgImages } from './assets';
+import { bgLayers, bgImages, vfxAnims } from './assets';
 import { Entity } from './entities';
 import { Enemy } from './enemy';
 
@@ -86,12 +86,20 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
       if (isKamisori) {
         ctx.globalAlpha = 0.25;
       }
-      const scale = globals.height / img.naturalHeight;
+      
+      const bufferFactor = 1.15;
+      const scale = (globals.height * bufferFactor) / img.naturalHeight;
       const imgW = img.naturalWidth * scale;
+      const imgH = img.naturalHeight * scale;
+      
       const offsetX = -(globals.camera.x * layer.speed * globals.gameZoom) % imgW;
       let startX = offsetX > 0 ? offsetX - imgW : offsetX;
+      
+      const midY = (globals.height - imgH) / 2;
+      const offsetY = midY - (globals.camera.y * layer.speed * 0.4 * globals.gameZoom);
+      
       for(let x = startX; x < globals.width + imgW; x += imgW) {
-        ctx.drawImage(img, x, 0, imgW, globals.height);
+        ctx.drawImage(img, x, offsetY, imgW, imgH);
       }
       ctx.restore();
     }
@@ -283,62 +291,55 @@ export function draw() {
       // stance effects
       const px = globals.player.x - globals.camera.x + globals.vw/2;
       const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
-      const auraTime = performance.now() / 1000;
+      const auraFrame = Math.floor((performance.now() / 60) % 16);
 
       if (riposteVisualScale > 0.01) {
         ctx.save();
-        ctx.strokeStyle = `rgba(255, 0, 85, ${0.7 * riposteVisualScale})`;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        const r = (32 + Math.sin(auraTime * 20) * 4) * (0.6 + 0.4 * riposteVisualScale);
-        ctx.arc(px, py + 10, r, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.globalAlpha = riposteVisualScale * 0.7;
+        const img = vfxAnims.auras.fire[auraFrame];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, px - img.width * 1.3 / 2, py + 10 - img.height * 1.3 / 2, img.width * 1.3, img.height * 1.3);
+        }
         ctx.restore();
       }
 
       if (frostStanceVisualScale > 0.01) {
         ctx.save();
-        ctx.strokeStyle = `rgba(0, 229, 255, ${0.4 * frostStanceVisualScale})`;
-        ctx.lineWidth = 2.0;
-        ctx.beginPath();
-        const r = (28 + Math.sin(auraTime * 6) * 2) * (0.6 + 0.4 * frostStanceVisualScale);
-        ctx.arc(px, py + 10, r, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.globalAlpha = frostStanceVisualScale * 0.6;
+        const img = vfxAnims.auras.ice[auraFrame];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, px - img.width * 1.25 / 2, py + 10 - img.height * 1.25 / 2, img.width * 1.25, img.height * 1.25);
+        }
         ctx.restore();
       }
 
       if (voidStanceVisualScale > 0.01) {
         ctx.save();
-        ctx.strokeStyle = `rgba(192, 132, 252, ${0.4 * voidStanceVisualScale})`;
-        ctx.lineWidth = 2.0;
-        ctx.beginPath();
-        ctx.setLineDash([4, 6]);
-        const r = 24 * (0.6 + 0.4 * voidStanceVisualScale);
-        ctx.arc(px, py + 10, r, -auraTime * 2, -auraTime * 2 + Math.PI * 2);
-        ctx.stroke();
+        ctx.globalAlpha = voidStanceVisualScale * 0.6;
+        const img = vfxAnims.auras.arcane[auraFrame];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, px - img.width * 1.2 / 2, py + 10 - img.height * 1.2 / 2, img.width * 1.2, img.height * 1.2);
+        }
         ctx.restore();
       }
 
       if (petalArmorVisualScale > 0.01) {
         ctx.save();
-        ctx.strokeStyle = `rgba(255, 183, 197, ${0.65 * petalArmorVisualScale})`;
-        ctx.lineWidth = 1.8;
-        ctx.beginPath();
-        ctx.setLineDash([6, 8]);
-        const r = 32 * (0.6 + 0.4 * petalArmorVisualScale);
-        ctx.arc(px, py + 10, r, auraTime, auraTime + Math.PI * 2);
-        ctx.stroke();
+        ctx.globalAlpha = petalArmorVisualScale * 0.7;
+        const img = vfxAnims.auras.poison[auraFrame];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, px - img.width * 1.4 / 2, py + 10 - img.height * 1.4 / 2, img.width * 1.4, img.height * 1.4);
+        }
         ctx.restore();
       }
 
       if (globals.gameMode === 'zen' && globals.timeSlowDuration > 0) {
         ctx.save();
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.75)';
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([8, 6]);
-        ctx.beginPath();
-        ctx.arc(px, py + 10, 42 + Math.sin(auraTime * 8) * 4, -auraTime * 1.2, -auraTime * 1.2 + Math.PI * 2);
-        ctx.stroke();
+        ctx.globalAlpha = 0.75;
+        const img = vfxAnims.auras.holy[auraFrame];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, px - img.width * 1.5 / 2, py + 10 - img.height * 1.5 / 2, img.width * 1.5, img.height * 1.5);
+        }
         ctx.restore();
       }
 
@@ -417,6 +418,19 @@ export function draw() {
   ctx.save();
   globals.particles.forEach(p => p.draw(ctx, globals.camera.x, globals.camera.y));
   ctx.restore();
+
+  if (globals.animatedEffects) {
+    let writeIdx = 0;
+    for (let i = 0; i < globals.animatedEffects.length; i++) {
+      const fx = globals.animatedEffects[i];
+      fx.update(dt);
+      if (fx.life > 0) {
+        fx.draw(ctx, globals.camera.x, globals.camera.y);
+        globals.animatedEffects[writeIdx++] = fx;
+      }
+    }
+    globals.animatedEffects.length = writeIdx;
+  }
 
   // Draw lightning beams and shockwaves with additive composition for premium glow aesthetics
   const hasAdditiveEffects = (globals.lightningBeams && globals.lightningBeams.length > 0) || (globals.shockwaves && globals.shockwaves.length > 0);

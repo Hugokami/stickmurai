@@ -918,6 +918,13 @@ export function updateStaticText() {
       el.innerHTML = i18n[globals.currentLang][key];
     }
   });
+
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (key && i18n[globals.currentLang]?.[key] && el instanceof HTMLInputElement) {
+      el.placeholder = i18n[globals.currentLang][key];
+    }
+  });
   
   document.documentElement.lang = globals.currentLang;
   updateUI();
