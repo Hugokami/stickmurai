@@ -570,7 +570,7 @@ export const bgImages: Record<string, HTMLImageElement> = {};
 bgLayers.forEach(layer => {
   const img = new Image();
   registerAssetToLoad(img);
-  img.src = `fantasy_bg/${encodeURIComponent(layer.name + '.png')}`;
+  img.src = `fantasy_bg/${encodeURIComponent(layer.name + '.png')}?v=2`;
   bgImages[layer.name] = img;
 });
 
