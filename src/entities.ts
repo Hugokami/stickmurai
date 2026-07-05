@@ -863,16 +863,28 @@ export class Slash {
   colorTint?: string;
   isCircular = false;
   life = 0.25; maxLife = 0.25;
+  owner?: any;
+  offsetX = 0;
+  offsetY = 0;
 
-  constructor(x: number, y: number, angle: number, sizeMult: number, isEnhanced = false, colorTint?: string, isCircular = false) {
-    this.init(x, y, angle, sizeMult, isEnhanced, colorTint, isCircular);
+  constructor(x: number, y: number, angle: number, sizeMult: number, isEnhanced = false, colorTint?: string, isCircular = false, owner?: any) {
+    this.init(x, y, angle, sizeMult, isEnhanced, colorTint, isCircular, owner);
   }
 
-  init(x: number, y: number, angle: number, sizeMult: number, isEnhanced = false, colorTint?: string, isCircular = false) {
+  init(x: number, y: number, angle: number, sizeMult: number, isEnhanced = false, colorTint?: string, isCircular = false, owner?: any) {
     this.x = x; this.y = y; this.angle = angle; this.sizeMult = sizeMult; this.isEnhanced = isEnhanced;
     this.colorTint = colorTint;
     this.isCircular = isCircular;
+    this.owner = owner;
     this.life = 0.25; this.maxLife = 0.25;
+    
+    if (owner) {
+      this.offsetX = x - owner.x;
+      this.offsetY = y - owner.y;
+    } else {
+      this.offsetX = 0;
+      this.offsetY = 0;
+    }
     
     // Automatically register a directional wind force in the slash's direction
     const windX = Math.cos(angle);
@@ -899,13 +911,13 @@ export class Slash {
 
   static pool: Slash[] = [];
 
-  static acquire(x: number, y: number, angle: number, sizeMult: number, isEnhanced = false, colorTint?: string, isCircular = false): Slash {
+  static acquire(x: number, y: number, angle: number, sizeMult: number, isEnhanced = false, colorTint?: string, isCircular = false, owner?: any): Slash {
     const inst = Slash.pool.pop();
     if (inst) {
-      inst.init(x, y, angle, sizeMult, isEnhanced, colorTint, isCircular);
+      inst.init(x, y, angle, sizeMult, isEnhanced, colorTint, isCircular, owner);
       return inst;
     }
-    return new Slash(x, y, angle, sizeMult, isEnhanced, colorTint, isCircular);
+    return new Slash(x, y, angle, sizeMult, isEnhanced, colorTint, isCircular, owner);
   }
 
   static release(inst: Slash) {
@@ -913,10 +925,17 @@ export class Slash {
       Slash.pool.push(inst);
     }
   }
-  update(dt: number) { this.life -= dt; }
+  update(dt: number) {
+    this.life -= dt;
+    if (this.owner && this.owner.state !== 'dead') {
+      this.x = this.owner.x + this.offsetX;
+      this.y = this.owner.y + this.offsetY;
+    }
+  }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
     const rx = this.x - cx + globals.vw/2;
-    const ry = this.y - cy + globals.vh/2;
+    const yOff = (this.owner && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
+    const ry = this.y - cy + globals.vh/2 + yOff;
     const buffer = 260 * this.sizeMult;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;

@@ -290,7 +290,7 @@ export function draw() {
 
       // stance effects
       const px = globals.player.x - globals.camera.x + globals.vw/2;
-      const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
+      const py = globals.player.y - globals.camera.y + globals.vh/2 + (globals.player.yOffset || 0) - 10;
       const auraFrame = Math.floor((performance.now() / 60) % 16);
 
       if (riposteVisualScale > 0.01) {

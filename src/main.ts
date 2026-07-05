@@ -1349,7 +1349,7 @@ function executeSwiftCounter() {
   // Spawn sakura slash and particles along the path
   const midX = startX + Math.cos(angle) * 125;
   const midY = startY + Math.sin(angle) * 125;
-  globals.slashes.push(Slash.acquire(midX, midY + (globals.player.yOffset || 0), angle, 1.3, true, 'sakura'));
+  globals.slashes.push(Slash.acquire(midX, midY, angle, 1.3, true, 'sakura', false, globals.player));
   
   for (let i = 0; i <= 12; i++) {
     const ratio = i / 12;
@@ -1424,7 +1424,7 @@ function executeThunderclapAndFlash() {
   const angle = Math.atan2(endY - startY, endX - startX) || (globals.player.dir === 1 ? 0 : Math.PI);
   const midX = startX + (endX - startX) / 2;
   const midY = startY + (endY - startY) / 2;
-  globals.slashes.push(Slash.acquire(midX, midY + (globals.player.yOffset || 0), angle, 2.0, true, '#fbbf24'));
+  globals.slashes.push(Slash.acquire(midX, midY, angle, 2.0, true, '#fbbf24', false, globals.player));
   globals.lightningBeams.push(new LightningBeam(endX, endY));
 
   // Hit path enemies
@@ -1463,7 +1463,7 @@ function executeRisingDragon() {
     angle = Math.atan2(globals.mouse.y - globals.height/2, globals.mouse.x - globals.width/2);
   }
   
-  globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y + (globals.player.yOffset || 0), angle, 1.8, true, '#00ffc8'));
+  globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, angle, 1.8, true, '#00ffc8', false, globals.player));
   globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#00ffc8'));
   
   globals.enemies.forEach(e => {
@@ -2714,7 +2714,7 @@ function update(realDt: number) {
           
           globals.player.attackCooldown = 0.2;
           globals.player.vx = 0; globals.player.vy = 0;
-          globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, Math.atan2(dy, dx), globals.playerStats.slashSizeMult * 1.5, true));
+          globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, Math.atan2(dy, dx), globals.playerStats.slashSizeMult * 1.5, true, undefined, false, globals.player));
         }
       }
     });
@@ -2864,7 +2864,8 @@ function update(realDt: number) {
         size, 
         isEnhanced, 
         isRiposteStrike ? 'rgba(255, 0, 85, ALPHA)' : undefined, 
-        isRiposteStrike
+        isRiposteStrike,
+        globals.player
       ));
       
       if (attackPower < 1.7 && globals.comboFinisherReady) {
@@ -2943,8 +2944,8 @@ function update(realDt: number) {
         const cloneSlashSize = size * 2.0;
         const cloneDmg = Math.max(1, Math.round(dmg * 0.4));
         
-        globals.slashes.push(Slash.acquire(globals.player.x + Math.cos(angle)*50, topY + Math.sin(angle)*50, angle, cloneSlashSize, false, 'rgba(0, 255, 255, ALPHA)'));
-        globals.slashes.push(Slash.acquire(globals.player.x + Math.cos(angle)*50, bottomY + Math.sin(angle)*50, angle, cloneSlashSize, false, 'rgba(0, 255, 255, ALPHA)'));
+        globals.slashes.push(Slash.acquire(globals.player.x + Math.cos(angle)*50, topY + Math.sin(angle)*50, angle, cloneSlashSize, false, 'rgba(0, 255, 255, ALPHA)', false, globals.player));
+        globals.slashes.push(Slash.acquire(globals.player.x + Math.cos(angle)*50, bottomY + Math.sin(angle)*50, angle, cloneSlashSize, false, 'rgba(0, 255, 255, ALPHA)', false, globals.player));
         
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
