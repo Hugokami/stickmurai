@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { bgLayers, bgImages } from './assets';
+import { bgLayers, bgImages, vfxAnims } from './assets';
 import { Entity } from './entities';
 import { Enemy } from './enemy';
 
@@ -12,6 +12,15 @@ let frostStanceVisualScale = 0;
 let voidStanceVisualScale = 0;
 let petalArmorVisualScale = 0;
 let riposteVisualScale = 0;
+
+interface SkyEffect {
+  x: number;
+  y: number;
+  frame: number;
+  timer: number;
+  scale: number;
+}
+const skyEffects: SkyEffect[] = [];
 
 const visibleEntities: Entity[] = [];
 const depthCompare = (a: Entity, b: Entity) => a.y - b.y;
@@ -111,6 +120,34 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
         // Decorative layers: tile horizontally only, single vertical position
         for(let x = startX; x < globals.width + imgW; x += imgW) {
           ctx.drawImage(img, x, offsetY, imgW, imgH);
+        }
+        
+        if (layer.name === 'sky') {
+          // Update and draw sky starfall effects (atmospheric background meteors)
+          if (Math.random() < 0.006 && skyEffects.length < 5) {
+            skyEffects.push({
+              x: Math.random() * globals.width,
+              y: Math.random() * (globals.height * 0.4),
+              frame: 0,
+              timer: 0,
+              scale: 0.6 + Math.random() * 0.6
+            });
+          }
+          for (let i = skyEffects.length - 1; i >= 0; i--) {
+            const fx = skyEffects[i];
+            fx.timer += 0.016;
+            fx.frame = Math.floor(fx.timer / 0.08); // 80ms per frame
+            if (fx.frame >= 8) {
+              skyEffects.splice(i, 1);
+              continue;
+            }
+            const starImg = vfxAnims.custom.starfall[fx.frame];
+            if (starImg && starImg.complete && starImg.naturalWidth > 0) {
+              ctx.save();
+              ctx.drawImage(starImg, fx.x - starImg.width * fx.scale / 2, fx.y - starImg.height * fx.scale / 2, starImg.width * fx.scale, starImg.height * fx.scale);
+              ctx.restore();
+            }
+          }
         }
       }
       ctx.restore();
@@ -221,47 +258,21 @@ export function draw() {
     // gravity zone glow
     const pulse = 0.95 + Math.sin(timer * 10) * 0.05;
     const grad = ctx.createRadialGradient(gx, gy, 10, gx, gy, baseRadius * pulse);
-    grad.addColorStop(0, 'rgba(138, 43, 226, 0.4)');
-    grad.addColorStop(0.3, 'rgba(75, 0, 130, 0.25)');
-    grad.addColorStop(0.7, 'rgba(255, 0, 127, 0.05)');
+    grad.addColorStop(0, 'rgba(138, 43, 226, 0.3)');
+    grad.addColorStop(0.5, 'rgba(75, 0, 130, 0.15)');
     grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(gx, gy, baseRadius * pulse, 0, Math.PI * 2);
     ctx.fill();
     
-    // gravity spiral lines
-    ctx.lineWidth = 3;
-    // Removed shadowBlur to prevent lag
-    const spiralCount = 4;
-    for (let i = 0; i < spiralCount; i++) {
-      ctx.strokeStyle = i % 2 === 0 ? '#ff007f' : '#8a2be2';
-      ctx.beginPath();
-      const startAngle = (timer * 3) + (i * Math.PI * 2 / spiralCount);
-      for (let r = 20; r < baseRadius * 0.75; r += 5) {
-        const theta = startAngle + (r / 50); // spiral twist
-        const sx = gx + Math.cos(theta) * r;
-        const sy = gy + Math.sin(theta) * r;
-        if (r === 20) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
-      }
-      ctx.stroke();
+    // custom vortex sprite sheet animation loop
+    const vortexFrames = vfxAnims.custom.vortex;
+    const vfFrameIdx = Math.floor((performance.now() / 65) % vortexFrames.length);
+    const img = vortexFrames[vfFrameIdx];
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.drawImage(img, gx - baseRadius, gy - baseRadius, baseRadius * 2, baseRadius * 2);
     }
-    
-    // black hole center
-    // Removed shadowBlur to prevent lag
-    ctx.fillStyle = '#0a0518';
-    ctx.strokeStyle = '#8a2be2';
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.arc(gx, gy, 28, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-    
-    // Tiny center event horizon
-    ctx.fillStyle = '#000000';
-    ctx.beginPath();
-    ctx.arc(gx, gy, 16, 0, Math.PI * 2);
-    ctx.fill();
     
     ctx.restore();
   }
@@ -369,6 +380,33 @@ export function draw() {
         ctx.beginPath();
         ctx.arc(px, py, 42 + Math.sin(auraTime * 8) * 4, -auraTime * 1.2, -auraTime * 1.2 + Math.PI * 2);
         ctx.stroke();
+        ctx.restore();
+      }
+
+      // Dragon's Fury Active Animation Loop (looping purple/void frames)
+      const isDragonFuryActive = globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0;
+      if (isDragonFuryActive) {
+        ctx.save();
+        ctx.globalAlpha = 0.8;
+        const dfFrames = vfxAnims.custom.dragonFury;
+        const dfFrameIdx = Math.floor((performance.now() / 65) % dfFrames.length);
+        const img = dfFrames[dfFrameIdx];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, px - img.width * 1.5 / 2, py - img.height * 1.5 / 2, img.width * 1.5, img.height * 1.5);
+        }
+        ctx.restore();
+      }
+
+      // Invincibility Duration Animation Loop (shield/spells around player)
+      if (globals.invulnTimer > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.65;
+        const invFrames = vfxAnims.custom.invincible;
+        const invFrameIdx = Math.floor((performance.now() / 50) % invFrames.length);
+        const img = invFrames[invFrameIdx];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, px - img.width * 1.4 / 2, py - img.height * 1.4 / 2, img.width * 1.4, img.height * 1.4);
+        }
         ctx.restore();
       }
 

@@ -1,5 +1,5 @@
 import { globals } from './globals';
-import { anims } from './assets';
+import { anims, vfxAnims } from './assets';
 import { callbacks } from './callbacks';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -926,8 +926,50 @@ export class Slash {
       this.y = this.owner.y + this.offsetY;
     }
   }
-  draw(_ctx: CanvasRenderingContext2D, _cx: number, _cy: number) {
-    // Slash animations are removed as requested. User will re-add individually later.
+  draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
+    let offsetX = 0;
+    let offsetY = 0;
+    let dir = 1;
+    if (this.owner && this.owner.subType === 'player') {
+      dir = this.owner.dir || 1;
+      const state = this.owner.state;
+      if (state === 'idle' || state === 'charge') {
+        offsetX = -15 * dir;
+        offsetY = 22;
+      } else if (state === 'attack') {
+        offsetX = -5 * dir;
+        offsetY = 20;
+      } else { // walk/run/dash
+        offsetX = -0.5 * dir;
+        offsetY = 17;
+      }
+    }
+
+    const rx = this.x - cx + globals.vw/2 + offsetX;
+    const yOff = (this.owner && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
+    const ry = this.y - cy + globals.vh/2 + yOff + offsetY - 17;
+    const buffer = 260 * this.sizeMult;
+    if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
+      return;
+    }
+
+    const frames = vfxAnims.custom.slash;
+    const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
+    const frameIdx = Math.floor(progress * frames.length);
+    const img = frames[frameIdx];
+
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.save();
+      ctx.translate(rx, ry);
+      ctx.scale(dir, 1);
+      ctx.rotate(dir === -1 ? Math.PI - this.angle : this.angle);
+      
+      // Center the slash arc on the player
+      const scale = 2.5 * this.sizeMult;
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.restore();
+    }
   }
 }
 

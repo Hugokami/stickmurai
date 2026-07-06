@@ -606,6 +606,13 @@ function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize
 }
 
 export const vfxAnims = {
+  custom: {
+    slash: loadVfxFrames('vfx/Frames/Slash_color5_frame{N}.png', 9, 1),
+    dragonFury: loadVfxFrames('vfx/Dragon_fury/Slash_color4_frame{N}.png', 9, 1),
+    invincible: loadVfxFrames('vfx/invincible/Starcaller_spell_3_frame_{N}.png', 15, 1),
+    starfall: loadVfxFrames('vfx/starfall/Starcaller_spell_2_frame_{N}.png', 8, 1),
+    vortex: loadVfxFrames('vfx/vortex/FireMage_skill3_frame{N}.png', 12, 1)
+  },
   slashes: {
     slash1: {
       color1: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color1/Frames/Slash_color1_frame{N}.png', 9, 1),
