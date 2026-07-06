@@ -104,9 +104,11 @@ export class Entity {
     const ry = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
     let scale = 0.5 * this.scaleMult;
     if (this.type === 'enemy01' || this.type === 'enemy02') {
-      scale *= 16.0;
-    } else if (this.type === 'enemy03' || this.type === 'enemy05' || this.type === 'skeleton') {
-      scale *= 8.0;
+      scale *= 10.0;
+    } else if (this.type === 'enemy03' || this.type === 'enemy05') {
+      scale *= 5.0;
+    } else if (this.type === 'skeleton') {
+      scale *= 6.0;
     }
     const buffer = Math.max(img.width, img.height) * scale + 60;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {

@@ -165,25 +165,25 @@ export class Enemy extends Entity {
       this.colorTint = 'none';
       this.speed = 200;
     } else if (this.subType === 'pyromancer') {
-      this.type = 'fighter';
+      this.type = 'enemy01';
       this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.5;
       this.scaleMult = 1.2; this.hp = this.maxHp = 8; this.expValue = 4;
       this.colorTint = '#ff4400';
       this.speed = 180;
     } else if (this.subType === 'glacial_sentinel') {
-      this.type = 'sword';
+      this.type = 'enemy02';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.1; this.lungeDuration = 0.7;
       this.scaleMult = 1.4; this.hp = this.maxHp = 12; this.expValue = 5;
       this.colorTint = '#60a5fa';
       this.speed = 220;
     } else if (this.subType === 'astromancer') {
-      this.type = 'fighter';
+      this.type = 'enemy01';
       this.lungeSpeed = 0; this.chargeTimeMax = 1.0; this.lungeDuration = 0.5;
       this.scaleMult = 1.1; this.hp = this.maxHp = 6; this.expValue = 5;
       this.colorTint = '#f43f5e';
       this.speed = 250;
     } else if (this.subType === 'necromancer') {
-      this.type = 'fighter';
+      this.type = 'enemy05';
       this.lungeSpeed = 0; this.chargeTimeMax = 1.4; this.lungeDuration = 0.6;
       this.scaleMult = 1.5; this.hp = this.maxHp = 20; this.expValue = 8;
       this.colorTint = '#a855f7';
