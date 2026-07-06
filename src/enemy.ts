@@ -122,6 +122,10 @@ export class Enemy extends Entity {
       else this.subType = 'brawler'; // Fallback
     }
     
+    this.configureSubType();
+  }
+
+  configureSubType() {
     if (this.subType === 'brawler') {
       this.type = 'enemy01';
       this.lungeSpeed = 1200; this.chargeTimeMax = 0.8; this.lungeDuration = 0.5;
@@ -619,6 +623,7 @@ export class Enemy extends Entity {
           run: () => {
             const minion = new Enemy(this.x + (Math.random() - 0.5) * 100, this.y, this.target);
             minion.subType = 'brawler';
+            minion.configureSubType();
             minion.hp = minion.maxHp = 3;
             minion.colorTint = '#a855f7'; // Purple tainted
             globals.enemies.push(minion);

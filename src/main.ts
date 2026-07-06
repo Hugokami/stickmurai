@@ -3638,7 +3638,7 @@ function initPvpGame() {
       const enemy = new Enemy(msg.x, msg.y, globals.player);
       (enemy as any).id = msg.id;
       enemy.subType = msg.subType as any;
-      enemy.init(msg.x, msg.y, globals.player);
+      enemy.configureSubType();
       globals.enemies.push(enemy);
       return;
     }
@@ -3675,7 +3675,8 @@ function initPvpGame() {
       syncMap.forEach((syncData) => {
         const enemy = new Enemy(syncData.x, syncData.y, globals.player);
         (enemy as any).id = syncData.id;
-        enemy.init(syncData.x, syncData.y, globals.player);
+        enemy.subType = (syncData as any).subType as any;
+        enemy.configureSubType();
         enemy.hp = syncData.hp;
         enemy.setState(syncData.state);
         enemy.dir = syncData.dir;
@@ -4354,7 +4355,8 @@ function runPvpSurvivalStep(realDt: number) {
           y: e.y,
           hp: e.hp,
           state: e.state,
-          dir: e.dir
+          dir: e.dir,
+          subType: e.subType
         }));
       pvpManager.send({
         type: 'pvp_enemy_sync',
