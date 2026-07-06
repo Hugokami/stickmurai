@@ -49,7 +49,7 @@ export function getTintedImage(img: HTMLImageElement, hexColor: string): HTMLCan
 export class Entity {
   x = 0; y = 0; vx = 0; vy = 0;
   yOffset = 0; yVelocity = 0; // Simulated vertical juggle height physics
-  type: 'sword' | 'fighter' | 'pistol' = 'sword';
+  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' = 'sword';
   subType?: string;
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
@@ -965,7 +965,7 @@ export class Slash {
       ctx.rotate(dir === -1 ? Math.PI - this.angle : this.angle);
       
       // Center the slash arc on the player
-      const scale = 2.5 * this.sizeMult;
+      const scale = 4.8 * this.sizeMult;
       ctx.scale(scale, scale);
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();

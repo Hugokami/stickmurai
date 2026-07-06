@@ -123,46 +123,46 @@ export class Enemy extends Entity {
     }
     
     if (this.subType === 'brawler') {
-      this.type = 'fighter';
+      this.type = 'enemy01';
       this.lungeSpeed = 1200; this.chargeTimeMax = 0.8; this.lungeDuration = 0.5;
       this.scaleMult = 1; this.hp = this.maxHp = 4; this.expValue = 1;
-      this.colorTint = '#ff33ff'; // Magenta
+      this.colorTint = 'none';
       this.speed = 300;
     } else if (this.subType === 'samurai') {
-      this.type = 'sword';
+      this.type = 'enemy02';
       this.lungeSpeed = 1100; this.chargeTimeMax = 0.9; this.lungeDuration = 0.6;
       this.scaleMult = 1.1; this.hp = this.maxHp = 4; this.expValue = 1;
-      this.colorTint = '#ff33ff'; // Magenta
+      this.colorTint = 'none';
       this.speed = 300;
     } else if (this.subType === 'ronin') {
-      this.type = 'sword';
+      this.type = 'enemy03';
       this.lungeSpeed = 1300; this.chargeTimeMax = 0.9; this.lungeDuration = 0.7;
       this.scaleMult = 1.2; this.hp = this.maxHp = 6; this.expValue = 2;
-      this.colorTint = '#ffaa00'; // Orange/gold
+      this.colorTint = 'none';
       this.speed = 300;
     } else if (this.subType === 'berserker') {
-      this.type = 'fighter';
+      this.type = 'enemy02';
       this.lungeSpeed = 1600; this.chargeTimeMax = 0.6; this.lungeDuration = 0.5;
       this.scaleMult = 1.3; this.hp = this.maxHp = 8; this.expValue = 3;
-      this.colorTint = '#ff3333'; // Deep red
+      this.colorTint = 'none';
       this.speed = 380;
     } else if (this.subType === 'giant') {
-      this.type = 'fighter';
+      this.type = 'enemy03';
       this.lungeSpeed = 750; this.chargeTimeMax = 1.4; this.lungeDuration = 0.8;
       this.scaleMult = 2; this.hp = this.maxHp = 10; this.expValue = 4;
-      this.colorTint = '#33ff33'; // Green
+      this.colorTint = 'none';
       this.speed = 160;
     } else if (this.subType === 'assassin') {
-      this.type = 'sword';
+      this.type = 'enemy01';
       this.lungeSpeed = 2400; this.chargeTimeMax = 0.4; this.lungeDuration = 0.4;
       this.scaleMult = 0.8; this.hp = this.maxHp = 3; this.expValue = 2;
-      this.colorTint = '#3388ff'; // Blue
+      this.colorTint = 'none';
       this.speed = 450;
     } else if (this.subType === 'musketeer') {
-      this.type = 'pistol';
+      this.type = 'enemy05';
       this.lungeSpeed = 0; this.chargeTimeMax = 1.3; this.lungeDuration = 0.4; // Shoots projectile
       this.scaleMult = 1; this.hp = this.maxHp = 2; this.expValue = 2;
-      this.colorTint = '#dddddd'; // White/Grey
+      this.colorTint = 'none';
       this.speed = 200;
     } else if (this.subType === 'pyromancer') {
       this.type = 'fighter';
@@ -189,16 +189,16 @@ export class Enemy extends Entity {
       this.colorTint = '#a855f7';
       this.speed = 170;
     } else if (this.subType === 'oni_boss') {
-      this.type = 'fighter';
+      this.type = 'skeleton';
       this.lungeSpeed = 1200; this.chargeTimeMax = 1.1; this.lungeDuration = 0.8;
-      this.scaleMult = 3; this.hp = this.maxHp = 50; this.expValue = 15;
-      this.colorTint = '#aa33ff'; // Purple
+      this.scaleMult = 2.2; this.hp = this.maxHp = 120; this.expValue = 15;
+      this.colorTint = 'none';
       this.speed = 300;
     } else { // shogun_boss
-      this.type = 'sword';
+      this.type = 'skeleton';
       this.lungeSpeed = 1800; this.chargeTimeMax = 0.8; this.lungeDuration = 0.6;
-      this.scaleMult = 2.5; this.hp = this.maxHp = 40; this.expValue = 20;
-      this.colorTint = '#ffff33'; // Bright Gold
+      this.scaleMult = 2.0; this.hp = this.maxHp = 100; this.expValue = 20;
+      this.colorTint = 'none';
       this.speed = 300;
     }
 

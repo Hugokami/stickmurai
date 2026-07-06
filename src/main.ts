@@ -2666,7 +2666,7 @@ function update(realDt: number) {
             addCombo();
             globals.hitStop = 0.35; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 35;
             addFlow(12.0);
-            globals.invulnTimer = isCharging ? 2.0 : 1.3;
+            globals.invulnTimer = 2.0;
             globals.invertScreenTimer = 0.25;
             globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffaa00'));
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, t('perfectParryText'), "neon-#ffaa00", 34));
@@ -4471,6 +4471,9 @@ function runPvpStep(realDt: number) {
           player.pvpParryActiveTimer = 0;
           player.setState('attack');
           playSound(sfx.slash);
+          if (isPerfect) {
+            globals.invulnTimer = 2.0;
+          }
 
           // Visuals
           globals.screenShake = isPerfect ? 35 : 20;

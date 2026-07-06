@@ -553,8 +553,66 @@ export const anims = {
     attack: loadAnim('Pistol sprites', 'pistol_shot', 64, 65),
     dash: loadAnim('Pistol sprites', 'pistol_dash', 33, 38),
     dead: loadAnim('Pistol sprites', 'pistol_death', 52, 61),
+  },
+  skeleton: {
+    idle: loadSkeletonAnim('idle', 8),
+    walk: loadSkeletonAnim('walk', 10),
+    attack: loadSkeletonAnim('attack', 25),
+    dash: loadSkeletonAnim('walk', 10),
+    dead: loadSkeletonAnim('dead', 25),
+  },
+  enemy01: {
+    idle: loadCustomEnemyAnim('Enemy01', 'fly', 7),
+    walk: loadCustomEnemyAnim('Enemy01', 'fly', 7),
+    attack: loadCustomEnemyAnim('Enemy01', 'attack', 10),
+    dash: loadCustomEnemyAnim('Enemy01', 'fly', 7),
+    dead: loadCustomEnemyAnim('Enemy01', 'hit', 3),
+  },
+  enemy02: {
+    idle: loadCustomEnemyAnim('Enemy02', 'idle', 11),
+    walk: loadCustomEnemyAnim('Enemy02', 'walk', 8),
+    attack: loadCustomEnemyAnim('Enemy02', 'attack', 8),
+    dash: loadCustomEnemyAnim('Enemy02', 'walk', 8),
+    dead: loadCustomEnemyAnim('Enemy02', 'hit', 3),
+  },
+  enemy03: {
+    idle: loadCustomEnemyAnim('Enemy03', 'idle', 7),
+    walk: loadCustomEnemyAnim('Enemy03', 'walk', 6),
+    attack: loadCustomEnemyAnim('Enemy03', 'attack', 7),
+    dash: loadCustomEnemyAnim('Enemy03', 'walk', 6),
+    dead: loadCustomEnemyAnim('Enemy03', 'hit', 3),
+  },
+  enemy05: {
+    idle: loadCustomEnemyAnim('Enemy05', 'idle', 9),
+    walk: loadCustomEnemyAnim('Enemy05', 'walk', 6),
+    attack: loadCustomEnemyAnim('Enemy05', 'attack', 6),
+    dash: loadCustomEnemyAnim('Enemy05', 'walk', 6),
+    dead: loadCustomEnemyAnim('Enemy05', 'hit', 3),
   }
 };
+
+function loadSkeletonAnim(prefix: string, count: number) {
+  const images: HTMLImageElement[] = [];
+  for (let i = 1; i <= count; i++) {
+    const img = new Image();
+    registerAssetToLoad(img);
+    img.src = encodeURI(`sprites/Skeleton/${prefix}_${i}.png`);
+    images.push(img);
+  }
+  return images;
+}
+
+function loadCustomEnemyAnim(folder: string, prefix: string, count: number) {
+  const images: HTMLImageElement[] = [];
+  for (let i = 1; i <= count; i++) {
+    const img = new Image();
+    registerAssetToLoad(img);
+    const frameStr = i.toString().padStart(2, '0');
+    img.src = encodeURI(`sprites/${folder}/${prefix}${frameStr}.png`);
+    images.push(img);
+  }
+  return images;
+}
 
 export const bgLayers = [
   { name: 'sky', speed: 0.01 },
