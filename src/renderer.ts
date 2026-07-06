@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { bgLayers, bgImages, vfxAnims } from './assets';
+import { bgLayers, bgImages } from './assets';
 import { Entity } from './entities';
 import { Enemy } from './enemy';
 
@@ -313,55 +313,62 @@ export function draw() {
 
       const px = globals.player.x - globals.camera.x + globals.vw/2 + offsetX;
       const py = globals.player.y - globals.camera.y + globals.vh/2 + (globals.player.yOffset || 0) + offsetY - 17;
-      const auraFrame = Math.floor((performance.now() / 60) % 16);
+      const auraTime = performance.now() / 1000;
 
       if (riposteVisualScale > 0.01) {
         ctx.save();
-        ctx.globalAlpha = riposteVisualScale * 0.7;
-        const img = vfxAnims.auras.fire[auraFrame];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.3 / 2, py - img.height * 1.3 / 2, img.width * 1.3, img.height * 1.3);
-        }
+        ctx.strokeStyle = `rgba(255, 0, 85, ${0.7 * riposteVisualScale})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        const r = (32 + Math.sin(auraTime * 20) * 4) * (0.6 + 0.4 * riposteVisualScale);
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       }
 
       if (frostStanceVisualScale > 0.01) {
         ctx.save();
-        ctx.globalAlpha = frostStanceVisualScale * 0.6;
-        const img = vfxAnims.auras.ice[auraFrame];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.25 / 2, py - img.height * 1.25 / 2, img.width * 1.25, img.height * 1.25);
-        }
+        ctx.strokeStyle = `rgba(0, 229, 255, ${0.4 * frostStanceVisualScale})`;
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        const r = (28 + Math.sin(auraTime * 6) * 2) * (0.6 + 0.4 * frostStanceVisualScale);
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       }
 
       if (voidStanceVisualScale > 0.01) {
         ctx.save();
-        ctx.globalAlpha = voidStanceVisualScale * 0.6;
-        const img = vfxAnims.auras.arcane[auraFrame];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.2 / 2, py - img.height * 1.2 / 2, img.width * 1.2, img.height * 1.2);
-        }
+        ctx.strokeStyle = `rgba(192, 132, 252, ${0.4 * voidStanceVisualScale})`;
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.setLineDash([4, 6]);
+        const r = 24 * (0.6 + 0.4 * voidStanceVisualScale);
+        ctx.arc(px, py, r, -auraTime * 2, -auraTime * 2 + Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       }
 
       if (petalArmorVisualScale > 0.01) {
         ctx.save();
-        ctx.globalAlpha = petalArmorVisualScale * 0.7;
-        const img = vfxAnims.auras.poison[auraFrame];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.4 / 2, py - img.height * 1.4 / 2, img.width * 1.4, img.height * 1.4);
-        }
+        ctx.strokeStyle = `rgba(255, 183, 197, ${0.65 * petalArmorVisualScale})`;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.setLineDash([6, 8]);
+        const r = 32 * (0.6 + 0.4 * petalArmorVisualScale);
+        ctx.arc(px, py, r, auraTime, auraTime + Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       }
 
       if (globals.gameMode === 'zen' && globals.timeSlowDuration > 0) {
         ctx.save();
-        ctx.globalAlpha = 0.75;
-        const img = vfxAnims.auras.holy[auraFrame];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.5 / 2, py - img.height * 1.5 / 2, img.width * 1.5, img.height * 1.5);
-        }
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.75)';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.arc(px, py, 42 + Math.sin(auraTime * 8) * 4, -auraTime * 1.2, -auraTime * 1.2 + Math.PI * 2);
+        ctx.stroke();
         ctx.restore();
       }
 

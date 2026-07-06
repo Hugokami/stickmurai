@@ -21,6 +21,8 @@ export class Enemy extends Entity {
   targetAngle = 0;
   lungeSpeed = 1200;
   lungeDuration = 0.6; // how long the lunge lasts
+  lungeCos = 1;
+  lungeSin = 0;
   subType!: EnemySubType;
   colorTint!: string;
   hp = 2;
@@ -59,6 +61,8 @@ export class Enemy extends Entity {
     this.knockbackVx = 0;
     this.knockbackVy = 0;
     this.targetAngle = 0;
+    this.lungeCos = 1;
+    this.lungeSin = 0;
     this.isSlashedKamisori = false;
     this.kamisoriCutAngle = 0;
     this.kamisoriDamage = 0;
@@ -230,12 +234,28 @@ export class Enemy extends Entity {
   }
   
   update(dt: number) {
-    if (this.chillTimer > 0 && this.state !== 'dead') {
+    if (this.state === 'dead') {
+      const effectiveDt = (this.chillTimer > 0) ? dt * 0.6 : dt;
+      if (this.chillTimer > 0) this.chillTimer -= dt;
+      this.vx = 0; this.vy = 0;
+      this.deadTimer += effectiveDt;
+      if (this.hitFlash > 0) this.hitFlash -= effectiveDt;
+      super.update(effectiveDt);
+      return;
+    }
+
+    const isChilled = this.chillTimer > 0;
+    const isKnockedBack = this.knockbackTimer > 0;
+    const isStunned = this.stunTimer > 0;
+    const isBurning = this.burnTimer > 0;
+
+    const effectiveDt = isChilled ? dt * 0.6 : dt;
+
+    if (isChilled) {
       this.chillTimer -= dt;
     }
-    const effectiveDt = (this.chillTimer > 0 && this.state !== 'dead') ? dt * 0.6 : dt;
 
-    if (this.knockbackTimer > 0 && this.state !== 'dead') {
+    if (isKnockedBack) {
       this.knockbackTimer -= effectiveDt;
       this.vx = this.knockbackVx;
       this.vy = this.knockbackVy;
@@ -249,12 +269,12 @@ export class Enemy extends Entity {
       return;
     }
 
-    if (this.stunTimer > 0 && this.state !== 'dead') {
+    if (isStunned) {
       this.stunTimer -= effectiveDt;
       this.vx = 0;
       this.vy = 0;
       this.setState('idle');
-      if (Math.random() < 0.15) {
+      if (globals.particles.length < 150 && Math.random() < 0.15) {
         globals.particles.push(Particle.acquire(this.x + (Math.random()-0.5)*20, this.y + (Math.random()-0.5)*40, '#00ffff', 100, 0.3, 1.5));
       }
       super.update(effectiveDt);
@@ -269,12 +289,14 @@ export class Enemy extends Entity {
       this.hpDelayed = this.hp;
     }
 
-    if (this.isSlashedKamisori && this.state !== 'dead') {
+    if (this.isSlashedKamisori) {
       this.vx = 0; this.vy = 0;
       return;
     }
+
     super.update(effectiveDt);
-    if (this.burnTimer > 0 && this.state !== 'dead') {
+
+    if (isBurning) {
       this.burnTimer -= effectiveDt;
       this.burnTickTimer -= effectiveDt;
       if (this.burnTickTimer <= 0) {
@@ -284,8 +306,10 @@ export class Enemy extends Entity {
         this.hitFlash = 0.15;
         globals.floatingTexts.push(FloatingText.acquire(this.x + (Math.random()-0.5)*20, this.y - 45, `BURN -${totalBurnDmg}`, "#ff5500", 18));
         
-        for (let i = 0; i < 4; i++) {
-          globals.particles.push(Particle.acquire(this.x, this.y, '#ff8800', 150, 0.3, 2));
+        if (globals.particles.length < 150) {
+          for (let i = 0; i < 4; i++) {
+            globals.particles.push(Particle.acquire(this.x, this.y, '#ff8800', 150, 0.3, 2));
+          }
         }
         
         if (this.hp <= 0) {
@@ -295,7 +319,7 @@ export class Enemy extends Entity {
       }
       
       const fireSpawnChance = isMobile ? 0.08 : 0.25;
-      if (Math.random() < fireSpawnChance) {
+      if (globals.particles.length < 150 && Math.random() < fireSpawnChance) {
         const pSpeed = 100 + Math.random() * 150;
         globals.particles.push(Particle.acquire(
           this.x + (Math.random() - 0.5) * 20,
@@ -311,11 +335,6 @@ export class Enemy extends Entity {
       }
     }
     if (this.hitFlash > 0) this.hitFlash -= effectiveDt;
-    if (this.state === 'dead') { 
-      this.vx = 0; this.vy = 0; 
-      this.deadTimer += effectiveDt;
-      return; 
-    }
     
     let currentTarget: { x: number, y: number } = this.target;
     if (globals.gameMode === 'pvp' && pvpManager.subMode === 'insane_survival') {
@@ -334,19 +353,24 @@ export class Enemy extends Entity {
     }
     
     if (globals.decoys && globals.decoys.length > 0) {
-      let nearestDecoy = null;
-      let minDistSq = Infinity;
-      for (const decoy of globals.decoys) {
-        const ddx = decoy.x - this.x;
-        const ddy = decoy.y - this.y;
-        const dSq = ddx * ddx + ddy * ddy;
-        if (dSq < minDistSq) {
-          minDistSq = dSq;
-          nearestDecoy = decoy;
+      if (globals.decoys.length === 1) {
+        currentTarget = globals.decoys[0];
+      } else {
+        let nearestDecoy = null;
+        let minDistSq = Infinity;
+        for (let i = 0; i < globals.decoys.length; i++) {
+          const decoy = globals.decoys[i];
+          const ddx = decoy.x - this.x;
+          const ddy = decoy.y - this.y;
+          const dSq = ddx * ddx + ddy * ddy;
+          if (dSq < minDistSq) {
+            minDistSq = dSq;
+            nearestDecoy = decoy;
+          }
         }
-      }
-      if (nearestDecoy) {
-        currentTarget = nearestDecoy;
+        if (nearestDecoy) {
+          currentTarget = nearestDecoy;
+        }
       }
     }
 
@@ -359,11 +383,12 @@ export class Enemy extends Entity {
     
     if (this.state === 'charge') {
       this.vx = 0; this.vy = 0;
-      
-      this.targetAngle = Math.atan2(dy, dx);
-      this.dir = Math.cos(this.targetAngle) < 0 ? -1 : 1;
+      this.dir = dx < 0 ? -1 : 1;
 
       if (this.stateTime > this.chargeTimeMax) {
+        this.targetAngle = Math.atan2(dy, dx);
+        this.lungeCos = Math.cos(this.targetAngle);
+        this.lungeSin = Math.sin(this.targetAngle);
         this.setState('attack');
         if (this.subType !== 'musketeer' && this.subType !== 'pyromancer' && this.subType !== 'astromancer' && this.subType !== 'necromancer') {
           playSound(sfx.enemySlash, 0.3);
@@ -377,8 +402,8 @@ export class Enemy extends Entity {
         if (this.chillTimer > 0) {
           curLungeSpeed *= 0.7;
         }
-        this.vx = Math.cos(this.targetAngle) * curLungeSpeed;
-        this.vy = Math.sin(this.targetAngle) * curLungeSpeed;
+        this.vx = this.lungeCos * curLungeSpeed;
+        this.vy = this.lungeSin * curLungeSpeed;
       }
       return;
     }
@@ -390,8 +415,8 @@ export class Enemy extends Entity {
       if (this.chillTimer > 0) {
         curLungeSpeed *= 0.7;
       }
-      this.vx = Math.cos(this.targetAngle) * curLungeSpeed * decay;
-      this.vy = Math.sin(this.targetAngle) * curLungeSpeed * decay;
+      this.vx = this.lungeCos * curLungeSpeed * decay;
+      this.vy = this.lungeSin * curLungeSpeed * decay;
       
       if (!this.attackLanded) {
         if (this.subType === 'musketeer') {
@@ -415,10 +440,10 @@ export class Enemy extends Entity {
     
     let speed = this.speed, attackRange = 250 * this.scaleMult;
     if (this.subType === 'musketeer') { attackRange = 500; }
-    if (this.subType === 'pyromancer') { attackRange = 450; }
-    if (this.subType === 'glacial_sentinel') { attackRange = 200; }
-    if (this.subType === 'astromancer') { attackRange = 600; }
-    if (this.subType === 'necromancer') { attackRange = 500; }
+    else if (this.subType === 'pyromancer') { attackRange = 450; }
+    else if (this.subType === 'glacial_sentinel') { attackRange = 200; }
+    else if (this.subType === 'astromancer') { attackRange = 600; }
+    else if (this.subType === 'necromancer') { attackRange = 500; }
 
     if (this.chillTimer > 0) {
       speed *= 0.7;
@@ -455,19 +480,24 @@ export class Enemy extends Entity {
   executeAttack() {
     let currentTarget: any = this.target;
     if (globals.decoys && globals.decoys.length > 0) {
-      let nearestDecoy = null;
-      let minDistSq = Infinity;
-      for (const decoy of globals.decoys) {
-        const ddx = decoy.x - this.x;
-        const ddy = decoy.y - this.y;
-        const dSq = ddx * ddx + ddy * ddy;
-        if (dSq < minDistSq) {
-          minDistSq = dSq;
-          nearestDecoy = decoy;
+      if (globals.decoys.length === 1) {
+        currentTarget = globals.decoys[0];
+      } else {
+        let nearestDecoy = null;
+        let minDistSq = Infinity;
+        for (let i = 0; i < globals.decoys.length; i++) {
+          const decoy = globals.decoys[i];
+          const ddx = decoy.x - this.x;
+          const ddy = decoy.y - this.y;
+          const dSq = ddx * ddx + ddy * ddy;
+          if (dSq < minDistSq) {
+            minDistSq = dSq;
+            nearestDecoy = decoy;
+          }
         }
-      }
-      if (nearestDecoy) {
-        currentTarget = nearestDecoy;
+        if (nearestDecoy) {
+          currentTarget = nearestDecoy;
+        }
       }
     }
     if (currentTarget === this.target) {
@@ -490,14 +520,14 @@ export class Enemy extends Entity {
         const ty = currentTarget.y;
         
         // Spawn ground warning indicator (VFX1 is fire rune, lasts 0.6s)
-        const warnEffect = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx1, 0.6, 1.8);
+        const warnEffect = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx1, 0.6, 1.8, 0, 'fire_rune');
         globals.animatedEffects.push(warnEffect);
         
         // Spawn vertical fire column after 0.6s
         globals.delayedActions.push({
           delay: 0.6,
           run: () => {
-            const firePillar = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx2, 0.8, 2.0);
+            const firePillar = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx2, 0.8, 2.0, 0, 'fire_pillar');
             globals.animatedEffects.push(firePillar);
             
             // Check if player is near
@@ -527,7 +557,7 @@ export class Enemy extends Entity {
           globals.delayedActions.push({
             delay: i * 0.1,
             run: () => {
-              const spike = new AnimatedEffect(ix, iy, vfxAnims.frostKnight.vfx3, 0.6, 1.5);
+              const spike = new AnimatedEffect(ix, iy, vfxAnims.frostKnight.vfx3, 0.6, 1.5, 0, 'ice_spike');
               globals.animatedEffects.push(spike);
               
               // Deal slow and minor damage
@@ -543,7 +573,7 @@ export class Enemy extends Entity {
         this.attackLanded = true;
       } else {
         // Temporary Ice Shield + standard lunge
-        const shieldFx = new AnimatedEffect(this.x, this.y, vfxAnims.frostKnight.vfx2, 1.0, 1.8);
+        const shieldFx = new AnimatedEffect(this.x, this.y, vfxAnims.frostKnight.vfx2, 1.0, 1.8, 0, 'ice_shield');
         globals.animatedEffects.push(shieldFx);
         (this as any).iceShieldActive = true;
         globals.delayedActions.push({
@@ -559,14 +589,14 @@ export class Enemy extends Entity {
       const ty = currentTarget.y;
       
       // Spawn star rune warning
-      const starRune = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx1, 0.5, 1.5);
+      const starRune = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx1, 0.5, 1.5, 0, 'star_rune');
       globals.animatedEffects.push(starRune);
       
       globals.delayedActions.push({
         delay: 0.5,
         run: () => {
           // Fall meteor (VFX3 is constellation/blast)
-          const blast = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx3, 0.7, 1.6);
+          const blast = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx3, 0.7, 1.6, 0, 'meteor_blast');
           globals.animatedEffects.push(blast);
           
           const pdx = globals.player.x - tx;
@@ -581,7 +611,7 @@ export class Enemy extends Entity {
       // Necromancer summons skeleton minions or fires tracking void skulls
       if (Math.random() < 0.5 && globals.enemies.length < 15) {
         // Portal effect
-        const portal = new AnimatedEffect(this.x, this.y - 40, vfxAnims.warlock.vfx1, 0.8, 2.0);
+        const portal = new AnimatedEffect(this.x, this.y - 40, vfxAnims.warlock.vfx1, 0.8, 2.0, 0, 'necro_portal');
         globals.animatedEffects.push(portal);
         
         globals.delayedActions.push({

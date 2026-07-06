@@ -1,27 +1,25 @@
 import { globals } from './globals';
-import { anims, vfxAnims } from './assets';
+import { anims } from './assets';
 import { callbacks } from './callbacks';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-const tintCache: Record<string, HTMLCanvasElement> = {};
-const tintKeys: string[] = [];
+const tintCache = new Map<string, HTMLCanvasElement>();
+
 export function getTintedImage(img: HTMLImageElement, hexColor: string): HTMLCanvasElement | HTMLImageElement {
-  if (!hexColor.startsWith('#')) return img;
+  if (hexColor[0] !== '#') return img;
   const key = img.src + '_' + hexColor;
-  if (tintCache[key]) {
-    const idx = tintKeys.indexOf(key);
-    if (idx !== -1) {
-      tintKeys.splice(idx, 1);
-      tintKeys.push(key);
-    }
-    return tintCache[key];
+  const cached = tintCache.get(key);
+  if (cached) {
+    tintCache.delete(key);
+    tintCache.set(key, cached); // refresh insertion order (LRU)
+    return cached;
   }
 
-  if (tintKeys.length >= 150) {
-    const oldestKey = tintKeys.shift();
-    if (oldestKey) {
-      delete tintCache[oldestKey];
+  if (tintCache.size >= 150) {
+    const oldestKey = tintCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      tintCache.delete(oldestKey);
     }
   }
 
@@ -44,8 +42,7 @@ export function getTintedImage(img: HTMLImageElement, hexColor: string): HTMLCan
   ctx.globalCompositeOperation = 'multiply';
   ctx.drawImage(img, 0, 0);
 
-  tintCache[key] = canvas;
-  tintKeys.push(key);
+  tintCache.set(key, canvas);
   return canvas;
 }
 
@@ -103,8 +100,8 @@ export class Entity {
     const img = currentAnim[this.animFrame];
     if (!img || !img.complete || img.naturalWidth === 0) return;
     
-    const rx = Math.round(this.x - cx + globals.vw/2);
-    const ry = Math.round(this.y - cy + globals.vh/2 + (this.yOffset || 0));
+    const rx = (this.x - cx + globals.vw/2) | 0;
+    const ry = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
     const scale = 0.5 * this.scaleMult;
     const buffer = Math.max(img.width, img.height) * scale + 60;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
@@ -116,7 +113,9 @@ export class Entity {
 
     // Draw motion blur ghost trail for dashing player
     if (this.subType === 'player' && this.state === 'dash' && (this.vx !== 0 || this.vy !== 0)) {
-      const angle = Math.atan2(this.vy, this.vx);
+      const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy) || 0.001;
+      const cos = this.vx / speed;
+      const sin = this.vy / speed;
       let trailColor = '#00ffff';
       if (globals.flowState === 'storm_god') trailColor = '#fbbf24';
       else if (globals.flowState === 'awakened') trailColor = '#c084fc';
@@ -126,7 +125,7 @@ export class Entity {
       // Far ghost
       ctx.save();
       ctx.globalAlpha = alpha * 0.22;
-      ctx.translate(-Math.cos(angle) * 22, -Math.sin(angle) * 22);
+      ctx.translate(-cos * 22, -sin * 22);
       ctx.scale(this.dir, 1);
       ctx.drawImage(ghostImg, -img.width/2 * scale, -img.height/2 * scale, img.width * scale, img.height * scale);
       ctx.restore();
@@ -134,7 +133,7 @@ export class Entity {
       // Near ghost
       ctx.save();
       ctx.globalAlpha = alpha * 0.42;
-      ctx.translate(-Math.cos(angle) * 11, -Math.sin(angle) * 11);
+      ctx.translate(-cos * 11, -sin * 11);
       ctx.scale(this.dir, 1);
       ctx.drawImage(ghostImg, -img.width/2 * scale, -img.height/2 * scale, img.width * scale, img.height * scale);
       ctx.restore();
@@ -145,7 +144,7 @@ export class Entity {
     
     let drawImg: any = img;
     if (colorTint !== 'none') {
-      if (colorTint.startsWith('#')) {
+      if (colorTint[0] === '#') {
         drawImg = getTintedImage(img, colorTint);
       } else {
         ctx.filter = colorTint;
@@ -244,16 +243,16 @@ export class Particle {
     this.life -= dt; this.vx *= this.friction; this.vy *= this.friction;
   }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    const rx = Math.round(this.x - cx + globals.vw/2);
-    const ry = Math.round(this.y - cy + globals.vh/2);
+    const rx = (this.x - cx + globals.vw/2) | 0;
+    const ry = (this.y - cy + globals.vh/2) | 0;
     const buffer = 40;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
     }
     
     ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
-    const speed = Math.hypot(this.vx, this.vy);
-    if (speed > 50) {
+    const speedSq = this.vx * this.vx + this.vy * this.vy;
+    if (speedSq > 2500) {
       ctx.lineWidth = this.size;
       ctx.strokeStyle = this.color;
       ctx.beginPath();
@@ -601,37 +600,32 @@ export class Projectile {
     
     if (this.isEnemy) {
       const tint = (this as any).colorTint;
+      let primary = '#ff0000';
+      let secondary = '#ffff00';
+      
       if (tint === '#ff4400') {
-        const frameIdx = Math.floor((performance.now() / 60) % 12);
-        const img = vfxAnims.fireMage.vfx3[frameIdx];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.scale(2.0, 2.0);
-          ctx.drawImage(img, -img.width / 2, -img.height / 2);
-        }
+        primary = '#ff4400';
+        secondary = '#ffb700';
       } else if (tint === '#a855f7') {
-        const frameIdx = Math.floor((performance.now() / 60) % 13);
-        const img = vfxAnims.warlock.vfx2[frameIdx];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.scale(1.8, 1.8);
-          ctx.drawImage(img, -img.width / 2, -img.height / 2);
-        }
+        primary = '#a855f7';
+        secondary = '#d8b4fe';
       } else if (tint === '#f43f5e') {
-        const frameIdx = Math.floor((performance.now() / 65) % 8);
-        const img = vfxAnims.starcaller.vfx2[frameIdx];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.scale(2.2, 2.2);
-          ctx.drawImage(img, -img.width / 2, -img.height / 2);
-        }
-      } else {
-        ctx.beginPath();
-        ctx.arc(0, 0, 15, 0, Math.PI*2);
-        ctx.fillStyle = '#ff0000';
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(0, 0, 10, 0, Math.PI*2);
-        ctx.fillStyle = '#ffff00';
-        ctx.fill();
+        primary = '#f43f5e';
+        secondary = '#fda4af';
       }
+
+      ctx.beginPath();
+      ctx.arc(0, 0, 15, 0, Math.PI*2);
+      ctx.fillStyle = primary;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, 10, 0, Math.PI*2);
+      ctx.fillStyle = secondary;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, 5, 0, Math.PI*2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
     } else if (this.isDeflected) {
       ctx.beginPath();
       ctx.arc(0, 0, 15, 0, Math.PI*2);
@@ -932,79 +926,8 @@ export class Slash {
       this.y = this.owner.y + this.offsetY;
     }
   }
-  draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    let offsetX = 0;
-    let offsetY = 0;
-    let dir = 1;
-    if (this.owner && this.owner.subType === 'player') {
-      dir = this.owner.dir || 1;
-      const state = this.owner.state;
-      if (state === 'idle' || state === 'charge') {
-        offsetX = -15 * dir;
-        offsetY = 22;
-      } else if (state === 'attack') {
-        offsetX = -5 * dir;
-        offsetY = 20;
-      } else { // walk/run/dash
-        offsetX = -0.5 * dir;
-        offsetY = 17;
-      }
-    }
-
-    const rx = this.x - cx + globals.vw/2 + offsetX;
-    const yOff = (this.owner && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
-    const ry = this.y - cy + globals.vh/2 + yOff + offsetY - 17;
-    const buffer = 260 * this.sizeMult;
-    if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
-      return;
-    }
-
-    // Determine color and anim set
-    let frames = vfxAnims.slashes.slash1.color1; // Default: cyan/wind
-    const isUlt = globals.flowState === 'awakened';
-
-    if (this.colorTint) {
-      if (this.colorTint.includes('136, 51, 255')) {
-        // Purple shadow clone slash
-        frames = vfxAnims.slashes.slash1.color4;
-      } else if (this.colorTint.includes('255, 0, 85')) {
-        // Riposte crimson/pink circular slash
-        frames = vfxAnims.slashes.slash2.color2; // red/pinkish
-      } else if (this.colorTint.includes('255, 183, 197') || this.colorTint.includes('sakura')) {
-        // Sakura pink slash
-        frames = vfxAnims.slashes.slash1.color5; // pink
-      } else if (this.colorTint.includes('0, 255, 255')) {
-        // Cyan clone slash
-        frames = vfxAnims.slashes.slash1.color1;
-      }
-    } else if (isUlt) {
-      // Ultimate golden/cyan slash
-      frames = vfxAnims.slashes.slash3.color1;
-    } else if (this.isEnhanced) {
-      // Fire/Enhanced slash
-      frames = vfxAnims.slashes.slash2.color2; // Fire red
-    } else if (globals.frostStanceActive) {
-      frames = vfxAnims.slashes.slash3.color3; // Ice blue
-    } else if (globals.voidStanceActive) {
-      frames = vfxAnims.slashes.slash1.color4; // Purple/void
-    }
-
-    const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
-    const frameIdx = Math.floor(progress * frames.length);
-    const img = frames[frameIdx];
-
-    if (img && img.complete && img.naturalWidth > 0) {
-      ctx.save();
-      ctx.translate(rx, ry);
-      ctx.scale(dir, 1);
-      ctx.rotate(dir === -1 ? Math.PI - this.angle : this.angle);
-      
-      // Center the slash arc on the player
-      const scale = 2.5 * this.sizeMult;
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
-      ctx.restore();
-    }
+  draw(_ctx: CanvasRenderingContext2D, _cx: number, _cy: number) {
+    // Slash animations are removed as requested. User will re-add individually later.
   }
 }
 
@@ -1016,8 +939,9 @@ export class AnimatedEffect {
   maxLife: number;
   scale: number;
   rotation: number;
+  type?: string;
 
-  constructor(x: number, y: number, frames: HTMLImageElement[], duration = 0.4, scale = 1.0, rotation = 0) {
+  constructor(x: number, y: number, frames: HTMLImageElement[], duration = 0.4, scale = 1.0, rotation = 0, type?: string) {
     this.x = x;
     this.y = y;
     this.frames = frames;
@@ -1025,6 +949,7 @@ export class AnimatedEffect {
     this.life = duration;
     this.scale = scale;
     this.rotation = rotation;
+    this.type = type;
   }
 
   update(dt: number) {
@@ -1032,22 +957,84 @@ export class AnimatedEffect {
   }
 
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    if (this.life <= 0 || this.frames.length === 0) return;
+    if (this.life <= 0) return;
     const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
-    const frameIdx = Math.floor(progress * this.frames.length);
-    const img = this.frames[frameIdx];
-    
-    if (img && img.complete && img.naturalWidth > 0) {
-      const rx = Math.round(this.x - cx + globals.vw/2);
-      const ry = Math.round(this.y - cy + globals.vh/2);
-      
-      ctx.save();
-      ctx.translate(rx, ry);
-      ctx.rotate(this.rotation);
-      ctx.scale(this.scale, this.scale);
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+    const rx = Math.round(this.x - cx + globals.vw/2);
+    const ry = Math.round(this.y - cy + globals.vh/2);
+
+    ctx.save();
+    ctx.translate(rx, ry);
+
+    if (this.type) {
+      if (this.type === 'fire_rune') {
+        ctx.beginPath();
+        ctx.arc(0, 0, 45 * this.scale, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(255, 68, 0, ${progress})`;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 6]);
+        ctx.stroke();
+      } else if (this.type === 'fire_pillar') {
+        const grad = ctx.createLinearGradient(-15 * this.scale, 0, 15 * this.scale, 0);
+        grad.addColorStop(0, `rgba(255, 68, 0, ${1 - progress})`);
+        grad.addColorStop(0.5, `rgba(255, 165, 0, ${(1 - progress) * 1.5})`);
+        grad.addColorStop(1, `rgba(255, 68, 0, ${1 - progress})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(-20 * this.scale * (1 - progress), -150 * this.scale, 40 * this.scale * (1 - progress), 170 * this.scale);
+      } else if (this.type === 'ice_spike') {
+        ctx.beginPath();
+        ctx.moveTo(0, 5);
+        ctx.lineTo(-12 * this.scale, 5);
+        ctx.lineTo(0, -45 * this.scale * Math.sin(progress * Math.PI));
+        ctx.lineTo(12 * this.scale, 5);
+        ctx.closePath();
+        const grad = ctx.createLinearGradient(-12, 0, 12, 0);
+        grad.addColorStop(0, `rgba(96, 165, 250, ${1 - progress})`);
+        grad.addColorStop(1, `rgba(224, 242, 254, ${1 - progress})`);
+        ctx.fillStyle = grad;
+        ctx.fill();
+      } else if (this.type === 'ice_shield') {
+        ctx.beginPath();
+        ctx.arc(0, 0, 40 * this.scale, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(96, 165, 250, ${(1 - progress) * 0.75})`;
+        ctx.lineWidth = 4;
+        ctx.stroke();
+        ctx.fillStyle = `rgba(96, 165, 250, ${(1 - progress) * 0.15})`;
+        ctx.fill();
+      } else if (this.type === 'star_rune') {
+        ctx.beginPath();
+        ctx.arc(0, 0, 50 * this.scale, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(244, 63, 94, ${progress})`;
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([8, 8]);
+        ctx.stroke();
+      } else if (this.type === 'meteor_blast') {
+        ctx.beginPath();
+        ctx.arc(0, 0, 75 * this.scale * progress, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(244, 63, 94, ${1 - progress})`;
+        ctx.lineWidth = 4 * (1 - progress);
+        ctx.stroke();
+      } else if (this.type === 'necro_portal') {
+        ctx.beginPath();
+        ctx.arc(0, 0, 30 * this.scale * Math.sin(progress * Math.PI), 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(168, 85, 247, ${1 - progress})`;
+        ctx.lineWidth = 4;
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+      }
       ctx.restore();
+      return;
     }
+
+    if (this.frames.length > 0) {
+      const frameIdx = Math.floor(progress * this.frames.length);
+      const img = this.frames[frameIdx];
+      if (img && img.complete && img.naturalWidth > 0) {
+        ctx.rotate(this.rotation);
+        ctx.scale(this.scale, this.scale);
+        ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      }
+    }
+    ctx.restore();
   }
 }
 
@@ -1090,12 +1077,15 @@ export class Decoy extends Entity {
     globals.slashes.push(Slash.acquire(this.x, this.y, Math.random() * Math.PI * 2, 1.2, false, 'rgba(192, 132, 252, ALPHA)', true));
     
     // Deal 3 damage + knockback to nearby enemies in 180px radius
-    globals.enemies.forEach(e => {
-      if (e.state === 'dead') return;
+    const enemies = globals.enemies;
+    const len = enemies.length;
+    for (let i = 0; i < len; i++) {
+      const e = enemies[i];
+      if (e.state === 'dead') continue;
       const dx = e.x - this.x;
       const dy = e.y - this.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 180) {
+      const distSq = dx * dx + dy * dy;
+      if (distSq < 32400) {
         if (callbacks.hitEnemy) {
           callbacks.hitEnemy(e, 3);
         } else {
@@ -1105,16 +1095,16 @@ export class Decoy extends Entity {
         }
         
         // knockback
-        const kbAngle = Math.atan2(dy, dx);
-        e.vx = Math.cos(kbAngle) * 800;
-        e.vy = Math.sin(kbAngle) * 800;
+        const dist = Math.sqrt(distSq) || 0.001;
+        e.vx = (dx / dist) * 800;
+        e.vy = (dy / dist) * 800;
         e.stunTimer = Math.max(e.stunTimer || 0, 0.6);
         
-        for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < 5; j++) {
           globals.particles.push(Particle.acquire(e.x, e.y, '#c084fc', 150, 0.3, 1.5));
         }
       }
-    });
+    }
   }
 
   explode() {
@@ -1123,12 +1113,15 @@ export class Decoy extends Entity {
       globals.particles.push(Particle.acquire(this.x, this.y, '#c084fc', 300, 0.5, 2.5 + Math.random() * 2, Math.random() * Math.PI * 2));
     }
     
-    globals.enemies.forEach(e => {
-      if (e.state === 'dead') return;
+    const enemies = globals.enemies;
+    const len = enemies.length;
+    for (let i = 0; i < len; i++) {
+      const e = enemies[i];
+      if (e.state === 'dead') continue;
       const dx = e.x - this.x;
       const dy = e.y - this.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 200) {
+      const distSq = dx * dx + dy * dy;
+      if (distSq < 40000) {
         if (callbacks.hitEnemy) {
           callbacks.hitEnemy(e, 8);
         } else {
@@ -1138,11 +1131,11 @@ export class Decoy extends Entity {
         }
         e.stunTimer = Math.max(e.stunTimer || 0, 1.5);
         // extra knockback
-        const kbAngle = Math.atan2(dy, dx);
-        e.vx = Math.cos(kbAngle) * 1200;
-        e.vy = Math.sin(kbAngle) * 1200;
+        const dist = Math.sqrt(distSq) || 0.001;
+        e.vx = (dx / dist) * 1200;
+        e.vy = (dy / dist) * 1200;
       }
-    });
+    }
   }
 
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
