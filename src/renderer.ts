@@ -383,17 +383,43 @@ export function draw() {
         ctx.restore();
       }
 
-      // Dragon's Fury Active Animation Loop (looping purple/void frames)
+      // Dragon's Fury Active Animation Loop (gorgeous programmatic energy aura and rotating blades)
       const isDragonFuryActive = globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0;
       if (isDragonFuryActive) {
         ctx.save();
-        ctx.globalAlpha = 0.8;
-        const dfFrames = vfxAnims.custom.dragonFury;
-        const dfFrameIdx = Math.floor((performance.now() / 65) % dfFrames.length);
-        const img = dfFrames[dfFrameIdx];
-        if (img && img.complete && img.naturalWidth > 0) {
-          ctx.drawImage(img, px - img.width * 1.5 / 2, py - img.height * 1.5 / 2, img.width * 1.5, img.height * 1.5);
+        const pulse = 1.0 + Math.sin(auraTime * 15) * 0.08;
+        
+        // 1. Draw glowing background radial aura
+        const gradient = ctx.createRadialGradient(px, py, 5, px, py, 45 * pulse);
+        gradient.addColorStop(0, 'rgba(192, 132, 252, 0.45)');
+        gradient.addColorStop(0.5, 'rgba(168, 85, 247, 0.25)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(px, py, 45 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 2. Draw rotating runic ring
+        ctx.strokeStyle = 'rgba(192, 132, 252, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([8, 12]);
+        ctx.beginPath();
+        ctx.arc(px, py, 38, auraTime * 3, auraTime * 3 + Math.PI * 2);
+        ctx.stroke();
+        
+        // 3. Draw rotating glowing dragon fury crescent blades (representing extra slash strikes)
+        const bladeCount = 3;
+        ctx.lineWidth = 3.5;
+        for (let i = 0; i < bladeCount; i++) {
+          const angle = (auraTime * 5) + (i * Math.PI * 2 / bladeCount);
+          ctx.strokeStyle = i % 2 === 0 ? 'rgba(192, 132, 252, 0.95)' : 'rgba(236, 72, 153, 0.95)'; // purple / pink
+          
+          ctx.beginPath();
+          // Draw a crescent arc path around px, py
+          ctx.arc(px, py, 30 + Math.sin(auraTime * 10 + i) * 3, angle, angle + 0.6);
+          ctx.stroke();
         }
+        
         ctx.restore();
       }
 

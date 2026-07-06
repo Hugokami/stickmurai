@@ -115,6 +115,12 @@ export class Entity {
       return;
     }
     
+    let finalDir = this.dir;
+    const isCustomType = this.type === 'enemy01' || this.type === 'enemy02' || this.type === 'enemy03' || this.type === 'enemy05' || this.type === 'skeleton';
+    if (isCustomType) {
+      finalDir = -this.dir;
+    }
+
     ctx.save(); 
     ctx.translate(rx, ry);
 
@@ -133,7 +139,7 @@ export class Entity {
       ctx.save();
       ctx.globalAlpha = alpha * 0.22;
       ctx.translate(-cos * 22, -sin * 22);
-      ctx.scale(this.dir, 1);
+      ctx.scale(finalDir, 1);
       ctx.drawImage(ghostImg, -img.width/2 * scale, -img.height/2 * scale, img.width * scale, img.height * scale);
       ctx.restore();
 
@@ -141,12 +147,12 @@ export class Entity {
       ctx.save();
       ctx.globalAlpha = alpha * 0.42;
       ctx.translate(-cos * 11, -sin * 11);
-      ctx.scale(this.dir, 1);
+      ctx.scale(finalDir, 1);
       ctx.drawImage(ghostImg, -img.width/2 * scale, -img.height/2 * scale, img.width * scale, img.height * scale);
       ctx.restore();
     }
 
-    ctx.scale(this.dir, 1); 
+    ctx.scale(finalDir, 1); 
     ctx.globalAlpha = alpha;
     
     let drawImg: any = img;

@@ -725,7 +725,7 @@ function initGame() {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
   }
   
-  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 14.0 : (globals.selectedSkill === 'dash' ? 2.8 : (globals.selectedSkill === 'firewheel' ? 12.0 : (globals.selectedSkill === 'gravity' ? 13.0 : (globals.selectedSkill === 'parry_master' ? 5.0 : (globals.selectedSkill === 'decoy_illusion' ? 14.0 : 16.0))))));
+  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 14.0 : (globals.selectedSkill === 'dash' ? 2.8 : (globals.selectedSkill === 'firewheel' ? 12.0 : (globals.selectedSkill === 'gravity' ? 8.0 : (globals.selectedSkill === 'parry_master' ? 5.0 : (globals.selectedSkill === 'decoy_illusion' ? 14.0 : 16.0))))));
   const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 5.5 : (globals.selectedSkill === 'dash' ? 0.3 : (globals.selectedSkill === 'firewheel' ? 5.0 : (globals.selectedSkill === 'gravity' ? 5.0 : (globals.selectedSkill === 'parry_master' ? 5.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
   globals.playerStats = { 
     slashSizeMult: 1.0, 
@@ -2202,6 +2202,25 @@ function update(realDt: number) {
   if (globals.enhanceActiveTimer > 0) {
     globals.enhanceActiveTimer -= realDt;
     
+    if (globals.selectedSkill === 'enhance') {
+      // Spawn purple dragon fury fire particles!
+      if (Math.random() < 0.35 && globals.particles.length < 300) {
+        const pAngle = -Math.PI/2 + (Math.random() - 0.5) * 0.8;
+        const pSpeed = 80 + Math.random() * 120;
+        globals.particles.push(Particle.acquire(
+          globals.player.x + (Math.random() - 0.5) * 35,
+          globals.player.y + (Math.random() - 0.5) * 60,
+          Math.random() < 0.5 ? '#c084fc' : '#a855f7',
+          pSpeed,
+          0.5 + Math.random() * 0.3,
+          2 + Math.random() * 2,
+          pAngle,
+          -80,
+          0.93
+        ));
+      }
+    }
+    
     // Aegis pulse
     if (globals.selectedSkill === 'shield') {
       globals.shieldPulseTimer += realDt;
@@ -2309,7 +2328,7 @@ function update(realDt: number) {
     globals.gravityWellTimer -= realDt;
     const pullRadius = 300 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
     const pullRadiusSq = pullRadius * pullRadius;
-    const pullSpeed = 700;
+    const pullSpeed = 1200;
     const tickDmg = 2 + 2 * (globals.playerStats.gravityDamageLevel || 0);
     
     if (Math.random() < 0.5) {
@@ -2350,6 +2369,13 @@ function update(realDt: number) {
       const dy = globals.gravityWellY - e.y;
       const distSq = dx * dx + dy * dy;
       if (distSq < pullRadiusSq) {
+        // Damp velocity inside gravity well and interrupt lunges/attacks
+        e.vx *= 0.15;
+        e.vy *= 0.15;
+        if (e.state === 'attack') {
+          e.setState('idle');
+        }
+        
         if (distSq > 100) {
           const dist = Math.sqrt(distSq);
           const pullRatio = Math.min(1, pullSpeed * realDt / dist);
@@ -3264,7 +3290,12 @@ function update(realDt: number) {
       }
     }
   }
-  inplaceFilter(globals.enemies, e => e.isPvpRemote || e.state !== 'dead' || (e.deadTimer !== undefined && e.deadTimer < 3.0));
+  inplaceFilter(globals.enemies, e => {
+    if (e.isPvpRemote || e.state !== 'dead') return true;
+    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss';
+    const maxDeadTime = isBoss ? 3.0 : 0.8;
+    return e.deadTimer !== undefined && e.deadTimer < maxDeadTime;
+  });
   
   for (let i = 0; i < globals.slashes.length; i++) {
     globals.slashes[i].update(realDt);
