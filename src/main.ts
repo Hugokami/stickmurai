@@ -731,13 +731,14 @@ function initGame() {
   globals.activeBladeClash = null;
   globals.ultCooldown = 0;
   globals.ultCooldownMax = 6.0;
+  globals.roninResolveCooldown = 0;
   
   if (globals.gameMode === 'zen') {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
   }
   
-  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 14.0 : (globals.selectedSkill === 'dash' ? 2.8 : (globals.selectedSkill === 'firewheel' ? 12.0 : (globals.selectedSkill === 'gravity' ? 8.0 : (globals.selectedSkill === 'parry_master' ? 10.0 : (globals.selectedSkill === 'decoy_illusion' ? 14.0 : 16.0))))));
-  const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 5.5 : (globals.selectedSkill === 'dash' ? 0.3 : (globals.selectedSkill === 'firewheel' ? 5.0 : (globals.selectedSkill === 'gravity' ? 5.0 : (globals.selectedSkill === 'parry_master' ? 3.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
+  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 12.0 : (globals.selectedSkill === 'dash' ? 2.8 : (globals.selectedSkill === 'firewheel' ? 12.0 : (globals.selectedSkill === 'gravity' ? 10.0 : (globals.selectedSkill === 'parry_master' ? 10.0 : (globals.selectedSkill === 'decoy_illusion' ? 14.0 : 16.0))))));
+  const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 3.5 : (globals.selectedSkill === 'dash' ? 0.3 : (globals.selectedSkill === 'firewheel' ? 5.0 : (globals.selectedSkill === 'gravity' ? 4.0 : (globals.selectedSkill === 'parry_master' ? 3.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
   globals.playerStats = { 
     slashSizeMult: 1.0, 
     attackCooldownBase: 0.3, 
@@ -1021,9 +1022,26 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   
   if (globals.player.state !== 'dead') {
     playSynthesizedHurt();
-    globals.lives -= damageAmount;
-    globals.invulnTimer = 0.5;
-    globals.screenShake = 20;
+    
+    // Step 3: Ronin's Resolve (Lethal One-Shot Protection)
+    if (globals.lives >= 2 && globals.lives - damageAmount <= 0 && globals.roninResolveCooldown <= 0) {
+      globals.lives = 1; // Preserve samurai on brink of defeat!
+      globals.roninResolveCooldown = 60.0; // 60s cooldown
+      globals.invulnTimer = 1.5; // Emergency i-frames
+      globals.screenShake = 35;
+      playSynthesizedPerfectParry();
+      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '武士の気迫！ 🛡️' : "RONIN'S RESOLVE! 🛡️", "neon-#ffd700", 36));
+      for (let i = 0; i < 20; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 250 + Math.random() * 250;
+        globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#ffd700', speed, 0.7, 3, angle));
+      }
+    } else {
+      globals.lives -= damageAmount;
+      globals.invulnTimer = 0.5;
+      globals.screenShake = 20;
+    }
     
     const flashOverlay = document.getElementById('flash-overlay')!;
     flashOverlay.style.background = 'red';
@@ -1818,13 +1836,24 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if (isExecution) {
     (e as any).postureBrokenTimer = 0;
     (e as any).posture = 0;
-    finalDmg = Math.max(30, (e.maxHp || 10) * 0.75);
+    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss;
+    if (isBoss) {
+      // Boss execution: cap at 30% of maxHp (min 35, max 60), stun boss for 2.5s
+      finalDmg = Math.min(60, Math.max(35, Math.round((e.maxHp || 100) * 0.30)));
+      e.stunTimer = 2.5;
+      e.knockbackTimer = 0.45;
+      const kbAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
+      e.knockbackVx = Math.cos(kbAngle) * 900;
+      e.knockbackVy = Math.sin(kbAngle) * 900;
+      globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `BOSS STAGGERED! 💥 -${finalDmg}`, 'neon-#ffd700', 34));
+    } else {
+      finalDmg = Math.max(30, (e.maxHp || 10) * 0.75);
+      globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
+    }
 
     globals.screenShake = Math.max(globals.screenShake, 30);
     globals.hitStop = 0;
-    globals.shockwaves.push(new Shockwave(e.x, e.y, '#ff003c'));
-    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
-
+    globals.shockwaves.push(new Shockwave(e.x, e.y, isBoss ? '#ffd700' : '#ff003c'));
     addFlow(20);
 
     const mangaCutin = document.getElementById('manga-cutin');
@@ -2409,7 +2438,7 @@ function update(realDt: number) {
           const dy = e.y - globals.player.y;
           const distSq = dx * dx + dy * dy;
           if (distSq < 220 * 220) {
-            hitEnemy(e, 3 + 2 * (globals.playerStats.shieldPulseLevel || 0));
+            hitEnemy(e, 6 + 2 * (globals.playerStats.shieldPulseLevel || 0));
             // pull enemies slightly toward player center
             if (distSq > 100) {
               const dist = Math.sqrt(distSq);
@@ -2463,7 +2492,7 @@ function update(realDt: number) {
           const dy = e.y - globals.player.y;
           
           if (dx * dx + dy * dy < rangeSq) {
-            hitEnemy(e, 4);
+            hitEnemy(e, 5);
             e.burnTimer = 4.0;
             e.burnBonusDmg = globals.playerStats.firewheelBlazeLevel || 0;
             
@@ -2493,6 +2522,32 @@ function update(realDt: number) {
                 }
               }
             }
+          }
+        });
+      }
+    }
+
+    if (globals.enhanceActiveTimer <= 0) {
+      globals.enhanceActiveTimer = 0;
+      if (globals.selectedSkill === 'firewheel') {
+        // Inferno Sweep expiration: expanding Flame Shockwave!
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ff4400'));
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffaa00'));
+        playSynthesizedThunder();
+        globals.screenShake = Math.max(globals.screenShake, 20);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '業火爆裂！ 🔥' : 'INFERNO BURST! 🔥', 'neon-#ff4400', 30));
+        const burstRadiusSq = 240 * 240;
+        globals.enemies.forEach(other => {
+          if (other.state === 'dead') return;
+          const dx = other.x - globals.player.x;
+          const dy = other.y - globals.player.y;
+          if (dx * dx + dy * dy < burstRadiusSq) {
+            hitEnemy(other, 8);
+            other.burnTimer = 4.0;
+            other.burnBonusDmg = (globals.playerStats.firewheelBlazeLevel || 0) + 1;
+            const pushAngle = Math.atan2(dy, dx);
+            other.vx = Math.cos(pushAngle) * 800;
+            other.vy = Math.sin(pushAngle) * 800;
           }
         });
       }
@@ -2579,7 +2634,7 @@ function update(realDt: number) {
     
     if (globals.gravityWellTimer <= 0) {
       globals.gravityWellTimer = 0;
-      const explosionDmg = 10 + 10 * (globals.playerStats.gravityExplosionLevel || 0);
+      const explosionDmg = 12 + 10 * (globals.playerStats.gravityExplosionLevel || 0);
       
       globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#8b008b'));
       globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#ff00ff'));
@@ -2622,6 +2677,11 @@ function update(realDt: number) {
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, "ULTIMATE READY!", "#ffd700", 32));
       }
     }
+  }
+
+  if (globals.roninResolveCooldown > 0) {
+    globals.roninResolveCooldown -= realDt;
+    if (globals.roninResolveCooldown < 0) globals.roninResolveCooldown = 0;
   }
   
   const autoUltCondition = globals.autoUltEnabled === 'on' && globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
@@ -2683,7 +2743,20 @@ function update(realDt: number) {
   const dt = realDt; // Time scaling disabled to prevent laggy feel
 
   if (globals.comboTimer > 0 && globals.gameState === 'playing') {
-    globals.comboTimer -= realDt; if (globals.comboTimer <= 0) { globals.combo = 0; globals.comboFinisherReady = false; callbacks.updateComboDisplay?.(); updateUI(); }
+    // Step 5: Freeze combo timer during Blade Clash, boss windups, and execution cut-in
+    const isBossCharging = globals.enemies.some(e => e.state !== 'dead' && (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss) && (e.state === 'charge' || e.state === 'attack'));
+    const isExecutionCutinActive = globals.flowState === 'omnislash' || (document.getElementById('manga-cutin')?.style.display === 'block');
+    const isClashActive = globals.activeBladeClash !== null;
+
+    if (!isClashActive && !isBossCharging && !isExecutionCutinActive) {
+      globals.comboTimer -= realDt; 
+      if (globals.comboTimer <= 0) { 
+        globals.combo = 0; 
+        globals.comboFinisherReady = false; 
+        callbacks.updateComboDisplay?.(); 
+        updateUI(); 
+      }
+    }
   }
 
   if (globals.decoyInvisibilityTimer > 0) {

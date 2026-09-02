@@ -78,6 +78,8 @@ export const powerUps: PowerUp[] = [
       globals.lives = 1;
       globals.playerStats.enhanceBonusDmg += 3;
       globals.playerStats.slashSizeMult += 0.5;
+      globals.playerStats.dashCooldownBase *= 0.7; // +40% dash rate
+      if (globals.player) (globals.player as any).dashDuration = 0.45; // extra i-frame window
       callbacks.updateUI();
     }
   },
@@ -96,9 +98,9 @@ export const powerUps: PowerUp[] = [
     descKey: "puCursedIronDesc",
     isCorrupted: true,
     apply: () => {
-      globals.playerStats.moveSpeedMult *= 0.8;
-      globals.playerStats.slashSizeMult += 0.8;
-      globals.playerStats.deflectedDmg += 4;
+      globals.playerStats.dashCooldownBase *= 1.25; // Replaces sluggish movement speed penalty with shorter dash recovery
+      globals.playerStats.slashSizeMult += 1.0; // +100% slash size
+      globals.playerStats.deflectedDmg += 6; // +6 deflected damage
     }
   },
   {

@@ -143,8 +143,27 @@ export class Enemy extends Entity {
       else if (globals.score > 40) this.subType = 'shogun_boss';
       else this.subType = 'brawler'; // Fallback
     }
+
+    // Enforce active ranged density cap (Max 3-4 simultaneous ranged casters)
+    if (this.isRanged()) {
+      const activeRangedCount = globals.enemies ? globals.enemies.filter(e => e && e.state !== 'dead' && e.isRanged?.()).length : 0;
+      const maxRanged = globals.difficulty === 'insane' ? 4 : 3;
+      if (activeRangedCount >= maxRanged) {
+        const meleePool: EnemySubType[] = ['samurai', 'ronin', 'brawler', 'berserker', 'giant'];
+        this.subType = meleePool[Math.floor(Math.random() * meleePool.length)];
+      }
+    }
     
     this.configureSubType();
+
+    // Desynchronize ranged attacks with random cadence offset to prevent simultaneous off-screen bullet walls
+    if (this.isRanged()) {
+      this.chargeTimeMax += 0.1 + Math.random() * 0.35;
+    }
+  }
+
+  isRanged(): boolean {
+    return this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'glacial_sentinel' || this.subType === 'astromancer' || this.subType === 'necromancer';
   }
 
   configureSubType() {

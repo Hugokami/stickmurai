@@ -22,6 +22,7 @@ export const globals = {
   invertScreenTimer: 0,
   lives: 5,
   invulnTimer: 0,
+  roninResolveCooldown: 0,
   enhanceActiveTimer: 0,
   enhanceCooldown: 0,
 
