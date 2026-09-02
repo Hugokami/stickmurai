@@ -721,6 +721,12 @@ function initGame() {
   globals.flowingCounterActive = false;
   globals.galeVortexActive = false;
   globals.bladeEchoesActive = false;
+  globals.activeBounty = null;
+  globals.bountyTimer = 30;
+  globals.bloodThirstCurseActive = false;
+  globals.bloodThirstBleedTimer = 45.0;
+  globals.curseOfGreedActive = false;
+  globals.scoreMultiplier = 1;
   
   if (globals.gameMode === 'zen') {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
@@ -1784,12 +1790,50 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   const isCrit = Math.random() < Math.min(0.75, critChance); // cap crit chance at 75% for balance
   
   let finalDmg = dmg;
-  if (isCrit) {
+  const isExecution = (e as any).postureBrokenTimer > 0;
+
+  if (isExecution) {
+    (e as any).postureBrokenTimer = 0;
+    (e as any).posture = 0;
+    finalDmg = Math.max(30, (e.maxHp || 10) * 0.75);
+
+    globals.screenShake = Math.max(globals.screenShake, 30);
+    globals.hitStop = 0.22;
+    globals.shockwaves.push(new Shockwave(e.x, e.y, '#ff003c'));
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
+
+    addFlow(globals.playerStats.flowMax);
+
+    const mangaCutin = document.getElementById('manga-cutin');
+    if (mangaCutin) {
+      mangaCutin.style.display = 'block';
+      mangaCutin.style.opacity = '0.9';
+      setTimeout(() => {
+        if (mangaCutin) {
+          mangaCutin.style.opacity = '0';
+          setTimeout(() => { mangaCutin.style.display = 'none'; }, 200);
+        }
+      }, 180);
+    }
+
+    playSynthesizedAwaken();
+    playSound(sfx.slash);
+
+    for (let i = 0; i < 20; i++) {
+      const spd = 300 + Math.random() * 400;
+      const ang = Math.random() * Math.PI * 2;
+      globals.particles.push(Particle.acquire(e.x, e.y, '#ff003c', spd, 0.45, 3.5, ang));
+    }
+  } else if (isCrit) {
     finalDmg = dmg * 2;
     globals.screenShake = Math.max(globals.screenShake, 14);
     globals.hitStop = Math.max(globals.hitStop, 0.08); // small crunchy hitstop
     globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 35, `CRIT! 💥 -${finalDmg}`, '#ffaa00', 26));
-    
+
+    if (typeof (e as any).addPostureDamage === 'function') {
+      (e as any).addPostureDamage(18);
+    }
+
     // Golden crit particles
     const critSparkCount = globals.graphicsSettings === 'low' ? 3 : 12;
     for(let i=0; i<critSparkCount; i++) {
@@ -1800,6 +1844,10 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   } else {
     globals.screenShake = Math.max(globals.screenShake, 6);
     globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 30, `-${finalDmg}`, '#ff5555', 18));
+
+    if (typeof (e as any).addPostureDamage === 'function') {
+      (e as any).addPostureDamage(10);
+    }
   }
   
   e.hp -= finalDmg;
@@ -1859,6 +1907,17 @@ function killEnemy(e: Enemy) {
   globals.runStats.kills++;
   checkVampireHeal(e);
 
+  if (globals.activeBounty && globals.activeBounty.type === 'slay') {
+    globals.activeBounty.current++;
+  }
+
+  if (globals.bloodThirstCurseActive) {
+    addFlow(2);
+    if (Math.random() < 0.35) {
+      triggerChainLightning(e);
+    }
+  }
+
   if (e.subType === 'pyromancer') {
     const fireExp = new AnimatedEffect(e.x, e.y, vfxAnims.explosions.fire, 0.7, 2.0);
     globals.animatedEffects.push(fireExp);
@@ -1882,8 +1941,6 @@ function killEnemy(e: Enemy) {
     ));
   }
 
-
-
   globals.screenShake += 5;
   globals.collectibles.push(new Collectible(e.x, e.y, 'exp', e.expValue));
   
@@ -1906,11 +1963,15 @@ function killEnemy(e: Enemy) {
 function addCombo() {
   globals.combo++; 
   globals.comboTimer = 6.0; 
-  globals.score++;
+  globals.score += globals.curseOfGreedActive ? 2 : 1;
   if (globals.combo > globals.runStats.maxCombo) {
     globals.runStats.maxCombo = globals.combo;
   }
   
+  if (globals.activeBounty && globals.activeBounty.type === 'combo') {
+    globals.activeBounty.current = Math.max(globals.activeBounty.current, globals.combo);
+  }
+
   if (globals.combo % 10 === 0 && globals.combo > 0) {
     globals.comboFinisherReady = true;
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, "FINISHER READY!", "#ffcc00", 24));
@@ -1982,6 +2043,83 @@ function update(realDt: number) {
     if (globals.level >= globals.levelModeTarget) {
       triggerVictory();
       return;
+    }
+  }
+
+  // Option 5: Battlefield Bounty Contracts Update
+  if (globals.gameState === 'playing' && globals.gameMode !== 'zen') {
+    if (!globals.activeBounty) {
+      globals.bountyTimer -= realDt;
+      if (globals.bountyTimer <= 0) {
+        const roll = Math.random();
+        if (roll < 0.35) {
+          globals.activeBounty = {
+            type: 'slay',
+            target: 6,
+            current: 0,
+            timeRemaining: 18,
+            description: globals.currentLang === 'ja' ? '18秒以内に敵を6体撃破せよ' : 'Slay 6 enemies in 18s'
+          };
+        } else if (roll < 0.60) {
+          globals.activeBounty = {
+            type: 'deflect',
+            target: 2,
+            current: 0,
+            timeRemaining: 22,
+            description: globals.currentLang === 'ja' ? '22秒以内に飛び道具を2回弾き返せ' : 'Deflect 2 projectiles in 22s'
+          };
+        } else if (roll < 0.80) {
+          globals.activeBounty = {
+            type: 'parry',
+            target: 2,
+            current: 0,
+            timeRemaining: 20,
+            description: globals.currentLang === 'ja' ? '20秒以内に受け流しを2回成功させよ' : 'Parry 2 attacks in 20s'
+          };
+        } else {
+          globals.activeBounty = {
+            type: 'combo',
+            target: 25,
+            current: globals.combo,
+            timeRemaining: 16,
+            description: globals.currentLang === 'ja' ? '16秒以内に25連撃に到達せよ' : 'Reach 25 combo in 16s'
+          };
+        }
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, "NEW BOUNTY!", "#fbbf24", 26));
+        playSynthesizedLevelUp();
+      }
+    } else {
+      globals.activeBounty.timeRemaining -= realDt;
+      if (globals.activeBounty.current >= globals.activeBounty.target) {
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, "BOUNTY CLAIMED! 🏆", "#10b981", 28));
+        globals.screenShake = 16;
+        globals.score += 500;
+        addFlow(globals.playerStats.flowMax);
+        playSynthesizedAwaken();
+        for (let i = 0; i < 20; i++) {
+          globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#10b981', 300 + Math.random() * 200, 0.5, 3));
+        }
+        globals.activeBounty = null;
+        globals.bountyTimer = 45;
+      } else if (globals.activeBounty.timeRemaining <= 0) {
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "BOUNTY EXPIRED", "#94a3b8", 18));
+        globals.activeBounty = null;
+        globals.bountyTimer = 35;
+      }
+    }
+  }
+
+  // Corrupted Blessing: Blood Thirst Bleed
+  if (globals.bloodThirstCurseActive && globals.gameState === 'playing' && globals.player.state !== 'dead') {
+    globals.bloodThirstBleedTimer -= realDt;
+    if (globals.bloodThirstBleedTimer <= 0) {
+      globals.bloodThirstBleedTimer = 45.0;
+      if (globals.lives > 1) {
+        globals.lives--;
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "BLOOD DRAIN -1 HP", "#ef4444", 20));
+        playSynthesizedHurt();
+        callbacks.updateUI();
+      }
     }
   }
 
@@ -2722,13 +2860,22 @@ function update(realDt: number) {
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, t('perfectParryText'), "neon-#ffaa00", 34));
             
             e.setState('idle');
-            e.vx = -Math.cos(e.targetAngle) * 2200; e.vy = -Math.sin(e.targetAngle) * 2200;
+            e.knockbackTimer = 0.45;
+            e.knockbackVx = -Math.cos(e.targetAngle) * 2200;
+            e.knockbackVy = -Math.sin(e.targetAngle) * 2200;
+            e.vx = e.knockbackVx; e.vy = e.knockbackVy;
+            if (typeof (e as any).addPostureDamage === 'function') {
+              (e as any).addPostureDamage(45);
+            }
             hitEnemy(e, 3);
-            
+            if (globals.activeBounty && globals.activeBounty.type === 'parry') {
+              globals.activeBounty.current++;
+            }
+
             globals.player.setState('attack');
             playSound(sfx.slash);
             playSynthesizedPerfectParry();
-            
+
             const parrySparkCount = globals.graphicsSettings === 'low' ? 10 : 30;
             for(let i=0; i<parrySparkCount; i++) {
               const speed = 400 + Math.random() * 500;
@@ -2742,15 +2889,24 @@ function update(realDt: number) {
             globals.invulnTimer = 0.8;
             globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, t('parryText'), "#ffd700", 28));
-            
+
             e.setState('idle');
-            e.vx = -Math.cos(e.targetAngle) * 2000; e.vy = -Math.sin(e.targetAngle) * 2000;
+            e.knockbackTimer = 0.35;
+            e.knockbackVx = -Math.cos(e.targetAngle) * 1800;
+            e.knockbackVy = -Math.sin(e.targetAngle) * 1800;
+            e.vx = e.knockbackVx; e.vy = e.knockbackVy;
+            if (typeof (e as any).addPostureDamage === 'function') {
+              (e as any).addPostureDamage(25);
+            }
             hitEnemy(e, 2);
-            
+            if (globals.activeBounty && globals.activeBounty.type === 'parry') {
+              globals.activeBounty.current++;
+            }
+
             globals.player.setState('attack');
             playSound(sfx.slash);
             playSynthesizedParry();
-            
+
             const normalParrySparkCount = globals.graphicsSettings === 'low' ? 4 : 12;
             for(let i=0; i<normalParrySparkCount; i++) {
               const speed = 300 + Math.random() * 400;
@@ -2963,6 +3119,74 @@ function update(realDt: number) {
           0, 
           0.92
         ));
+      }
+
+      // Option 1: Blade Deflection / Projectile Baseball (Hane-Kaeshi)
+      for (let j = 0; j < globals.projectiles.length; j++) {
+        const proj = globals.projectiles[j];
+        if (!proj.isEnemy || proj.isDeflected || proj.life <= 0) continue;
+        const pdx = proj.x - globals.player.x;
+        const pdy = proj.y - globals.player.y;
+        const slashDeflectRange = 280 * size;
+        if (pdx * pdx + pdy * pdy < slashDeflectRange * slashDeflectRange) {
+          const pa = Math.atan2(pdy, pdx);
+          let diff = Math.abs(pa - angle);
+          if (diff > Math.PI) diff = Math.PI * 2 - diff;
+          if (diff < Math.PI / 1.5 || isRiposteStrike) {
+            proj.isEnemy = false;
+            proj.isDeflected = true;
+            proj.life = 3.5;
+
+            let targetEnemy: Enemy | null = (proj.shooter && proj.shooter.state !== 'dead') ? proj.shooter : null;
+            if (!targetEnemy) {
+              let minDistanceSq = Infinity;
+              for (const otherEnemy of globals.enemies) {
+                if (otherEnemy.state === 'dead') continue;
+                const edx = otherEnemy.x - proj.x;
+                const edy = otherEnemy.y - proj.y;
+                const edSq = edx * edx + edy * edy;
+                if (edSq < minDistanceSq) {
+                  minDistanceSq = edSq;
+                  targetEnemy = otherEnemy;
+                }
+              }
+            }
+
+            let deflectAngle = angle;
+            if (targetEnemy) {
+              deflectAngle = Math.atan2(targetEnemy.y - proj.y, targetEnemy.x - proj.x);
+            }
+
+            const deflectSpeed = 2400;
+            proj.vx = Math.cos(deflectAngle) * deflectSpeed;
+            proj.vy = Math.sin(deflectAngle) * deflectSpeed;
+            proj.angle = deflectAngle;
+            proj.damage = (globals.playerStats.deflectedDmg || 2) * 3 + Math.round(dmg * 0.5);
+
+            playSynthesizedParry();
+            globals.screenShake = 16;
+            globals.shockwaves.push(new Shockwave(proj.x, proj.y, '#ffd700'));
+            globals.floatingTexts.push(FloatingText.acquire(proj.x, proj.y - 45, "BATTER UP!", "#ffd700", 24));
+
+            addFlow(15);
+            if (globals.activeBounty && globals.activeBounty.type === 'deflect') {
+              globals.activeBounty.current++;
+            }
+
+            const sparkCount = globals.graphicsSettings === 'low' ? 6 : 14;
+            for (let k = 0; k < sparkCount; k++) {
+              globals.particles.push(Particle.acquire(
+                proj.x,
+                proj.y,
+                '#ffd700',
+                400 + Math.random() * 200,
+                0.35,
+                2 + Math.random() * 2,
+                deflectAngle + (Math.random() - 0.5) * 0.8
+              ));
+            }
+          }
+        }
       }
 
       let hasChained = false;
@@ -3220,6 +3444,14 @@ function update(realDt: number) {
         }
         if (dx * dx + dy * dy < (baseRadius + enemyHitRadius) * (baseRadius + enemyHitRadius)) {
           if (proj.isDeflected) {
+            hitEnemy(e, proj.damage || 5);
+            if (typeof (e as any).addPostureDamage === 'function') {
+              (e as any).addPostureDamage(35);
+            }
+            e.knockbackTimer = 0.45;
+            e.knockbackVx = Math.cos(proj.angle) * 1900;
+            e.knockbackVy = Math.sin(proj.angle) * 1900;
+            e.vx = e.knockbackVx; e.vy = e.knockbackVy;
             triggerLightningExplosion(proj.x, proj.y);
             proj.life = 0;
           } else {

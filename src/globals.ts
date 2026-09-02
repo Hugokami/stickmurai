@@ -210,9 +210,24 @@ export const globals = {
   p1Kills: 0,
   p2Kills: 0,
 
-  // Ad Reward States
   hasRevivedThisRun: false,
   activeBlessing: null as 'swift_strike' | 'fortune' | null,
   zenFieldActiveTimer: 0,
-  zenFieldTickTimer: 0
+  zenFieldTickTimer: 0,
+
+  // Battlefield Bounty Contracts
+  activeBounty: null as null | {
+    type: 'slay' | 'parry' | 'deflect' | 'combo',
+    target: number,
+    current: number,
+    timeRemaining: number,
+    description: string
+  },
+  bountyTimer: 30,
+
+  // Corrupted / Cursed Blessings
+  bloodThirstCurseActive: false,
+  bloodThirstBleedTimer: 45.0,
+  curseOfGreedActive: false,
+  scoreMultiplier: 1
 };

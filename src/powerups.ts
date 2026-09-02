@@ -17,6 +17,7 @@ export interface PowerUp {
   descKey: string;
   apply: () => void;
   skill?: 'enhance' | 'shield' | 'dash' | 'firewheel' | 'gravity' | 'parry_master';
+  isCorrupted?: boolean;
 }
 
 export const powerUps: PowerUp[] = [
@@ -65,7 +66,49 @@ export const powerUps: PowerUp[] = [
   { nameKey: "puVoidName", descKey: "puVoidDesc", apply: () => { globals.voidStanceActive = true; } },
   { skill: "dash", nameKey: "puFlowingCounterName", descKey: "puFlowingCounterDesc", apply: () => { globals.flowingCounterActive = true; } },
   { skill: "shield", nameKey: "puGaleVortexName", descKey: "puGaleVortexDesc", apply: () => { globals.galeVortexActive = true; globals.playerStats.enhanceDuration = Math.max(1.0, globals.playerStats.enhanceDuration - 1.0); } },
-  { nameKey: "puBladeEchoesName", descKey: "puBladeEchoesDesc", apply: () => { globals.bladeEchoesActive = true; } }
+  { nameKey: "puBladeEchoesName", descKey: "puBladeEchoesDesc", apply: () => { globals.bladeEchoesActive = true; } },
+
+  // Option 6: Corrupted Blessings / Cursed Relics (High-Risk, High-Reward)
+  {
+    nameKey: "puCursedGlassName",
+    descKey: "puCursedGlassDesc",
+    isCorrupted: true,
+    apply: () => {
+      globals.maxLives = 1;
+      globals.lives = 1;
+      globals.playerStats.enhanceBonusDmg += 3;
+      globals.playerStats.slashSizeMult += 0.5;
+      callbacks.updateUI();
+    }
+  },
+  {
+    nameKey: "puCursedBloodName",
+    descKey: "puCursedBloodDesc",
+    isCorrupted: true,
+    apply: () => {
+      globals.bloodThirstCurseActive = true;
+      globals.playerStats.flowGenMult += 0.5;
+      globals.playerStats.vampireChance += 0.15;
+    }
+  },
+  {
+    nameKey: "puCursedIronName",
+    descKey: "puCursedIronDesc",
+    isCorrupted: true,
+    apply: () => {
+      globals.playerStats.moveSpeedMult *= 0.8;
+      globals.playerStats.slashSizeMult += 0.8;
+      globals.playerStats.deflectedDmg += 4;
+    }
+  },
+  {
+    nameKey: "puCursedGreedName",
+    descKey: "puCursedGreedDesc",
+    isCorrupted: true,
+    apply: () => {
+      globals.curseOfGreedActive = true;
+    }
+  }
 ];
 
 export function triggerLevelUp() {
@@ -110,8 +153,19 @@ export function triggerLevelUp() {
     });
   }
   
-  const shuffled = [...availablePowers].sort(() => 0.5 - Math.random());
-  const choices = shuffled.slice(0, 3);
+  const normalPowers = availablePowers.filter(p => !p.isCorrupted);
+  const cursedPowers = availablePowers.filter(p => p.isCorrupted);
+  const shuffledNormal = [...normalPowers].sort(() => 0.5 - Math.random());
+  const choices: PowerUp[] = [];
+
+  // 35% chance to offer a Cursed Blessing in non-zen mode when level >= 3
+  const offerCurse = (globals.gameMode !== 'zen' && globals.level >= 3 && Math.random() < 0.35 && cursedPowers.length > 0);
+  if (offerCurse) {
+    const randomCurse = cursedPowers[Math.floor(Math.random() * cursedPowers.length)];
+    choices.push(shuffledNormal[0], shuffledNormal[1], randomCurse);
+  } else {
+    choices.push(...shuffledNormal.slice(0, 3));
+  }
   
   choices.forEach((power, index) => {
     const card = document.createElement('div');
@@ -121,27 +175,38 @@ export function triggerLevelUp() {
     
     let category = 'basic';
     const nk = power.nameKey;
-    if (nk.includes('Fire') || nk.includes('Blaze')) {
-      category = 'fire';
-    } else if (nk.includes('Wind') || nk.includes('Shield') || nk.includes('Gale') || nk.includes('Swift') || nk.includes('Feather')) {
-      category = 'wind';
-    } else if (nk.includes('Dash') || nk.includes('Thunder') || nk.includes('Charge')) {
-      category = 'thunder';
-    } else if (nk.includes('Void') || nk.includes('Gravity') || nk.includes('Clones') || nk.includes('Dimensional') || nk.includes('Echo')) {
-      category = 'void';
-    } else if (nk.includes('Giant') || nk.includes('Lethal') || nk.includes('Colossal') || nk.includes('Vampire') || nk.includes('Heart') || nk.includes('Armor') || nk.includes('Frost') || nk.includes('Tempo')) {
-      if (nk.includes('Frost')) {
-        category = 'frost';
-      } else {
-        category = 'vitality';
+    if (power.isCorrupted) {
+      category = 'cursed';
+      card.style.borderColor = 'rgba(239, 68, 68, 0.7)';
+      card.style.background = 'linear-gradient(135deg, rgba(30, 10, 20, 0.95), rgba(15, 5, 10, 0.98))';
+      card.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.35)';
+      card.innerHTML = `<span style="display:inline-block; font-size:10px; font-weight:800; letter-spacing:1px; color:#ef4444; background:rgba(239,68,68,0.18); padding:2px 8px; border-radius:10px; margin-bottom:8px; border:1px solid rgba(239,68,68,0.4);">☠ CURSED RELIC</span><h3 style="color:#fee2e2;">${t(power.nameKey)}</h3><p style="color:#fca5a5;">${t(power.descKey)}</p>`;
+    } else {
+      if (nk.includes('Fire') || nk.includes('Blaze')) {
+        category = 'fire';
+      } else if (nk.includes('Wind') || nk.includes('Shield') || nk.includes('Gale') || nk.includes('Swift') || nk.includes('Feather')) {
+        category = 'wind';
+      } else if (nk.includes('Dash') || nk.includes('Thunder') || nk.includes('Charge')) {
+        category = 'thunder';
+      } else if (nk.includes('Void') || nk.includes('Gravity') || nk.includes('Clones') || nk.includes('Dimensional') || nk.includes('Echo')) {
+        category = 'void';
+      } else if (nk.includes('Giant') || nk.includes('Lethal') || nk.includes('Colossal') || nk.includes('Vampire') || nk.includes('Heart') || nk.includes('Armor') || nk.includes('Frost') || nk.includes('Tempo')) {
+        if (nk.includes('Frost')) {
+          category = 'frost';
+        } else {
+          category = 'vitality';
+        }
       }
+      card.classList.add(`category-${category}`);
+      card.innerHTML = `<h3>${t(power.nameKey)}</h3><p>${t(power.descKey)}</p>`;
     }
-    
-    card.classList.add(`category-${category}`);
-    card.innerHTML = `<h3>${t(power.nameKey)}</h3><p>${t(power.descKey)}</p>`;
     card.addEventListener('click', () => {
       power.apply();
       globals.chosenPowerUps.push(power.nameKey);
+      if (power.isCorrupted) {
+        const idx = powerUps.indexOf(power);
+        if (idx !== -1) powerUps.splice(idx, 1);
+      }
       globals.exp -= globals.maxExp;
       globals.maxExp = Math.round(globals.maxExp * 1.25);
       globals.level++;

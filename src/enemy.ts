@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { Entity, Particle, FloatingText, Projectile, AnimatedEffect } from './entities';
+import { Entity, Particle, FloatingText, Projectile, AnimatedEffect, Shockwave } from './entities';
 import { Player } from './player';
 import { playSound, sfx } from './audio';
 import { vfxAnims } from './assets';
@@ -43,8 +43,13 @@ export class Enemy extends Entity {
   stunTimer = 0;
   chillTimer = 0;
   speed = 260;
-
-
+  burstShotsFired = 0;
+  burstShotTimer = 0;
+  isAimLocked = false;
+  posture = 0;
+  maxPosture = 60;
+  postureBrokenTimer = 0;
+  dominoHitEnemies = new Set<Enemy>();
 
   constructor(x: number, y: number, target: Player) {
     super(); 
@@ -65,6 +70,13 @@ export class Enemy extends Entity {
     this.targetAngle = 0;
     this.lungeCos = 1;
     this.lungeSin = 0;
+    this.burstShotsFired = 0;
+    this.burstShotTimer = 0;
+    this.isAimLocked = false;
+    this.posture = 0;
+    this.maxPosture = 60;
+    this.postureBrokenTimer = 0;
+    this.dominoHitEnemies.clear();
     this.isSlashedKamisori = false;
     this.kamisoriCutAngle = 0;
     this.kamisoriDamage = 0;
@@ -134,78 +146,91 @@ export class Enemy extends Entity {
       this.scaleMult = 1; this.hp = this.maxHp = 4; this.expValue = 1;
       this.colorTint = 'none';
       this.speed = 260;
+      this.maxPosture = 50;
     } else if (this.subType === 'samurai') {
       this.type = 'enemy02';
       this.lungeSpeed = 900; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
       this.scaleMult = 1.1; this.hp = this.maxHp = 4; this.expValue = 1;
       this.colorTint = 'none';
       this.speed = 260;
+      this.maxPosture = 60;
     } else if (this.subType === 'ronin') {
       this.type = 'enemy03';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.8; this.lungeDuration = 0.7;
       this.scaleMult = 1.2; this.hp = this.maxHp = 6; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 260;
+      this.maxPosture = 80;
     } else if (this.subType === 'berserker') {
       this.type = 'enemy02';
       this.lungeSpeed = 1300; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
       this.scaleMult = 1.3; this.hp = this.maxHp = 8; this.expValue = 3;
       this.colorTint = 'none';
       this.speed = 320;
+      this.maxPosture = 100;
     } else if (this.subType === 'giant') {
       this.type = 'enemy03';
       this.lungeSpeed = 650; this.chargeTimeMax = 2.4; this.lungeDuration = 0.8;
       this.scaleMult = 2; this.hp = this.maxHp = 10; this.expValue = 4;
       this.colorTint = 'none';
       this.speed = 150;
+      this.maxPosture = 140;
     } else if (this.subType === 'assassin') {
       this.type = 'enemy01';
       this.lungeSpeed = 1500; this.chargeTimeMax = 1.0; this.lungeDuration = 0.4;
       this.scaleMult = 0.8; this.hp = this.maxHp = 3; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 360;
+      this.maxPosture = 40;
     } else if (this.subType === 'musketeer') {
       this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.2; this.lungeDuration = 0.4; // Shoots projectile
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.2; this.lungeDuration = 0.55; // Double-shot projectile
       this.scaleMult = 1; this.hp = this.maxHp = 2; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 180;
+      this.maxPosture = 45;
     } else if (this.subType === 'pyromancer') {
       this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.2; this.lungeDuration = 0.5;
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.2; this.lungeDuration = 0.55;
       this.scaleMult = 1.2; this.hp = this.maxHp = 8; this.expValue = 4;
       this.colorTint = '#ff4400';
       this.speed = 160;
+      this.maxPosture = 70;
     } else if (this.subType === 'glacial_sentinel') {
       this.type = 'enemy02';
       this.lungeSpeed = 850; this.chargeTimeMax = 2.0; this.lungeDuration = 0.7;
       this.scaleMult = 1.4; this.hp = this.maxHp = 12; this.expValue = 5;
       this.colorTint = '#60a5fa';
       this.speed = 190;
+      this.maxPosture = 110;
     } else if (this.subType === 'astromancer') {
       this.type = 'enemy01';
       this.lungeSpeed = 0; this.chargeTimeMax = 1.9; this.lungeDuration = 0.5;
       this.scaleMult = 1.1; this.hp = this.maxHp = 6; this.expValue = 5;
       this.colorTint = '#f43f5e';
       this.speed = 210;
+      this.maxPosture = 60;
     } else if (this.subType === 'necromancer') {
       this.type = 'enemy05';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.4; this.lungeDuration = 0.6;
       this.scaleMult = 1.5; this.hp = this.maxHp = 20; this.expValue = 8;
       this.colorTint = '#a855f7';
       this.speed = 150;
+      this.maxPosture = 120;
     } else if (this.subType === 'oni_boss') {
       this.type = 'skeleton';
       this.lungeSpeed = 1000; this.chargeTimeMax = 2.0; this.lungeDuration = 0.8;
       this.scaleMult = 2.2; this.hp = this.maxHp = 120; this.expValue = 15;
       this.colorTint = 'none';
       this.speed = 260;
+      this.maxPosture = 250;
     } else { // shogun_boss
       this.type = 'skeleton';
       this.lungeSpeed = 1300; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
       this.scaleMult = 2.0; this.hp = this.maxHp = 100; this.expValue = 20;
       this.colorTint = 'none';
       this.speed = 260;
+      this.maxPosture = 280;
     }
 
     // Apply difficulty modifiers
@@ -269,14 +294,76 @@ export class Enemy extends Entity {
       this.knockbackTimer -= effectiveDt;
       this.vx = this.knockbackVx;
       this.vy = this.knockbackVy;
+
+      const kbSpeed = Math.hypot(this.knockbackVx, this.knockbackVy);
+      if (kbSpeed > 450) {
+        // Domino collision with other enemies
+        for (let j = 0; j < globals.enemies.length; j++) {
+          const other = globals.enemies[j];
+          if (other === this || other.state === 'dead' || this.dominoHitEnemies.has(other)) continue;
+          const edx = other.x - this.x;
+          const edy = other.y - this.y;
+          const colRadius = 55 * (this.scaleMult + other.scaleMult) * 0.5;
+          if (edx * edx + edy * edy < colRadius * colRadius) {
+            this.dominoHitEnemies.add(other);
+            const colAngle = Math.atan2(this.knockbackVy, this.knockbackVx);
+            other.knockbackTimer = 0.35;
+            other.knockbackVx = Math.cos(colAngle) * (kbSpeed * 0.7);
+            other.knockbackVy = Math.sin(colAngle) * (kbSpeed * 0.7);
+            other.stunTimer = 0.6;
+            callbacks.hitEnemy(other, 2);
+            other.addPostureDamage(20);
+
+            globals.screenShake = 8;
+            globals.floatingTexts.push(FloatingText.acquire(other.x, other.y - 35, "DOMINO!", "#f97316", 20));
+            for (let k = 0; k < 6; k++) {
+              globals.particles.push(Particle.acquire(other.x, other.y, '#f97316', 220, 0.3, 2, Math.random() * Math.PI * 2));
+            }
+          }
+        }
+      }
+
+      // Wall Splat: Crashing into outer arena boundary under high knockback
+      const pDistX = Math.abs(this.x - globals.player.x);
+      const pDistY = Math.abs(this.y - globals.player.y);
+      const barrierLimitX = (globals.vw || 1200) * 0.72;
+      const barrierLimitY = (globals.vh || 800) * 0.72;
+      if (kbSpeed > 1000 && (pDistX > barrierLimitX || pDistY > barrierLimitY)) {
+        this.knockbackVx = 0;
+        this.knockbackVy = 0;
+        this.knockbackTimer = 0;
+        this.stunTimer = 1.2;
+        callbacks.hitEnemy(this, 4);
+        this.addPostureDamage(35);
+        globals.screenShake = 16;
+        globals.shockwaves.push(new Shockwave(this.x, this.y, '#f8fafc'));
+        globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 50, "WALL SPLAT!", "#ef4444", 24));
+        for (let k = 0; k < 12; k++) {
+          globals.particles.push(Particle.acquire(this.x, this.y, '#cbd5e1', 300, 0.4, 3, Math.random() * Math.PI * 2));
+        }
+      }
+
       this.knockbackVx *= Math.exp(-6 * effectiveDt);
       this.knockbackVy *= Math.exp(-6 * effectiveDt);
       if (this.knockbackTimer <= 0) {
         this.knockbackVx = 0;
         this.knockbackVy = 0;
+        this.dominoHitEnemies.clear();
       }
       super.update(effectiveDt);
       return;
+    }
+
+    // Posture broken timer and recovery
+    if (this.postureBrokenTimer > 0) {
+      this.postureBrokenTimer -= effectiveDt;
+      this.stunTimer = Math.max(this.stunTimer, this.postureBrokenTimer);
+      this.vx = 0; this.vy = 0;
+      if (this.postureBrokenTimer <= 0) {
+        this.posture = 0;
+      }
+    } else if (this.posture > 0) {
+      this.posture = Math.max(0, this.posture - 8 * effectiveDt);
     }
 
     if (isStunned) {
@@ -393,21 +480,32 @@ export class Enemy extends Entity {
     
     if (this.state === 'charge') {
       this.vx = 0; this.vy = 0;
-      this.dir = dx < 0 ? -1 : 1;
+      const chargeRatio = this.stateTime / this.chargeTimeMax;
+
+      // Track target during first 65% of charge, then lock in aim for fair telegraph reaction!
+      if (chargeRatio < 0.65) {
+        this.targetAngle = Math.atan2(dy, dx);
+        this.isAimLocked = false;
+      } else {
+        this.isAimLocked = true;
+      }
+      this.dir = Math.cos(this.targetAngle) < 0 ? -1 : 1;
 
       if (this.stateTime > this.chargeTimeMax) {
-        this.targetAngle = Math.atan2(dy, dx);
         this.lungeCos = Math.cos(this.targetAngle);
         this.lungeSin = Math.sin(this.targetAngle);
         this.setState('attack');
+        this.attackLanded = false;
+        this.burstShotsFired = 0;
+        this.burstShotTimer = 0;
+
         if (this.subType !== 'musketeer' && this.subType !== 'pyromancer' && this.subType !== 'astromancer' && this.subType !== 'necromancer') {
           playSound(sfx.enemySlash, 0.3);
         }
-        this.attackLanded = false;
-        
+
         // Trigger custom spells
         this.triggerCustomSpellCast(currentTarget);
-        
+
         let curLungeSpeed = this.lungeSpeed;
         if (this.chillTimer > 0) {
           curLungeSpeed *= 0.7;
@@ -427,26 +525,41 @@ export class Enemy extends Entity {
       }
       this.vx = this.lungeCos * curLungeSpeed * decay;
       this.vy = this.lungeSin * curLungeSpeed * decay;
-      
-      if (!this.attackLanded) {
-        if (this.subType === 'musketeer') {
-          const proj = Projectile.acquire(this.x, this.y, this.targetAngle, true);
-          (proj as any).shooter = this;
-          globals.projectiles.push(proj);
+
+      if (this.subType === 'musketeer') {
+        this.burstShotTimer += effectiveDt;
+        // First shot fires at 0.05s
+        if (this.burstShotsFired === 0 && this.stateTime >= 0.05) {
+          const proj1 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+          (proj1 as any).shooter = this;
+          globals.projectiles.push(proj1);
+          this.burstShotsFired = 1;
+          playSound(sfx.enemySlash, 0.25);
+        }
+        // Second shot fires 0.18s later in rapid succession!
+        else if (this.burstShotsFired === 1 && this.burstShotTimer >= 0.18) {
+          const proj2 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+          (proj2 as any).shooter = this;
+          globals.projectiles.push(proj2);
+          this.burstShotsFired = 2;
           this.attackLanded = true;
-        } else {
-          const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
-          const enemyHitRadius = (this.scaleMult - 1) * 60; 
-          const threshold = 140 + enemyHitRadius;
-          if (dxHit*dxHit + dyHit*dyHit < threshold * threshold) {
-            this.executeAttack(); 
-            this.attackLanded = true; 
-          }
+          playSound(sfx.enemySlash, 0.25);
+        }
+      } else if (!this.attackLanded) {
+        const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
+        const enemyHitRadius = (this.scaleMult - 1) * 60; 
+        const threshold = 140 + enemyHitRadius;
+        if (dxHit*dxHit + dyHit*dyHit < threshold * threshold) {
+          this.executeAttack(); 
+          this.attackLanded = true; 
         }
       }
       if (this.stateTime > this.lungeDuration) {
         this.setState('idle');
         this.attackLanded = false;
+        this.burstShotsFired = 0;
+        this.burstShotTimer = 0;
+        this.isAimLocked = false;
         this.attackCooldownTimer = 1.0 + Math.random() * 0.6;
       }
       return;
@@ -522,11 +635,23 @@ export class Enemy extends Entity {
   triggerCustomSpellCast(currentTarget: any) {
     if (this.subType === 'pyromancer') {
       if (Math.random() < 0.4) {
-        // Fire burning fireball projectile
+        // Fire burning fireball projectile (burst of 2 in a row!)
         const proj = Projectile.acquire(this.x, this.y, this.targetAngle, true);
         (proj as any).shooter = this;
         (proj as any).colorTint = '#ff4400';
         globals.projectiles.push(proj);
+
+        globals.delayedActions.push({
+          delay: 0.18,
+          run: () => {
+            if (this.state !== 'dead') {
+              const proj2 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+              (proj2 as any).shooter = this;
+              (proj2 as any).colorTint = '#ff4400';
+              globals.projectiles.push(proj2);
+            }
+          }
+        });
         this.attackLanded = true;
       } else {
         // Fire pillar ground eruption
@@ -651,6 +776,21 @@ export class Enemy extends Entity {
     }
   }
 
+  addPostureDamage(amount: number) {
+    if (this.state === 'dead' || this.postureBrokenTimer > 0) return;
+    this.posture += amount;
+    if (this.posture >= this.maxPosture) {
+      this.posture = this.maxPosture;
+      this.postureBrokenTimer = 2.5;
+      this.stunTimer = 2.5;
+      this.vx = 0; this.vy = 0;
+      globals.screenShake = 14;
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#f59e0b'));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 65, "STANCE BROKEN!", "#f59e0b", 22));
+      playSound(sfx.enemySlash, 0.4);
+    }
+  }
+
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1) {
     const rx = this.x - cx + globals.vw/2;
     const ry = this.y - cy + globals.vh/2;
@@ -662,50 +802,130 @@ export class Enemy extends Entity {
     if (this.state === 'charge') {
       ctx.save();
       ctx.translate(rx, ry);
-      
-      const p = this.stateTime / this.chargeTimeMax;
+
+      const p = Math.min(1, this.stateTime / this.chargeTimeMax);
       ctx.rotate(this.targetAngle);
-      
-      // laser sight
-      const laserLen = this.lungeSpeed * this.lungeDuration * 0.5;
-      
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(laserLen, 0);
-      ctx.strokeStyle = `rgba(255, 30, 30, ${p})`;
-      ctx.lineWidth = (1 + p * 6) * this.scaleMult;
-      ctx.setLineDash([15, 10]);
-      ctx.stroke();
-      
-      ctx.beginPath();
-      ctx.arc(laserLen * p, 0, 10 * this.scaleMult, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 100, 100, ${p})`;
-      ctx.fill();
-      
+
+      const isRanged = (this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'astromancer' || this.subType === 'necromancer');
+      const laserLen = isRanged ? 520 * this.scaleMult : Math.max(180, (this.lungeSpeed * this.lungeDuration * 0.5 + 120) * this.scaleMult);
+
+      if (isRanged) {
+        // Precision laser sight with target reticle
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(laserLen, 0);
+        if (this.isAimLocked) {
+          // Locked aim - solid bright glowing red warning
+          ctx.strokeStyle = `rgba(255, 40, 40, 0.95)`;
+          ctx.lineWidth = 3 * this.scaleMult;
+          ctx.setLineDash([]);
+        } else {
+          // Tracking aim - pulsing dashed red laser
+          ctx.strokeStyle = `rgba(255, 60, 60, ${0.3 + p * 0.5})`;
+          ctx.lineWidth = (1.5 + p * 2) * this.scaleMult;
+          ctx.setLineDash([12, 8]);
+        }
+        ctx.stroke();
+
+        // Reticle / target dot at the end
+        ctx.beginPath();
+        ctx.arc(laserLen, 0, (this.isAimLocked ? 7 : 4 + p * 3) * this.scaleMult, 0, Math.PI * 2);
+        ctx.fillStyle = this.isAimLocked ? '#ff0000' : `rgba(255, 80, 80, ${0.5 + p * 0.5})`;
+        ctx.fill();
+
+        // Lock-on ring when locked
+        if (this.isAimLocked) {
+          ctx.beginPath();
+          ctx.arc(laserLen, 0, 12 * this.scaleMult, 0, Math.PI * 2);
+          ctx.strokeStyle = '#ff0000';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      } else {
+        // Melee lunge corridor & hitbox telegraph
+        const halfWidth = (22 + (this.scaleMult - 1) * 20);
+
+        // Translucent danger corridor fill
+        ctx.fillStyle = this.isAimLocked ? `rgba(255, 30, 30, ${0.15 + p * 0.15})` : `rgba(255, 60, 60, ${0.08 + p * 0.12})`;
+        ctx.fillRect(0, -halfWidth, laserLen, halfWidth * 2);
+
+        // Boundary strokes
+        ctx.strokeStyle = this.isAimLocked ? `rgba(255, 50, 50, 0.9)` : `rgba(255, 80, 80, ${0.3 + p * 0.4})`;
+        ctx.lineWidth = this.isAimLocked ? 2 : 1;
+        ctx.setLineDash(this.isAimLocked ? [] : [10, 8]);
+        ctx.strokeRect(0, -halfWidth, laserLen, halfWidth * 2);
+
+        // Progress charge bar advancing down the corridor
+        ctx.fillStyle = `rgba(255, 50, 50, ${0.3 + p * 0.5})`;
+        ctx.fillRect(0, -halfWidth, laserLen * p, halfWidth * 2);
+
+        // Direction arrow at front
+        ctx.beginPath();
+        ctx.moveTo(laserLen, 0);
+        ctx.lineTo(laserLen - 12, -halfWidth * 0.6);
+        ctx.lineTo(laserLen - 12, halfWidth * 0.6);
+        ctx.closePath();
+        ctx.fillStyle = this.isAimLocked ? '#ff2222' : `rgba(255, 80, 80, ${p})`;
+        ctx.fill();
+      }
+
       ctx.restore();
     }
-    
+
     // HP bar above enemy
     if (this.state !== 'dead' && this.hp < this.maxHp) {
       const barW = 50 * this.scaleMult;
       const barH = 5;
       const barY = ry - 60 * this.scaleMult;
       const barX = rx - barW / 2;
-      
+
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
       ctx.fillRect(barX, barY, barW, barH);
-      
+
       // catchup orange bar
       ctx.fillStyle = '#ffa500';
       const delayRatio = (this.hpDelayed || this.hp) / this.maxHp;
       ctx.fillRect(barX, barY, barW * delayRatio, barH);
-      
+
       // health red bar
       ctx.fillStyle = '#ff3333';
       ctx.fillRect(barX, barY, barW * (this.hp / this.maxHp), barH);
-      
+
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
+      ctx.strokeRect(barX, barY, barW, barH);
+    }
+
+    // Posture bar directly under HP bar (for bosses, elites, or when posture > 0)
+    if (this.state !== 'dead' && (this.posture > 0 || this.postureBrokenTimer > 0 || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'giant' || this.subType === 'berserker')) {
+      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' ? 70 : 45) * this.scaleMult;
+      const barH = 3.5;
+      const barY = ry - 53 * this.scaleMult;
+      const barX = rx - barW / 2;
+
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
+      ctx.fillRect(barX, barY, barW, barH);
+
+      if (this.postureBrokenTimer > 0) {
+        // Posture Broken / Stance Broken: Flashing bright red/gold!
+        const flashColor = (Math.floor(Date.now() / 120) % 2 === 0) ? '#ff003c' : '#fbbf24';
+        ctx.fillStyle = flashColor;
+        ctx.fillRect(barX, barY, barW, barH);
+
+        // Render glowing [EXECUTE] prompt over enemy head!
+        ctx.font = 'bold 11px Outfit, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = flashColor;
+        ctx.fillText('[EXECUTE]', rx, barY - 8);
+      } else {
+        // Building posture: Amber / Orange fill
+        const postureRatio = Math.min(1, this.posture / this.maxPosture);
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(barX, barY, barW * postureRatio, barH);
+      }
+
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+      ctx.lineWidth = 0.8;
       ctx.strokeRect(barX, barY, barW, barH);
     }
 

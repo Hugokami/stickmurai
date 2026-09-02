@@ -908,7 +908,21 @@ export function updateUI() {
   const objDisplay = objectiveDisplayElement || (objectiveDisplayElement = document.getElementById('objective-display'));
   if (objDisplay) {
     if (globals.gameState === 'playing') {
-      if (globals.timerLimit !== 'endless') {
+      if (globals.activeBounty) {
+        if (lastObjectiveDisplay !== 'block') {
+          objDisplay.style.display = 'block';
+          lastObjectiveDisplay = 'block';
+        }
+        const b = globals.activeBounty;
+        const remaining = Math.ceil(b.timeRemaining);
+        const text = `📜 BOUNTY [${remaining}s]: ${b.description} (${b.current}/${b.target})`;
+        if (text !== lastObjectiveText) {
+          objDisplay.textContent = text;
+          objDisplay.style.borderColor = 'rgba(251, 191, 36, 0.6)';
+          objDisplay.style.color = '#fbbf24';
+          lastObjectiveText = text;
+        }
+      } else if (globals.timerLimit !== 'endless') {
         if (lastObjectiveDisplay !== 'block') {
           objDisplay.style.display = 'block';
           lastObjectiveDisplay = 'block';
@@ -921,6 +935,8 @@ export function updateUI() {
           : `TIME: ${mins}:${secsStr}`;
         if (text !== lastObjectiveText) {
           objDisplay.textContent = text;
+          objDisplay.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+          objDisplay.style.color = 'inherit';
           lastObjectiveText = text;
         }
       } else if (globals.gameMode === 'level') {
@@ -931,6 +947,8 @@ export function updateUI() {
         const text = `GOAL: LVL ${globals.levelModeTarget}`;
         if (text !== lastObjectiveText) {
           objDisplay.textContent = text;
+          objDisplay.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+          objDisplay.style.color = 'inherit';
           lastObjectiveText = text;
         }
       } else {
