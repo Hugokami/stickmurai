@@ -580,7 +580,7 @@ export function renderSkillChoicesPregame() {
     else if (skill.id === 'decoy_illusion') category = 'void';
     
     card.classList.add(`category-${category}`);
-    card.innerHTML = `<h3>${t(skill.nameKey)}</h3><p>${t(skill.descKey)}</p>`;
+    card.innerHTML = `<span class="skill-category-badge">${category}</span><h3>${t(skill.nameKey)}</h3><p>${t(skill.descKey)}</p>`;
     card.addEventListener('click', () => {
       globals.selectedSkill = skill.id as any;
       document.querySelectorAll('#pregame-skill-choices .skill-card').forEach(c => c.classList.remove('active'));

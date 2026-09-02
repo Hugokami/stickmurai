@@ -433,6 +433,25 @@ canvas.inverted {
   }
 }
 
+.skill-select-box {
+  background: rgba(13, 14, 18, 0.96) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-top: 3px solid #bc2c2c !important;
+  border-radius: 12px !important;
+  box-shadow: 0 25px 60px -10px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+}
+
+.skill-select-heading {
+  color: #f8fafc !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.12em !important;
+  font-size: 18px !important;
+  margin: 0 0 16px 0 !important;
+  text-align: center !important;
+  text-transform: uppercase !important;
+}
+
 .game-title {
   color: #fff;
   font-size: clamp(34px, 6vw, 56px);
@@ -460,28 +479,29 @@ canvas.inverted {
   text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
 }
 
-/* Polished Interactive Menu Buttons - Senjafuda Style */
+/* Polished Interactive Menu Buttons - Refined Minimalist Aesthetic */
 .menu-btn {
   position: relative;
   overflow: hidden;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 14px 32px;
-  font-size: clamp(14px, 2.5vw, 20px);
-  background: linear-gradient(90deg, #1a0808 0%, #2d0e0e 50%, #1a0808 100%);
-  color: #f4efe2;
-  border: 2px solid #bc2c2c;
+  padding: 12px 28px;
+  font-size: clamp(13px, 2.2vw, 17px);
+  background: rgba(20, 21, 28, 0.9);
+  color: #f1f5f9;
+  border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  font-family: 'Shojumaru', cursive;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
   line-height: 1.2;
-  border-radius: 4px;
+  border-radius: 6px;
   width: 100%;
   max-width: 280px;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
-  box-shadow: inset 0 0 0 1px #d4af37, 0 4px 15px rgba(0, 0, 0, 0.6);
+  letter-spacing: 0.08em;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
 /* Shine Reflection Sweep Effect */
@@ -495,7 +515,7 @@ canvas.inverted {
   background: linear-gradient(
     to right,
     rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.2) 50%,
     rgba(255, 255, 255, 0) 100%
   );
   transform: skewX(-25deg);
@@ -508,16 +528,16 @@ canvas.inverted {
 }
 
 .menu-btn:hover {
-  background: linear-gradient(90deg, #bc2c2c 0%, #e03b3b 50%, #bc2c2c 100%);
-  border-color: #ffd700;
-  transform: translateY(-3px);
+  background: #bc2c2c;
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
   color: #ffffff;
-  box-shadow: inset 0 0 0 1.5px #ffd700, 0 8px 30px rgba(188, 44, 44, 0.75);
+  box-shadow: 0 6px 20px rgba(188, 44, 44, 0.45);
 }
 
 .menu-btn:active {
   transform: translateY(1px);
-  box-shadow: inset 0 0 0 1px #ffd700, 0 4px 10px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
 }
 
 .menu-btn.exit-btn {
@@ -1929,57 +1949,80 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 #skill-select-screen .skill-card {
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   text-align: left;
   cursor: pointer;
-  background: linear-gradient(135deg, #0e0e13 0%, #15151d 100%);
-  border: 1.5px solid #bc2c2c;
-  border-radius: 4px;
-  width: clamp(210px, 25vw, 240px);
-  padding: 24px 20px;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  background: rgba(18, 19, 26, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  width: clamp(210px, 26vw, 240px);
+  padding: 16px 18px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
   overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  box-sizing: border-box;
 }
 
 #skill-select-screen .skill-card:hover {
-  border-color: #ffd700;
-  transform: translateY(-6px);
-  box-shadow: inset 0 0 0 1.5px #ffd700, 0 15px 35px rgba(188, 44, 44, 0.45);
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(24, 26, 36, 0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
 #skill-select-screen .skill-card.active {
-  border-color: #ffd700;
-  background: linear-gradient(135deg, #181822 0%, #20202d 100%);
-  transform: scale(1.02);
-  box-shadow: inset 0 0 0 2px #ffd700, 0 15px 35px rgba(255, 215, 0, 0.25);
+  border-color: #d4af37 !important;
+  background: rgba(28, 30, 42, 0.95) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.35), 0 10px 25px rgba(0, 0, 0, 0.55) !important;
 }
 
-#skill-select-screen .skill-card h3 {
-  color: #ffd700;
-  letter-spacing: 0.5px;
-  margin-top: 0;
+.skill-category-badge {
+  display: inline-block;
+  font-family: 'Outfit', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 4px;
   margin-bottom: 8px;
-  font-family: 'Shojumaru', cursive;
-  font-size: 15px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.category-fire .skill-category-badge { color: #fb923c; background: rgba(249, 115, 22, 0.12); border-color: rgba(249, 115, 22, 0.25); }
+.category-wind .skill-category-badge { color: #38bdf8; background: rgba(56, 189, 248, 0.12); border-color: rgba(56, 189, 248, 0.25); }
+.category-thunder .skill-category-badge { color: #facc15; background: rgba(250, 204, 21, 0.12); border-color: rgba(250, 204, 21, 0.25); }
+.category-void .skill-category-badge { color: #c084fc; background: rgba(192, 132, 252, 0.12); border-color: rgba(192, 132, 252, 0.25); }
+.category-vitality .skill-category-badge { color: #4ade80; background: rgba(74, 222, 128, 0.12); border-color: rgba(74, 222, 128, 0.25); }
+
+#skill-select-screen .skill-card h3 {
+  color: #f1f5f9;
+  letter-spacing: 0.03em;
+  margin-top: 0;
+  margin-bottom: 6px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.25;
+  text-transform: uppercase;
 }
 
 #skill-select-screen .skill-card.active h3 {
-  color: #ffffff;
+  color: #ffd700;
 }
 
 #skill-select-screen .skill-card p {
-  color: #cbd8d6;
+  color: #94a3b8;
   margin: 0;
-  font-size: 12px;
-  line-height: 1.5;
+  font-size: 11.5px;
+  line-height: 1.55;
   font-family: 'Noto Sans JP', sans-serif;
 }
 
 #skill-select-screen .skill-card.active p {
-  color: #f4efe2;
+  color: #e2e8f0;
 }
 
 /* gamepad support & cyberpunk card customization */
@@ -2130,76 +2173,154 @@ input[type="range"]::-webkit-slider-thumb:hover {
   text-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
 }
 
-/* Pregame Difficulty Buttons Styles */
+/* Minimalist Pregame Option Buttons (Difficulty, Time Limit, Target Level) */
+.pregame-section-label {
+  color: #94a3b8 !important;
+  font-family: 'Outfit', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  margin: 0 !important;
+}
+
+.pregame-btn-group {
+  background: rgba(18, 19, 26, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.diff-btn, .time-opt-btn, .lvl-opt-btn {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  background: transparent !important;
+  color: #94a3b8 !important;
+  border: 1px solid transparent !important;
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  padding: 9px 12px !important;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  line-height: 1.2 !important;
+  outline: none !important;
+}
+
+.diff-btn:hover, .time-opt-btn:hover, .lvl-opt-btn:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+  color: #ffffff !important;
+}
+
 #diff-easy-btn.active {
-  border-color: #2e8b57 !important;
-  box-shadow: 0 0 15px rgba(46, 139, 87, 0.5) !important;
-  background: linear-gradient(90deg, rgba(46, 139, 87, 0.15), rgba(46, 139, 87, 0.3)) !important;
+  border-color: rgba(74, 222, 128, 0.45) !important;
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.2) !important;
+  background: rgba(46, 139, 87, 0.25) !important;
+  color: #4ade80 !important;
 }
+
 #diff-normal-btn.active {
-  border-color: #d4af37 !important;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.5) !important;
-  background: linear-gradient(90deg, rgba(212, 175, 55, 0.15), rgba(212, 175, 55, 0.3)) !important;
+  border-color: rgba(253, 224, 71, 0.45) !important;
+  box-shadow: 0 0 12px rgba(253, 224, 71, 0.2) !important;
+  background: rgba(212, 175, 55, 0.25) !important;
+  color: #fde047 !important;
 }
+
 #diff-hard-btn.active {
-  border-color: #bc2c2c !important;
-  box-shadow: 0 0 15px rgba(188, 44, 44, 0.5) !important;
-  background: linear-gradient(90deg, rgba(188, 44, 44, 0.15), rgba(188, 44, 44, 0.3)) !important;
+  border-color: rgba(248, 113, 113, 0.45) !important;
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.2) !important;
+  background: rgba(220, 38, 38, 0.25) !important;
+  color: #f87171 !important;
+}
+
+.time-opt-btn.active, .lvl-opt-btn.active {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.1) !important;
 }
 
 @media (max-height: 520px), (max-width: 900px) and (orientation: landscape) {
   .pregame-difficulty-container {
     margin-bottom: 12px !important;
   }
-  .diff-btn {
+  .diff-btn, .time-opt-btn, .lvl-opt-btn {
     padding: 6px 8px !important;
     font-size: 11px !important;
-    min-width: 80px !important;
+    min-width: 70px !important;
   }
 }
 
-/* Insane Mode Glowing Flame Button */
+/* Insane Mode Button: Sleek, non-animating default state */
 #diff-insane-btn {
   position: relative;
+  background: rgba(239, 68, 68, 0.05) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  overflow: visible !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  animation: none !important;
+}
+
+#diff-insane-btn::before,
+#diff-insane-btn::after {
+  display: none !important;
+  animation: none !important;
+}
+
+#diff-insane-btn:hover {
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(239, 68, 68, 0.45) !important;
+  color: #ffffff !important;
+}
+
+/* Insane Mode Button: Glowing flame animation plays ONLY when chosen (.active) */
+#diff-insane-btn.active {
   background: linear-gradient(135deg, #7f1d1d 0%, #b91c1c 50%, #ef4444 100%) !important;
   color: #ffffff !important;
-  border: 1px solid #f87171 !important;
-  text-shadow: 0 0 5px rgba(255, 0, 0, 0.8) !important;
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.6), inset 0 0 8px rgba(255, 255, 255, 0.3) !important;
-  overflow: visible !important; /* so flames show outside */
-  transition: all 0.3s ease !important;
-  animation: insane-btn-pulse 1.5s infinite alternate !important;
+  border: 1px solid #fca5a5 !important;
+  text-shadow: 0 0 6px rgba(255, 0, 0, 0.9) !important;
+  box-shadow: 0 0 18px rgba(239, 68, 68, 0.8), inset 0 0 6px rgba(255, 255, 255, 0.35) !important;
+  animation: insane-btn-pulse 1.4s infinite alternate !important;
+  transform: translateY(-2px) !important;
   z-index: 10;
 }
 
-#diff-insane-btn::before {
+#diff-insane-btn.active::before {
+  display: block !important;
   content: '';
   position: absolute;
-  top: -6px; left: -6px; right: -6px; bottom: -6px;
-  border-radius: 6px;
+  top: -5px; left: -5px; right: -5px; bottom: -5px;
+  border-radius: 8px;
   background: transparent;
-  box-shadow: 0 -8px 12px rgba(239, 68, 68, 0.5),
-              -6px -4px 8px rgba(245, 158, 11, 0.4),
-              6px -4px 8px rgba(239, 68, 68, 0.4),
-              0 4px 6px rgba(220, 38, 38, 0.3);
+  box-shadow: 0 -8px 14px rgba(239, 68, 68, 0.55),
+              -6px -4px 8px rgba(245, 158, 11, 0.45),
+              6px -4px 8px rgba(239, 68, 68, 0.45),
+              0 4px 6px rgba(220, 38, 38, 0.35);
   filter: blur(2px);
   z-index: -1;
-  animation: flame-lick 1.2s infinite ease-in-out;
+  animation: flame-lick 1.2s infinite ease-in-out !important;
   pointer-events: none;
 }
 
-#diff-insane-btn::after {
+#diff-insane-btn.active::after {
+  display: block !important;
   content: '';
   position: absolute;
   top: -3px; left: -3px; right: -3px; bottom: -3px;
-  border-radius: 4px;
+  border-radius: 6px;
   background: transparent;
-  box-shadow: 0 -4px 6px rgba(251, 191, 36, 0.6),
+  box-shadow: 0 -4px 8px rgba(251, 191, 36, 0.65),
               -3px -2px 4px rgba(245, 158, 11, 0.5),
               3px -2px 4px rgba(239, 68, 68, 0.5);
   filter: blur(1px);
   z-index: -1;
-  animation: flame-lick-reverse 0.9s infinite ease-in-out;
+  animation: flame-lick-reverse 0.9s infinite ease-in-out !important;
   pointer-events: none;
 }
 
@@ -2257,13 +2378,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
     box-shadow: 0 0 20px rgba(239, 68, 68, 0.9), 0 0 8px rgba(245, 158, 11, 0.5);
     text-shadow: 0 0 10px rgba(255, 0, 0, 1.0);
   }
-}
-
-#diff-insane-btn.active {
-  background: linear-gradient(135deg, #991b1b 0%, #dc2626 50%, #f87171 100%) !important;
-  border: 2px solid #fca5a5 !important;
-  transform: translateY(-2px);
-  box-shadow: 0 0 25px rgba(239, 68, 68, 0.85), inset 0 0 10px rgba(255, 255, 255, 0.5) !important;
 }
 
 /* Animated Active Card glowing borders & floating */
@@ -2692,61 +2806,119 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* Stance Blessing UI Styles */
 .blessing-card {
-  background: rgba(8, 8, 12, 0.6) !important;
-  border: 1.5px solid rgba(212, 175, 55, 0.2) !important;
-  border-radius: 4px;
-  padding: 10px 14px;
+  background: rgba(18, 19, 26, 0.6) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 8px;
+  padding: 12px 14px;
   width: 145px;
   text-align: center;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
+  gap: 4px;
   box-sizing: border-box;
   position: relative;
 }
 
 .blessing-card:hover {
-  border-color: #ffd700 !important;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  background: rgba(24, 26, 35, 0.8) !important;
   transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
 }
 
 .blessing-card.active {
-  background: rgba(197, 42, 42, 0.15) !important;
-  border: 1.8px solid #c92a2a !important;
-  box-shadow: 0 0 15px rgba(197, 42, 42, 0.45), inset 0 0 0 1px rgba(255, 215, 0, 0.3) !important;
-  transform: scale(1.03);
+  background: rgba(30, 32, 44, 0.95) !important;
+  border: 1px solid #d4af37 !important;
+  box-shadow: 0 0 0 1px rgba(212, 175, 55, 0.3), 0 8px 20px rgba(0, 0, 0, 0.45) !important;
+  transform: translateY(-2px);
 }
 
 .blessing-badge {
-  font-size: 20px;
-  margin-bottom: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  margin-bottom: 3px;
 }
 
 .blessing-card h4 {
-  font-family: 'Noto Sans JP', sans-serif;
-  font-weight: bold;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 700;
   font-size: 12.5px;
-  color: #ffffff;
+  letter-spacing: 0.03em;
+  color: #f1f5f9;
   margin: 0;
 }
 
 .blessing-card p {
-  font-size: 10px;
-  color: #cbd8d6;
+  font-size: 11px;
+  color: #94a3b8;
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.4;
+  font-family: 'Noto Sans JP', sans-serif;
 }
 
 .blessing-cost-text {
   font-size: 9px;
-  color: #ffd700;
+  color: #fbbf24;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 9999px;
+  padding: 1px 8px;
   margin-top: 4px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* Minimalist Skill Modal Buttons */
+#skill-back-btn {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  font-size: 12.5px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #94a3b8 !important;
+  border-radius: 6px !important;
+  padding: 10px 24px !important;
+  box-shadow: none !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#skill-back-btn:hover {
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  color: #ffffff !important;
+  transform: translateY(-1px) !important;
+}
+
+#start-run-btn {
+  font-family: 'Outfit', sans-serif !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.12em !important;
+  text-transform: uppercase !important;
+  font-size: 13px !important;
+  background: #bc2c2c !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  border-radius: 6px !important;
+  padding: 10px 32px !important;
+  box-shadow: 0 4px 14px rgba(188, 44, 44, 0.4) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+#start-run-btn:hover {
+  background: #dc2626 !important;
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.55) !important;
+  transform: translateY(-1px) !important;
 }
 
 #ad-revive-btn {
