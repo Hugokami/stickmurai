@@ -33,6 +33,8 @@ export class Player extends Entity {
   shieldVisualScale = 0;
   firewheelVisualScale = 0;
   auraVisualScale = 0;
+  airborneZ = 0;
+  airborneVz = 0;
 
   constructor() {
     super();
@@ -59,6 +61,19 @@ export class Player extends Entity {
 
     const targetAura = (!this.isPvpRemote && ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god' || globals.enhanceActiveTimer > 0)) ? 1 : 0;
     this.auraVisualScale += (targetAura - this.auraVisualScale) * Math.min(1, 12 * dt);
+
+    // Option 3: Airborne Z-axis physics
+    if (this.airborneZ > 0 || this.airborneVz !== 0) {
+      this.airborneZ += this.airborneVz * dt;
+      this.airborneVz -= 1800 * dt;
+      if (this.airborneZ <= 0) {
+        this.airborneZ = 0;
+        this.airborneVz = 0;
+      }
+      this.yOffset = -this.airborneZ;
+    } else {
+      this.yOffset = 0;
+    }
 
     if ((globals.gameMode as string) === 'pvp') {
       if (pvpManager.subMode === 'insane_survival') {
@@ -1020,6 +1035,18 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     if (colorTint === 'none') {
       // Revert to default white stick figure sprite for all modes
       finalTint = 'none';
+    }
+
+    if (this.airborneZ > 0) {
+      ctx.save();
+      const rx = this.x - cx + globals.vw/2;
+      const ry = this.y - cy + globals.vh/2;
+      const shadowScale = Math.max(0.3, 1.0 - this.airborneZ / 250);
+      ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
+      ctx.beginPath();
+      ctx.ellipse(rx, ry, 24 * shadowScale, 8 * shadowScale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
     }
 
     // Call super.draw to use the animated sprites

@@ -17,6 +17,7 @@ import {
   playSynthesizedFirewheel,
   playSynthesizedGravity,
   playSynthesizedLevelUp,
+  playSynthesizedClash,
   startBgm
 } from './audio';
 import {
@@ -727,6 +728,7 @@ function initGame() {
   globals.bloodThirstBleedTimer = 45.0;
   globals.curseOfGreedActive = false;
   globals.scoreMultiplier = 1;
+  globals.activeBladeClash = null;
   
   if (globals.gameMode === 'zen') {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
@@ -1791,6 +1793,25 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   
   let finalDmg = dmg;
   const isExecution = (e as any).postureBrokenTimer > 0;
+  const isUpwardInput = globals.keys['KeyW'] || globals.keys['ArrowUp'] || (globals.joystickActive && globals.joystickVector && globals.joystickVector.y < -0.35);
+
+  if (isExecution && isUpwardInput && !(e as any).airborneZ) {
+    // Option 3: Rising Aerial Launcher
+    (e as any).airborneZ = 15;
+    (e as any).airborneVz = 820;
+    (e as any).canAerialCleave = true;
+    (e as any).postureBrokenTimer = 1.4;
+    (e as any).stunTimer = 1.4;
+
+    globals.screenShake = Math.max(globals.screenShake, 18);
+    globals.slashes.push(Slash.acquire(e.x, e.y, -Math.PI / 2, 2.2, false, '#38bdf8'));
+    globals.shockwaves.push(new Shockwave(e.x, e.y, '#38bdf8'));
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, t('aerialLaunchedText') || "LAUNCHED! 🌪️", "neon-#38bdf8", 30));
+    playSound(sfx.slash);
+    addFlow(15);
+    addCombo();
+    return;
+  }
 
   if (isExecution) {
     (e as any).postureBrokenTimer = 0;
@@ -2795,7 +2816,109 @@ function update(realDt: number) {
   const isAttackPressed = globals.mouse.justPressed || globals.mobileAttackJustPressed;
   const isAttackReleased = globals.mouse.justReleased || globals.mobileAttackReleased;
 
+  // Option 2: Active Blade Clash (Tsubazeriai) Update & Input
+  if (globals.activeBladeClash) {
+    const clash = globals.activeBladeClash;
+    clash.timer -= realDt;
+    clash.x = (globals.player.x + clash.enemy.x) / 2;
+    clash.y = (globals.player.y + clash.enemy.y) / 2;
+
+    if (Math.random() < 0.4) {
+      const spd = 120 + Math.random() * 200;
+      const ang = Math.random() * Math.PI * 2;
+      globals.particles.push(Particle.acquire(clash.x, clash.y, '#ffd700', spd, 0.2, 2.5, ang));
+    }
+
+    clash.enemy.vx = 0; clash.enemy.vy = 0;
+    clash.enemy.stunTimer = Math.max(clash.enemy.stunTimer || 0, 0.25);
+
+    if (isAttackPressed) {
+      clash.tapsCurrent++;
+      clash.timer = Math.min(clash.timer + 0.08, clash.maxTimer);
+      playSynthesizedClash();
+      globals.screenShake = Math.max(globals.screenShake, 8);
+      for (let p = 0; p < 8; p++) {
+        const spd = 200 + Math.random() * 250;
+        const ang = Math.random() * Math.PI * 2;
+        globals.particles.push(Particle.acquire(clash.x, clash.y, '#ffd700', spd, 0.3, 3, ang));
+      }
+
+      if (clash.tapsCurrent >= clash.tapsRequired) {
+        // VICTORY!
+        const enemy = clash.enemy;
+        globals.activeBladeClash = null;
+        globals.shockwaves.push(new Shockwave(clash.x, clash.y, '#ffd700'));
+        globals.floatingTexts.push(FloatingText.acquire(clash.x, clash.y - 65, t('clashVictoryText') || "CLASH VICTORY! ⚔️", "neon-#ffd700", 32));
+        playSynthesizedAwaken();
+        globals.screenShake = Math.max(globals.screenShake, 25);
+        addFlow(20);
+        addCombo();
+        addCombo();
+
+        if (enemy && enemy.state !== 'dead') {
+          if (typeof enemy.addPostureDamage === 'function') {
+            enemy.addPostureDamage(60);
+          }
+          const kbAngle = Math.atan2(enemy.y - globals.player.y, enemy.x - globals.player.x);
+          enemy.knockbackTimer = 0.45;
+          enemy.knockbackVx = Math.cos(kbAngle) * 1900;
+          enemy.knockbackVy = Math.sin(kbAngle) * 1900;
+          enemy.vx = enemy.knockbackVx;
+          enemy.vy = enemy.knockbackVy;
+          enemy.setState('idle');
+          hitEnemy(enemy, 5);
+        }
+      }
+    } else if (clash.timer <= 0 || clash.enemy.state === 'dead') {
+      // DRAW / Expiry
+      if (clash.enemy && clash.enemy.state !== 'dead') {
+        const kbAngle = Math.atan2(clash.enemy.y - globals.player.y, clash.enemy.x - globals.player.x);
+        clash.enemy.knockbackTimer = 0.25;
+        clash.enemy.knockbackVx = Math.cos(kbAngle) * 700;
+        clash.enemy.knockbackVy = Math.sin(kbAngle) * 700;
+        clash.enemy.vx = clash.enemy.knockbackVx;
+        clash.enemy.vy = clash.enemy.knockbackVy;
+        clash.enemy.setState('idle');
+      }
+      globals.floatingTexts.push(FloatingText.acquire(clash.x, clash.y - 50, t('clashDrawText') || "CLASH DRAW", "#94a3b8", 22));
+      globals.activeBladeClash = null;
+    }
+  }
+
   globals.player.update(realDt);
+
+  // Option 3: Mid-Air Pursuit & Aerial Helm-Splitter Cleave
+  const isDashJustPressed = (globals.keys[globals.keyMaps.dash] || globals.mobileDashJustPressed);
+  if (isAttackPressed || isDashJustPressed) {
+    const airborneEnemy = globals.enemies.find(e => {
+      if (e.state === 'dead' || !(e as any).canAerialCleave) return false;
+      const dx = e.x - globals.player.x;
+      const dy = e.y - globals.player.y;
+      return (e as any).airborneZ > 20 && (dx * dx + dy * dy < 360 * 360);
+    });
+
+    if (airborneEnemy) {
+      (airborneEnemy as any).canAerialCleave = false;
+      (airborneEnemy as any).aerialCleaveTriggered = true;
+      (airborneEnemy as any).airborneVz = -1750; // Drive enemy violently back down to earth!
+
+      // Player teleports airborne directly above the target
+      globals.player.x = airborneEnemy.x - (globals.player.dir || 1) * 25;
+      globals.player.y = airborneEnemy.y;
+      globals.player.airborneZ = (airborneEnemy as any).airborneZ + 20;
+      globals.player.airborneVz = 0;
+      globals.player.setState('attack');
+
+      // Aerial cross-slash
+      globals.slashes.push(Slash.acquire(airborneEnemy.x, airborneEnemy.y - (airborneEnemy as any).airborneZ, Math.PI / 4, 2.2, false, '#38bdf8'));
+      globals.slashes.push(Slash.acquire(airborneEnemy.x, airborneEnemy.y - (airborneEnemy as any).airborneZ, -Math.PI / 4, 2.2, false, '#38bdf8'));
+
+      globals.screenShake = Math.max(globals.screenShake, 20);
+      playSound(sfx.slash);
+      addFlow(20);
+      addCombo();
+    }
+  }
   if (globals.player.state !== 'dash' && globals.raijinDashActive) {
     globals.raijinDashActive = false;
     if (globals.lightningDischargeActive) {
@@ -3200,6 +3323,34 @@ function update(realDt: number) {
             isHit = diff < Math.PI / 1.5;
           }
           if (isHit) {
+            // Option 2: Blade Clash (Tsubazeriai) Trigger
+            const isMeleeEnemy = e.subType !== 'pyromancer' && e.subType !== 'musketeer';
+            const isEnemyAttackingOrCharging = e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax * 0.65);
+            if (!globals.activeBladeClash && !isRiposteStrike && isMeleeEnemy && isEnemyAttackingOrCharging && distSq < 140 * 140) {
+              const clashX = (globals.player.x + e.x) / 2;
+              const clashY = (globals.player.y + e.y) / 2;
+              globals.activeBladeClash = {
+                enemy: e,
+                timer: 0.45,
+                maxTimer: 0.45,
+                tapsRequired: globals.difficulty === 'insane' ? 3 : 2,
+                tapsCurrent: 0,
+                x: clashX,
+                y: clashY
+              };
+              e.vx = 0; e.vy = 0;
+              e.stunTimer = 0.55;
+              globals.screenShake = Math.max(globals.screenShake, 12);
+              playSynthesizedClash();
+              globals.shockwaves.push(new Shockwave(clashX, clashY, '#ffd700'));
+              for (let p = 0; p < 12; p++) {
+                const spd = 200 + Math.random() * 300;
+                const pAng = Math.random() * Math.PI * 2;
+                globals.particles.push(Particle.acquire(clashX, clashY, '#ffd700', spd, 0.35, 3, pAng));
+              }
+              continue;
+            }
+
             hitEnemy(e, dmg);
             if (globals.flowState === 'storm_god' && !hasChained) {
               hasChained = true;

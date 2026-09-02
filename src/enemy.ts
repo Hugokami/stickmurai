@@ -2,7 +2,7 @@ import { globals } from './globals';
 import { callbacks } from './callbacks';
 import { Entity, Particle, FloatingText, Projectile, AnimatedEffect, Shockwave } from './entities';
 import { Player } from './player';
-import { playSound, sfx } from './audio';
+import { playSound, sfx, playSynthesizedThunder } from './audio';
 import { vfxAnims } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 
@@ -50,6 +50,10 @@ export class Enemy extends Entity {
   maxPosture = 60;
   postureBrokenTimer = 0;
   dominoHitEnemies = new Set<Enemy>();
+  airborneZ = 0;
+  airborneVz = 0;
+  canAerialCleave = false;
+  aerialCleaveTriggered = false;
 
   constructor(x: number, y: number, target: Player) {
     super(); 
@@ -77,6 +81,10 @@ export class Enemy extends Entity {
     this.maxPosture = 60;
     this.postureBrokenTimer = 0;
     this.dominoHitEnemies.clear();
+    this.airborneZ = 0;
+    this.airborneVz = 0;
+    this.canAerialCleave = false;
+    this.aerialCleaveTriggered = false;
     this.isSlashedKamisori = false;
     this.kamisoriCutAngle = 0;
     this.kamisoriDamage = 0;
@@ -352,6 +360,44 @@ export class Enemy extends Entity {
       }
       super.update(effectiveDt);
       return;
+    }
+
+    // Option 3: Airborne Z-axis physics
+    if (this.airborneZ > 0 || this.airborneVz !== 0) {
+      this.airborneZ += this.airborneVz * effectiveDt;
+      this.airborneVz -= 1800 * effectiveDt; // gravity
+      if (this.airborneZ <= 0) {
+        this.airborneZ = 0;
+        this.airborneVz = 0;
+        this.canAerialCleave = false;
+
+        // Check if landing from Helm-Splitter Aerial Cleave
+        if (this.aerialCleaveTriggered) {
+          this.aerialCleaveTriggered = false;
+          callbacks.hitEnemy(this, Math.max(14, Math.round((this.maxHp || 10) * 0.45)));
+          globals.screenShake = Math.max(globals.screenShake, 26);
+          globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8'));
+          globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 55, "HELM SPLITTER! ⚡", "neon-#38bdf8", 32));
+          playSynthesizedThunder();
+
+          // Collateral ground shockwave knocking down surrounding enemies
+          globals.enemies.forEach(other => {
+            if (other === this || other.state === 'dead') return;
+            const odx = other.x - this.x;
+            const ody = other.y - this.y;
+            if (odx * odx + ody * ody < 170 * 170) {
+              callbacks.hitEnemy(other, 3);
+              other.stunTimer = Math.max(other.stunTimer || 0, 1.0);
+              other.knockbackTimer = 0.35;
+              const oang = Math.atan2(ody, odx);
+              other.knockbackVx = Math.cos(oang) * 900;
+              other.knockbackVy = Math.sin(oang) * 900;
+              other.vx = other.knockbackVx;
+              other.vy = other.knockbackVy;
+            }
+          });
+        }
+      }
     }
 
     // Posture broken timer and recovery
@@ -929,11 +975,28 @@ export class Enemy extends Entity {
       ctx.strokeRect(barX, barY, barW, barH);
     }
 
+    if (this.airborneZ > 0) {
+      ctx.save();
+      const shadowScale = Math.max(0.3, 1.0 - this.airborneZ / 250);
+      ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
+      ctx.beginPath();
+      ctx.ellipse(rx, ry, 22 * this.scaleMult * shadowScale, 8 * this.scaleMult * shadowScale, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
     let tint = this.hitFlash > 0 ? '#ffffff' : this.colorTint;
     if (this.chillTimer > 0 && this.hitFlash <= 0) {
       tint = '#00ffff';
     }
-    super.draw(ctx, cx, cy, alpha, tint);
+
+    if (this.airborneZ > 0) {
+      this.y -= this.airborneZ;
+      super.draw(ctx, cx, cy, alpha, tint);
+      this.y += this.airborneZ;
+    } else {
+      super.draw(ctx, cx, cy, alpha, tint);
+    }
 
     // time stop cut marks
     if (this.isSlashedKamisori && this.state !== 'dead') {

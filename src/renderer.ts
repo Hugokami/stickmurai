@@ -734,4 +734,74 @@ export function draw() {
     ctx.fillText(`${langLabel}: ${globals.reapersMarkTimer.toFixed(1)}s [${globals.reapersMarkKills}/10 Kills]`, hx, hy);
     ctx.restore();
   }
+
+  // Option 2: Blade Clash Visual HUD Overlay
+  if (globals.activeBladeClash) {
+    const clash = globals.activeBladeClash;
+    const cx = (clash.x - globals.camera.x) * globals.gameZoom + globals.width / 2;
+    const cy = (clash.y - globals.camera.y) * globals.gameZoom + globals.height / 2;
+
+    ctx.save();
+    // Glowing clash center point
+    const pulse = 1.0 + Math.sin(performance.now() / 40) * 0.15;
+    ctx.fillStyle = 'rgba(255, 215, 0, 0.45)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 34 * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Radial timer ring
+    const timerRatio = Math.max(0, clash.timer / clash.maxTimer);
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(cx, cy - 40, 18, -Math.PI / 2, -Math.PI / 2 + timerRatio * Math.PI * 2);
+    ctx.stroke();
+
+    // Floating Tap Prompt Pill
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = "900 16px 'Outfit', sans-serif";
+    
+    const promptText = `⚔️ ${globals.currentLang === 'ja' ? '攻撃連打！' : 'TAP SLASH!'} (${clash.tapsCurrent}/${clash.tapsRequired})`;
+    const textWidth = ctx.measureText(promptText).width;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(cx - textWidth / 2 - 12, cy - 85, textWidth + 24, 28, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffd700';
+    ctx.fillText(promptText, cx, cy - 71);
+
+    ctx.restore();
+  }
+
+  // Option 3: Aerial Cleave Indicator
+  globals.enemies.forEach(e => {
+    if (e.state !== 'dead' && (e as any).canAerialCleave && (e as any).airborneZ > 20) {
+      ctx.save();
+      const ex = (e.x - globals.camera.x) * globals.gameZoom + globals.width / 2;
+      const ey = ((e.y - (e as any).airborneZ) - globals.camera.y) * globals.gameZoom + globals.height / 2;
+
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = "bold 13px 'Outfit', sans-serif";
+      const cleavePrompt = `⚡ ${globals.currentLang === 'ja' ? '空中斬り [攻撃/回避]!' : 'AERIAL CLEAVE!'}`;
+      const width = ctx.measureText(cleavePrompt).width;
+
+      ctx.fillStyle = 'rgba(14, 165, 233, 0.9)';
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(ex - width / 2 - 8, ey - 50, width + 16, 24, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(cleavePrompt, ex, ey - 38);
+      ctx.restore();
+    }
+  });
 }

@@ -229,5 +229,18 @@ export const globals = {
   bloodThirstCurseActive: false,
   bloodThirstBleedTimer: 45.0,
   curseOfGreedActive: false,
-  scoreMultiplier: 1
+  scoreMultiplier: 1,
+
+  // Option 2: Blade Clash (Tsubazeriai)
+  activeBladeClash: null as BladeClashState | null
 };
+
+export interface BladeClashState {
+  enemy: any;
+  timer: number;
+  maxTimer: number;
+  tapsRequired: number;
+  tapsCurrent: number;
+  x: number;
+  y: number;
+}

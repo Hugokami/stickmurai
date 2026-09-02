@@ -284,6 +284,42 @@ export function playSynthesizedParry() {
   } catch (e) {}
 }
 
+export function playSynthesizedClash() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.6);
+    
+    // High metal resonant ping
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(1400 + Math.random() * 200, now);
+    osc1.frequency.exponentialRampToValueAtTime(300, now + 0.2);
+    gain1.gain.setValueAtTime(volume, now);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc1.connect(gain1);
+    gain1.connect(getSoundDestination(ctx));
+
+    // Heavy sword scrape body
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(950, now);
+    osc2.frequency.exponentialRampToValueAtTime(400, now + 0.15);
+    gain2.gain.setValueAtTime(volume * 0.7, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc2.connect(gain2);
+    gain2.connect(getSoundDestination(ctx));
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.21);
+    osc2.stop(now + 0.16);
+  } catch (e) {}
+}
+
 export function playSynthesizedPerfectParry() {
   try {
     const nowTime = performance.now();
