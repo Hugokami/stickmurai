@@ -13,13 +13,14 @@ export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berse
 export class Enemy extends Entity {
   target!: Player;
   attackLanded = false;
-  chargeTimeMax = 0.8;
+  chargeTimeMax = 1.6;
+  attackCooldownTimer = 0;
   deadTimer = 0;
   knockbackTimer = 0;
   knockbackVx = 0;
   knockbackVy = 0;
   targetAngle = 0;
-  lungeSpeed = 1200;
+  lungeSpeed = 950;
   lungeDuration = 0.6; // how long the lunge lasts
   lungeCos = 1;
   lungeSin = 0;
@@ -41,7 +42,7 @@ export class Enemy extends Entity {
   hpDelayed = 2;
   stunTimer = 0;
   chillTimer = 0;
-  speed = 300;
+  speed = 260;
 
 
 
@@ -56,6 +57,7 @@ export class Enemy extends Entity {
     this.yOffset = 0; this.yVelocity = 0;
     this.vx = 0; this.vy = 0;
     this.attackLanded = false;
+    this.attackCooldownTimer = 0.5 + Math.random() * 0.5;
     this.deadTimer = 0;
     this.knockbackTimer = 0;
     this.knockbackVx = 0;
@@ -80,9 +82,9 @@ export class Enemy extends Entity {
     this.hp = 2;
     this.maxHp = 2;
     this.hpDelayed = 2;
-    this.speed = 300;
-    this.lungeSpeed = 1200;
-    this.chargeTimeMax = 0.8;
+    this.speed = 260;
+    this.lungeSpeed = 950;
+    this.chargeTimeMax = 1.6;
     this.lungeDuration = 0.6;
     this.scaleMult = 1;
     this.expValue = 1;
@@ -128,82 +130,82 @@ export class Enemy extends Entity {
   configureSubType() {
     if (this.subType === 'brawler') {
       this.type = 'enemy01';
-      this.lungeSpeed = 1200; this.chargeTimeMax = 0.8; this.lungeDuration = 0.5;
+      this.lungeSpeed = 950; this.chargeTimeMax = 1.6; this.lungeDuration = 0.5;
       this.scaleMult = 1; this.hp = this.maxHp = 4; this.expValue = 1;
       this.colorTint = 'none';
-      this.speed = 300;
+      this.speed = 260;
     } else if (this.subType === 'samurai') {
       this.type = 'enemy02';
-      this.lungeSpeed = 1100; this.chargeTimeMax = 0.9; this.lungeDuration = 0.6;
+      this.lungeSpeed = 900; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
       this.scaleMult = 1.1; this.hp = this.maxHp = 4; this.expValue = 1;
       this.colorTint = 'none';
-      this.speed = 300;
+      this.speed = 260;
     } else if (this.subType === 'ronin') {
       this.type = 'enemy03';
-      this.lungeSpeed = 1300; this.chargeTimeMax = 0.9; this.lungeDuration = 0.7;
+      this.lungeSpeed = 1000; this.chargeTimeMax = 1.8; this.lungeDuration = 0.7;
       this.scaleMult = 1.2; this.hp = this.maxHp = 6; this.expValue = 2;
       this.colorTint = 'none';
-      this.speed = 300;
+      this.speed = 260;
     } else if (this.subType === 'berserker') {
       this.type = 'enemy02';
-      this.lungeSpeed = 1600; this.chargeTimeMax = 0.6; this.lungeDuration = 0.5;
+      this.lungeSpeed = 1300; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
       this.scaleMult = 1.3; this.hp = this.maxHp = 8; this.expValue = 3;
       this.colorTint = 'none';
-      this.speed = 380;
+      this.speed = 320;
     } else if (this.subType === 'giant') {
       this.type = 'enemy03';
-      this.lungeSpeed = 750; this.chargeTimeMax = 1.4; this.lungeDuration = 0.8;
+      this.lungeSpeed = 650; this.chargeTimeMax = 2.4; this.lungeDuration = 0.8;
       this.scaleMult = 2; this.hp = this.maxHp = 10; this.expValue = 4;
       this.colorTint = 'none';
-      this.speed = 160;
+      this.speed = 150;
     } else if (this.subType === 'assassin') {
       this.type = 'enemy01';
-      this.lungeSpeed = 2400; this.chargeTimeMax = 0.4; this.lungeDuration = 0.4;
+      this.lungeSpeed = 1500; this.chargeTimeMax = 1.0; this.lungeDuration = 0.4;
       this.scaleMult = 0.8; this.hp = this.maxHp = 3; this.expValue = 2;
       this.colorTint = 'none';
-      this.speed = 450;
+      this.speed = 360;
     } else if (this.subType === 'musketeer') {
       this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.3; this.lungeDuration = 0.4; // Shoots projectile
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.2; this.lungeDuration = 0.4; // Shoots projectile
       this.scaleMult = 1; this.hp = this.maxHp = 2; this.expValue = 2;
       this.colorTint = 'none';
-      this.speed = 200;
+      this.speed = 180;
     } else if (this.subType === 'pyromancer') {
       this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.5;
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.2; this.lungeDuration = 0.5;
       this.scaleMult = 1.2; this.hp = this.maxHp = 8; this.expValue = 4;
       this.colorTint = '#ff4400';
-      this.speed = 180;
+      this.speed = 160;
     } else if (this.subType === 'glacial_sentinel') {
       this.type = 'enemy02';
-      this.lungeSpeed = 1000; this.chargeTimeMax = 1.1; this.lungeDuration = 0.7;
+      this.lungeSpeed = 850; this.chargeTimeMax = 2.0; this.lungeDuration = 0.7;
       this.scaleMult = 1.4; this.hp = this.maxHp = 12; this.expValue = 5;
       this.colorTint = '#60a5fa';
-      this.speed = 220;
+      this.speed = 190;
     } else if (this.subType === 'astromancer') {
       this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.0; this.lungeDuration = 0.5;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.9; this.lungeDuration = 0.5;
       this.scaleMult = 1.1; this.hp = this.maxHp = 6; this.expValue = 5;
       this.colorTint = '#f43f5e';
-      this.speed = 250;
+      this.speed = 210;
     } else if (this.subType === 'necromancer') {
       this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.4; this.lungeDuration = 0.6;
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.4; this.lungeDuration = 0.6;
       this.scaleMult = 1.5; this.hp = this.maxHp = 20; this.expValue = 8;
       this.colorTint = '#a855f7';
-      this.speed = 170;
+      this.speed = 150;
     } else if (this.subType === 'oni_boss') {
       this.type = 'skeleton';
-      this.lungeSpeed = 1200; this.chargeTimeMax = 1.1; this.lungeDuration = 0.8;
+      this.lungeSpeed = 1000; this.chargeTimeMax = 2.0; this.lungeDuration = 0.8;
       this.scaleMult = 2.2; this.hp = this.maxHp = 120; this.expValue = 15;
       this.colorTint = 'none';
-      this.speed = 300;
+      this.speed = 260;
     } else { // shogun_boss
       this.type = 'skeleton';
-      this.lungeSpeed = 1800; this.chargeTimeMax = 0.8; this.lungeDuration = 0.6;
+      this.lungeSpeed = 1300; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
       this.scaleMult = 2.0; this.hp = this.maxHp = 100; this.expValue = 20;
       this.colorTint = 'none';
-      this.speed = 300;
+      this.speed = 260;
     }
 
     // Apply difficulty modifiers
@@ -214,19 +216,19 @@ export class Enemy extends Entity {
     if (globals.difficulty === 'easy') {
       hpMult = 0.3;
       speedMult = 0.5;
-      chargeMult = 1.8;
+      chargeMult = 2.0;
     } else if (globals.difficulty === 'normal') {
       hpMult = 0.5;
       speedMult = 0.7;
-      chargeMult = 1.4;
+      chargeMult = 1.6;
     } else if (globals.difficulty === 'hard') {
       hpMult = 1.3;
       speedMult = 1.15;
-      chargeMult = 0.8;
+      chargeMult = 1.3;
     } else if (globals.difficulty === 'insane') {
       hpMult = 3.0;
-      speedMult = 1.55;
-      chargeMult = 0.4;
+      speedMult = 1.35;
+      chargeMult = 1.0;
     }
 
     this.hp = Math.max(1, Math.round(this.hp * hpMult));
@@ -257,6 +259,10 @@ export class Enemy extends Entity {
 
     if (isChilled) {
       this.chillTimer -= dt;
+    }
+
+    if (this.attackCooldownTimer > 0) {
+      this.attackCooldownTimer -= effectiveDt;
     }
 
     if (isKnockedBack) {
@@ -438,7 +444,11 @@ export class Enemy extends Entity {
           }
         }
       }
-      if (this.stateTime > this.lungeDuration) { this.setState('idle'); this.attackLanded = false; }
+      if (this.stateTime > this.lungeDuration) {
+        this.setState('idle');
+        this.attackLanded = false;
+        this.attackCooldownTimer = 1.0 + Math.random() * 0.6;
+      }
       return;
     }
     
@@ -472,7 +482,7 @@ export class Enemy extends Entity {
       return;
     }
 
-    if (distSq > attackRange * attackRange) {
+    if (distSq > attackRange * attackRange || this.attackCooldownTimer > 0) {
       const dist = Math.sqrt(distSq) || 0.001;
       this.vx = (dx / dist) * speed; this.vy = (dy / dist) * speed; this.setState('walk');
     } else {
@@ -523,13 +533,13 @@ export class Enemy extends Entity {
         const tx = currentTarget.x;
         const ty = currentTarget.y;
         
-        // Spawn ground warning indicator (VFX1 is fire rune, lasts 0.6s)
-        const warnEffect = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx1, 0.6, 1.8, 0, 'fire_rune');
+        // Spawn ground warning indicator (VFX1 is fire rune, lasts 1.1s)
+        const warnEffect = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx1, 1.1, 1.8, 0, 'fire_rune');
         globals.animatedEffects.push(warnEffect);
         
-        // Spawn vertical fire column after 0.6s
+        // Spawn vertical fire column after 1.1s
         globals.delayedActions.push({
-          delay: 0.6,
+          delay: 1.1,
           run: () => {
             const firePillar = new AnimatedEffect(tx, ty, vfxAnims.fireMage.vfx2, 0.8, 2.0, 0, 'fire_pillar');
             globals.animatedEffects.push(firePillar);
@@ -559,7 +569,7 @@ export class Enemy extends Entity {
           const iy = startY + dirY * stepDist;
           
           globals.delayedActions.push({
-            delay: i * 0.1,
+            delay: i * 0.18,
             run: () => {
               const spike = new AnimatedEffect(ix, iy, vfxAnims.frostKnight.vfx3, 0.6, 1.5, 0, 'ice_spike');
               globals.animatedEffects.push(spike);
@@ -577,11 +587,11 @@ export class Enemy extends Entity {
         this.attackLanded = true;
       } else {
         // Temporary Ice Shield + standard lunge
-        const shieldFx = new AnimatedEffect(this.x, this.y, vfxAnims.frostKnight.vfx2, 1.0, 1.8, 0, 'ice_shield');
+        const shieldFx = new AnimatedEffect(this.x, this.y, vfxAnims.frostKnight.vfx2, 1.2, 1.8, 0, 'ice_shield');
         globals.animatedEffects.push(shieldFx);
         (this as any).iceShieldActive = true;
         globals.delayedActions.push({
-          delay: 1.0,
+          delay: 1.2,
           run: () => {
             (this as any).iceShieldActive = false;
           }
@@ -593,11 +603,11 @@ export class Enemy extends Entity {
       const ty = currentTarget.y;
       
       // Spawn star rune warning
-      const starRune = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx1, 0.5, 1.5, 0, 'star_rune');
+      const starRune = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx1, 1.0, 1.5, 0, 'star_rune');
       globals.animatedEffects.push(starRune);
       
       globals.delayedActions.push({
-        delay: 0.5,
+        delay: 1.0,
         run: () => {
           // Fall meteor (VFX3 is constellation/blast)
           const blast = new AnimatedEffect(tx, ty, vfxAnims.starcaller.vfx3, 0.7, 1.6, 0, 'meteor_blast');
@@ -615,11 +625,11 @@ export class Enemy extends Entity {
       // Necromancer summons skeleton minions or fires tracking void skulls
       if (Math.random() < 0.5 && globals.enemies.length < 15) {
         // Portal effect
-        const portal = new AnimatedEffect(this.x, this.y - 40, vfxAnims.warlock.vfx1, 0.8, 2.0, 0, 'necro_portal');
+        const portal = new AnimatedEffect(this.x, this.y - 40, vfxAnims.warlock.vfx1, 1.2, 2.0, 0, 'necro_portal');
         globals.animatedEffects.push(portal);
         
         globals.delayedActions.push({
-          delay: 0.8,
+          delay: 1.2,
           run: () => {
             const minion = new Enemy(this.x + (Math.random() - 0.5) * 100, this.y, this.target);
             minion.subType = 'brawler';
