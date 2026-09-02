@@ -139,9 +139,7 @@ canvas.inverted {
   flex-direction: column;
   gap: 8px;
   max-width: 320px;
-  background: linear-gradient(90deg, #0e0e12, #07070a);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: linear-gradient(90deg, rgba(14, 14, 18, 0.95), rgba(7, 7, 10, 0.95));
   border-left: 5px solid #bc2c2c;
   border-top: 1px solid rgba(212, 175, 55, 0.25);
   border-right: 1px solid rgba(212, 175, 55, 0.1);
@@ -874,7 +872,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   transition: opacity 0.15s ease-out;
   pointer-events: none;
   z-index: 45;
-  backdrop-filter: blur(2px);
   box-shadow: 0 0 25px rgba(255, 255, 255, 0.08);
 }
 
@@ -906,9 +903,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   width: clamp(75px, 14vh, 105px);
   height: clamp(75px, 14vh, 105px);
   border-radius: 50%;
-  background: rgba(15, 15, 20, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(14, 14, 20, 0.88);
   border: 3px solid #bc2c2c;
   color: #bc2c2c;
   font-weight: 700;

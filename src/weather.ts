@@ -178,7 +178,46 @@ export class WeatherEngine {
   }
 
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    if (globals.graphicsSettings === 'low' || globals.weatherEffectsEnabled === 'off') return;
-    this.particles.forEach(p => p.draw(ctx, cx, cy));
+    if (globals.graphicsSettings === 'low' || globals.weatherEffectsEnabled === 'off' || this.particles.length === 0) return;
+
+    ctx.save();
+    const type = this.type;
+    if (type === 'rain') {
+      ctx.strokeStyle = 'rgba(174, 219, 255, 0.4)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for (let i = 0; i < this.particles.length; i++) {
+        const p = this.particles[i];
+        const rx = p.x - cx + globals.vw/2;
+        const ry = p.y - cy + globals.vh/2;
+        if (rx < -50 || rx > globals.vw + 50 || ry < -50 || ry > globals.vh + 50) continue;
+        ctx.moveTo(rx, ry);
+        ctx.lineTo(rx + p.vx * 0.015, ry + p.vy * 0.015);
+      }
+      ctx.stroke();
+    } else if (type === 'snow') {
+      ctx.fillStyle = '#ffffff';
+      for (let i = 0; i < this.particles.length; i++) {
+        const p = this.particles[i];
+        const rx = p.x - cx + globals.vw/2;
+        const ry = p.y - cy + globals.vh/2;
+        if (rx < -50 || rx > globals.vw + 50 || ry < -50 || ry > globals.vh + 50) continue;
+        ctx.globalAlpha = p.alpha;
+        ctx.fillRect(rx - p.size, ry - p.size, p.size * 2, p.size * 2);
+      }
+    } else { // sakura
+      ctx.fillStyle = '#ffb7c5';
+      for (let i = 0; i < this.particles.length; i++) {
+        const p = this.particles[i];
+        const rx = p.x - cx + globals.vw/2;
+        const ry = p.y - cy + globals.vh/2;
+        if (rx < -50 || rx > globals.vw + 50 || ry < -50 || ry > globals.vh + 50) continue;
+        ctx.globalAlpha = p.alpha;
+        ctx.beginPath();
+        ctx.ellipse(rx, ry, p.size, p.size * 0.6, Math.PI / 4 + Math.sin(p.swayTime) * 0.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    ctx.restore();
   }
 }

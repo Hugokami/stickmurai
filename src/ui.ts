@@ -29,6 +29,22 @@ let lastAttackOverlayHeight = -1;
 let lastUltOverlayHeight = -1;
 let lastLives = 5;
 
+// Additional DOM element caches to prevent querySelector / getElementById thrashing
+let btnUltElement: HTMLElement | null = null;
+let btnEnhanceElement: HTMLElement | null = null;
+let btnDashElement: HTMLElement | null = null;
+let objectiveDisplayElement: HTMLElement | null = null;
+
+let lastFlowWidth = -1;
+let lastExpWidth = -1;
+let lastMaxFlowClass = false;
+let lastObjectiveDisplay = '';
+let lastObjectiveText = '';
+let lastBtnUltReady = false;
+let lastBtnDashReady = false;
+let lastBtnEnhanceReady = false;
+let lastBtnEnhanceBuff = false;
+
 export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void, onRestartCallback: () => void) {
   // DOM queries
   enhanceCooldownOverlay = document.getElementById('enhance-cooldown-overlay')!;
@@ -44,6 +60,10 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   scoreDisplay = document.getElementById('score-display')!;
   comboDisplay = document.getElementById('combo-display')!;
   heartsElements = document.querySelectorAll('.heart');
+  btnUltElement = document.getElementById('btn-ult');
+  btnEnhanceElement = document.getElementById('btn-enhance');
+  btnDashElement = document.getElementById('btn-dash');
+  objectiveDisplayElement = document.getElementById('objective-display');
 
   const mainMenu = document.getElementById('main-menu')!;
   const settingsScreen = document.getElementById('settings-screen')!;
@@ -745,7 +765,7 @@ export function updateComboDisplay() {
 }
 
 export function updateCooldownsUI() {
-  const btnUlt = document.getElementById('btn-ult')!;
+  const btnUlt = btnUltElement || (btnUltElement = document.getElementById('btn-ult'));
   if (enhanceCooldownOverlay && enhanceCooldownText) {
     if (globals.enhanceActiveTimer > 0) {
       const p = Math.round((globals.enhanceActiveTimer / globals.playerStats.enhanceDuration) * 100);
@@ -763,10 +783,14 @@ export function updateCooldownsUI() {
         lastEnhanceTextContent = text;
       }
       
-      const btn = document.getElementById('btn-enhance');
+      const btn = btnEnhanceElement || (btnEnhanceElement = document.getElementById('btn-enhance'));
       if (btn) {
-        if (!btn.classList.contains('buff-active')) btn.classList.add('buff-active');
-        btn.classList.remove('ready');
+        if (!lastBtnEnhanceBuff) {
+          btn.classList.add('buff-active');
+          btn.classList.remove('ready');
+          lastBtnEnhanceBuff = true;
+          lastBtnEnhanceReady = false;
+        }
       }
     } else {
       const p = globals.enhanceCooldown > 0 ? Math.round((globals.enhanceCooldown / globals.playerStats.enhanceCooldownMax) * 100) : 0;
@@ -784,13 +808,17 @@ export function updateCooldownsUI() {
         lastEnhanceTextContent = text;
       }
       
-      const btn = document.getElementById('btn-enhance');
+      const btn = btnEnhanceElement || (btnEnhanceElement = document.getElementById('btn-enhance'));
       if (btn) {
-        btn.classList.remove('buff-active');
-        if (globals.enhanceCooldown <= 0) {
-          btn.classList.add('ready');
-        } else {
-          btn.classList.remove('ready');
+        const isReady = globals.enhanceCooldown <= 0;
+        if (lastBtnEnhanceBuff) {
+          btn.classList.remove('buff-active');
+          lastBtnEnhanceBuff = false;
+        }
+        if (isReady !== lastBtnEnhanceReady) {
+          if (isReady) btn.classList.add('ready');
+          else btn.classList.remove('ready');
+          lastBtnEnhanceReady = isReady;
         }
       }
     }
@@ -810,12 +838,13 @@ export function updateCooldownsUI() {
       lastDashTextContent = text;
     }
   }
-  const btnDash = document.getElementById('btn-dash');
+  const btnDash = btnDashElement || (btnDashElement = document.getElementById('btn-dash'));
   if (btnDash) {
-    if (globals.player && globals.player.dashCooldown <= 0) {
-      btnDash.classList.add('ready');
-    } else {
-      btnDash.classList.remove('ready');
+    const isDashReady = !!(globals.player && globals.player.dashCooldown <= 0);
+    if (isDashReady !== lastBtnDashReady) {
+      if (isDashReady) btnDash.classList.add('ready');
+      else btnDash.classList.remove('ready');
+      lastBtnDashReady = isDashReady;
     }
   }
 
@@ -836,67 +865,108 @@ export function updateCooldownsUI() {
     }
   }
   
-  if (globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal') {
-    btnUlt.classList.add('ready');
-  } else {
-    btnUlt.classList.remove('ready');
+  if (btnUlt) {
+    const isUltReady = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal';
+    if (isUltReady !== lastBtnUltReady) {
+      if (isUltReady) btnUlt.classList.add('ready');
+      else btnUlt.classList.remove('ready');
+      lastBtnUltReady = isUltReady;
+    }
   }
 }
 
+let lastRenderedScore = -1;
+let lastRenderedMaxLives = -1;
+
 export function updateUI() {
   if (!flowMeterFill || !expMeterFill || !scoreDisplay) return;
-  flowMeterFill.style.width = `${(globals.flow/globals.playerStats.flowMax)*100}%`;
-  expMeterFill.style.width = `${(globals.exp/globals.maxExp)*100}%`;
   
-  if (globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal') { 
-    flowMeterContainer.classList.add('max-flow'); 
-  } else { 
-    flowMeterContainer.classList.remove('max-flow'); 
+  const flowPct = Math.round((globals.flow / globals.playerStats.flowMax) * 100);
+  if (flowPct !== lastFlowWidth) {
+    flowMeterFill.style.width = `${flowPct}%`;
+    lastFlowWidth = flowPct;
   }
   
-  scoreDisplay.textContent = `Kills: ${globals.score}`;
+  const expPct = Math.round((globals.exp / globals.maxExp) * 100);
+  if (expPct !== lastExpWidth) {
+    expMeterFill.style.width = `${expPct}%`;
+    lastExpWidth = expPct;
+  }
+  
+  const isMaxFlow = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal';
+  if (isMaxFlow !== lastMaxFlowClass) {
+    if (isMaxFlow) flowMeterContainer.classList.add('max-flow');
+    else flowMeterContainer.classList.remove('max-flow');
+    lastMaxFlowClass = isMaxFlow;
+  }
+  
+  if (globals.score !== lastRenderedScore) {
+    scoreDisplay.textContent = `Kills: ${globals.score}`;
+    lastRenderedScore = globals.score;
+  }
 
-  const objDisplay = document.getElementById('objective-display');
+  const objDisplay = objectiveDisplayElement || (objectiveDisplayElement = document.getElementById('objective-display'));
   if (objDisplay) {
     if (globals.gameState === 'playing') {
       if (globals.timerLimit !== 'endless') {
-        objDisplay.style.display = 'block';
+        if (lastObjectiveDisplay !== 'block') {
+          objDisplay.style.display = 'block';
+          lastObjectiveDisplay = 'block';
+        }
         const mins = Math.floor(globals.timeModeTimeRemaining / 60);
         const secs = Math.floor(globals.timeModeTimeRemaining % 60);
         const secsStr = secs < 10 ? '0' + secs : secs;
-        if (globals.gameMode === 'level') {
-          objDisplay.textContent = `GOAL: LVL ${globals.levelModeTarget} | TIME: ${mins}:${secsStr}`;
-        } else {
-          objDisplay.textContent = `TIME: ${mins}:${secsStr}`;
+        const text = globals.gameMode === 'level' 
+          ? `GOAL: LVL ${globals.levelModeTarget} | TIME: ${mins}:${secsStr}`
+          : `TIME: ${mins}:${secsStr}`;
+        if (text !== lastObjectiveText) {
+          objDisplay.textContent = text;
+          lastObjectiveText = text;
         }
       } else if (globals.gameMode === 'level') {
-        objDisplay.style.display = 'block';
-        objDisplay.textContent = `GOAL: LVL ${globals.levelModeTarget}`;
+        if (lastObjectiveDisplay !== 'block') {
+          objDisplay.style.display = 'block';
+          lastObjectiveDisplay = 'block';
+        }
+        const text = `GOAL: LVL ${globals.levelModeTarget}`;
+        if (text !== lastObjectiveText) {
+          objDisplay.textContent = text;
+          lastObjectiveText = text;
+        }
       } else {
-        objDisplay.style.display = 'none';
+        if (lastObjectiveDisplay !== 'none') {
+          objDisplay.style.display = 'none';
+          lastObjectiveDisplay = 'none';
+        }
       }
     } else {
-      objDisplay.style.display = 'none';
+      if (lastObjectiveDisplay !== 'none') {
+        objDisplay.style.display = 'none';
+        lastObjectiveDisplay = 'none';
+      }
     }
   }
   
-  heartsElements.forEach((h, i) => {
-    if (i >= globals.maxLives) {
-      (h as HTMLElement).style.display = 'none';
-    } else {
-      (h as HTMLElement).style.display = '';
-    }
-    if (i < globals.lives) {
-      h.classList.add('active');
-      h.classList.remove('damaged');
-    } else {
-      h.classList.remove('active');
-      if (i < lastLives) {
-        h.classList.add('damaged');
+  if (globals.lives !== lastLives || globals.maxLives !== lastRenderedMaxLives) {
+    heartsElements.forEach((h, i) => {
+      if (i >= globals.maxLives) {
+        (h as HTMLElement).style.display = 'none';
+      } else {
+        (h as HTMLElement).style.display = '';
       }
-    }
-  });
-  lastLives = globals.lives;
+      if (i < globals.lives) {
+        h.classList.add('active');
+        h.classList.remove('damaged');
+      } else {
+        h.classList.remove('active');
+        if (i < lastLives) {
+          h.classList.add('damaged');
+        }
+      }
+    });
+    lastLives = globals.lives;
+    lastRenderedMaxLives = globals.maxLives;
+  }
 
   updateCooldownsUI();
 }

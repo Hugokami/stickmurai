@@ -581,11 +581,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       const radius = 120 * (0.6 + 0.4 * this.shieldVisualScale);
       
       // Glow background
-      const grad = ctx.createRadialGradient(0, 0, radius - 40, 0, 0, radius + 20);
-      grad.addColorStop(0, 'rgba(0, 255, 200, 0)');
-      grad.addColorStop(0.7, `rgba(0, 255, 200, ${0.15 * this.shieldVisualScale})`);
-      grad.addColorStop(1, 'rgba(0, 255, 200, 0)');
-      ctx.fillStyle = grad;
+      ctx.fillStyle = `rgba(0, 255, 200, ${0.08 * this.shieldVisualScale})`;
       ctx.beginPath();
       ctx.arc(0, 0, radius + 20, 0, Math.PI * 2);
       ctx.fill();
@@ -995,33 +991,21 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
         rgbaColor = 'rgba(255, 170, 0, ';
       }
 
-      // 1. Radial Gradient Glowing Aura (behind the player)
-      const auraGrad = ctx.createRadialGradient(px, py - 10, 5, px, py - 10, 45);
-      auraGrad.addColorStop(0, rgbaColor + '0.35)');
-      auraGrad.addColorStop(0.5, rgbaColor + '0.12)');
-      auraGrad.addColorStop(1, rgbaColor + '0)');
-      
-      ctx.fillStyle = auraGrad;
+      // 1. Glowing Aura (behind the player)
+      ctx.fillStyle = rgbaColor + '0.15)';
       ctx.beginPath();
-      ctx.arc(px, py - 10, 45, 0, Math.PI * 2);
+      ctx.arc(px, py - 10, 42, 0, Math.PI * 2);
       ctx.fill();
 
-      // 2. Permanent, Semi-transparent Neon Ellipse Ring (directly at the feet)
-      // Layer 1: Outer soft glow
-      ctx.strokeStyle = rgbaColor + '0.15)';
-      ctx.lineWidth = 7;
-      ctx.beginPath();
-      ctx.ellipse(px, py + 22, 22, 7, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Layer 2: Medium glow
-      ctx.strokeStyle = rgbaColor + '0.4)';
+      // 2. Permanent Neon Ellipse Ring (at the feet)
+      // Layer 1: Glow
+      ctx.strokeStyle = rgbaColor + '0.35)';
       ctx.lineWidth = 4;
       ctx.beginPath();
       ctx.ellipse(px, py + 22, 22, 7, 0, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Layer 3: Sharp core
+      // Layer 2: Core
       ctx.strokeStyle = playerColor;
       ctx.lineWidth = 1.5;
       ctx.beginPath();

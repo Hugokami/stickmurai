@@ -49,7 +49,8 @@ export function resizeCanvas() {
   globals.width = window.innerWidth;
   globals.height = window.innerHeight;
   
-  const dprCap = globals.graphicsSettings === 'low' ? 1.0 : 1.25;
+  const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  const dprCap = (globals.graphicsSettings === 'low' || isTouchDevice) ? 1.0 : 1.25;
   const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
   
   canvas.width = globals.width * dpr;
@@ -85,8 +86,12 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   ctx.fillRect(0, 0, globals.width, globals.height);
   ctx.imageSmoothingEnabled = false;
 
+  const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   bgLayers.forEach(layer => {
     if (globals.graphicsSettings === 'low' && layer.name !== 'sky' && layer.name !== 'stones&grass') {
+      return;
+    }
+    if (isTouch && layer.name !== 'sky' && layer.name !== 'hills&trees' && layer.name !== 'stones&grass') {
       return;
     }
     const img = bgImages[layer.name];
@@ -107,18 +112,21 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
       const midY = (globals.height - imgH) / 2;
       const offsetY = midY - (globals.camera.y * 0.3 * globals.gameZoom);
       
+      const maxDrawX = globals.width + 1;
+      const maxDrawY = globals.height + 1;
+      
       if (layer.name === 'stones&grass') {
         // Only the grass ground layer tiles infinitely in both directions
         const offsetYMod = offsetY % imgH;
         let startY = offsetYMod > 0 ? offsetYMod - imgH : offsetYMod;
-        for(let x = startX; x < globals.width + imgW; x += imgW) {
-          for(let y = startY; y < globals.height + imgH; y += imgH) {
+        for(let x = startX; x < maxDrawX; x += imgW) {
+          for(let y = startY; y < maxDrawY; y += imgH) {
             ctx.drawImage(img, x, y, imgW, imgH);
           }
         }
       } else {
         // Decorative layers: tile horizontally only, single vertical position
-        for(let x = startX; x < globals.width + imgW; x += imgW) {
+        for(let x = startX; x < maxDrawX; x += imgW) {
           ctx.drawImage(img, x, offsetY, imgW, imgH);
         }
         
@@ -257,11 +265,7 @@ export function draw() {
     
     // gravity zone glow
     const pulse = 0.95 + Math.sin(timer * 10) * 0.05;
-    const grad = ctx.createRadialGradient(gx, gy, 10, gx, gy, baseRadius * pulse);
-    grad.addColorStop(0, 'rgba(138, 43, 226, 0.3)');
-    grad.addColorStop(0.5, 'rgba(75, 0, 130, 0.15)');
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    ctx.fillStyle = grad;
+    ctx.fillStyle = 'rgba(138, 43, 226, 0.2)';
     ctx.beginPath();
     ctx.arc(gx, gy, baseRadius * pulse, 0, Math.PI * 2);
     ctx.fill();
@@ -389,12 +393,8 @@ export function draw() {
         ctx.save();
         const pulse = 1.0 + Math.sin(auraTime * 15) * 0.08;
         
-        // 1. Draw glowing background radial aura
-        const gradient = ctx.createRadialGradient(px, py, 5, px, py, 45 * pulse);
-        gradient.addColorStop(0, 'rgba(192, 132, 252, 0.45)');
-        gradient.addColorStop(0.5, 'rgba(168, 85, 247, 0.25)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = gradient;
+        // 1. Draw glowing background aura
+        ctx.fillStyle = 'rgba(192, 132, 252, 0.22)';
         ctx.beginPath();
         ctx.arc(px, py, 45 * pulse, 0, Math.PI * 2);
         ctx.fill();
@@ -491,10 +491,7 @@ export function draw() {
       ctx.arc(dx, dy, radius, 0, Math.PI * 2);
       ctx.stroke();
       
-      const grad = ctx.createRadialGradient(dx, dy, 10, dx, dy, radius);
-      grad.addColorStop(0, 'rgba(0, 255, 255, 0.08)');
-      grad.addColorStop(1, 'rgba(0, 255, 255, 0.02)');
-      ctx.fillStyle = grad;
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.05)';
       ctx.beginPath();
       ctx.arc(dx, dy, radius, 0, Math.PI * 2);
       ctx.fill();

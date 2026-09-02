@@ -503,6 +503,7 @@ function inplaceFilter<T>(arr: T[], predicate: (item: T) => boolean, releaseCall
 }
 
 let lastTime = performance.now();
+let uiUpdateAccumulator = 0;
 
 function initGame() {
   playSound(sfx.gameStart);
@@ -2053,8 +2054,7 @@ function update(realDt: number) {
           if (e.state === 'dead') continue;
           const dx = e.x - globals.player.x;
           const dy = e.y - globals.player.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 320) {
+          if (dx * dx + dy * dy < 102400) { // 320 * 320
             const isEnemyAttacking = e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.2);
             if (isEnemyAttacking) {
               perfectDodgeTriggered = true;
@@ -2538,14 +2538,17 @@ function update(realDt: number) {
     globals.decoys.length = decoyWriteIndex;
   }
 
-  // Update sakura petals
+  // Update sakura petals (in-place compaction without heap allocation)
   if (globals.sakuraPetals) {
-    globals.sakuraPetals = globals.sakuraPetals.filter(petal => {
+    let writeIdx = 0;
+    for (let i = 0; i < globals.sakuraPetals.length; i++) {
+      const petal = globals.sakuraPetals[i];
       petal.life -= realDt;
-      if (petal.life <= 0) return false;
+      if (petal.life <= 0) continue;
       
       let exploded = false;
-      for (const e of globals.enemies) {
+      for (let j = 0; j < globals.enemies.length; j++) {
+        const e = globals.enemies[j];
         if (e.state === 'dead') continue;
         const dx = e.x - petal.x;
         const dy = e.y - petal.y;
@@ -2555,7 +2558,7 @@ function update(realDt: number) {
           exploded = true;
           hitEnemy(e, 1);
           playSound(sfx.slash, 0.15);
-          for (let i = 0; i < 6; i++) {
+          for (let k = 0; k < 4; k++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = 100 + Math.random() * 150;
             globals.particles.push(Particle.acquire(petal.x, petal.y, '#ffb7c5', speed, 0.4, 2.5 + Math.random()*2, angle));
@@ -2563,13 +2566,18 @@ function update(realDt: number) {
           break;
         }
       }
-      return !exploded;
-    });
+      if (!exploded) {
+        globals.sakuraPetals[writeIdx++] = petal;
+      }
+    }
+    globals.sakuraPetals.length = writeIdx;
   }
 
-  // Update collectibles (EXP gems & Hearts)
+  // Update collectibles (in-place compaction without heap allocation)
   if (globals.collectibles) {
-    globals.collectibles.forEach(c => {
+    let writeIdx = 0;
+    for (let i = 0; i < globals.collectibles.length; i++) {
+      const c = globals.collectibles[i];
       c.update(realDt);
       const dx = globals.player.x - c.x;
       const dy = globals.player.y - c.y;
@@ -2590,19 +2598,31 @@ function update(realDt: number) {
           }
         }
       }
-    });
-    globals.collectibles = globals.collectibles.filter(c => c.life > 0);
+      if (c.life > 0) {
+        globals.collectibles[writeIdx++] = c;
+      }
+    }
+    globals.collectibles.length = writeIdx;
   }
 
-  // Update Lightning Beams
+  // Update Lightning Beams (in-place compaction)
   if (globals.lightningBeams) {
-    globals.lightningBeams.forEach(lb => lb.update(realDt));
-    globals.lightningBeams = globals.lightningBeams.filter(lb => lb.life > 0);
+    let writeIdx = 0;
+    for (let i = 0; i < globals.lightningBeams.length; i++) {
+      const lb = globals.lightningBeams[i];
+      lb.update(realDt);
+      if (lb.life > 0) {
+        globals.lightningBeams[writeIdx++] = lb;
+      }
+    }
+    globals.lightningBeams.length = writeIdx;
   }
 
-  // Update Judgement Domes
+  // Update Judgement Domes (in-place compaction)
   if (globals.judgementDomes) {
-    globals.judgementDomes = globals.judgementDomes.filter(dome => {
+    let writeIdx = 0;
+    for (let i = 0; i < globals.judgementDomes.length; i++) {
+      const dome = globals.judgementDomes[i];
       dome.timer -= realDt;
       const currentTick = Math.floor((dome.maxLife - dome.timer) / 0.25);
       if (currentTick > dome.ticks && currentTick <= 6) {
@@ -2616,23 +2636,27 @@ function update(realDt: number) {
         const sy = dome.y + Math.sin(sliceAngle + Math.PI/2) * offsetDist;
         globals.slashes.push(Slash.acquire(sx, sy, sliceAngle, 0.6, false, 'rgba(0, 255, 255, 0.6)'));
         
-        for (let i = 0; i < 4; i++) {
+        for (let k = 0; k < 3; k++) {
           const sa = Math.random() * Math.PI * 2;
           const ss = 100 + Math.random() * 150;
           globals.particles.push(Particle.acquire(dome.x + (Math.random()-0.5)*120, dome.y + (Math.random()-0.5)*120, '#00ffff', ss, 0.2, 1.5, sa));
         }
 
-        globals.enemies.forEach(e => {
-          if (e.state === 'dead') return;
+        for (let j = 0; j < globals.enemies.length; j++) {
+          const e = globals.enemies[j];
+          if (e.state === 'dead') continue;
           const dx = e.x - dome.x;
           const dy = e.y - dome.y;
           if (dx * dx + dy * dy < radius * radius) {
             hitEnemy(e, 0.5);
           }
-        });
+        }
       }
-      return dome.timer > 0;
-    });
+      if (dome.timer > 0) {
+        globals.judgementDomes[writeIdx++] = dome;
+      }
+    }
+    globals.judgementDomes.length = writeIdx;
   }
 
   const isAttackPressed = globals.mouse.justPressed || globals.mobileAttackJustPressed;
@@ -2668,8 +2692,8 @@ function update(realDt: number) {
     globals.enemies.forEach(e => {
       if (!parryTriggered && (e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.15))) {
         const dx = e.x - globals.player.x; const dy = e.y - globals.player.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 200 + (e.scaleMult - 1) * 60) {
+        const maxDist = 200 + (e.scaleMult - 1) * 60;
+        if (dx * dx + dy * dy < maxDist * maxDist) {
           parryTriggered = true;
           
           triggerFlowingCounterReset();
@@ -2809,16 +2833,19 @@ function update(realDt: number) {
         if (!globals.joystickActive) { angle = Math.atan2(globals.mouse.y - globals.height/2, globals.mouse.x - globals.width/2); }
         
         let closestEnemy: Enemy | null = null;
-        let minDistance = Infinity;
-        for (const e of globals.enemies) {
+        let minDistanceSq = 360000; // 600 * 600
+        for (let j = 0; j < globals.enemies.length; j++) {
+          const e = globals.enemies[j];
           if (e.state === 'dead') continue;
-          const dist = Math.hypot(e.x - globals.player.x, e.y - globals.player.y);
-          if (dist < minDistance) {
-            minDistance = dist;
+          const edx = e.x - globals.player.x;
+          const edy = e.y - globals.player.y;
+          const dSq = edx * edx + edy * edy;
+          if (dSq < minDistanceSq) {
+            minDistanceSq = dSq;
             closestEnemy = e;
           }
         }
-        if (closestEnemy && minDistance < 600) {
+        if (closestEnemy) {
           angle = Math.atan2(closestEnemy.y - globals.player.y, closestEnemy.x - globals.player.x);
           globals.player.dir = closestEnemy.x > globals.player.x ? 1 : -1;
         }
@@ -2939,30 +2966,36 @@ function update(realDt: number) {
       }
 
       let hasChained = false;
-      globals.enemies.forEach(e => {
-        if (e.state === 'dead') return;
+      for (let j = 0; j < globals.enemies.length; j++) {
+        const e = globals.enemies[j];
+        if (e.state === 'dead') continue;
         const dx = e.x - globals.player.x; const dy = e.y - globals.player.y;
-        const dist = Math.hypot(dx, dy); const a = Math.atan2(dy, dx);
-        let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
         const enemyHitRadius = (e.scaleMult - 1) * 60; 
-        
         const hitRange = 280 * size + enemyHitRadius;
-        const isHit = isRiposteStrike ? (dist < hitRange) : (dist < hitRange && diff < Math.PI/1.5);
-        if (isHit) {
-          hitEnemy(e, dmg);
-          if (globals.flowState === 'storm_god' && !hasChained) {
-            hasChained = true;
-            triggerChainLightning(e);
+        const distSq = dx * dx + dy * dy;
+        if (distSq < hitRange * hitRange) {
+          let isHit = isRiposteStrike;
+          if (!isHit) {
+            const a = Math.atan2(dy, dx);
+            let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
+            isHit = diff < Math.PI / 1.5;
           }
-          if (isRiposteStrike) {
-            const knockbackAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
-            e.knockbackTimer = 0.5;
-            e.knockbackVx = Math.cos(knockbackAngle) * 2600;
-            e.knockbackVy = Math.sin(knockbackAngle) * 2600;
-            e.setState('idle');
+          if (isHit) {
+            hitEnemy(e, dmg);
+            if (globals.flowState === 'storm_god' && !hasChained) {
+              hasChained = true;
+              triggerChainLightning(e);
+            }
+            if (isRiposteStrike) {
+              const knockbackAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
+              e.knockbackTimer = 0.5;
+              e.knockbackVx = Math.cos(knockbackAngle) * 2600;
+              e.knockbackVy = Math.sin(knockbackAngle) * 2600;
+              e.setState('idle');
+            }
           }
         }
-      });
+      }
 
       if (globals.bladeEchoesActive && globals.flowState === 'awakened') {
         const topY = globals.player.y - 90;
@@ -2973,23 +3006,30 @@ function update(realDt: number) {
         globals.slashes.push(Slash.acquire(globals.player.x + Math.cos(angle)*50, topY + Math.sin(angle)*50, angle, cloneSlashSize, false, 'rgba(0, 255, 255, ALPHA)', false, globals.player));
         globals.slashes.push(Slash.acquire(globals.player.x + Math.cos(angle)*50, bottomY + Math.sin(angle)*50, angle, cloneSlashSize, false, 'rgba(0, 255, 255, ALPHA)', false, globals.player));
         
-        globals.enemies.forEach(e => {
-          if (e.state === 'dead') return;
-          const dx = e.x - globals.player.x; const dy = e.y - topY;
-          const dist = Math.hypot(dx, dy); const a = Math.atan2(dy, dx);
-          let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
-          const enemyHitRadius = (e.scaleMult - 1) * 60; 
-          if (dist < 280 * cloneSlashSize + enemyHitRadius && diff < Math.PI/1.5) { hitEnemy(e, cloneDmg); }
-        });
-        
-        globals.enemies.forEach(e => {
-          if (e.state === 'dead') return;
-          const dx = e.x - globals.player.x; const dy = e.y - bottomY;
-          const dist = Math.hypot(dx, dy); const a = Math.atan2(dy, dx);
-          let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
-          const enemyHitRadius = (e.scaleMult - 1) * 60; 
-          if (dist < 280 * cloneSlashSize + enemyHitRadius && diff < Math.PI/1.5) { hitEnemy(e, cloneDmg); }
-        });
+        const topCloneHitRange = 280 * cloneSlashSize;
+        for (let j = 0; j < globals.enemies.length; j++) {
+          const e = globals.enemies[j];
+          if (e.state === 'dead') continue;
+          const enemyHitRadius = (e.scaleMult - 1) * 60;
+          const totalRange = topCloneHitRange + enemyHitRadius;
+          const totalRangeSq = totalRange * totalRange;
+
+          // Check top clone
+          const dxTop = e.x - globals.player.x; const dyTop = e.y - topY;
+          if (dxTop * dxTop + dyTop * dyTop < totalRangeSq) {
+            const a = Math.atan2(dyTop, dxTop);
+            let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
+            if (diff < Math.PI / 1.5) { hitEnemy(e, cloneDmg); continue; }
+          }
+
+          // Check bottom clone
+          const dxBot = e.x - globals.player.x; const dyBot = e.y - bottomY;
+          if (dxBot * dxBot + dyBot * dyBot < totalRangeSq) {
+            const a = Math.atan2(dyBot, dxBot);
+            let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
+            if (diff < Math.PI / 1.5) { hitEnemy(e, cloneDmg); }
+          }
+        }
       }
 
       if (globals.playerStats.shadowClonesLevel && globals.playerStats.shadowClonesLevel > 0) {
@@ -3028,16 +3068,19 @@ function update(realDt: number) {
           globals.shadowAutoAttackTimer = 0.22;
           
           let nearestEnemy: Enemy | null = null;
-          let minDist = Infinity;
-          for (const enemy of globals.enemies) {
+          let minDistSq = 360000; // 600 * 600
+          for (let j = 0; j < globals.enemies.length; j++) {
+            const enemy = globals.enemies[j];
             if (enemy.state === 'dead') continue;
-            const dist = Math.hypot(enemy.x - globals.player.x, enemy.y - globals.player.y);
-            if (dist < minDist) {
-              minDist = dist;
+            const edx = enemy.x - globals.player.x;
+            const edy = enemy.y - globals.player.y;
+            const dSq = edx * edx + edy * edy;
+            if (dSq < minDistSq) {
+              minDistSq = dSq;
               nearestEnemy = enemy;
             }
           }
-          if (nearestEnemy && minDist < 600) {
+          if (nearestEnemy) {
             const clone = Afterimage.acquire(globals.player, '#c084fc');
             clone.x = nearestEnemy.x;
             clone.y = nearestEnemy.y;
@@ -3404,7 +3447,11 @@ function update(realDt: number) {
     if (globals.screenShake < 0.5) globals.screenShake = 0;
   }
 
-  callbacks.updateUI?.();
+  uiUpdateAccumulator += realDt;
+  if (uiUpdateAccumulator >= 0.033) {
+    uiUpdateAccumulator = 0;
+    callbacks.updateUI?.();
+  }
 }
 
 function loop(time: number) {

@@ -11,8 +11,6 @@ export function getTintedImage(img: HTMLImageElement, hexColor: string): HTMLCan
   const key = img.src + '_' + hexColor;
   const cached = tintCache.get(key);
   if (cached) {
-    tintCache.delete(key);
-    tintCache.set(key, cached); // refresh insertion order (LRU)
     return cached;
   }
 
@@ -282,6 +280,11 @@ export class Particle {
 
 const floatingTextPool: FloatingText[] = [];
 
+const fontCache: Record<number, string> = {};
+function getFont(size: number): string {
+  return fontCache[size] || (fontCache[size] = `bold ${size}px Arial`);
+}
+
 export class FloatingText {
   x!: number; y!: number; text!: string; color!: string; life = 1.2; maxLife = 1.2; size!: number;
   isFrozenDuringTimeStop = false;
@@ -322,7 +325,7 @@ export class FloatingText {
     if (globals.floatingTextEnabled === 'off') return;
     ctx.save();
     ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
-    ctx.font = `bold ${this.size}px Arial`;
+    ctx.font = getFont(this.size);
     ctx.textAlign = 'center';
     
     // Removed CPU-heavy shadowBlur for FloatingText to optimize performance
