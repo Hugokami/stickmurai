@@ -989,7 +989,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     playSynthesizedParry();
     globals.runStats.parries++;
     addCombo();
-    globals.hitStop = 0.08; 
+    globals.hitStop = 0; 
     globals.screenShake = 12; 
     addFlow(3.0);
     globals.invulnTimer = 0.5;
@@ -1798,7 +1798,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     finalDmg = Math.max(30, (e.maxHp || 10) * 0.75);
 
     globals.screenShake = Math.max(globals.screenShake, 30);
-    globals.hitStop = 0.22;
+    globals.hitStop = 0;
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#ff003c'));
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
 
@@ -1827,7 +1827,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   } else if (isCrit) {
     finalDmg = dmg * 2;
     globals.screenShake = Math.max(globals.screenShake, 14);
-    globals.hitStop = Math.max(globals.hitStop, 0.08); // small crunchy hitstop
+    globals.hitStop = 0;
     globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 35, `CRIT! 💥 -${finalDmg}`, '#ffaa00', 26));
 
     if (typeof (e as any).addPostureDamage === 'function') {
@@ -1979,7 +1979,7 @@ function addCombo() {
 
   addFlow(2.5);
   callbacks.updateComboDisplay?.();
-  globals.hitStop = Math.max(globals.hitStop, 0.05); 
+  globals.hitStop = 0; 
   updateUI();
 }
 
@@ -2021,7 +2021,8 @@ function update(realDt: number) {
 
   if (globals.gameState === 'levelup' || globals.gameState === 'ultchoice' || globals.gameState === 'paused') return; 
   if (globals.gameState !== 'playing' && globals.player.state !== 'dead') return;
-  if (globals.hitStop > 0) { globals.hitStop -= realDt; return; }
+  // Slow-motion and freeze-frame hitStop removed completely to ensure seamless 60fps
+  globals.hitStop = 0;
 
   if (globals.timerLimit !== 'endless' && globals.gameState === 'playing') {
     globals.timeModeTimeRemaining -= realDt;
@@ -2591,16 +2592,10 @@ function update(realDt: number) {
     updateUI();
     if (globals.flow <= 0) { globals.flow = 0; globals.flowState = 'normal'; }
   }
-  if (globals.timeSlowDuration > 0) {
-    globals.timeSlowDuration -= realDt;
-    globals.timeSlowFactor += (globals.targetTimeSlowFactor - globals.timeSlowFactor) * 12 * realDt;
-  } else {
-    globals.targetTimeSlowFactor = 1.0;
-    globals.timeSlowFactor += (1.0 - globals.timeSlowFactor) * 8 * realDt;
-    if (Math.abs(globals.timeSlowFactor - 1.0) < 0.005) {
-      globals.timeSlowFactor = 1.0;
-    }
-  }
+  // Slow-motion time dilation removed completely to prevent perceived lag
+  globals.timeSlowDuration = 0;
+  globals.timeSlowFactor = 1.0;
+  globals.targetTimeSlowFactor = 1.0;
 
   // Zen Field Ultimate Ticking
   if (globals.zenFieldActiveTimer > 0) {
@@ -2852,7 +2847,7 @@ function update(realDt: number) {
             globals.runStats.parries++;
             addCombo();
             addCombo();
-            globals.hitStop = 0.35; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 35;
+            globals.hitStop = 0; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 35;
             addFlow(12.0);
             globals.invulnTimer = 2.0;
             globals.invertScreenTimer = 0.25;
@@ -2884,7 +2879,7 @@ function update(realDt: number) {
           } else {
             globals.runStats.parries++;
             addCombo();
-            globals.hitStop = 0.2; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 25;
+            globals.hitStop = 0; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 25;
             addFlow(8.0);
             globals.invulnTimer = 0.8;
             globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));

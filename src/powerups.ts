@@ -255,11 +255,11 @@ const ultOptions = [
         const staggerInterval = 0.015;
         const finalDelay = (Math.min(targets.length, maxVisuals) * staggerInterval) + 0.15;
 
-        // freeze time slow-mo disabled to prevent laggy feel
+        // Slow-motion and hit-stop completely disabled to ensure butter-smooth 60fps
         globals.timeSlowDuration = 0; 
         globals.timeSlowFactor = 1.0;
         globals.targetTimeSlowFactor = 1.0;
-        globals.hitStop = 0.35;
+        globals.hitStop = 0;
         globals.screenShake = 60;
 
         // stun all active enemies so they freeze in place
