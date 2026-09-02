@@ -352,8 +352,8 @@ const ultOptions = [
               }
             });
 
-            // restore 2 Hearts
-            globals.lives = Math.min(globals.maxLives, globals.lives + 2);
+            // restore 1 Heart
+            globals.lives = Math.min(globals.maxLives, globals.lives + 1);
             globals.flowState = 'normal';
             globals.timeSlowDuration = 0;
             globals.timeSlowFactor = 1.0;

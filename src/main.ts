@@ -734,8 +734,8 @@ function initGame() {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
   }
   
-  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 14.0 : (globals.selectedSkill === 'dash' ? 2.8 : (globals.selectedSkill === 'firewheel' ? 12.0 : (globals.selectedSkill === 'gravity' ? 8.0 : (globals.selectedSkill === 'parry_master' ? 5.0 : (globals.selectedSkill === 'decoy_illusion' ? 14.0 : 16.0))))));
-  const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 5.5 : (globals.selectedSkill === 'dash' ? 0.3 : (globals.selectedSkill === 'firewheel' ? 5.0 : (globals.selectedSkill === 'gravity' ? 5.0 : (globals.selectedSkill === 'parry_master' ? 5.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
+  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 14.0 : (globals.selectedSkill === 'dash' ? 2.8 : (globals.selectedSkill === 'firewheel' ? 12.0 : (globals.selectedSkill === 'gravity' ? 8.0 : (globals.selectedSkill === 'parry_master' ? 10.0 : (globals.selectedSkill === 'decoy_illusion' ? 14.0 : 16.0))))));
+  const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 5.5 : (globals.selectedSkill === 'dash' ? 0.3 : (globals.selectedSkill === 'firewheel' ? 5.0 : (globals.selectedSkill === 'gravity' ? 5.0 : (globals.selectedSkill === 'parry_master' ? 3.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
   globals.playerStats = { 
     slashSizeMult: 1.0, 
     attackCooldownBase: 0.3, 
@@ -1808,7 +1808,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#38bdf8'));
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, t('aerialLaunchedText') || "LAUNCHED! 🌪️", "neon-#38bdf8", 30));
     playSound(sfx.slash);
-    addFlow(15);
+    addFlow(8);
     addCombo();
     return;
   }
@@ -1823,7 +1823,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#ff003c'));
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
 
-    addFlow(globals.playerStats.flowMax);
+    addFlow(20);
 
     const mangaCutin = document.getElementById('manga-cutin');
     if (mangaCutin) {
@@ -1998,7 +1998,7 @@ function addCombo() {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, "FINISHER READY!", "#ffcc00", 24));
   }
 
-  addFlow(2.5);
+  addFlow(1.2);
   callbacks.updateComboDisplay?.();
   globals.hitStop = 0; 
   updateUI();
@@ -2007,7 +2007,19 @@ function addCombo() {
 function addFlow(amount: number) {
   if (globals.flowState !== 'normal') return;
   const prevFlow = globals.flow;
-  globals.flow += amount * globals.playerStats.flowGenMult;
+  let mult = globals.playerStats.flowGenMult || 1.0;
+  if (globals.difficulty === 'insane') {
+    mult *= 0.5; // Significantly reduce flow accumulation in insane mode
+  } else if (globals.difficulty === 'hard') {
+    mult *= 0.75;
+  }
+  // Soft diminishing returns as combo grows very large to prevent runaway flow accumulation in hordes
+  if (globals.combo > 40) {
+    mult *= 0.6;
+  } else if (globals.combo > 20) {
+    mult *= 0.8;
+  }
+  globals.flow += amount * mult;
   if (globals.flow >= globals.playerStats.flowMax) {
     globals.flow = globals.playerStats.flowMax;
     document.getElementById('btn-ult')!.classList.add('ready');
@@ -2116,7 +2128,7 @@ function update(realDt: number) {
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, "BOUNTY CLAIMED! 🏆", "#10b981", 28));
         globals.screenShake = 16;
         globals.score += 500;
-        addFlow(globals.playerStats.flowMax);
+        addFlow(35);
         playSynthesizedAwaken();
         for (let i = 0; i < 20; i++) {
           globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#10b981', 300 + Math.random() * 200, 0.5, 3));
@@ -2851,7 +2863,7 @@ function update(realDt: number) {
         globals.floatingTexts.push(FloatingText.acquire(clash.x, clash.y - 65, t('clashVictoryText') || "CLASH VICTORY! ⚔️", "neon-#ffd700", 32));
         playSynthesizedAwaken();
         globals.screenShake = Math.max(globals.screenShake, 25);
-        addFlow(20);
+        addFlow(10);
         addCombo();
         addCombo();
 
@@ -2915,7 +2927,7 @@ function update(realDt: number) {
 
       globals.screenShake = Math.max(globals.screenShake, 20);
       playSound(sfx.slash);
-      addFlow(20);
+      addFlow(10);
       addCombo();
     }
   }
@@ -2971,7 +2983,7 @@ function update(realDt: number) {
             addCombo();
             addCombo();
             globals.hitStop = 0; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 35;
-            addFlow(12.0);
+            addFlow(8.0);
             globals.invulnTimer = 2.0;
             globals.invertScreenTimer = 0.25;
             globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffaa00'));
@@ -3003,7 +3015,7 @@ function update(realDt: number) {
             globals.runStats.parries++;
             addCombo();
             globals.hitStop = 0; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 25;
-            addFlow(8.0);
+            addFlow(4.0);
             globals.invulnTimer = 0.8;
             globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, t('parryText'), "#ffd700", 28));
