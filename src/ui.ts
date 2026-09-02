@@ -14,6 +14,7 @@ let dashCooldownOverlay: HTMLElement;
 let dashCooldownText: HTMLElement;
 let attackCooldownOverlay: HTMLElement;
 let ultCooldownOverlay: HTMLElement;
+let ultCooldownText: HTMLElement | null = null;
 let flowMeterFill: HTMLElement;
 let flowMeterContainer: HTMLElement;
 let expMeterFill: HTMLElement;
@@ -27,6 +28,7 @@ let lastDashOverlayHeight = -1;
 let lastDashTextContent = '';
 let lastAttackOverlayHeight = -1;
 let lastUltOverlayHeight = -1;
+let lastUltTextContent = '';
 let lastLives = 5;
 
 // Additional DOM element caches to prevent querySelector / getElementById thrashing
@@ -53,6 +55,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   dashCooldownText = document.getElementById('dash-cooldown-text')!;
   attackCooldownOverlay = document.getElementById('attack-cooldown-overlay')!;
   ultCooldownOverlay = document.getElementById('ult-cooldown-overlay')!;
+  ultCooldownText = document.getElementById('ult-cooldown-text');
   
   flowMeterFill = document.getElementById('flow-meter-fill')!;
   flowMeterContainer = document.getElementById('flow-meter-container')!;
@@ -858,15 +861,30 @@ export function updateCooldownsUI() {
   }
 
   if (ultCooldownOverlay) {
-    const p = Math.round((1 - globals.flow / globals.playerStats.flowMax) * 100);
+    let p = 0;
+    if (globals.ultCooldown > 0) {
+      p = Math.round((globals.ultCooldown / globals.ultCooldownMax) * 100);
+      ultCooldownOverlay.style.background = 'rgba(255, 60, 0, 0.4)';
+    } else {
+      p = Math.round((1 - globals.flow / globals.playerStats.flowMax) * 100);
+      ultCooldownOverlay.style.background = '';
+    }
     if (p !== lastUltOverlayHeight) {
       ultCooldownOverlay.style.height = `${p}%`;
       lastUltOverlayHeight = p;
     }
   }
+
+  if (ultCooldownText) {
+    const text = globals.ultCooldown > 0 ? globals.ultCooldown.toFixed(1) + 's' : '';
+    if (text !== lastUltTextContent) {
+      ultCooldownText.textContent = text;
+      lastUltTextContent = text;
+    }
+  }
   
   if (btnUlt) {
-    const isUltReady = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal';
+    const isUltReady = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
     if (isUltReady !== lastBtnUltReady) {
       if (isUltReady) btnUlt.classList.add('ready');
       else btnUlt.classList.remove('ready');

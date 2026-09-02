@@ -287,8 +287,15 @@ export function initInput() {
 
   btnUlt.addEventListener('touchstart', (e) => { 
     e.preventDefault(); 
+    if (globals.ultCooldown > 0) return;
     globals.mobileUltJustPressed = true; 
   }, { passive: false });
+
+  btnUlt.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (globals.ultCooldown > 0) return;
+    globals.mobileUltJustPressed = true;
+  });
 
   function handleJoystickStart(e: TouchEvent) {
     e.preventDefault(); 

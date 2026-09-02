@@ -729,6 +729,8 @@ function initGame() {
   globals.curseOfGreedActive = false;
   globals.scoreMultiplier = 1;
   globals.activeBladeClash = null;
+  globals.ultCooldown = 0;
+  globals.ultCooldownMax = 6.0;
   
   if (globals.gameMode === 'zen') {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
@@ -2005,7 +2007,7 @@ function addCombo() {
 }
 
 function addFlow(amount: number) {
-  if (globals.flowState !== 'normal') return;
+  if (globals.flowState !== 'normal' || globals.zenFieldActiveTimer > 0) return;
   const prevFlow = globals.flow;
   let mult = globals.playerStats.flowGenMult || 1.0;
   if (globals.difficulty === 'insane') {
@@ -2022,13 +2024,15 @@ function addFlow(amount: number) {
   globals.flow += amount * mult;
   if (globals.flow >= globals.playerStats.flowMax) {
     globals.flow = globals.playerStats.flowMax;
-    document.getElementById('btn-ult')!.classList.add('ready');
-    if (prevFlow < globals.playerStats.flowMax) {
-      playSynthesizedPerfectParry(); 
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, "ULTIMATE READY!", "#ffd700", 32));
-      for(let i=0; i<15; i++) {
-        const speed = 200 + Math.random() * 200;
-        globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#ffd700', speed, 0.8, 3));
+    if (globals.ultCooldown <= 0) {
+      document.getElementById('btn-ult')?.classList.add('ready');
+      if (prevFlow < globals.playerStats.flowMax) {
+        playSynthesizedPerfectParry(); 
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, "ULTIMATE READY!", "#ffd700", 32));
+        for(let i=0; i<15; i++) {
+          const speed = 200 + Math.random() * 200;
+          globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#ffd700', speed, 0.8, 3));
+        }
       }
     }
   }
@@ -2609,8 +2613,19 @@ function update(realDt: number) {
     }
   }
   
-  const autoUltCondition = globals.autoUltEnabled === 'on' && globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal';
-  if (globals.keys[globals.keyMaps.ult] || globals.mobileUltJustPressed || autoUltCondition) {
+  if (globals.ultCooldown > 0) {
+    globals.ultCooldown -= realDt;
+    if (globals.ultCooldown <= 0) {
+      globals.ultCooldown = 0;
+      if (globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal') {
+        playSynthesizedPerfectParry();
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, "ULTIMATE READY!", "#ffd700", 32));
+      }
+    }
+  }
+  
+  const autoUltCondition = globals.autoUltEnabled === 'on' && globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
+  if ((globals.keys[globals.keyMaps.ult] || globals.mobileUltJustPressed || autoUltCondition) && globals.ultCooldown <= 0) {
     globals.mobileUltJustPressed = false;
     globals.keys[globals.keyMaps.ult] = false; // consume key
     activateAwakening();
@@ -2619,11 +2634,19 @@ function update(realDt: number) {
   if (globals.flowState === 'awakened') {
     globals.flow -= (globals.playerStats.flowMax / 6.0) * realDt;
     updateUI();
-    if (globals.flow <= 0) { globals.flow = 0; globals.flowState = 'normal'; }
+    if (globals.flow <= 0) {
+      globals.flow = 0;
+      globals.flowState = 'normal';
+      globals.ultCooldown = globals.ultCooldownMax; // 6s cooldown starts ONLY after awakening duration finishes
+    }
   } else if (globals.flowState === 'storm_god') {
     globals.flow -= (globals.playerStats.flowMax / 8.0) * realDt;
     updateUI();
-    if (globals.flow <= 0) { globals.flow = 0; globals.flowState = 'normal'; }
+    if (globals.flow <= 0) {
+      globals.flow = 0;
+      globals.flowState = 'normal';
+      globals.ultCooldown = globals.ultCooldownMax; // 6s cooldown starts ONLY after awakening duration finishes
+    }
   }
   // Slow-motion time dilation removed completely to prevent perceived lag
   globals.timeSlowDuration = 0;
@@ -2653,6 +2676,7 @@ function update(realDt: number) {
     }
     if (globals.zenFieldActiveTimer <= 0) {
       globals.zenFieldActiveTimer = 0;
+      globals.ultCooldown = globals.ultCooldownMax; // 6s cooldown starts ONLY after Zen Field duration finishes
     }
   }
   

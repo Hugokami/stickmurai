@@ -12,6 +12,8 @@ export const globals = {
   timeSlowDuration: 0,
   targetTimeSlowFactor: 1,
   flow: 0,
+  ultCooldown: 0,
+  ultCooldownMax: 6.0,
   combo: 0,
   comboTimer: 0,
   score: 0,

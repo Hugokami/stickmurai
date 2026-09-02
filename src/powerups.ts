@@ -355,6 +355,7 @@ const ultOptions = [
             // restore 1 Heart
             globals.lives = Math.min(globals.maxLives, globals.lives + 1);
             globals.flowState = 'normal';
+            globals.ultCooldown = globals.ultCooldownMax; // Cooldown starts immediately when Omnislash ends
             globals.timeSlowDuration = 0;
             globals.timeSlowFactor = 1.0;
             globals.targetTimeSlowFactor = 1.0;
@@ -389,7 +390,7 @@ const ultOptions = [
 ];
 
 export function activateAwakening() {
-  if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal') return;
+  if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
   
   playSynthesizedAwaken();
   globals.gameState = 'ultchoice';
