@@ -570,17 +570,50 @@ function loadAnim(folder: string, prefix: string, start: number, end: number, is
   return images;
 }
 
+const enemyFolderMap: Record<string, string> = {
+  sword: 'Sword sprites',
+  fighter: 'Fighter sprites',
+  pistol: 'Pistol sprites',
+  skeleton: 'Skeleton',
+  enemy01: 'Enemy01',
+  enemy02: 'Enemy02',
+  enemy03: 'Enemy03',
+  enemy05: 'Enemy05',
+  heroluneblade: 'HeroLuneblade',
+  heroninja: 'HeroNinja',
+  evil_wizard: 'EvilWizard',
+  enemy_orc: 'EnemyOrc',
+  enemy_barrel: 'EnemyBarrel',
+  boss_agis: 'BossAgis'
+};
+
+export function loadEnemyAssetsNow(type: string) {
+  const folder = enemyFolderMap[type] || type;
+  for (let i = lazyImageQueue.length - 1; i >= 0; i--) {
+    const item = lazyImageQueue[i];
+    if (item.src.includes(folder)) {
+      if (!item.img.src) {
+        item.img.src = item.src;
+      }
+      lazyImageQueue.splice(i, 1);
+    }
+  }
+}
+
 export function startBackgroundAssetLoading() {
-  const batchSize = 16;
+  const batchSize = 3;
   const processBatch = () => {
     if (lazyImageQueue.length === 0) return;
     const batch = lazyImageQueue.splice(0, batchSize);
     for (const item of batch) {
-      item.img.src = item.src;
+      if (!item.img.src) {
+        item.img.src = item.src;
+      }
     }
-    setTimeout(processBatch, 35);
+    setTimeout(processBatch, 350);
   };
-  setTimeout(processBatch, 150);
+  // Wait 4.0 seconds after page load before trickling non-priority assets
+  setTimeout(processBatch, 4000);
 }
 
 export const anims = {

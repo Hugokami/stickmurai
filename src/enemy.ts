@@ -3,7 +3,7 @@ import { callbacks } from './callbacks';
 import { Entity, Particle, FloatingText, Projectile, AnimatedEffect, Shockwave } from './entities';
 import { Player } from './player';
 import { playSound, sfx, playSynthesizedThunder } from './audio';
-import { vfxAnims } from './assets';
+import { vfxAnims, loadEnemyAssetsNow } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -368,6 +368,7 @@ export class Enemy extends Entity {
     this.speed *= speedMult;
     this.lungeSpeed *= speedMult;
     this.chargeTimeMax *= chargeMult;
+    loadEnemyAssetsNow(this.type);
   }
   
   update(dt: number) {
