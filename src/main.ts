@@ -91,6 +91,71 @@ let gravityTickTimer = 0;
 let loaderStickmanFrame = 1;
 let loaderStickmanInterval: any = null;
 let loadingFinished = false;
+let loaderTimeoutId: any = null;
+
+function finishLoading() {
+  if (loadingFinished) return;
+  loadingFinished = true;
+  
+  if (loaderTimeoutId) {
+    clearTimeout(loaderTimeoutId);
+    loaderTimeoutId = null;
+  }
+
+  const fill = document.getElementById('loader-fill');
+  const flare = document.getElementById('loader-bar-flare');
+  const percentText = document.getElementById('loader-percent-text');
+  const text = document.getElementById('loader-text');
+  const statusText = document.getElementById('loader-status');
+
+  if (fill) fill.style.width = '100%';
+  if (flare) flare.style.left = '100%';
+  if (percentText) percentText.innerText = '100%';
+  if (text) {
+    text.innerText = t('tapToContinue') || 'TAP / CLICK TO CONTINUE';
+    text.classList.add('ready-to-continue');
+  }
+  if (statusText) statusText.innerText = "READY";
+
+  const loaderScreen = document.getElementById('loader-screen');
+  if (loaderScreen && !loaderScreen.dataset.bound) {
+    loaderScreen.dataset.bound = 'true';
+    let transitioned = false;
+    const onContinue = (e?: Event) => {
+      if (transitioned) return;
+      transitioned = true;
+      if (e) e.stopPropagation();
+      loaderScreen.removeEventListener('click', onContinue);
+      loaderScreen.removeEventListener('touchstart', onContinue);
+      loaderScreen.removeEventListener('pointerdown', onContinue);
+      
+      clearInterval(tipsInterval);
+      if (loaderStickmanInterval) {
+        clearInterval(loaderStickmanInterval);
+      }
+      
+      const proceedToMenu = () => {
+        loaderScreen.classList.add('fade-out');
+        setTimeout(() => {
+          loaderScreen.classList.add('hidden');
+          const mainMenu = document.getElementById('main-menu');
+          if (mainMenu) mainMenu.style.display = 'flex';
+        }, 500);
+      };
+
+      tryEnterFullscreen(proceedToMenu);
+    };
+
+    loaderScreen.addEventListener('click', onContinue);
+    loaderScreen.addEventListener('touchstart', onContinue);
+    loaderScreen.addEventListener('pointerdown', onContinue);
+
+    // Auto-proceed after 800ms so mobile players don't need to guess to tap
+    setTimeout(() => {
+      onContinue();
+    }, 800);
+  }
+}
 
 function startLoaderStickmanAnimation() {
   const img = document.getElementById('loader-stickman-img') as HTMLImageElement;
@@ -148,42 +213,7 @@ function updateLoaderProgress() {
   }
   
   if (globals.assetsLoadedCount >= globals.totalAssetsToLoad && !loadingFinished) {
-    loadingFinished = true;
-    
-    // Update labels immediately to show tap to continue
-    if (text) {
-      text.innerText = t('tapToContinue') || 'TAP / CLICK TO CONTINUE';
-      text.classList.add('ready-to-continue');
-    }
-    if (statusText) statusText.innerText = "READY";
-    
-    const loaderScreen = document.getElementById('loader-screen');
-    if (loaderScreen && !loaderScreen.dataset.bound) {
-      loaderScreen.dataset.bound = 'true';
-      const onContinue = () => {
-        if (!loadingFinished) return;
-        loaderScreen.removeEventListener('click', onContinue);
-        loaderScreen.removeEventListener('touchstart', onContinue);
-        
-        clearInterval(tipsInterval);
-        if (loaderStickmanInterval) {
-          clearInterval(loaderStickmanInterval);
-        }
-        
-        const proceedToMenu = () => {
-          loaderScreen.classList.add('fade-out');
-          setTimeout(() => {
-            loaderScreen.classList.add('hidden');
-            const mainMenu = document.getElementById('main-menu');
-            if (mainMenu) mainMenu.style.display = 'flex';
-          }, 500);
-        };
-
-        tryEnterFullscreen(proceedToMenu);
-      };
-      loaderScreen.addEventListener('click', onContinue);
-      loaderScreen.addEventListener('touchstart', onContinue);
-    }
+    finishLoading();
   }
 }
 
@@ -225,22 +255,22 @@ function tryEnterFullscreen(onComplete: () => void) {
         res.then(() => {
           onComplete();
         }).catch((err: any) => {
-          console.warn("Fullscreen request rejected:", err);
-          showFullscreenPrompt(onComplete);
+          console.warn("Fullscreen request rejected (continuing):", err);
+          onComplete();
         });
       } else {
         onComplete();
       }
     } catch (err) {
-      console.warn("Fullscreen request crashed:", err);
-      showFullscreenPrompt(onComplete);
+      console.warn("Fullscreen request crashed (continuing):", err);
+      onComplete();
     }
   } else {
     onComplete();
   }
 }
 
-function showFullscreenPrompt(onComplete: () => void) {
+export function showFullscreenPrompt(onComplete: () => void) {
   const prompt = document.getElementById('fullscreen-prompt');
   if (!prompt) {
     onComplete();
@@ -252,7 +282,8 @@ function showFullscreenPrompt(onComplete: () => void) {
   const btnYes = document.getElementById('fs-btn-yes');
   const btnNo = document.getElementById('fs-btn-no');
   
-  const handleYes = () => {
+  const handleYes = (e?: Event) => {
+    if (e) e.stopPropagation();
     prompt.style.display = 'none';
     cleanup();
     const docEl = document.documentElement as any;
@@ -275,7 +306,8 @@ function showFullscreenPrompt(onComplete: () => void) {
     }
   };
   
-  const handleNo = () => {
+  const handleNo = (e?: Event) => {
+    if (e) e.stopPropagation();
     prompt.style.display = 'none';
     cleanup();
     onComplete();
@@ -283,24 +315,54 @@ function showFullscreenPrompt(onComplete: () => void) {
   
   const cleanup = () => {
     btnYes?.removeEventListener('click', handleYes);
+    btnYes?.removeEventListener('pointerdown', handleYes);
     btnNo?.removeEventListener('click', handleNo);
+    btnNo?.removeEventListener('pointerdown', handleNo);
   };
   
   btnYes?.addEventListener('click', handleYes);
+  btnYes?.addEventListener('pointerdown', handleYes);
   btnNo?.addEventListener('click', handleNo);
+  btnNo?.addEventListener('pointerdown', handleNo);
 }
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+let rotatePromptDismissed = false;
 
 function checkOrientationAndFullscreen() {
   if (!isMobile) return;
 
   const rotatePrompt = document.getElementById('rotate-prompt');
   const fsEnterBtn = document.getElementById('fs-enter-btn') as HTMLButtonElement;
+  const rotateDismissBtn = document.getElementById('rotate-dismiss-btn') as HTMLButtonElement;
+  const rotateCloseBtn = document.getElementById('rotate-close-btn') as HTMLButtonElement;
   const rotateMessage = document.getElementById('rotate-message');
   const iosPwaTip = document.getElementById('ios-pwa-tip');
 
   if (!rotatePrompt) return;
+
+  const dismissRotate = (e?: Event) => {
+    if (e) e.stopPropagation();
+    rotatePromptDismissed = true;
+    rotatePrompt.style.display = 'none';
+  };
+
+  if (rotateCloseBtn && !rotateCloseBtn.dataset.bound) {
+    rotateCloseBtn.dataset.bound = 'true';
+    rotateCloseBtn.addEventListener('click', dismissRotate);
+    rotateCloseBtn.addEventListener('pointerdown', dismissRotate);
+  }
+
+  if (rotateDismissBtn && !rotateDismissBtn.dataset.bound) {
+    rotateDismissBtn.dataset.bound = 'true';
+    rotateDismissBtn.addEventListener('click', dismissRotate);
+    rotateDismissBtn.addEventListener('pointerdown', dismissRotate);
+  }
+
+  if (rotatePromptDismissed) {
+    rotatePrompt.style.display = 'none';
+    return;
+  }
 
   const isPortrait = window.innerHeight > window.innerWidth;
   const fsApproved = localStorage.getItem('stickmurai_fs_approved') === 'true';
@@ -332,29 +394,31 @@ function checkOrientationAndFullscreen() {
           fsEnterBtn.innerText = globals.currentLang === 'ja' ? '確認' : 'CONFIRM';
           if (!fsEnterBtn.dataset.bound) {
             fsEnterBtn.dataset.bound = 'true';
-            const enterFS = () => {
+            const enterFS = (e?: Event) => {
+              if (e) e.stopPropagation();
               localStorage.setItem('stickmurai_fs_approved', 'true');
               const requestFS = docEl.requestFullscreen || 
                                 docEl.webkitRequestFullscreen || 
                                 docEl.mozRequestFullScreen || 
                                 docEl.msRequestFullscreen;
               if (requestFS) {
-                requestFS.call(docEl).catch((err: any) => {
-                  console.warn("Fullscreen request rejected:", err);
-                });
+                try {
+                  requestFS.call(docEl).catch((err: any) => {
+                    console.warn("Fullscreen request rejected:", err);
+                  });
+                } catch(e) {}
               }
               if (screen.orientation && (screen.orientation as any).lock) {
-                (screen.orientation as any).lock('landscape').catch((err: any) => {
-                  console.warn("Orientation lock rejected:", err);
-                });
+                try {
+                  (screen.orientation as any).lock('landscape').catch((err: any) => {
+                    console.warn("Orientation lock rejected:", err);
+                  });
+                } catch(e) {}
               }
               checkOrientationAndFullscreen();
             };
             fsEnterBtn.addEventListener('click', enterFS);
-            fsEnterBtn.addEventListener('touchstart', (e) => {
-              e.preventDefault();
-              enterFS();
-            });
+            fsEnterBtn.addEventListener('pointerdown', enterFS);
           }
         }
       } else {
@@ -378,29 +442,31 @@ function checkOrientationAndFullscreen() {
         fsEnterBtn.innerText = globals.currentLang === 'ja' ? '確認' : 'CONFIRM';
         if (!fsEnterBtn.dataset.bound) {
           fsEnterBtn.dataset.bound = 'true';
-          const enterFS = () => {
+          const enterFS = (e?: Event) => {
+            if (e) e.stopPropagation();
             localStorage.setItem('stickmurai_fs_approved', 'true');
             const requestFS = docEl.requestFullscreen || 
                               docEl.webkitRequestFullscreen || 
                               docEl.mozRequestFullScreen || 
                               docEl.msRequestFullscreen;
             if (requestFS) {
-              requestFS.call(docEl).catch((err: any) => {
-                console.warn("Fullscreen request rejected:", err);
-              });
+              try {
+                requestFS.call(docEl).catch((err: any) => {
+                  console.warn("Fullscreen request rejected:", err);
+                });
+              } catch(e) {}
             }
             if (screen.orientation && (screen.orientation as any).lock) {
-              (screen.orientation as any).lock('landscape').catch((err: any) => {
-                console.warn("Orientation lock rejected:", err);
-              });
+              try {
+                (screen.orientation as any).lock('landscape').catch((err: any) => {
+                  console.warn("Orientation lock rejected:", err);
+                });
+              } catch(e) {}
             }
             rotatePrompt.style.display = 'none';
           };
           fsEnterBtn.addEventListener('click', enterFS);
-          fsEnterBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            enterFS();
-          });
+          fsEnterBtn.addEventListener('pointerdown', enterFS);
         }
       }
       if (iosPwaTip) iosPwaTip.style.display = 'none';
@@ -413,20 +479,24 @@ function checkOrientationAndFullscreen() {
                             docEl.mozRequestFullScreen || 
                             docEl.msRequestFullscreen;
           if (requestFS) {
-            requestFS.call(docEl).catch((err: any) => {
-              console.warn("Auto-fullscreen on gesture rejected:", err);
-            });
+            try {
+              requestFS.call(docEl).catch((err: any) => {
+                console.warn("Auto-fullscreen on gesture rejected:", err);
+              });
+            } catch(e) {}
           }
           if (screen.orientation && (screen.orientation as any).lock) {
-            (screen.orientation as any).lock('landscape').catch((err: any) => {
-              console.warn("Orientation lock on gesture rejected:", err);
-            });
+            try {
+              (screen.orientation as any).lock('landscape').catch((err: any) => {
+                console.warn("Orientation lock on gesture rejected:", err);
+              });
+            } catch(e) {}
           }
           document.removeEventListener('click', triggerFSOnGesture);
-          document.removeEventListener('touchstart', triggerFSOnGesture);
+          document.removeEventListener('pointerdown', triggerFSOnGesture);
         };
-        document.addEventListener('click', triggerFSOnGesture);
-        document.addEventListener('touchstart', triggerFSOnGesture);
+        document.addEventListener('click', triggerFSOnGesture, { once: true });
+        document.addEventListener('pointerdown', triggerFSOnGesture, { once: true });
       }
     }
   }
@@ -457,6 +527,18 @@ function startApp() {
 
   setupPvpRematchListeners();
 
+  // Allow early tap-to-skip on loader screen
+  const loaderScreen = document.getElementById('loader-screen');
+  if (loaderScreen) {
+    const earlySkip = (e: Event) => {
+      e.stopPropagation();
+      finishLoading();
+    };
+    loaderScreen.addEventListener('click', earlySkip, { once: true });
+    loaderScreen.addEventListener('touchstart', earlySkip, { once: true });
+    loaderScreen.addEventListener('pointerdown', earlySkip, { once: true });
+  }
+
   // Setup loader video events and programmatically trigger play
   const loaderVideo = document.getElementById('loader-video') as HTMLVideoElement;
   if (loaderVideo) {
@@ -485,6 +567,11 @@ function startApp() {
 
   startLoaderStickmanAnimation();
   setTimeout(updateLoaderProgress, 0);
+
+  // Hard safety timeout: if assets hang on mobile WebKit/cellular, finish loading after 2.5s
+  loaderTimeoutId = setTimeout(() => {
+    finishLoading();
+  }, 2500);
 }
 
 if (document.readyState === 'loading') {
@@ -840,13 +927,20 @@ function initGame() {
 
   // Apply Campaign / Ascension Upgrades (Permanent progression)
   if (globals.campaignUpgrades) {
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + (globals.campaignUpgrades.katana_dmg || 0) * 2;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + (globals.campaignUpgrades.iaijutsu_shock || 0) * 4;
-    globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + (globals.campaignUpgrades.iaijutsu_shock || 0) * 0.15;
-    globals.maxLives += (globals.campaignUpgrades.bushido_hp || 0);
+    const cu = globals.campaignUpgrades as any;
+    const slashLvl = cu.slashDamage ?? cu.katana_dmg ?? 0;
+    const iaijutsuLvl = cu.iaijutsuPower ?? cu.iaijutsu_shock ?? 0;
+    const hpLvl = cu.maxLives ?? cu.bushido_hp ?? 0;
+    const dashLvl = cu.dashCooldown ?? cu.phantom_dash ?? 0;
+    const flowLvl = cu.spiritResonance ?? cu.flow_resonance ?? 0;
+
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + slashLvl * 2;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + iaijutsuLvl * 4;
+    globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + iaijutsuLvl * 0.15;
+    globals.maxLives += hpLvl;
     globals.lives = globals.maxLives;
-    globals.playerStats.dashCooldownBase = Math.max(0.4, globals.playerStats.dashCooldownBase - (globals.campaignUpgrades.phantom_dash || 0) * 0.15);
-    globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) + (globals.campaignUpgrades.flow_resonance || 0) * 0.25;
+    globals.playerStats.dashCooldownBase = Math.max(0.4, globals.playerStats.dashCooldownBase - dashLvl * 0.15);
+    globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) + flowLvl * 0.25;
   }
 
   // Initialize Stage Mode Objectives

@@ -30,10 +30,14 @@
   <body style="background:#090a0f;margin:0;padding:0;">
     <!-- Rotate & Fullscreen Device Prompt -->
     <div id="rotate-prompt">
+      <button id="rotate-close-btn" class="modal-close-btn" style="position: absolute; top: 16px; right: 16px; width: 38px; height: 38px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 50%; color: #ffd700; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">✕</button>
       <div class="rotate-icon">📱</div>
       <h2 style="font-family: 'Shojumaru', cursive; color: #ffd700; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: clamp(20px, 4vw, 32px);">LANDSCAPE & FULLSCREEN</h2>
       <p id="rotate-message" style="margin-bottom: 15px;"><strong data-i18n="rotatePrompt">Rotate and enter full screen?</strong></p>
-      <button id="fs-enter-btn" class="menu-btn" style="display: none; border-color: #ffd700; color: #ffd700; margin-top: 10px; font-size: 14px; padding: 10px 20px; width: auto; max-width: none;">CONFIRM</button>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
+        <button id="fs-enter-btn" class="menu-btn btn-compact" style="display: none; border-color: #ffd700; color: #ffd700; font-size: 13px; padding: 8px 18px; width: auto; max-width: none;">CONFIRM</button>
+        <button id="rotate-dismiss-btn" class="menu-btn btn-compact exit-btn" style="font-size: 13px; padding: 8px 18px; width: auto; max-width: none;" data-i18n="rotateDismiss">PLAY ANYWAY ✕</button>
+      </div>
       <p id="ios-pwa-tip" style="display: none; font-size: 11px; color: #8a8d9a; margin-top: 15px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4; max-width: 320px;">Tip: For actual fullscreen with no browser bars on iOS, tap <span style="font-size: 15px;">⎋</span> (Share) -> Add to Home Screen.</p>
     </div>
 

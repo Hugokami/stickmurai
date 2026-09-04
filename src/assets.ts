@@ -6,6 +6,7 @@ export const i18n: Record<string, Record<string, string>> = {
   en: {
     rotatePrompt: "Rotate and enter full screen?",
     rotateInstruction: "Please physically rotate your device to landscape mode.",
+    rotateDismiss: "PLAY ANYWAY ✕",
     flow: "FLOW",
     expLvl: "EXP Lvl",
     btnDash: "DASH",
@@ -260,6 +261,7 @@ export const i18n: Record<string, Record<string, string>> = {
   ja: {
     rotatePrompt: "画面を回転して全画面表示にしますか？",
     rotateInstruction: "デバイスを横向き（ランドスケープ）に回転させてください。",
+    rotateDismiss: "このままプレイ ✕",
     flow: "気 (FLOW)",
     expLvl: "レベル",
     btnDash: "回避",
