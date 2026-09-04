@@ -56,16 +56,16 @@ let hudMagatamaElement: HTMLElement | null = null;
 let cachedOnPlayCallback: (() => void) | null = null;
 
 export const STAGES = [
-  { id: 1, name: 'STAGE 1: BAMBOO GROVE', nameJa: 'ステージ1: 竹林の覚醒', desc: 'Target: 12 Kills // Grunts & Rogues' },
-  { id: 2, name: 'STAGE 2: FOREST OUTPOST', nameJa: 'ステージ2: 狼の群れ', desc: 'Target: 15 Kills // Wolf Packs & Assassins' },
-  { id: 3, name: 'STAGE 3: SIEGE WORKSHOP', nameJa: 'ステージ3: 機巧工房', desc: 'Target: 18 Kills // Barrel Bombers & Musketeers' },
-  { id: 4, name: 'STAGE 4: IRON BASTION', nameJa: 'ステージ4: 鉄壁の要塞', desc: 'Target: 22 Kills // Heavy Orc Brutes & Frost Sentinels' },
-  { id: 5, name: 'STAGE 5: YOMI GATEWAY', nameJa: 'ステージ5: 黄泉の門', desc: 'BOSS BATTLE // Skeleton Oni Overlord' },
-  { id: 6, name: 'STAGE 6: CURSED GRAVEYARD', nameJa: 'ステージ6: 呪われた墓所', desc: 'Target: 25 Kills // Necromancers & Barrel Bombers' },
-  { id: 7, name: 'STAGE 7: BLOOD RIVER', nameJa: 'ステージ7: 血潮の河原', desc: 'Target: 28 Kills // Chaos Vanguard & Pyromancers' },
-  { id: 8, name: 'STAGE 8: CASTLE RAMPARTS', nameJa: 'ステージ8: 漆黒の城壁', desc: 'Target: 30 Kills // Shogun Guards & Orc Brutes' },
-  { id: 9, name: 'STAGE 9: THRONE ANTECHAMBER', nameJa: 'ステージ9: 謁見の間', desc: 'Target: 35 Kills // Purgatory Elite Rampage' },
-  { id: 10, name: 'STAGE 10: SANCTUM OF OBLIVION', nameJa: 'ステージ10: 忘却の聖域', desc: 'FINAL BOSS // Colossus Agis & Divine Shogun' }
+  { id: 1, name: 'BAMBOO GROVE', nameJa: '竹林の覚醒', desc: 'Target: 25 Kills // Grunts & Rogues' },
+  { id: 2, name: 'FOREST OUTPOST', nameJa: '狼の群れ', desc: 'Target: 35 Kills // Wolf Packs & Assassins' },
+  { id: 3, name: 'SIEGE WORKSHOP', nameJa: '機巧工房', desc: 'Target: 45 Kills // Barrel Bombers & Musketeers' },
+  { id: 4, name: 'IRON BASTION', nameJa: '鉄壁の要塞', desc: 'Target: 55 Kills // Heavy Orc Brutes & Frost Sentinels' },
+  { id: 5, name: 'YOMI GATEWAY', nameJa: '黄泉の門', desc: 'BOSS BATTLE // Skeleton Oni Overlord' },
+  { id: 6, name: 'CURSED GRAVEYARD', nameJa: '呪われた墓所', desc: 'Target: 40 Kills // Necromancers & Barrel Bombers' },
+  { id: 7, name: 'BLOOD RIVER', nameJa: '血潮の河原', desc: 'Target: 50 Kills // Chaos Vanguard & Pyromancers' },
+  { id: 8, name: 'CASTLE RAMPARTS', nameJa: '漆黒の城壁', desc: 'Target: 60 Kills // Shogun Guards & Orc Brutes' },
+  { id: 9, name: 'THRONE ANTECHAMBER', nameJa: '謁見の間', desc: 'Target: 70 Kills // Purgatory Elite Rampage' },
+  { id: 10, name: 'SANCTUM OF OBLIVION', nameJa: '忘却の聖域', desc: 'FINAL BOSS // Colossus Agis & Divine Shogun' }
 ];
 
 export const ASCENSION_UPGRADES = [
@@ -237,7 +237,8 @@ export function updateStageSelectionUI() {
   const nameEl = document.getElementById('stage-select-name');
   const descEl = document.getElementById('stage-select-desc');
   if (nameEl && stageData) {
-    nameEl.textContent = isJa ? stageData.nameJa : stageData.name;
+    const sName = isJa ? stageData.nameJa : stageData.name;
+    nameEl.textContent = isJa ? `ステージ ${current}: ${sName}` : `STAGE ${current}: ${sName}`;
   }
   if (descEl && stageData) {
     descEl.textContent = stageData.desc;
@@ -507,6 +508,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const openGrimoireBtn = document.getElementById('open-grimoire-btn');
   const pauseGrimoireBtn = document.getElementById('pause-grimoire-btn');
   const closeGrimoireBtn = document.getElementById('close-grimoire-btn');
+  const closeGrimoireXBtn = document.getElementById('close-grimoire-x-btn');
 
   const openGrimoire = () => {
     if (grimoireScreen) {
@@ -520,10 +522,14 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   bindDualListener(closeGrimoireBtn, () => {
     if (grimoireScreen) grimoireScreen.style.display = 'none';
   });
+  bindDualListener(closeGrimoireXBtn, () => {
+    if (grimoireScreen) grimoireScreen.style.display = 'none';
+  });
 
   const chronicleScreen = document.getElementById('chronicle-screen');
   const openChronicleBtn = document.getElementById('open-chronicle-btn');
   const closeChronicleBtn = document.getElementById('close-chronicle-btn');
+  const closeChronicleXBtn = document.getElementById('close-chronicle-x-btn');
 
   bindDualListener(openChronicleBtn, () => {
     if (chronicleScreen) {
@@ -532,6 +538,9 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     }
   });
   bindDualListener(closeChronicleBtn, () => {
+    if (chronicleScreen) chronicleScreen.style.display = 'none';
+  });
+  bindDualListener(closeChronicleXBtn, () => {
     if (chronicleScreen) chronicleScreen.style.display = 'none';
   });
 
@@ -1517,7 +1526,9 @@ export function updateUI() {
         let text = '';
         if (isBoss) {
           const bossStageData = getStageData(stage);
-          text = `STAGE ${stage}: ${isJa ? (bossStageData.nameJa || bossStageData.name) : bossStageData.name}`;
+          const rawName = isJa ? (bossStageData.nameJa || bossStageData.name) : bossStageData.name;
+          const cleanName = rawName.replace(/^ステージ\s*\d+:\s*|^STAGE\s*\d+:\s*/i, '');
+          text = isJa ? `ステージ ${stage}: ${cleanName}` : `STAGE ${stage}: ${cleanName}`;
         } else {
           text = `STAGE ${stage}: ${globals.stageKills} / ${globals.stageTargetKills} KILLS`;
         }
@@ -2306,6 +2317,10 @@ export function populateAscensionUpgrades() {
 
 export function triggerStageClear() {
   globals.gameState = 'paused';
+  const levelUpModal = document.getElementById('level-up-screen');
+  if (levelUpModal) levelUpModal.style.display = 'none';
+  const ultModal = document.getElementById('ult-screen');
+  if (ultModal) ultModal.style.display = 'none';
   const modal = document.getElementById('stage-clear-modal');
   if (!modal) return;
 

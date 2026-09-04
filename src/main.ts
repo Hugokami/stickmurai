@@ -997,12 +997,12 @@ function initGame() {
   const currentStage = globals.currentStage || 1;
   const isBossStage = currentStage % 5 === 0;
   const stageTargets: Record<number, number> = {
-    1: 12, 2: 15, 3: 18, 4: 22, 5: 1, 6: 25, 7: 28, 8: 30, 9: 35, 10: 1
+    1: 25, 2: 35, 3: 45, 4: 55, 5: 1, 6: 40, 7: 50, 8: 60, 9: 70, 10: 1
   };
   if (isBossStage) {
     globals.stageTargetKills = 1;
   } else {
-    globals.stageTargetKills = stageTargets[currentStage] || Math.min(50, 10 + currentStage * 3);
+    globals.stageTargetKills = stageTargets[currentStage] || Math.min(90, 35 + currentStage * 4);
   }
 
   // Active Stage Affix (Calamity Winds for Stages >= 6)
@@ -1028,25 +1028,6 @@ function initGame() {
     }
   } else {
     globals.activeStageAffix = null;
-  }
-
-  // Torii Fast-Forward: Catch-up perk picks when jumping straight into higher stages
-  if (globals.gameMode === 'classic' && currentStage > 1) {
-    const catchUpCount = Math.min(5, Math.floor((currentStage - 1) / 2));
-    if (catchUpCount > 0) {
-      for (let i = 0; i < catchUpCount; i++) {
-        applyRandomStartUpgrade();
-      }
-      const catchUpMsg = globals.currentLang === 'ja'
-        ? `⛩️ 鳥居の加護: ${catchUpCount}つの能力解放！`
-        : `⛩️ TORII CATCH-UP: +${catchUpCount} BLESSINGS!`;
-      globals.delayedActions.push({
-        delay: 0.25,
-        run: () => {
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 95, catchUpMsg, '#ffd700', 26));
-        }
-      });
-    }
   }
 
   // Cinematic Boss Encounter Announcement
@@ -1405,6 +1386,13 @@ export function triggerStormGodLightning(x: number, y: number) {
 export function triggerZanFinisher(onComplete: () => void) {
   if (isZanFinisherActive) return;
   isZanFinisherActive = true;
+  globals.gameState = 'stageclear';
+
+  // Immediately hide and cancel any active or queued level-up or ult popups
+  const levelUpModal = document.getElementById('level-up-screen');
+  if (levelUpModal) levelUpModal.style.display = 'none';
+  const ultModal = document.getElementById('ult-screen');
+  if (ultModal) ultModal.style.display = 'none';
 
   // 1. Visceral Audio Cues
   playSynthesizedSingingBowl();
@@ -2380,6 +2368,12 @@ function killEnemy(e: Enemy) {
     const isBossStage = stage % 5 === 0;
     const isBossDefeated = e.subType === 'oni_boss' || e.subType === 'agis_colossus' || e.subType === 'shogun_boss' || (e as any).isBoss;
     if ((isBossStage && isBossDefeated) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
+      globals.gameState = 'stageclear';
+      const lvlScreen = document.getElementById('level-up-screen');
+      if (lvlScreen) lvlScreen.style.display = 'none';
+      const ultScreen = document.getElementById('ult-screen');
+      if (ultScreen) ultScreen.style.display = 'none';
+
       if (!isZanFinisherActive && callbacks.triggerStageClear) {
         triggerZanFinisher(() => {
           callbacks.triggerStageClear();

@@ -241,6 +241,7 @@ export const FUSION_RECIPES: FusionRecipe[] = [
 ];
 
 export function triggerLevelUp() {
+  if (globals.gameState !== 'playing') return;
   playSynthesizedLevelUp();
   globals.gameState = 'levelup';
   

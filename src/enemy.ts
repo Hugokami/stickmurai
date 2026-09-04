@@ -256,49 +256,49 @@ export class Enemy extends Entity {
     if (this.subType === 'brawler') {
       this.type = 'enemy01';
       this.lungeSpeed = 950; this.chargeTimeMax = 1.6; this.lungeDuration = 0.5;
-      this.scaleMult = 1; this.hp = this.maxHp = 4; this.expValue = 1;
+      this.scaleMult = 1; this.hp = this.maxHp = 6; this.expValue = 1;
       this.colorTint = 'none';
       this.speed = 260;
       this.maxPosture = 50;
     } else if (this.subType === 'samurai') {
       this.type = 'enemy02';
       this.lungeSpeed = 900; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
-      this.scaleMult = 1.1; this.hp = this.maxHp = 4; this.expValue = 1;
+      this.scaleMult = 1.1; this.hp = this.maxHp = 7; this.expValue = 1;
       this.colorTint = 'none';
       this.speed = 260;
       this.maxPosture = 60;
     } else if (this.subType === 'ronin') {
       this.type = 'enemy03';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.8; this.lungeDuration = 0.7;
-      this.scaleMult = 1.2; this.hp = this.maxHp = 6; this.expValue = 2;
+      this.scaleMult = 1.2; this.hp = this.maxHp = 10; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 260;
       this.maxPosture = 80;
     } else if (this.subType === 'berserker') {
       this.type = 'enemy02';
       this.lungeSpeed = 1300; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
-      this.scaleMult = 1.3; this.hp = this.maxHp = 8; this.expValue = 3;
+      this.scaleMult = 1.3; this.hp = this.maxHp = 12; this.expValue = 3;
       this.colorTint = 'none';
       this.speed = 320;
       this.maxPosture = 100;
     } else if (this.subType === 'giant') {
       this.type = 'enemy03';
       this.lungeSpeed = 650; this.chargeTimeMax = 2.4; this.lungeDuration = 0.8;
-      this.scaleMult = 2; this.hp = this.maxHp = 10; this.expValue = 4;
+      this.scaleMult = 2; this.hp = this.maxHp = 18; this.expValue = 4;
       this.colorTint = 'none';
       this.speed = 150;
       this.maxPosture = 140;
     } else if (this.subType === 'assassin') {
       this.type = 'enemy01';
       this.lungeSpeed = 1500; this.chargeTimeMax = 1.0; this.lungeDuration = 0.4;
-      this.scaleMult = 0.8; this.hp = this.maxHp = 3; this.expValue = 2;
+      this.scaleMult = 0.8; this.hp = this.maxHp = 5; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 360;
       this.maxPosture = 40;
     } else if (this.subType === 'musketeer') {
       this.type = 'enemy05';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.5; this.lungeDuration = 0.55; // Double-shot projectile
-      this.scaleMult = 1.6; this.hp = this.maxHp = 2; this.expValue = 2;
+      this.scaleMult = 1.6; this.hp = this.maxHp = 4; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 180;
       this.maxPosture = 45;
@@ -312,56 +312,56 @@ export class Enemy extends Entity {
     } else if (this.subType === 'glacial_sentinel') {
       this.type = 'enemy02';
       this.lungeSpeed = 850; this.chargeTimeMax = 2.0; this.lungeDuration = 0.7;
-      this.scaleMult = 1.4; this.hp = this.maxHp = 12; this.expValue = 5;
+      this.scaleMult = 1.4; this.hp = this.maxHp = 14; this.expValue = 5;
       this.colorTint = '#60a5fa';
       this.speed = 190;
       this.maxPosture = 110;
     } else if (this.subType === 'astromancer') {
       this.type = 'enemy01';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.3; this.lungeDuration = 0.5;
-      this.scaleMult = 1.5; this.hp = this.maxHp = 6; this.expValue = 5;
+      this.scaleMult = 1.5; this.hp = this.maxHp = 7; this.expValue = 5;
       this.colorTint = '#f43f5e';
       this.speed = 210;
       this.maxPosture = 60;
     } else if (this.subType === 'necromancer') {
       this.type = 'enemy05';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.7; this.lungeDuration = 0.6;
-      this.scaleMult = 1.8; this.hp = this.maxHp = 20; this.expValue = 8;
+      this.scaleMult = 1.8; this.hp = this.maxHp = 22; this.expValue = 8;
       this.colorTint = '#a855f7';
       this.speed = 150;
       this.maxPosture = 120;
     } else if (this.subType === 'oni_boss') {
       this.type = 'skeleton';
       this.lungeSpeed = 1000; this.chargeTimeMax = 2.0; this.lungeDuration = 0.8;
-      this.scaleMult = 2.2; this.hp = this.maxHp = 120; this.expValue = 15;
+      this.scaleMult = 2.2; this.hp = this.maxHp = 140; this.expValue = 15;
       this.colorTint = 'none';
       this.speed = 260;
       this.maxPosture = 250;
     } else if (this.subType === 'barrel_bomber') {
       this.type = 'enemy_barrel';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
-      this.scaleMult = 1.1; this.hp = this.maxHp = 3; this.expValue = 2;
+      this.scaleMult = 1.1; this.hp = this.maxHp = 6; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 340;
       this.maxPosture = 35;
     } else if (this.subType === 'orc_brute') {
       this.type = 'enemy_orc';
       this.lungeSpeed = 800; this.chargeTimeMax = 1.8; this.lungeDuration = 0.65;
-      this.scaleMult = 1.2; this.hp = this.maxHp = 10; this.expValue = 4;
+      this.scaleMult = 1.2; this.hp = this.maxHp = 16; this.expValue = 4;
       this.colorTint = 'none';
       this.speed = 220;
       this.maxPosture = 130;
     } else if (this.subType === 'agis_colossus') {
       this.type = 'boss_agis';
       this.lungeSpeed = 650; this.chargeTimeMax = 2.4; this.lungeDuration = 0.8;
-      this.scaleMult = 1.6; this.hp = this.maxHp = 180; this.expValue = 30;
+      this.scaleMult = 1.6; this.hp = this.maxHp = 240; this.expValue = 30;
       this.colorTint = 'none';
       this.speed = 180;
       this.maxPosture = 360;
     } else { // shogun_boss
       this.type = 'evil_wizard';
       this.lungeSpeed = 1300; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
-      this.scaleMult = 2.0; this.hp = this.maxHp = 100; this.expValue = 20;
+      this.scaleMult = 2.0; this.hp = this.maxHp = 180; this.expValue = 20;
       this.colorTint = 'none';
       this.speed = 260;
       this.maxPosture = 280;
