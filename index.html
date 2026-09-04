@@ -674,7 +674,10 @@
           <div id="shrine-modal-reward" style="color: #fef08a; background: rgba(254, 240, 138, 0.1); border: 1px solid rgba(254, 240, 138, 0.3); border-radius: 8px; padding: 10px; font-family: 'Space Mono', monospace; font-size: 12px; margin-bottom: 24px; font-weight: bold;">
             <!-- Permanent reward description -->
           </div>
-          <button id="shrine-claim-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); width: 100%;">SHATTER THE SEAL</button>
+          <div style="display: flex; gap: 12px; width: 100%;">
+            <button id="shrine-leave-btn" class="menu-btn exit-btn" style="flex: 1; margin: 0; min-height: 48px;">Leave</button>
+            <button id="shrine-claim-btn" class="menu-btn" style="flex: 2; margin: 0; border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); min-height: 48px;">SHATTER THE SEAL</button>
+          </div>
         </div>
       </div>
 
@@ -682,19 +685,15 @@
       <div id="hermit-modal" class="overlay" style="display:none; z-index: 9500; background: rgba(15, 8, 5, 0.92); backdrop-filter: blur(8px);">
         <div class="menu-box" style="max-width: 520px; width: 90vw; text-align: center; border-color: #f97316; box-shadow: 0 0 35px rgba(249, 115, 22, 0.35); padding: 26px;">
           <div style="font-size: 32px; margin-bottom: 10px;">🔥</div>
-          <h2 style="font-family: 'Shojumaru', cursive; color: #f97316; margin-bottom: 8px; text-shadow: 0 0 15px rgba(249, 115, 22, 0.5);">WANDERING HERMIT</h2>
-          <p id="hermit-dialogue" style="color: #cbd5e1; font-family: 'Georgia', serif; font-size: 14px; line-height: 1.6; margin-bottom: 20px; font-style: italic;">
+          <h2 id="hermit-modal-title" style="font-family: 'Shojumaru', cursive; color: #f97316; margin-bottom: 8px; text-shadow: 0 0 15px rgba(249, 115, 22, 0.5);">WANDERING HERMIT</h2>
+          <p id="hermit-modal-desc" style="color: #cbd5e1; font-family: 'Georgia', serif; font-size: 14px; line-height: 1.6; margin-bottom: 20px; font-style: italic;">
             "A wandering ghost seeking vengeance in Yomi? The fire is warm, but steel demands sacrifice. What say you to a bargain?"
           </p>
-          <div id="hermit-pact-card" style="background: rgba(30, 15, 5, 0.85); border: 1px solid #f97316; border-radius: 10px; padding: 14px; margin-bottom: 22px; text-align: left;">
-            <div id="hermit-pact-title" style="color: #fed7aa; font-weight: bold; font-family: 'Orbitron'; font-size: 14px; margin-bottom: 6px;">FAUSTIAN BLADE</div>
-            <div id="hermit-pact-cost" style="color: #ef4444; font-size: 12px; margin-bottom: 4px; font-family: 'Space Mono';">SACRIFICE: -1 Maximum Heart</div>
-            <div id="hermit-pact-gain" style="color: #22c55e; font-size: 12px; font-family: 'Space Mono';">GAIN: +80% Katana Range & Permanent Shockwaves</div>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <button id="hermit-pact-choice-1" class="menu-btn" style="border-color: #f97316; color: #fed7aa; text-align: left; padding: 12px; line-height: 1.4;"></button>
+            <button id="hermit-pact-choice-2" class="menu-btn" style="border-color: #f97316; color: #fed7aa; text-align: left; padding: 12px; line-height: 1.4;"></button>
           </div>
-          <div style="display: flex; gap: 12px;">
-            <button id="hermit-refuse-btn" class="menu-btn exit-btn" style="flex: 1; margin: 0;">Decline</button>
-            <button id="hermit-accept-btn" class="menu-btn" style="flex: 1; margin: 0; border-color: #f97316; color: #f97316;">Accept Pact</button>
-          </div>
+          <button id="hermit-leave-btn" class="menu-btn exit-btn" style="width: 100%; margin: 0; min-height: 48px;">Leave Campfire</button>
         </div>
       </div>
 

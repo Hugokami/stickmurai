@@ -1882,8 +1882,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     (e as any).posture = 0;
     const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss;
     if (isBoss) {
-      // Boss execution: cap at 30% of maxHp (min 35, max 60), stun boss for 2.5s
-      finalDmg = Math.min(60, Math.max(35, Math.round((e.maxHp || 100) * 0.30)));
+      // Boss execution: lower to ~12% max HP (capped at 25, min 12), stun boss for 2.5s
+      finalDmg = Math.min(25, Math.max(12, Math.round((e.maxHp || 100) * 0.12)));
       e.stunTimer = 2.5;
       e.knockbackTimer = 0.45;
       const kbAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
@@ -1891,7 +1891,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       e.knockbackVy = Math.sin(kbAngle) * 900;
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `BOSS STAGGERED! 💥 -${finalDmg}`, 'neon-#ffd700', 34));
     } else {
-      finalDmg = Math.max(30, (e.maxHp || 10) * 0.75);
+      // Regular execution: reduced to ~20% of max HP (min 8 DMG)
+      finalDmg = Math.max(8, Math.round((e.maxHp || 10) * 0.20));
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
     }
 

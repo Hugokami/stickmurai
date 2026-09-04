@@ -102,7 +102,7 @@ export class Entity {
     const ry = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
     let scale = 0.5 * this.scaleMult;
     if (this.type === 'enemy01' || this.type === 'enemy02') {
-      scale *= 10.0;
+      scale *= 2.9;
     } else if (this.type === 'enemy03' || this.type === 'enemy05') {
       scale *= 5.0;
     } else if (this.type === 'skeleton') {
@@ -114,8 +114,7 @@ export class Entity {
     }
     
     let finalDir = this.dir;
-    const isCustomType = this.type === 'enemy01' || this.type === 'enemy02' || this.type === 'enemy03' || this.type === 'enemy05' || this.type === 'skeleton';
-    if (isCustomType) {
+    if (this.type === 'skeleton') {
       finalDir = -this.dir;
     }
 

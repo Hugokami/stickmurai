@@ -217,28 +217,39 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   }
 
   // Shrine & Hermit Modal Listeners
+  const onShatterSeal = () => {
+    if (globals.activeShrine) {
+      const sealId = globals.activeShrine.sealId;
+      if (!globals.unlockedSeals.includes(sealId)) {
+        globals.unlockedSeals.push(sealId);
+        try { localStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals)); } catch(e) {}
+        YOMI_SEALS[sealId]?.applyPermanentReward();
+        playSynthesizedSealShatter();
+        globals.screenShake = Math.max(globals.screenShake, 42);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '⛩️ 封印砕散！ 恒久恩恵開眼！' : '⛩️ SEAL SHATTERED! PERMANENT BLESSING UNLEASHED!', '#ffd700', 34));
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
+      }
+      globals.activeShrine = null;
+    }
+    closeShrineModal();
+  };
+
+  const shrineClaimBtn = document.getElementById('shrine-claim-btn');
   const shrineCommuneBtn = document.getElementById('shrine-commune-btn');
   const shrineLeaveBtn = document.getElementById('shrine-leave-btn');
-  if (shrineCommuneBtn) {
-    shrineCommuneBtn.addEventListener('click', () => {
-      if (globals.activeShrine) {
-        const sealId = globals.activeShrine.sealId;
-        if (!globals.unlockedSeals.includes(sealId)) {
-          globals.unlockedSeals.push(sealId);
-          try { localStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals)); } catch(e) {}
-          YOMI_SEALS[sealId]?.applyPermanentReward();
-          playSynthesizedSealShatter();
-          globals.screenShake = Math.max(globals.screenShake, 42);
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '⛩️ 封印砕散！ 恒久恩恵開眼！' : '⛩️ SEAL SHATTERED! PERMANENT BLESSING UNLEASHED!', '#ffd700', 34));
-          globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
-          globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
-        }
-        globals.activeShrine = null;
-      }
-      closeShrineModal();
-    });
+  if (shrineClaimBtn) {
+    shrineClaimBtn.addEventListener('click', onShatterSeal);
+    shrineClaimBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); onShatterSeal(); });
   }
-  if (shrineLeaveBtn) shrineLeaveBtn.addEventListener('click', closeShrineModal);
+  if (shrineCommuneBtn) {
+    shrineCommuneBtn.addEventListener('click', onShatterSeal);
+    shrineCommuneBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); onShatterSeal(); });
+  }
+  if (shrineLeaveBtn) {
+    shrineLeaveBtn.addEventListener('click', closeShrineModal);
+    shrineLeaveBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); closeShrineModal(); });
+  }
 
   const hermitChoice1Btn = document.getElementById('hermit-pact-choice-1');
   const hermitChoice2Btn = document.getElementById('hermit-pact-choice-2');
@@ -1507,13 +1518,13 @@ export function openShrineCommuneModal(sealId: number) {
 
   const isJa = globals.currentLang === 'ja';
   const titleEl = document.getElementById('shrine-modal-title');
-  const kanjiEl = document.getElementById('shrine-kanji');
-  const descEl = document.getElementById('shrine-modal-desc');
+  const featEl = document.getElementById('shrine-modal-feat');
+  const rewardEl = document.getElementById('shrine-modal-reward');
   const loreEl = document.getElementById('shrine-modal-lore');
 
-  if (titleEl) titleEl.textContent = isJa ? seal.titleJa : seal.titleEn;
-  if (kanjiEl) kanjiEl.textContent = '祠';
-  if (descEl) descEl.innerHTML = `<strong>${isJa ? '【試練達成】' : '【FEAT COMPLETED】'}</strong> ${isJa ? seal.featDescJa : seal.featDescEn}<br><br><span style="color:#ffd700;">${isJa ? seal.rewardJa : seal.rewardEn}</span>`;
+  if (titleEl) titleEl.textContent = isJa ? `⛩️ 封印開眼: ${seal.titleJa}` : `⛩️ SEAL AWAKENED: ${seal.titleEn}`;
+  if (featEl) featEl.textContent = `${isJa ? '【試練達成】' : 'FEAT FULFILLED: '} ${isJa ? seal.featDescJa : seal.featDescEn}`;
+  if (rewardEl) rewardEl.innerHTML = `⭐ <strong>${isJa ? '恒久恩恵' : 'PERMANENT BLESSING'}:</strong> ${isJa ? seal.rewardJa : seal.rewardEn}`;
   if (loreEl) loreEl.textContent = `"${isJa ? seal.loreFragmentJa : seal.loreFragmentEn}"`;
 
   modal.style.display = 'flex';
@@ -1522,6 +1533,7 @@ export function openShrineCommuneModal(sealId: number) {
 export function closeShrineModal() {
   const modal = document.getElementById('shrine-modal');
   if (modal) modal.style.display = 'none';
+  globals.activeShrine = null;
 }
 
 export function openHermitPactModal() {
