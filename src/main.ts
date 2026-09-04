@@ -1,7 +1,7 @@
 import './style.css';
 import { globals } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
-import { i18n, loaderTips, startBackgroundAssetLoading } from './assets';
+import { i18n, loaderTips, startBackgroundAssetLoading, loadCoreCombatAssetsNow } from './assets';
 import {
   playSound,
   sfx,
@@ -603,6 +603,7 @@ let lastTime = performance.now();
 let uiUpdateAccumulator = 0;
 
 function initGame() {
+  loadCoreCombatAssetsNow();
   playSound(sfx.gameStart);
   startBgm();
   globals.gameState = 'playing'; 
