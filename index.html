@@ -759,15 +759,17 @@
 
       <!-- Stage Clear & Ascension Upgrade Shrine Modal -->
       <div id="stage-clear-modal" class="overlay" style="display:none; z-index: 9700; background: rgba(8, 10, 18, 0.95); backdrop-filter: blur(10px);">
-        <div class="menu-box" style="max-width: 760px; width: 94vw; max-height: 90vh; display: flex; flex-direction: column; border-color: #ffd700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.35); padding: 22px;">
-          <div style="text-align: center; margin-bottom: 12px;">
-            <div style="font-size: 36px; margin-bottom: 4px;">⛩️</div>
-            <h2 id="stage-clear-title" style="font-family: 'Shojumaru', cursive; color: #ffd700; font-size: 26px; margin: 0 0 4px 0; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); letter-spacing: 2px;">STAGE 1 CONQUERED!</h2>
-            <p style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0; letter-spacing: 1px;">PURGATORY RECLAIMED // ASCEND IN THE SHRINE OF BUSHIDO</p>
+        <div class="menu-box stage-clear-menu-box" style="max-width: 780px; width: 94vw; max-height: 90vh; position: relative; display: flex; flex-direction: column; border-color: #ffd700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.35); padding: 16px 20px; overflow: hidden;">
+          <button id="close-stage-clear-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #ffd700; color: #ffd700;">✕</button>
+
+          <div class="stage-clear-header" style="text-align: center; margin-bottom: 8px; flex-shrink: 0;">
+            <div style="font-size: 26px; margin-bottom: 2px;">⛩️</div>
+            <h2 id="stage-clear-title" style="font-family: 'Shojumaru', cursive; color: #ffd700; font-size: 22px; margin: 0 0 2px 0; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); letter-spacing: 2px;">STAGE 1 CONQUERED!</h2>
+            <p class="stage-clear-subtitle" style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0; letter-spacing: 1px;">PURGATORY RECLAIMED // ASCEND IN THE SHRINE OF BUSHIDO</p>
           </div>
 
           <!-- Stage Performance Bar -->
-          <div style="display: flex; justify-content: space-around; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,215,0,0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-family: 'Orbitron', monospace; font-size: 13px; color: #e2e8f0; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; justify-content: space-around; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,215,0,0.25); border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; font-family: 'Orbitron', monospace; font-size: 12px; color: #e2e8f0; flex-wrap: wrap; gap: 6px; flex-shrink: 0;">
             <div>🗡️ KILLS: <span id="stage-clear-kills" style="color: #ffd700; font-weight: bold;">0</span></div>
             <div>⏱️ TIME: <span id="stage-clear-time" style="color: #38bdf8; font-weight: bold;">0:00</span></div>
             <div>🔮 REWARD: <span id="stage-clear-reward" style="color: #c084fc; font-weight: bold;">+100</span></div>
@@ -775,37 +777,37 @@
           </div>
 
           <!-- 3-Star Mastery Breakdown -->
-          <div id="stage-clear-stars-card" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px; padding: 8px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-family: 'Space Mono', monospace; font-size: 11px;">
-            <div id="star-req-1" style="display: flex; align-items: center; gap: 6px; color: #ffd700;">
-              <span id="star-icon-1" style="font-size: 16px;">⭐</span>
+          <div id="stage-clear-stars-card" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 8px; font-family: 'Space Mono', monospace; font-size: 11px; flex-shrink: 0;">
+            <div id="star-req-1" style="display: flex; align-items: center; gap: 5px; color: #ffd700;">
+              <span id="star-icon-1" style="font-size: 15px;">⭐</span>
               <span id="star-text-1">Stage Conquered</span>
             </div>
-            <div id="star-req-2" style="display: flex; align-items: center; gap: 6px; color: #94a3b8;">
-              <span id="star-icon-2" style="font-size: 16px;">⭐</span>
+            <div id="star-req-2" style="display: flex; align-items: center; gap: 5px; color: #94a3b8;">
+              <span id="star-icon-2" style="font-size: 15px;">⭐</span>
               <span id="star-text-2">Speed Demon (&le;60s)</span>
             </div>
-            <div id="star-req-3" style="display: flex; align-items: center; gap: 6px; color: #94a3b8;">
-              <span id="star-icon-3" style="font-size: 16px;">⭐</span>
+            <div id="star-req-3" style="display: flex; align-items: center; gap: 5px; color: #94a3b8;">
+              <span id="star-icon-3" style="font-size: 15px;">⭐</span>
               <span id="star-text-3">Combo Master (20+ Combo)</span>
             </div>
-            <div id="star-bounty-badge" style="display: none; background: rgba(255,215,0,0.15); border: 1px solid #ffd700; border-radius: 12px; padding: 3px 10px; color: #ffd700; font-weight: bold; font-family: 'Orbitron', monospace; font-size: 11px; box-shadow: 0 0 10px rgba(255,215,0,0.3);">
+            <div id="star-bounty-badge" style="display: none; background: rgba(255,215,0,0.15); border: 1px solid #ffd700; border-radius: 12px; padding: 2px 8px; color: #ffd700; font-weight: bold; font-family: 'Orbitron', monospace; font-size: 10px; box-shadow: 0 0 10px rgba(255,215,0,0.3);">
               ✨ +300 🔮 MASTERY BOUNTY!
             </div>
           </div>
 
-          <!-- Ascension Upgrade Grid -->
-          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-bottom: 10px;">
-            <h3 style="font-family: 'Shojumaru', cursive; color: #38bdf8; font-size: 15px; margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);">SHRINE OF ASCENSION (PERMANENT UPGRADES)</h3>
-            <div id="ascension-upgrade-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; max-height: 42vh; overflow-y: auto; padding-right: 6px;">
+          <!-- Ascension Upgrade Section -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; margin-bottom: 6px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <h3 style="font-family: 'Shojumaru', cursive; color: #38bdf8; font-size: 13px; margin: 0 0 6px 0; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3); flex-shrink: 0;">SHRINE OF ASCENSION (PERMANENT UPGRADES)</h3>
+            <div id="ascension-upgrade-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 6px;">
               <!-- Populated dynamically by UI.ts -->
             </div>
           </div>
 
           <!-- Action Buttons -->
-          <div style="display: flex; gap: 10px; width: 100%; margin-top: auto; flex-wrap: wrap;">
-            <button id="stage-clear-menu-btn" class="menu-btn exit-btn btn-compact" style="flex: 1; min-width: 130px; margin: 0;">Title Menu</button>
-            <button id="stage-clear-replay-btn" class="menu-btn btn-compact" style="flex: 1; min-width: 140px; margin: 0; border-color: #94a3b8; color: #cbd5e1;">🔄 Replay Stage</button>
-            <button id="stage-clear-next-btn" class="menu-btn btn-compact" style="flex: 2; min-width: 180px; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); font-weight: bold;">⚔️ NEXT STAGE</button>
+          <div class="stage-clear-actions" style="display: flex; gap: 8px; width: 100%; margin-top: auto; flex-shrink: 0; flex-wrap: wrap;">
+            <button id="stage-clear-menu-btn" class="menu-btn exit-btn btn-compact" style="flex: 1; min-width: 110px; margin: 0; height: 36px; min-height: 36px; font-size: 12px; padding: 4px 10px !important;">Title Menu</button>
+            <button id="stage-clear-replay-btn" class="menu-btn btn-compact" style="flex: 1; min-width: 120px; margin: 0; height: 36px; min-height: 36px; font-size: 12px; padding: 4px 10px !important; border-color: #94a3b8; color: #cbd5e1;">🔄 Replay Stage</button>
+            <button id="stage-clear-next-btn" class="menu-btn btn-compact" style="flex: 2; min-width: 160px; margin: 0; height: 36px; min-height: 36px; font-size: 12px; padding: 4px 12px !important; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); font-weight: bold;">⚔️ NEXT STAGE</button>
           </div>
         </div>
       </div>

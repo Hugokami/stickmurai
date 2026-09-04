@@ -979,15 +979,15 @@ function initGame() {
     const infFortune = cu.infiniteFortune ?? 0;
     const infRiposte = cu.infiniteRiposte ?? 0;
 
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + slashLvl * 1 + infSharpness * 0.5;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + iaijutsuLvl * 2;
-    globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + iaijutsuLvl * 0.10;
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + slashLvl * 0.5 + infSharpness * 0.25;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + iaijutsuLvl * 1;
+    globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + iaijutsuLvl * 0.08;
     globals.maxLives += hpLvl;
     globals.lives = globals.maxLives;
-    globals.playerStats.dashCooldownBase = Math.max(0.4, globals.playerStats.dashCooldownBase - dashLvl * 0.10);
-    globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) + flowLvl * 0.25 + infFlow * 0.01;
+    globals.playerStats.dashCooldownBase = Math.max(0.4, globals.playerStats.dashCooldownBase - dashLvl * 0.08);
+    globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) + flowLvl * 0.15 + infFlow * 0.01;
     globals.playerStats.fortuneMult = 1.0 + infFortune * 0.02;
-    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + infRiposte * 1.5;
+    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + infRiposte * 1.0;
   }
 
   // Initialize Stage Mode Objectives & Affixes

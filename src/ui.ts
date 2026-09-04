@@ -75,8 +75,8 @@ export const ASCENSION_UPGRADES = [
     nameJa: '刃の研鑽',
     icon: '🗡️',
     max: 10,
-    desc: '+1 Slash DMG per level',
-    descJa: '通常斬撃ダメージ+1',
+    desc: '+0.5 Slash DMG per level',
+    descJa: '通常斬撃ダメージ+0.5',
     baseCost: 100,
     costMult: 100,
   },
@@ -86,8 +86,8 @@ export const ASCENSION_UPGRADES = [
     nameJa: '居合波の極意',
     icon: '🌊',
     max: 10,
-    desc: '+2 Shockwave DMG & +10% Width',
-    descJa: '衝撃波ダメージ+2 & 幅+10%',
+    desc: '+1 Shockwave DMG & +8% Width',
+    descJa: '衝撃波ダメージ+1 & 幅+8%',
     baseCost: 150,
     costMult: 150,
   },
@@ -108,8 +108,8 @@ export const ASCENSION_UPGRADES = [
     nameJa: '瞬歩・神速',
     icon: '⚡',
     max: 5,
-    desc: '-10% Dash CD & +5% Move Speed',
-    descJa: 'ダッシュCT-10% & 移動速度+5%',
+    desc: '-8% Dash CD & +5% Move Speed',
+    descJa: 'ダッシュCT-8% & 移動速度+5%',
     baseCost: 250,
     costMult: 250,
   },
@@ -119,8 +119,8 @@ export const ASCENSION_UPGRADES = [
     nameJa: '魂の共鳴',
     icon: '🧘',
     max: 5,
-    desc: '+25% Flow Gen & +1.5s Ult Duration',
-    descJa: '気力生成+25% & 奥義持続+1.5秒',
+    desc: '+15% Flow Gen & +1.5s Ult Duration',
+    descJa: '気力生成+15% & 奥義持続+1.5秒',
     baseCost: 300,
     costMult: 300,
   },
@@ -132,8 +132,8 @@ export const ASCENSION_UPGRADES = [
     icon: '✨',
     max: 999,
     isEndless: true,
-    desc: '+0.5 Slash DMG per rank (Uncapped)',
-    descJa: '通常斬撃ダメージ+0.5 (上限なし)',
+    desc: '+0.25 Slash DMG per rank (Uncapped)',
+    descJa: '通常斬撃ダメージ+0.25 (上限なし)',
     baseCost: 400,
     costMult: 150,
   },
@@ -168,8 +168,8 @@ export const ASCENSION_UPGRADES = [
     icon: '⚡',
     max: 999,
     isEndless: true,
-    desc: '+1.5 Posture break DMG per parry (Uncapped)',
-    descJa: '弾き時の体幹削り+1.5 (上限なし)',
+    desc: '+1.0 Posture break DMG per parry (Uncapped)',
+    descJa: '弾き時の体幹削り+1.0 (上限なし)',
     baseCost: 450,
     costMult: 180,
   }
@@ -389,6 +389,18 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
 
   if (stageClearMenuBtn) {
     bindDualListener(stageClearMenuBtn, () => {
+      if (stageClearModal) stageClearModal.style.display = 'none';
+      globals.gameState = 'mainmenu';
+      mainMenu.style.display = 'flex';
+      uiLayer.style.display = 'none';
+      mobileControls.style.display = 'none';
+      pauseBgm();
+    });
+  }
+
+  const stageClearXBtn = document.getElementById('close-stage-clear-x-btn');
+  if (stageClearXBtn) {
+    bindDualListener(stageClearXBtn, () => {
       if (stageClearModal) stageClearModal.style.display = 'none';
       globals.gameState = 'mainmenu';
       mainMenu.style.display = 'flex';

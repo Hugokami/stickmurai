@@ -377,7 +377,7 @@ export class Enemy extends Entity {
       const isBoss = this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus';
       
       // Progressive endless scaling: keeps grunts killable in 1-3 clean strikes while steadily raising challenge
-      const stageHpMult = isBoss ? (1.0 + (stage - 1) * 0.15) : (1.0 + (stage - 1) * 0.08);
+      const stageHpMult = isBoss ? (1.0 + (stage - 1) * 0.15) : (1.0 + (stage - 1) * 0.12);
       const stageSpeedMult = Math.min(1.40, 1.0 + (stage - 1) * 0.025);
       const stageChargeMult = Math.max(0.65, 1.0 - (stage - 1) * 0.02);
 

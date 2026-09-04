@@ -2004,6 +2004,34 @@ input[type="range"]::-webkit-slider-thumb:hover {
     padding: 4px 8px !important;
     font-size: 11px !important;
   }
+
+  /* Stage clear modal landscape adjustments */
+  #stage-clear-modal .menu-box {
+    padding: 8px 14px 10px 14px !important;
+    gap: 4px !important;
+    height: 94% !important;
+    max-height: 94% !important;
+  }
+  #stage-clear-modal .stage-clear-subtitle {
+    display: none !important;
+  }
+  #stage-clear-modal .stage-clear-header div {
+    font-size: 18px !important;
+  }
+  #stage-clear-modal #stage-clear-title {
+    font-size: 16px !important;
+  }
+  #stage-clear-modal .stage-clear-actions .menu-btn {
+    height: 30px !important;
+    min-height: 28px !important;
+    font-size: 11px !important;
+    padding: 2px 8px !important;
+  }
+  #stage-clear-modal .buy-ascension-btn {
+    min-height: 28px !important;
+    padding: 2px 6px !important;
+    font-size: 10px !important;
+  }
 }
 
 /* Modal Close (X) circular button */
@@ -2019,19 +2047,21 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: #fff;
   font-size: 16px;
   font-weight: bold;
+  cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  z-index: 100;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  line-height: 1;
-  padding: 0;
+  z-index: 10;
+  transition: all 0.2s ease;
 }
+
 .modal-close-x:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.15);
+  border-color: #ffd700;
+  color: #ffd700;
+  transform: scale(1.08);
 }
+
 .modal-close-x:active {
   transform: scale(0.95);
 }
@@ -2063,6 +2093,38 @@ input[type="range"]::-webkit-slider-thumb:hover {
   padding: 6px 20px !important;
   font-size: 12px !important;
   margin: 4px auto 0 auto !important;
+}
+
+/* Stage Clear Modal Containment & Anti-Spill */
+#stage-clear-modal .menu-box {
+  position: relative !important;
+  max-height: 90vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  padding: 14px 20px !important;
+  gap: 6px !important;
+}
+
+#stage-clear-modal #ascension-upgrade-grid {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#stage-clear-modal .stage-clear-actions {
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
+  padding-top: 4px !important;
+}
+
+#stage-clear-modal .menu-btn {
+  flex-shrink: 0 !important;
+  height: 36px !important;
+  min-height: 34px !important;
+  font-size: 12px !important;
+  padding: 4px 12px !important;
 }
 
 /* Skill Lock UI styles */
