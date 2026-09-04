@@ -584,7 +584,11 @@ const enemyFolderMap: Record<string, string> = {
   evil_wizard: 'EvilWizard',
   enemy_orc: 'EnemyOrc',
   enemy_barrel: 'EnemyBarrel',
-  boss_agis: 'BossAgis'
+  boss_agis: 'BossAgis',
+  boss_skeleton: 'BossSkeleton',
+  heronightborne: 'HeroNightborne',
+  herosamurai: 'HeroSamurai',
+  toaster_bot: 'EnemyToasterBot'
 };
 
 export function loadEnemyAssetsNow(type: string) {
@@ -729,6 +733,40 @@ export const anims = {
     attack: loadCustomEnemyAnim('BossAgis', 'attack', 8),
     dash: loadCustomEnemyAnim('BossAgis', 'dash', 6),
     dead: loadCustomEnemyAnim('BossAgis', 'dead', 4),
+  },
+  boss_skeleton: {
+    idle: loadCustomEnemyAnim('BossSkeleton', 'idle', 11),
+    walk: loadCustomEnemyAnim('BossSkeleton', 'walk', 13),
+    react: loadCustomEnemyAnim('BossSkeleton', 'react', 4),
+    attack: loadCustomEnemyAnim('BossSkeleton', 'attack', 9),
+    recover: loadCustomEnemyAnim('BossSkeleton', 'recover', 9),
+    hit: loadCustomEnemyAnim('BossSkeleton', 'hit', 8),
+    dash: loadCustomEnemyAnim('BossSkeleton', 'walk', 13),
+    dead: loadCustomEnemyAnim('BossSkeleton', 'dead', 15),
+  },
+  heronightborne: {
+    idle: loadCustomEnemyAnim('HeroNightborne', 'idle', 9),
+    walk: loadCustomEnemyAnim('HeroNightborne', 'walk', 6),
+    attack: loadCustomEnemyAnim('HeroNightborne', 'attack', 12),
+    hit: loadCustomEnemyAnim('HeroNightborne', 'hit', 5),
+    dash: loadCustomEnemyAnim('HeroNightborne', 'dash', 6),
+    dead: loadCustomEnemyAnim('HeroNightborne', 'dead', 23),
+  },
+  herosamurai: {
+    idle: loadCustomEnemyAnim('HeroSamurai', 'idle', 10),
+    walk: loadCustomEnemyAnim('HeroSamurai', 'walk', 16),
+    attack: loadCustomEnemyAnim('HeroSamurai', 'attack', 7),
+    hit: loadCustomEnemyAnim('HeroSamurai', 'hit', 4),
+    dash: loadCustomEnemyAnim('HeroSamurai', 'dash', 8),
+    dead: loadCustomEnemyAnim('HeroSamurai', 'dead', 8),
+  },
+  toaster_bot: {
+    idle: loadCustomEnemyAnim('EnemyToasterBot', 'idle', 10),
+    walk: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 16),
+    attack: loadCustomEnemyAnim('EnemyToasterBot', 'attack', 22),
+    hit: loadCustomEnemyAnim('EnemyToasterBot', 'hit', 4),
+    dash: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 16),
+    dead: loadCustomEnemyAnim('EnemyToasterBot', 'dead', 10),
   }
 };
 
@@ -856,6 +894,13 @@ export const vfxAnims = {
     vfx1: loadVfxFrames('vfx/Pixel Art VFX - Warlock - FREE Version/VFX1/Frames/Warlock_skill1_frame{N}.png', 8, 1),
     vfx2: loadVfxFrames('vfx/Pixel Art VFX - Warlock - FREE Version/VFX2/Frames/Warlock_skill2_frame{N}.png', 13, 1),
     vfx3: loadVfxFrames('vfx/Pixel Art VFX - Warlock - FREE Version/VFX3/Frames/Warlock_skill3_frame{N}.png', 8, 1)
+  },
+  heroSlashes: {
+    ronin: loadVfxFrames('vfx/slashes/slash_ronin/frame_{N}.png', 9, 1, 2, false),
+    ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 7, 1, 2, false),
+    luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2, false),
+    samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, false),
+    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, false),
   }
 };
 

@@ -27,6 +27,7 @@ function getEntityFootY(e: Entity): number {
   let baseFoot = 62;
   switch (e.type) {
     case 'boss_agis': baseFoot = 143; break;
+    case 'boss_skeleton': baseFoot = 44; break;
     case 'enemy_barrel': baseFoot = 42; break;
     case 'enemy02': baseFoot = 39; break;
     case 'skeleton': baseFoot = 38; break;
@@ -37,6 +38,9 @@ function getEntityFootY(e: Entity): number {
     case 'enemy05': baseFoot = 18; break;
     case 'enemy03': baseFoot = 17; break;
     case 'heroninja': baseFoot = 48; break;
+    case 'heronightborne': baseFoot = 52; break;
+    case 'herosamurai': baseFoot = 56; break;
+    case 'toaster_bot': baseFoot = 20; break;
     case 'sword':
     default:
       baseFoot = 62;

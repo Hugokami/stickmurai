@@ -1882,14 +1882,14 @@ export const HEROES_DATA = [
     nameJa: '霧の浪人 (クラシック)',
     titleEn: 'Ronin of the Mist',
     titleJa: '疾風怒濤の流浪剣士',
-    descEn: 'The traditional stickmurai swordsman. Well-rounded agility, blade range, and recovery.',
-    descJa: '伝統を受け継ぐ棒人間サムライ。速さ・刃のリーチ・隙の少なさの全てが高水準で調和した万能の型。',
+    descEn: 'The traditional stickmurai swordsman. Master of parry discipline with an expanded perfect parry window and deadly posture break.',
+    descJa: '伝統を受け継ぐ棒人間サムライ。弾きの道を極め、完璧なパリィの猶予時間が拡大し敵の体幹を激しく削る。',
     cost: 0,
     image: '/sprites/portraits/portrait_ronin.png',
-    atk: '100%',
-    spd: '100%',
-    specialEn: 'Balanced Arts (Baseline Stance)',
-    specialJa: '中段の構え（基本型）'
+    atk: '110%',
+    spd: '105%',
+    specialEn: 'Parry Prodigy (+35% Parry Window, +50% Stance Break)',
+    specialJa: '神速の弾き（パリィ判定強化・体幹削り増加）'
   },
   {
     id: 'luneblade',
@@ -1897,14 +1897,14 @@ export const HEROES_DATA = [
     nameJa: '月影の剣聖（ルーンブレイド）',
     titleEn: 'Axion Swordsman',
     titleJa: '星海を切り裂く双刃の英傑',
-    descEn: 'Wields an ethereal celestial greatsword. +25% Slash AoE, +1 Base Slash DMG, and +2 Iaijutsu Shockwave DMG.',
-    descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+25%、基礎威力+1、抜刀衝撃波威力+2。',
+    descEn: 'Wields an ethereal celestial greatsword. +35% Slash AoE, +2 Base Slash DMG, and +4 Iaijutsu Shockwave DMG.',
+    descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+35%、基礎威力+2、抜刀衝撃波威力+4。',
     cost: 100000,
     image: '/sprites/portraits/portrait_luneblade.png',
-    atk: '130%',
-    spd: '95%',
-    specialEn: 'Lunar Resonance (+25% AoE, +2 Iai DMG)',
-    specialJa: '月華共鳴（広範囲斬撃・衝撃波強化）'
+    atk: '140%',
+    spd: '100%',
+    specialEn: 'Lunar Resonance (+35% AoE, +2 Slash DMG, +4 Iai DMG)',
+    specialJa: '月華共鳴（超広範囲斬撃・抜刀術威力大幅上昇）'
   },
   {
     id: 'ninja',
@@ -1912,14 +1912,44 @@ export const HEROES_DATA = [
     nameJa: '闇夜の忍（シャドウ・シノビ）',
     titleEn: 'Silent Assassin',
     titleJa: '影を纏いし暗殺の達人',
-    descEn: 'Master of lethal shadow-stepping. +15% Movement Speed, -20% Dash Cooldown, and +10% Attack Speed.',
-    descJa: '闇に潜み急所を討つ達人。移動速度+15%、瞬歩クールダウン-20%、攻撃速度+10%。',
-    cost: 150000,
+    descEn: 'Lethal shadow assassin. -25% Dash Cooldown, +30% Movement Speed, +20% Critical Strike Chance, and phantom dash afterimages.',
+    descJa: '闇に潜み急所を討つ達人。移動速度+30%、瞬歩クールダウン-25%、会心率+20%、影分身残像追撃。',
+    cost: 120000,
     image: '/sprites/portraits/portrait_ninja.png',
-    atk: '110%',
-    spd: '120%',
-    specialEn: 'Phantom Step (-20% Dash CD, +15% Speed)',
-    specialJa: '幻影瞬歩（高速離脱・移動速度上昇）'
+    atk: '125%',
+    spd: '130%',
+    specialEn: 'Phantom Strike (-25% Dash CD, +20% Crit Chance)',
+    specialJa: '幻影瞬歩（高速離脱・会心率上昇・影の追撃）'
+  },
+  {
+    id: 'samurai',
+    nameEn: 'Grandmaster Samurai',
+    nameJa: '極意の侍（グランドマスター）',
+    titleEn: 'Kensei of the Blade',
+    titleJa: '一騎当千の剣聖武士',
+    descEn: 'Supreme master of Bushido. -35% Attack Cooldown. Every 3rd basic attack unleashes a devastating 360° cross-cleave!',
+    descJa: '武士道を極めし孤高の剣聖。攻撃クールダウン-35%。通常連撃3段目で全方位360度十文字回転斬りを放つ！',
+    cost: 150000,
+    image: '/sprites/portraits/portrait_samurai.png',
+    atk: '150%',
+    spd: '115%',
+    specialEn: 'Kensei Rapid Arts (-35% Atk CD, 360° Cleave)',
+    specialJa: '剣聖の連撃（攻撃速度大幅上昇・全方位十文字連撃）'
+  },
+  {
+    id: 'nightborne',
+    nameEn: 'Nightborne Sovereign',
+    nameJa: '常世の覇王（ナイトボーン）',
+    titleEn: 'Abyssal Lord',
+    titleJa: '冥府の深淵より現れし覇王',
+    descEn: 'Immortal void lord from the nether realms. +3 Slash DMG, +6 Iai DMG. Executions restore +1 Heart and siphon +25 Magatama!',
+    descJa: '深淵の冥府より来たりし不死の覇王。斬撃威力+3、抜刀威力+6。処刑成功時に体力を1回復し追加で25勾玉を奪う！',
+    cost: 200000,
+    image: '/sprites/portraits/portrait_nightborne.png',
+    atk: '165%',
+    spd: '110%',
+    specialEn: 'Abyssal Calamity (+1 Heart & +25 🔮 on Executions)',
+    specialJa: '深淵の天災（処刑時体力回復・追加勾玉獲得・虚無焔）'
   }
 ];
 

@@ -8,7 +8,7 @@ import { pvpManager } from './pvpIaijutsuManager';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer' | 'barrel_bomber' | 'orc_brute' | 'agis_colossus';
+export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer' | 'barrel_bomber' | 'orc_brute' | 'agis_colossus' | 'skeleton_warlord' | 'toaster_bot';
 
 export class Enemy extends Entity {
   target!: Player;
@@ -113,7 +113,8 @@ export class Enemy extends Entity {
     
     if (globals.gameMode === 'zen') {
       const roll = Math.random();
-      if (roll < 0.30) this.subType = 'musketeer';
+      if (roll < 0.20) this.subType = 'musketeer';
+      else if (roll < 0.30) this.subType = 'toaster_bot';
       else if (roll < 0.40) this.subType = 'samurai';
       else if (roll < 0.50) this.subType = 'ronin';
       else if (roll < 0.60) this.subType = 'brawler';
@@ -122,9 +123,10 @@ export class Enemy extends Entity {
       else if (roll < 0.80) this.subType = 'assassin';
       else if (roll < 0.85) this.subType = 'pyromancer';
       else if (roll < 0.90) this.subType = 'glacial_sentinel';
-      else if (roll < 0.95) this.subType = 'astromancer';
-      else if (roll < 0.97 && globals.score > 20) this.subType = 'oni_boss';
-      else if (globals.score > 40) this.subType = 'shogun_boss';
+      else if (roll < 0.94) this.subType = 'astromancer';
+      else if (roll < 0.96 && globals.score > 20) this.subType = 'oni_boss';
+      else if (roll < 0.98 && globals.score > 35) this.subType = 'skeleton_warlord';
+      else if (globals.score > 50) this.subType = 'shogun_boss';
       else this.subType = 'necromancer';
     } else {
       // Stage Mode Campaign Spawning
@@ -171,22 +173,22 @@ export class Enemy extends Entity {
         else if (r < 0.75) this.subType = 'barrel_bomber';
         else this.subType = 'orc_brute';
       } else if (stage === 7) {
-        // Stage 7: Blood River - Chaos Vanguard
+        // Stage 7: Blood River - Chaos Vanguard & Advanced Bots
         const r = Math.random();
         if (r < 0.25) this.subType = 'assassin';
-        else if (r < 0.50) this.subType = 'berserker';
+        else if (r < 0.50) this.subType = 'toaster_bot';
         else if (r < 0.75) this.subType = 'barrel_bomber';
         else this.subType = 'pyromancer';
       } else if (stage === 8) {
-        // Stage 8: Castle Ramparts - Shogun's Guard
+        // Stage 8: Castle Ramparts - Shogun's Guard & Artillery
         const r = Math.random();
         if (r < 0.25) this.subType = 'orc_brute';
         else if (r < 0.50) this.subType = 'glacial_sentinel';
-        else if (r < 0.75) this.subType = 'musketeer';
+        else if (r < 0.75) this.subType = 'toaster_bot';
         else this.subType = 'giant';
       } else if (stage === 9) {
         // Stage 9: Throne Ante-Chamber - Purgatory Rampage
-        const elitePool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'necromancer', 'astromancer', 'berserker', 'assassin', 'pyromancer'];
+        const elitePool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'necromancer', 'astromancer', 'berserker', 'assassin', 'toaster_bot'];
         this.subType = elitePool[Math.floor(Math.random() * elitePool.length)];
       } else if (stage === 10) {
         // Stage 10: Sanctum of Oblivion - Agis Colossus Boss
@@ -199,29 +201,40 @@ export class Enemy extends Entity {
           else if (r < 0.7) this.subType = 'orc_brute';
           else this.subType = 'berserker';
         }
+      } else if (stage === 15) {
+        // Stage 15: Tomb of the Ancient King - Skeleton Warlord Boss
+        const warlordAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'skeleton_warlord');
+        if (!warlordAlive && (globals.stageKills || 0) === 0) {
+          this.subType = 'skeleton_warlord';
+        } else {
+          const r = Math.random();
+          if (r < 0.4) this.subType = 'toaster_bot';
+          else if (r < 0.7) this.subType = 'orc_brute';
+          else this.subType = 'necromancer';
+        }
       } else {
         // Stage 11+ Endless Realms
         const realm = Math.floor((stage - 1) / 5) + 1;
         const stageInRealm = ((stage - 1) % 5) + 1;
         if (stageInRealm === 5) {
           // Boss stage every 5 stages
-          const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'shogun_boss'];
+          const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'skeleton_warlord', 'shogun_boss'];
           const targetBoss = bossTypes[(realm - 1) % bossTypes.length];
           const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && (e.subType === targetBoss || (e as any).isBoss));
           if (!bossAlive && (globals.stageKills || 0) === 0) {
             this.subType = targetBoss;
           } else {
-            const minionPool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'berserker', 'glacial_sentinel'];
+            const minionPool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'berserker', 'toaster_bot', 'glacial_sentinel'];
             this.subType = minionPool[Math.floor(Math.random() * minionPool.length)];
           }
         } else if (stageInRealm === 1) {
           const pool: EnemySubType[] = ['samurai', 'ronin', 'assassin', 'brawler'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else if (stageInRealm === 2) {
-          const pool: EnemySubType[] = ['musketeer', 'berserker', 'orc_brute', 'assassin'];
+          const pool: EnemySubType[] = ['musketeer', 'toaster_bot', 'berserker', 'orc_brute', 'assassin'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else if (stageInRealm === 3) {
-          const pool: EnemySubType[] = ['barrel_bomber', 'pyromancer', 'orc_brute', 'giant'];
+          const pool: EnemySubType[] = ['barrel_bomber', 'pyromancer', 'toaster_bot', 'orc_brute', 'giant'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else {
           const pool: EnemySubType[] = ['glacial_sentinel', 'necromancer', 'astromancer', 'orc_brute', 'berserker'];
@@ -249,7 +262,7 @@ export class Enemy extends Entity {
   }
 
   isRanged(): boolean {
-    return this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'glacial_sentinel' || this.subType === 'astromancer' || this.subType === 'necromancer';
+    return this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'glacial_sentinel' || this.subType === 'astromancer' || this.subType === 'necromancer' || this.subType === 'toaster_bot';
   }
 
   configureSubType() {
@@ -358,6 +371,20 @@ export class Enemy extends Entity {
       this.colorTint = 'none';
       this.speed = 180;
       this.maxPosture = 360;
+    } else if (this.subType === 'skeleton_warlord') {
+      this.type = 'boss_skeleton';
+      this.lungeSpeed = 850; this.chargeTimeMax = 2.2; this.lungeDuration = 0.75;
+      this.scaleMult = 1.0; this.hp = this.maxHp = 220; this.expValue = 35;
+      this.colorTint = 'none';
+      this.speed = 210;
+      this.maxPosture = 320;
+    } else if (this.subType === 'toaster_bot') {
+      this.type = 'toaster_bot';
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.0; this.lungeDuration = 0.6;
+      this.scaleMult = 1.0; this.hp = this.maxHp = 10; this.expValue = 3;
+      this.colorTint = 'none';
+      this.speed = 190;
+      this.maxPosture = 45;
     } else { // shogun_boss
       this.type = 'evil_wizard';
       this.lungeSpeed = 1300; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
@@ -374,7 +401,7 @@ export class Enemy extends Entity {
 
     if (globals.gameMode === 'classic') {
       const stage = Math.max(1, globals.currentStage || 1);
-      const isBoss = this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus';
+      const isBoss = this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord';
       
       // Progressive endless scaling: keeps grunts killable in 1-3 clean strikes while steadily raising challenge
       const stageHpMult = isBoss ? (1.0 + (stage - 1) * 0.15) : (1.0 + (stage - 1) * 0.12);
@@ -669,7 +696,25 @@ export class Enemy extends Entity {
     const dx = currentTarget.x - this.x; const dy = currentTarget.y - this.y;
     const distSq = dx * dx + dy * dy;
     
-    if (this.state !== 'charge' && this.state !== 'attack') {
+    if (this.state === 'react') {
+      this.vx = 0; this.vy = 0;
+      if (this.stateTime > 1.2) {
+        this.setState('idle');
+        this.attackCooldownTimer = 0.6 + Math.random() * 0.4;
+      }
+      return;
+    }
+
+    if (this.state === 'recover') {
+      this.vx = 0; this.vy = 0;
+      if (this.stateTime > 0.8) {
+        this.setState('idle');
+        this.attackCooldownTimer = 0.8 + Math.random() * 0.5;
+      }
+      return;
+    }
+
+    if (this.state !== 'charge' && this.state !== 'attack' && this.state !== 'react' && this.state !== 'recover') {
       this.dir = dx < 0 ? -1 : 1;
     }
     
@@ -694,7 +739,7 @@ export class Enemy extends Entity {
         this.burstShotsFired = 0;
         this.burstShotTimer = 0;
 
-        if (this.subType !== 'musketeer' && this.subType !== 'pyromancer' && this.subType !== 'astromancer' && this.subType !== 'necromancer') {
+        if (this.subType !== 'musketeer' && this.subType !== 'pyromancer' && this.subType !== 'astromancer' && this.subType !== 'necromancer' && this.subType !== 'toaster_bot') {
           playSound(sfx.enemySlash, 0.3);
         }
 
@@ -740,6 +785,17 @@ export class Enemy extends Entity {
           this.attackLanded = true;
           playSound(sfx.enemySlash, 0.25);
         }
+      } else if (this.subType === 'toaster_bot') {
+        // Toaster Bot plasma blast at frame 12 or 0.32s
+        if (!this.attackLanded && (this.animFrame >= 12 || this.stateTime >= 0.32)) {
+          const proj = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+          (proj as any).shooter = this;
+          (proj as any).colorTint = '#38bdf8';
+          globals.projectiles.push(proj);
+          this.attackLanded = true;
+          playSound(sfx.enemySlash, 0.3);
+          playSynthesizedThunder();
+        }
       } else if (!this.attackLanded) {
         const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
         const enemyHitRadius = (this.scaleMult - 1) * 60; 
@@ -750,7 +806,11 @@ export class Enemy extends Entity {
         }
       }
       if (this.stateTime > this.lungeDuration) {
-        this.setState('idle');
+        if (this.subType === 'skeleton_warlord') {
+          this.setState('recover');
+        } else {
+          this.setState('idle');
+        }
         this.attackLanded = false;
         this.burstShotsFired = 0;
         this.burstShotTimer = 0;
@@ -766,6 +826,7 @@ export class Enemy extends Entity {
     else if (this.subType === 'glacial_sentinel') { attackRange = 200; }
     else if (this.subType === 'astromancer') { attackRange = 600; }
     else if (this.subType === 'necromancer') { attackRange = 500; }
+    else if (this.subType === 'toaster_bot') { attackRange = 460; }
 
     if (this.chillTimer > 0) {
       speed *= 0.7;
@@ -787,6 +848,23 @@ export class Enemy extends Entity {
       const tpIn = new AnimatedEffect(this.x, this.y, vfxAnims.starcaller.vfx1, 0.4, 1.5);
       globals.animatedEffects.push(tpIn);
       this.vx = 0; this.vy = 0;
+      return;
+    }
+
+    // Skeleton Warlord parry reaction stance trigger
+    if (this.subType === 'skeleton_warlord' && this.attackCooldownTimer <= 0 && distSq < 280 * 280 && Math.random() < 0.025) {
+      this.setState('react');
+      this.vx = 0; this.vy = 0;
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 65, "PARRY STANCE! ⚔️", "#cbd5e1", 20));
+      return;
+    }
+
+    // Toaster Bot kiting / strafing AI: back away when player gets close to keep optimal firing distance
+    if (this.subType === 'toaster_bot' && distSq < 260 * 260 && this.state !== 'charge' && this.state !== 'attack') {
+      const dist = Math.sqrt(distSq) || 0.001;
+      this.vx = -(dx / dist) * speed;
+      this.vy = -(dy / dist) * speed;
+      this.setState('walk');
       return;
     }
 
@@ -1004,6 +1082,20 @@ export class Enemy extends Entity {
         callbacks.checkPlayerHit(this, 2);
       }
       this.attackLanded = true;
+    } else if (this.subType === 'skeleton_warlord') {
+      // Skeleton Warlord Ground-Splitting Cleave Tremor
+      globals.screenShake = Math.max(globals.screenShake, 24);
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444'));
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ffffff'));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "WARLORD CLEAVE! 💀", "#ef4444", 28));
+      playSound(sfx.enemySlash, 0.5);
+
+      const pdx = globals.player.x - this.x;
+      const pdy = globals.player.y - this.y;
+      if (pdx * pdx + pdy * pdy < 210 * 210 && globals.player.state !== 'dead') {
+        callbacks.checkPlayerHit(this, 2);
+      }
+      this.attackLanded = true;
     }
   }
 
@@ -1109,6 +1201,8 @@ export class Enemy extends Entity {
     // Dynamic head height offset per enemy type for cleanly anchored HP and Posture bars
     let headOffset = 46;
     if (this.type === 'boss_agis') headOffset = 160;
+    else if (this.type === 'boss_skeleton') headOffset = 65;
+    else if (this.type === 'toaster_bot') headOffset = 25;
     else if (this.type === 'evil_wizard') headOffset = 52;
     else if (this.type === 'skeleton') headOffset = 22;
     else if (this.type === 'enemy01') headOffset = 50;
@@ -1120,7 +1214,7 @@ export class Enemy extends Entity {
 
     // HP bar directly above enemy head
     if (this.state !== 'dead' && this.hp < this.maxHp) {
-      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' ? 80 : 48) * this.scaleMult;
+      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' ? 80 : 48) * this.scaleMult;
       const barH = 5;
       const barY = (effectiveRy - headOffset * this.scaleMult) | 0;
       const barX = (rx - barW / 2) | 0;
@@ -1143,8 +1237,8 @@ export class Enemy extends Entity {
     }
 
     // Posture bar directly under HP bar (for bosses, elites, or when posture > 0)
-    if (this.state !== 'dead' && (this.posture > 0 || this.postureBrokenTimer > 0 || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'giant' || this.subType === 'berserker' || this.subType === 'orc_brute')) {
-      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' ? 80 : 44) * this.scaleMult;
+    if (this.state !== 'dead' && (this.posture > 0 || this.postureBrokenTimer > 0 || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' || this.subType === 'giant' || this.subType === 'berserker' || this.subType === 'orc_brute')) {
+      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' ? 80 : 44) * this.scaleMult;
       const barH = 3.5;
       const barY = (effectiveRy - headOffset * this.scaleMult + 6) | 0;
       const barX = (rx - barW / 2) | 0;
@@ -1176,7 +1270,7 @@ export class Enemy extends Entity {
     }
 
     // Ground contact shadow (drawn anchored at entity's physical feet baseline)
-    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37))))))) * this.scaleMult;
+    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'boss_skeleton' ? 44 : (this.type === 'toaster_bot' ? 20 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37))))))))) * this.scaleMult;
     const shadowGroundRy = ((this.y - cy + globals.vh/2) + footOffsetY) | 0;
     const shadowGroundRx = (this.x - cx + globals.vw/2) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
@@ -1186,7 +1280,8 @@ export class Enemy extends Entity {
     ctx.save();
     ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
     ctx.beginPath();
-    ctx.ellipse(shadowGroundRx, shadowGroundRy, ((this.subType === 'agis_colossus' ? 65 : 22) * this.scaleMult * shadowScale) | 0, ((this.subType === 'agis_colossus' ? 18 : 7) * this.scaleMult * shadowScale) | 0, 0, 0, Math.PI * 2);
+    const isLargeBoss = this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord';
+    ctx.ellipse(shadowGroundRx, shadowGroundRy, ((isLargeBoss ? 55 : 22) * this.scaleMult * shadowScale) | 0, ((isLargeBoss ? 16 : 7) * this.scaleMult * shadowScale) | 0, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
 

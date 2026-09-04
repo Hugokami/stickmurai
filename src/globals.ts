@@ -102,7 +102,8 @@ export const globals = {
     magneticDrawLevel: 0,
     reapersMarkLevel: 0,
     fortuneMult: 1.0,
-    postureDmgBonus: 0
+    postureDmgBonus: 0,
+    critChanceBonus: 0
   },
 
   exp: 0,

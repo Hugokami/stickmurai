@@ -929,18 +929,33 @@ function initGame() {
     magneticDrawLevel: 0,
     reapersMarkLevel: 0,
     fortuneMult: 1.0,
-    postureDmgBonus: 0
+    postureDmgBonus: 0,
+    critChanceBonus: 0
   };
 
   // Apply Hero Archetype Perks & update sprite type
   if (globals.selectedHero === 'luneblade') {
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 1;
-    globals.playerStats.slashSizeMult *= 1.25;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 2;
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 2;
+    globals.playerStats.slashSizeMult *= 1.35;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 4;
   } else if (globals.selectedHero === 'ninja') {
+    globals.playerStats.moveSpeedMult *= 1.30;
+    globals.playerStats.dashCooldownBase *= 0.75;
+    globals.playerStats.attackCooldownBase *= 0.85;
+    globals.playerStats.critChanceBonus = (globals.playerStats.critChanceBonus || 0) + 0.20;
+  } else if (globals.selectedHero === 'samurai') {
     globals.playerStats.moveSpeedMult *= 1.15;
-    globals.playerStats.dashCooldownBase *= 0.8;
-    globals.playerStats.attackCooldownBase *= 0.9;
+    globals.playerStats.attackCooldownBase *= 0.65; // -35% attack cooldown (Kensei Rapid Arts)
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 1;
+  } else if (globals.selectedHero === 'nightborne') {
+    globals.playerStats.moveSpeedMult *= 1.10;
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 3;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 6;
+    globals.playerStats.slashSizeMult *= 1.40;
+  } else {
+    // Default Classic Ronin (Parry Prodigy)
+    globals.playerStats.moveSpeedMult *= 1.05;
+    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + 12;
   }
   globals.player?.updateHeroType();
   
@@ -2133,6 +2148,20 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     }
     return;
   }
+  // Skeleton Warlord Guard Stance Parry & Counter-Thrust
+  if (e.subType === 'skeleton_warlord' && e.state === 'react') {
+    playSynthesizedParry();
+    globals.screenShake = Math.max(globals.screenShake, 18);
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 60, globals.currentLang === 'ja' ? '骨刃受け流し！ 🛡️' : 'BONE DEFLECTION! 🛡️', '#cbd5e1', 26));
+    globals.shockwaves.push(new Shockwave(e.x, e.y, '#f59e0b'));
+    e.setState('attack');
+    e.targetAngle = Math.atan2(globals.player.y - e.y, globals.player.x - e.x);
+    e.lungeCos = Math.cos(e.targetAngle);
+    e.lungeSin = Math.sin(e.targetAngle);
+    e.vx = e.lungeCos * e.lungeSpeed;
+    e.vy = e.lungeSin * e.lungeSpeed;
+    return;
+  }
   if ((e as any).isPvpRemote && pvpManager.subMode === 'insane_survival') return;
 
   if (globals.gameMode === 'pvp' && pvpManager.subMode === 'insane_survival') {
@@ -2161,11 +2190,18 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
 
   playSynthesizedHit();
   
-  // Critical Hit calculation (15% base + 1% per 2 combo points)
-  const critChance = 0.15 + (globals.combo / 200.0);
+  // Critical Hit calculation (15% base + 1% per 2 combo points + hero bonuses)
+  const critChance = 0.15 + (globals.combo / 200.0) + (globals.playerStats?.critChanceBonus || 0);
   const isCrit = Math.random() < Math.min(0.75, critChance); // cap crit chance at 75% for balance
   
   let finalDmg = dmg;
+
+  // Skeleton Warlord Punish window (+50% bonus damage)
+  if (e.subType === 'skeleton_warlord' && e.state === 'recover') {
+    finalDmg = Math.round(finalDmg * 1.5);
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 80, "PUNISH! 💥", "#ef4444", 24));
+  }
+
   const isExecution = (e as any).postureBrokenTimer > 0;
   const isUpwardInput = globals.keys['KeyW'] || globals.keys['ArrowUp'] || (globals.joystickActive && globals.joystickVector && globals.joystickVector.y < -0.35);
 
@@ -2190,7 +2226,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if (isExecution) {
     (e as any).postureBrokenTimer = 0;
     (e as any).posture = 0;
-    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss;
+    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
     if (isBoss) {
       // Boss execution: lower to ~12% max HP (capped at 25, min 12), stun boss for 2.5s
       finalDmg = Math.min(25, Math.max(12, Math.round((e.maxHp || 100) * 0.12)));
@@ -2217,6 +2253,15 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.magatama = (globals.magatama || 0) + execMag;
     try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
     globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🔮`, '#c084fc', 22));
+
+    // Nightborne Sovereign execution passive: Soul Siphon restores +1 Heart and siphons +25 extra Magatama
+    if (globals.selectedHero === 'nightborne') {
+      globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+      globals.magatama = (globals.magatama || 0) + 25;
+      try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "+1 ❤️ SOUL SIPHON! (+25 🔮)", "#c084fc", 26));
+      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
+    }
 
     const mangaCutin = document.getElementById('manga-cutin');
     if (mangaCutin) {
@@ -3718,7 +3763,8 @@ function update(realDt: number) {
             }
           }
 
-          const isPerfect = (e.state === 'attack' && e.stateTime < 0.18) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08);
+          const parryWindowMult = globals.selectedHero === 'default' ? 1.35 : 1.0;
+          const isPerfect = (e.state === 'attack' && e.stateTime < 0.18 * parryWindowMult) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08 * parryWindowMult);
           
           if (isPerfect) {
             globals.runStats.perfectParries++;
@@ -4043,6 +4089,42 @@ function update(realDt: number) {
         isRiposteStrike,
         globals.player
       ));
+
+      // Grandmaster Samurai passive: Kensei 360-degree cross-cleave on every 3rd strike
+      if (globals.selectedHero === 'samurai' && globals.comboSlashesCount >= 3 && attackPower < 1.7) {
+        globals.comboSlashesCount = 0;
+        for (let a = 0; a < Math.PI * 2; a += Math.PI / 2) {
+          globals.slashes.push(Slash.acquire(
+            globals.player.x + Math.cos(a) * 50,
+            globals.player.y + Math.sin(a) * 50,
+            a,
+            size * 1.35,
+            true,
+            'rgba(251, 191, 36, ALPHA)',
+            false,
+            globals.player
+          ));
+        }
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fbbf24'));
+        globals.screenShake = Math.max(globals.screenShake, 14);
+        playSynthesizedPerfectParry();
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 75, "KENSEI CROSS-CLEAVE! ⚔️", "#fbbf24", 22));
+      }
+
+      // Nightborne Sovereign passive: lingering void flame particles along slash trajectory
+      if (globals.selectedHero === 'nightborne') {
+        for (let i = 0; i < 4; i++) {
+          const px = globals.player.x + Math.cos(angle) * (30 + i * 25) + (Math.random() - 0.5) * 16;
+          const py = globals.player.y + Math.sin(angle) * (30 + i * 25) + (Math.random() - 0.5) * 16;
+          globals.particles.push(Particle.acquire(
+            px, py,
+            Math.random() > 0.5 ? '#8b5cf6' : '#c084fc',
+            50,
+            0.35 + Math.random() * 0.2,
+            12 + Math.random() * 8
+          ));
+        }
+      }
       
       if (attackPower < 1.7 && globals.comboFinisherReady) {
         globals.comboFinisherReady = false;
