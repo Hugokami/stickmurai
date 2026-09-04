@@ -19,6 +19,7 @@ import {
   playSynthesizedLevelUp,
   playSynthesizedClash,
   playSynthesizedTempleBell,
+  playSynthesizedSingingBowl,
   startBgm
 } from './audio';
 import {
@@ -602,6 +603,36 @@ function inplaceFilter<T>(arr: T[], predicate: (item: T) => boolean, releaseCall
 let lastTime = performance.now();
 let uiUpdateAccumulator = 0;
 
+function showBossWarningBanner(stage: number) {
+  const banner = document.getElementById('boss-warning-banner');
+  const nameEl = document.getElementById('boss-banner-name');
+  if (!banner || !nameEl) return;
+
+  const realm = Math.floor((stage - 1) / 5) + 1;
+  const bossNames = [
+    { name: 'SKELETON ONI OVERLORD', nameJa: '冥府の鬼神・骸骨鬼王' },
+    { name: 'DIVINE SHOGUN OF YOMI', nameJa: '黄泉の神将・魔界征夷大将軍' },
+    { name: 'AGIS ASTRUM COLOSSUS', nameJa: '星海巨神・アギス・コロッサス' },
+    { name: 'VOID CALAMITY INCARNATE', nameJa: '虚無の災厄・破滅の権化' }
+  ];
+  const b = bossNames[(realm - 1) % bossNames.length];
+  nameEl.textContent = (globals.currentLang === 'ja' ? b.nameJa : b.name) + ` [STAGE ${stage}]`;
+
+  banner.style.display = 'block';
+  setTimeout(() => { if (banner) banner.style.opacity = '1'; }, 10);
+  globals.screenShake = Math.max(globals.screenShake, 35);
+  try { playSynthesizedSingingBowl(); } catch(e) {}
+
+  setTimeout(() => {
+    if (banner) {
+      banner.style.opacity = '0';
+      setTimeout(() => {
+        if (banner) banner.style.display = 'none';
+      }, 550);
+    }
+  }, 3200);
+}
+
 function initGame() {
   loadCoreCombatAssetsNow();
   playSound(sfx.gameStart);
@@ -894,7 +925,9 @@ function initGame() {
     sakuraBlizzardLevel: 0,
     unstableOverloadLevel: 0,
     magneticDrawLevel: 0,
-    reapersMarkLevel: 0
+    reapersMarkLevel: 0,
+    fortuneMult: 1.0,
+    postureDmgBonus: 0
   };
 
   // Apply Hero Archetype Perks & update sprite type
@@ -939,14 +972,20 @@ function initGame() {
     const hpLvl = cu.maxLives ?? cu.bushido_hp ?? 0;
     const dashLvl = cu.dashCooldown ?? cu.phantom_dash ?? 0;
     const flowLvl = cu.spiritResonance ?? cu.flow_resonance ?? 0;
+    const infSharpness = cu.infiniteSharpness ?? 0;
+    const infFlow = cu.infiniteFlow ?? 0;
+    const infFortune = cu.infiniteFortune ?? 0;
+    const infRiposte = cu.infiniteRiposte ?? 0;
 
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + slashLvl * 2;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + iaijutsuLvl * 4;
-    globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + iaijutsuLvl * 0.15;
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + slashLvl * 1 + infSharpness * 0.5;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + iaijutsuLvl * 2;
+    globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + iaijutsuLvl * 0.10;
     globals.maxLives += hpLvl;
     globals.lives = globals.maxLives;
-    globals.playerStats.dashCooldownBase = Math.max(0.4, globals.playerStats.dashCooldownBase - dashLvl * 0.15);
-    globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) + flowLvl * 0.25;
+    globals.playerStats.dashCooldownBase = Math.max(0.4, globals.playerStats.dashCooldownBase - dashLvl * 0.10);
+    globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) + flowLvl * 0.25 + infFlow * 0.01;
+    globals.playerStats.fortuneMult = 1.0 + infFortune * 0.02;
+    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + infRiposte * 1.5;
   }
 
   // Initialize Stage Mode Objectives
@@ -962,11 +1001,43 @@ function initGame() {
     globals.stageTargetKills = stageTargets[currentStage] || Math.min(50, 10 + currentStage * 3);
   }
 
+  // Torii Fast-Forward: Catch-up perk picks when jumping straight into higher stages
+  if (globals.gameMode === 'classic' && currentStage > 1) {
+    const catchUpCount = Math.min(5, Math.floor((currentStage - 1) / 2));
+    if (catchUpCount > 0) {
+      for (let i = 0; i < catchUpCount; i++) {
+        applyRandomStartUpgrade();
+      }
+      const catchUpMsg = globals.currentLang === 'ja'
+        ? `⛩️ 鳥居の加護: ${catchUpCount}つの能力解放！`
+        : `⛩️ TORII CATCH-UP: +${catchUpCount} BLESSINGS!`;
+      globals.delayedActions.push({
+        delay: 0.25,
+        run: () => {
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 95, catchUpMsg, '#ffd700', 26));
+        }
+      });
+    }
+  }
+
+  // Cinematic Boss Encounter Announcement
+  if (globals.gameMode === 'classic' && isBossStage) {
+    showBossWarningBanner(currentStage);
+  }
+
   document.getElementById('level-display')!.textContent = globals.level.toString();
   updateEnhanceButton();
   updateStaticText();
   updateUI(); 
   spawnEnemy();
+
+  // Wave Influx: Immediate spawn on higher stages to eliminate early dead air
+  if (globals.gameMode === 'classic' && !isBossStage && currentStage >= 3) {
+    const initialInflux = Math.min(3, Math.floor(currentStage / 3));
+    for (let i = 0; i < initialInflux; i++) {
+      spawnEnemy();
+    }
+  }
 }
 
 function spawnEnemy() {
@@ -981,7 +1052,18 @@ function spawnEnemy() {
   let count = 1;
   let nextSpawnMult = 1.0;
   
-  if (globals.difficulty === 'easy') {
+  if (globals.gameMode === 'classic') {
+    const stage = globals.currentStage || 1;
+    if (stage >= 8) {
+      count = Math.min(4, 2 + Math.floor((stage - 8) / 4));
+      nextSpawnMult = Math.max(0.45, 0.85 - (stage - 8) * 0.025);
+    } else if (stage >= 4) {
+      count = 2;
+      nextSpawnMult = 0.75;
+    } else if (stage >= 2) {
+      nextSpawnMult = 0.90;
+    }
+  } else if (globals.difficulty === 'easy') {
     maxEnemies = Math.round(maxEnemies * 0.6);
     if (globals.score > 20) count = 2;
     nextSpawnMult = 1.5;
@@ -2043,6 +2125,12 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.shockwaves.push(new Shockwave(e.x, e.y, isBoss ? '#ffd700' : '#ff003c'));
     addFlow(20);
 
+    // Execution Magatama Bounty (boosted by Fortune)
+    const execMag = Math.round((isBoss ? 15 : 3) * (globals.playerStats?.fortuneMult || 1.0));
+    globals.magatama = (globals.magatama || 0) + execMag;
+    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+    globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🔮`, '#c084fc', 22));
+
     const mangaCutin = document.getElementById('manga-cutin');
     if (mangaCutin) {
       mangaCutin.style.display = 'block';
@@ -2188,10 +2276,11 @@ function killEnemy(e: Enemy) {
     spawnShrine(5);
   }
 
-  // Award Yomi Magatama based on enemy tier
+  // Award Yomi Magatama based on enemy tier (boosted by Fortune)
   const isBossEnemy = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss;
   const isEliteOrRanged = e.subType === 'musketeer' || e.subType === 'pyromancer' || e.subType === 'necromancer' || e.subType === 'orc_brute';
-  const earnedMagatama = isBossEnemy ? 50 : (isEliteOrRanged ? 3 : 1);
+  const fortuneMult = globals.playerStats?.fortuneMult || 1.0;
+  const earnedMagatama = Math.round((isBossEnemy ? 50 : (isEliteOrRanged ? 3 : 1)) * fortuneMult);
   globals.magatama = (globals.magatama || 0) + earnedMagatama;
   try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
   if (isBossEnemy || Math.random() < 0.35) {
@@ -2271,6 +2360,22 @@ function addCombo() {
 
   if (!globals.unlockedSeals.includes(4) && (globals.combo === 25 || globals.combo === 40)) {
     notifyFeatMilestone(4, globals.combo, 50, "Combo Streak", "コンボ数");
+  }
+
+  // Combo Milestone Magatama Bounties (boosted by Fortune)
+  if (globals.combo === 25 || globals.combo === 50 || globals.combo === 100 || (globals.combo > 100 && globals.combo % 50 === 0)) {
+    const bountyBase = Math.min(150, globals.combo);
+    const comboBounty = Math.round(bountyBase * (globals.playerStats?.fortuneMult || 1.0));
+    globals.magatama = (globals.magatama || 0) + comboBounty;
+    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+    globals.floatingTexts.push(FloatingText.acquire(
+      globals.player.x,
+      globals.player.y - 140,
+      globals.currentLang === 'ja' ? `🔥 ${globals.combo}連撃ボーナス: +${comboBounty} 🔮` : `🔥 ${globals.combo} COMBO BOUNTY: +${comboBounty} 🔮`,
+      'neon-#ffd700',
+      30
+    ));
+    try { playSynthesizedParry(); } catch(err) {}
   }
 
   addFlow(1.2);
@@ -3474,6 +3579,13 @@ function update(realDt: number) {
             globals.runStats.perfectParries++;
             globals.runStats.parries++;
             globals.consecutiveParries++;
+
+            // Perfect Parry Magatama Bounty (boosted by Fortune)
+            const parryMag = Math.round(2 * (globals.playerStats?.fortuneMult || 1.0));
+            globals.magatama = (globals.magatama || 0) + parryMag;
+            try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x + 35, globals.player.y - 85, `+${parryMag} 🔮`, '#c084fc', 20));
+
             if (globals.consecutiveParries >= 10 && !globals.unlockedSeals.includes(6)) {
               spawnShrine(6);
             }

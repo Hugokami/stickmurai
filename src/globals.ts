@@ -100,7 +100,9 @@ export const globals = {
     sakuraBlizzardLevel: 0,
     unstableOverloadLevel: 0,
     magneticDrawLevel: 0,
-    reapersMarkLevel: 0
+    reapersMarkLevel: 0,
+    fortuneMult: 1.0,
+    postureDmgBonus: 0
   },
 
   exp: 0,
@@ -309,13 +311,24 @@ export const globals = {
   })(),
   stageKills: 0,
   stageTargetKills: 12,
+  clearedStages: (() => {
+    try {
+      const stored = localStorage.getItem('stickmurai_cleared_stages');
+      if (stored) return JSON.parse(stored) as number[];
+    } catch(e) {}
+    return [] as number[];
+  })(),
   campaignUpgrades: (() => {
     const defaults = {
       slashDamage: 0,     // Level 0..10 (+1 DMG per level)
       iaijutsuPower: 0,   // Level 0..10 (+2 DMG & +10% width per level)
       maxLives: 0,        // Level 0..5 (+1 max heart per level)
       dashCooldown: 0,    // Level 0..5 (-10% dash CD & +5% speed per level)
-      spiritResonance: 0  // Level 0..5 (+25% flow gen & +1.5s ult per level)
+      spiritResonance: 0, // Level 0..5 (+25% flow gen & +1.5s ult per level)
+      infiniteSharpness: 0, // Uncapped (+0.5 DMG per rank)
+      infiniteFlow: 0,      // Uncapped (+1% flow per rank)
+      infiniteFortune: 0,   // Uncapped (+2% magatama bounty yield per rank)
+      infiniteRiposte: 0    // Uncapped (+1.5 posture break DMG per rank)
     };
     try {
       const stored = localStorage.getItem('stickmurai_campaign_upgrades');

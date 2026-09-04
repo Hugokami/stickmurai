@@ -1005,7 +1005,8 @@ export class Enemy extends Entity {
 
   addPostureDamage(amount: number) {
     if (this.state === 'dead' || this.postureBrokenTimer > 0) return;
-    this.posture += amount;
+    const bonus = globals.playerStats?.postureDmgBonus || 0;
+    this.posture += (amount + bonus);
     if (this.posture >= this.maxPosture) {
       this.posture = this.maxPosture;
       this.postureBrokenTimer = 2.5;

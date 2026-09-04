@@ -123,6 +123,55 @@ export const ASCENSION_UPGRADES = [
     descJa: '気力生成+25% & 奥義持続+1.5秒',
     baseCost: 300,
     costMult: 300,
+  },
+  // Infinite / Paragon Upgrades (Endless Bushido Progression)
+  {
+    id: 'infiniteSharpness',
+    name: 'Endless Edge',
+    nameJa: '無限の真剣',
+    icon: '✨',
+    max: 999,
+    isEndless: true,
+    desc: '+0.5 Slash DMG per rank (Uncapped)',
+    descJa: '通常斬撃ダメージ+0.5 (上限なし)',
+    baseCost: 400,
+    costMult: 150,
+  },
+  {
+    id: 'infiniteFlow',
+    name: 'Unbound Spirit',
+    nameJa: '無限の霊気',
+    icon: '🌀',
+    max: 999,
+    isEndless: true,
+    desc: '+1% Flow Rate & Spirit Power (Uncapped)',
+    descJa: '気力蓄積速度+1% (上限なし)',
+    baseCost: 350,
+    costMult: 150,
+  },
+  {
+    id: 'infiniteFortune',
+    name: 'Golden Fortune',
+    nameJa: '黄金の神威',
+    icon: '💰',
+    max: 999,
+    isEndless: true,
+    desc: '+2% Magatama drop & bounty yields (Uncapped)',
+    descJa: '勾玉獲得量+2% (上限なし)',
+    baseCost: 300,
+    costMult: 120,
+  },
+  {
+    id: 'infiniteRiposte',
+    name: 'Iron Parry Mastery',
+    nameJa: '鉄壁の崩し',
+    icon: '⚡',
+    max: 999,
+    isEndless: true,
+    desc: '+1.5 Posture break DMG per parry (Uncapped)',
+    descJa: '弾き時の体幹削り+1.5 (上限なし)',
+    baseCost: 450,
+    costMult: 180,
   }
 ];
 
@@ -1404,10 +1453,16 @@ export function updateUI() {
           objDisplay.style.display = 'block';
           lastObjectiveDisplay = 'block';
         }
-        const isBoss = globals.currentStage === 5 || globals.currentStage >= 10;
-        const text = isBoss
-          ? `STAGE ${globals.currentStage}: ${globals.currentStage === 5 ? 'SKELETON ONI BOSS' : 'AGIS COLOSSUS BOSS'}`
-          : `STAGE ${globals.currentStage}: ${globals.stageKills} / ${globals.stageTargetKills} KILLS`;
+        const stage = globals.currentStage || 1;
+        const isBoss = stage % 5 === 0;
+        const isJa = globals.currentLang === 'ja';
+        let text = '';
+        if (isBoss) {
+          const bossStageData = getStageData(stage);
+          text = `STAGE ${stage}: ${isJa ? (bossStageData.nameJa || bossStageData.name) : bossStageData.name}`;
+        } else {
+          text = `STAGE ${stage}: ${globals.stageKills} / ${globals.stageTargetKills} KILLS`;
+        }
         if (text !== lastObjectiveText) {
           objDisplay.textContent = text;
           objDisplay.style.borderColor = isBoss ? 'rgba(239, 68, 68, 0.7)' : 'rgba(255, 215, 0, 0.4)';
@@ -2107,39 +2162,49 @@ export function populateAscensionUpgrades() {
     iaijutsuPower: 0,
     maxLives: 0,
     dashCooldown: 0,
-    spiritResonance: 0
+    spiritResonance: 0,
+    infiniteSharpness: 0,
+    infiniteFlow: 0,
+    infiniteFortune: 0,
+    infiniteRiposte: 0
   };
 
   ASCENSION_UPGRADES.forEach(u => {
     const curLevel = (upgrades as any)[u.id] || 0;
-    const isMax = curLevel >= u.max;
+    const isEndless = (u as any).isEndless || u.max >= 999;
+    const isMax = !isEndless && curLevel >= u.max;
     const cost = isMax ? 0 : u.baseCost + curLevel * u.costMult;
     const canAfford = !isMax && (globals.magatama || 0) >= cost;
 
     let pips = '';
-    for (let i = 0; i < u.max; i++) {
-      pips += i < curLevel ? '● ' : '○ ';
+    if (isEndless) {
+      pips = `<span style="color: #fbbf24; font-weight: bold; font-size: 10px;">★ PRESTIGE UNBOUND ★</span>`;
+    } else {
+      for (let i = 0; i < u.max; i++) {
+        pips += i < curLevel ? '● ' : '○ ';
+      }
     }
 
     const card = document.createElement('div');
     card.style.cssText = `
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid ${isMax ? 'rgba(34, 197, 94, 0.4)' : (canAfford ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.1)')};
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid ${isMax ? 'rgba(34, 197, 94, 0.4)' : (isEndless ? 'rgba(251, 191, 36, 0.45)' : (canAfford ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.1)'))};
       border-radius: 8px;
       padding: 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 6px;
       transition: all 0.2s ease;
+      box-shadow: ${isEndless ? '0 0 12px rgba(251, 191, 36, 0.1)' : 'none'};
     `;
 
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-family: 'Shojumaru', cursive; color: ${isMax ? '#4ade80' : '#ffd700'}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+        <span style="font-family: 'Shojumaru', cursive; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
           <span>${u.icon}</span> ${isJa ? u.nameJa : u.name}
         </span>
-        <span style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : '#38bdf8'}; font-weight: bold;">
-          ${isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`}
+        <span style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold;">
+          ${isEndless ? `Rank ${curLevel} (∞)` : (isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`)}
         </span>
       </div>
       <div style="font-family: monospace; font-size: 10px; color: #a855f7; letter-spacing: 1px;">
@@ -2152,7 +2217,7 @@ export function populateAscensionUpgrades() {
         ${isMax ? `
           <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;">✓ MASTERED</button>
         ` : `
-          <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? '#ffd700' : '#475569'}; color: ${canAfford ? '#ffd700' : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">
+          <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">
             ${isJa ? `強化: ${cost.toLocaleString()} 🔮` : `UPGRADE: ${cost.toLocaleString()} 🔮`}
           </button>
         `}
@@ -2162,7 +2227,7 @@ export function populateAscensionUpgrades() {
     const buyBtn = card.querySelector('.buy-ascension-btn');
     if (buyBtn && canAfford) {
       bindDualListener(buyBtn as HTMLElement, () => {
-        if ((globals.magatama || 0) >= cost && curLevel < u.max) {
+        if ((globals.magatama || 0) >= cost && (isEndless || curLevel < u.max)) {
           globals.magatama -= cost;
           (globals.campaignUpgrades as any)[u.id] = curLevel + 1;
           try {
@@ -2191,7 +2256,20 @@ export function triggerStageClear() {
   playSynthesizedFusionUnlock();
 
   const currentStage = globals.currentStage || 1;
-  const stageReward = currentStage * 100;
+  const fortuneMult = globals.playerStats?.fortuneMult || 1.0;
+  const baseReward = Math.round(currentStage * 100 * fortuneMult);
+
+  let clearedStages: number[] = globals.clearedStages || [];
+  const isFirstClear = !clearedStages.includes(currentStage);
+  let stageReward = baseReward;
+
+  if (isFirstClear) {
+    stageReward = baseReward * 3;
+    clearedStages.push(currentStage);
+    globals.clearedStages = clearedStages;
+    try { localStorage.setItem('stickmurai_cleared_stages', JSON.stringify(clearedStages)); } catch(e) {}
+  }
+
   globals.magatama = (globals.magatama || 0) + stageReward;
   try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
 
@@ -2216,7 +2294,11 @@ export function triggerStageClear() {
   }
 
   const rewardEl = document.getElementById('stage-clear-reward');
-  if (rewardEl) rewardEl.textContent = `+${stageReward} 🔮`;
+  if (rewardEl) {
+    rewardEl.innerHTML = isFirstClear
+      ? `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[FIRST CLEAR 3×]</span> +${stageReward.toLocaleString()} 🔮`
+      : `+${stageReward.toLocaleString()} 🔮`;
+  }
 
   const magEl = document.getElementById('stage-clear-magatama');
   if (magEl) magEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
