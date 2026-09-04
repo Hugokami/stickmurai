@@ -54,6 +54,20 @@ let lastBtnEnhanceBuff = false;
 let lastRenderedMagatama = -1;
 let hudMagatamaElement: HTMLElement | null = null;
 
+export function bindDualListener(el: HTMLElement | null | undefined, handler: (e: Event) => void) {
+  if (!el) return;
+  let lastTriggerTime = 0;
+  const safeHandler = (e: Event) => {
+    e.stopPropagation();
+    const now = Date.now();
+    if (now - lastTriggerTime < 300) return;
+    lastTriggerTime = now;
+    handler(e);
+  };
+  el.addEventListener('pointerdown', safeHandler);
+  el.addEventListener('click', safeHandler);
+}
+
 export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void, onRestartCallback: () => void) {
   // DOM queries
   enhanceCooldownOverlay = document.getElementById('enhance-cooldown-overlay')!;
@@ -192,31 +206,25 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     }
   };
 
-  if (openGrimoireBtn) openGrimoireBtn.addEventListener('click', openGrimoire);
-  if (pauseGrimoireBtn) pauseGrimoireBtn.addEventListener('click', openGrimoire);
-  if (closeGrimoireBtn) {
-    closeGrimoireBtn.addEventListener('click', () => {
-      if (grimoireScreen) grimoireScreen.style.display = 'none';
-    });
-  }
+  bindDualListener(openGrimoireBtn, openGrimoire);
+  bindDualListener(pauseGrimoireBtn, openGrimoire);
+  bindDualListener(closeGrimoireBtn, () => {
+    if (grimoireScreen) grimoireScreen.style.display = 'none';
+  });
 
   const chronicleScreen = document.getElementById('chronicle-screen');
   const openChronicleBtn = document.getElementById('open-chronicle-btn');
   const closeChronicleBtn = document.getElementById('close-chronicle-btn');
 
-  if (openChronicleBtn) {
-    openChronicleBtn.addEventListener('click', () => {
-      if (chronicleScreen) {
-        chronicleScreen.style.display = 'flex';
-        populateChronicleList();
-      }
-    });
-  }
-  if (closeChronicleBtn) {
-    closeChronicleBtn.addEventListener('click', () => {
-      if (chronicleScreen) chronicleScreen.style.display = 'none';
-    });
-  }
+  bindDualListener(openChronicleBtn, () => {
+    if (chronicleScreen) {
+      chronicleScreen.style.display = 'flex';
+      populateChronicleList();
+    }
+  });
+  bindDualListener(closeChronicleBtn, () => {
+    if (chronicleScreen) chronicleScreen.style.display = 'none';
+  });
 
   // Dojo & Heroes Screen listeners
   const dojoScreen = document.getElementById('dojo-screen');
@@ -236,38 +244,22 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     if (dojoScreen) dojoScreen.style.display = 'none';
   };
 
-  if (openDojoBtn) {
-    openDojoBtn.addEventListener('click', openDojo);
-    openDojoBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); openDojo(); });
-  }
-  if (closeDojoBtn) {
-    closeDojoBtn.addEventListener('click', closeDojo);
-    closeDojoBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); closeDojo(); });
-  }
+  bindDualListener(openDojoBtn, openDojo);
+  bindDualListener(closeDojoBtn, closeDojo);
 
-  if (tributeSmallBtn) {
-    const handleSmallTribute = (e: Event) => {
-      e.stopPropagation();
-      globals.magatama = (globals.magatama || 0) + 200;
-      try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
-      playSynthesizedTempleBell();
-      populateDojoHeroGrid();
-    };
-    tributeSmallBtn.addEventListener('click', handleSmallTribute);
-    tributeSmallBtn.addEventListener('pointerdown', handleSmallTribute);
-  }
+  bindDualListener(tributeSmallBtn, () => {
+    globals.magatama = (globals.magatama || 0) + 200;
+    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+    playSynthesizedTempleBell();
+    populateDojoHeroGrid();
+  });
 
-  if (tributeGrandBtn) {
-    const handleGrandTribute = (e: Event) => {
-      e.stopPropagation();
-      globals.magatama = (globals.magatama || 0) + 1000;
-      try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
-      playSynthesizedSealShatter();
-      populateDojoHeroGrid();
-    };
-    tributeGrandBtn.addEventListener('click', handleGrandTribute);
-    tributeGrandBtn.addEventListener('pointerdown', handleGrandTribute);
-  }
+  bindDualListener(tributeGrandBtn, () => {
+    globals.magatama = (globals.magatama || 0) + 1000;
+    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+    playSynthesizedSealShatter();
+    populateDojoHeroGrid();
+  });
 
   // Shrine & Hermit Modal Listeners
   const onShatterSeal = () => {
@@ -295,103 +287,88 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const shrineClaimBtn = document.getElementById('shrine-claim-btn');
   const shrineCommuneBtn = document.getElementById('shrine-commune-btn');
   const shrineLeaveBtn = document.getElementById('shrine-leave-btn');
-  if (shrineClaimBtn) {
-    shrineClaimBtn.addEventListener('click', onShatterSeal);
-    shrineClaimBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); onShatterSeal(); });
-  }
-  if (shrineCommuneBtn) {
-    shrineCommuneBtn.addEventListener('click', onShatterSeal);
-    shrineCommuneBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); onShatterSeal(); });
-  }
-  if (shrineLeaveBtn) {
-    shrineLeaveBtn.addEventListener('click', closeShrineModal);
-    shrineLeaveBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); closeShrineModal(); });
-  }
+  bindDualListener(shrineClaimBtn, onShatterSeal);
+  bindDualListener(shrineCommuneBtn, onShatterSeal);
+  bindDualListener(shrineLeaveBtn, closeShrineModal);
 
   const hermitChoice1Btn = document.getElementById('hermit-pact-choice-1');
   const hermitChoice2Btn = document.getElementById('hermit-pact-choice-2');
   const hermitLeaveBtn = document.getElementById('hermit-leave-btn');
 
-  if (hermitChoice1Btn) {
-    hermitChoice1Btn.addEventListener('click', () => {
-      const hermit = globals.activeHermit;
-      const isJa = globals.currentLang === 'ja';
-      if (hermit) {
-        if (hermit.pactType === 'blade') {
-          if (globals.maxLives > 1) {
-            globals.maxLives--;
-            globals.lives = Math.min(globals.lives, globals.maxLives);
-            globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 2;
-            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '血刀の誓い成立！ +2 攻撃力' : 'BLOODBLADE SEALED! +2 DMG', '#ef4444', 28));
-          }
-        } else if (hermit.pactType === 'speed') {
-          if (globals.maxLives > 1) {
-            globals.maxLives--;
-            globals.lives = Math.min(globals.lives, globals.maxLives);
-            globals.playerStats.dashCooldownBase *= 0.65;
-            globals.playerStats.moveSpeedMult += 0.25;
-            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '疾風の生贄成立！ 神速化' : 'GALE PACT SEALED! RAPID DASH', '#38bdf8', 28));
-          }
-        } else {
-          if (globals.maxLives > 1) {
-            globals.maxLives--;
-            globals.lives = Math.min(globals.lives, globals.maxLives);
-            globals.playerStats.flowGenMult *= 1.6;
-            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '心眼の覚醒成立！ 気力急増' : 'MIND EYE SEALED! +60% FLOW', '#a855f7', 28));
-          }
+  bindDualListener(hermitChoice1Btn, () => {
+    const hermit = globals.activeHermit;
+    const isJa = globals.currentLang === 'ja';
+    if (hermit) {
+      if (hermit.pactType === 'blade') {
+        if (globals.maxLives > 1) {
+          globals.maxLives--;
+          globals.lives = Math.min(globals.lives, globals.maxLives);
+          globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 2;
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '血刀の誓い成立！ +2 攻撃力' : 'BLOODBLADE SEALED! +2 DMG', '#ef4444', 28));
         }
-        playSynthesizedTempleBell();
-        globals.screenShake = Math.max(globals.screenShake, 24);
-        globals.activeHermit = null;
-        closeHermitModal();
-        callbacks.updateUI();
-      }
-    });
-  }
-
-  if (hermitChoice2Btn) {
-    hermitChoice2Btn.addEventListener('click', () => {
-      const hermit = globals.activeHermit;
-      const isJa = globals.currentLang === 'ja';
-      if (hermit) {
-        if (hermit.pactType === 'blade') {
-          globals.flow = Math.max(0, globals.flow * 0.5);
-          globals.playerStats.slashSizeMult += 0.50;
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '巨刃の瞑想成立！ +50% 範囲' : 'COLOSSUS SEALED! +50% SIZE', '#ffd700', 28));
-        } else if (hermit.pactType === 'speed') {
-          callbacks.addFlow(globals.playerStats.flowMax);
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '薄氷の修羅！ 気力全開' : 'GLASS ASURA! FULL FLOW', '#f97316', 28));
-        } else {
-          globals.petalArmorActive = false;
-          globals.petalArmorCooldown = 30;
-          globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 1;
-          globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 2;
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '天恵拝領！ 抜刀威力向上' : 'ASCETIC GIFT! +2 IAI DMG', '#10b981', 28));
+      } else if (hermit.pactType === 'speed') {
+        if (globals.maxLives > 1) {
+          globals.maxLives--;
+          globals.lives = Math.min(globals.lives, globals.maxLives);
+          globals.playerStats.dashCooldownBase *= 0.65;
+          globals.playerStats.moveSpeedMult += 0.25;
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '疾風の生贄成立！ 神速化' : 'GALE PACT SEALED! RAPID DASH', '#38bdf8', 28));
         }
-        playSynthesizedTempleBell();
-        globals.screenShake = Math.max(globals.screenShake, 24);
-        globals.activeHermit = null;
-        closeHermitModal();
-        callbacks.updateUI();
+      } else {
+        if (globals.maxLives > 1) {
+          globals.maxLives--;
+          globals.lives = Math.min(globals.lives, globals.maxLives);
+          globals.playerStats.flowGenMult *= 1.6;
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '心眼の覚醒成立！ 気力急増' : 'MIND EYE SEALED! +60% FLOW', '#a855f7', 28));
+        }
       }
-    });
-  }
+      playSynthesizedTempleBell();
+      globals.screenShake = Math.max(globals.screenShake, 24);
+      globals.activeHermit = null;
+      closeHermitModal();
+      callbacks.updateUI();
+    }
+  });
 
-  if (hermitLeaveBtn) hermitLeaveBtn.addEventListener('click', closeHermitModal);
+  bindDualListener(hermitChoice2Btn, () => {
+    const hermit = globals.activeHermit;
+    const isJa = globals.currentLang === 'ja';
+    if (hermit) {
+      if (hermit.pactType === 'blade') {
+        globals.flow = Math.max(0, globals.flow * 0.5);
+        globals.playerStats.slashSizeMult += 0.50;
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '巨刃の瞑想成立！ +50% 範囲' : 'COLOSSUS SEALED! +50% SIZE', '#ffd700', 28));
+      } else if (hermit.pactType === 'speed') {
+        callbacks.addFlow(globals.playerStats.flowMax);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '薄氷の修羅！ 気力全開' : 'GLASS ASURA! FULL FLOW', '#f97316', 28));
+      } else {
+        globals.petalArmorActive = false;
+        globals.petalArmorCooldown = 30;
+        globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 1;
+        globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 2;
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '天恵拝領！ 抜刀威力向上' : 'ASCETIC GIFT! +2 IAI DMG', '#10b981', 28));
+      }
+      playSynthesizedTempleBell();
+      globals.screenShake = Math.max(globals.screenShake, 24);
+      globals.activeHermit = null;
+      closeHermitModal();
+      callbacks.updateUI();
+    }
+  });
+
+  bindDualListener(hermitLeaveBtn, closeHermitModal);
 
   // Dawn Victory return button
   const dawnReturnBtn = document.getElementById('dawn-return-btn');
-  if (dawnReturnBtn) {
-    dawnReturnBtn.addEventListener('click', () => {
-      const dawnScreen = document.getElementById('dawn-victory-screen');
-      if (dawnScreen) dawnScreen.style.display = 'none';
-      globals.gameState = 'mainmenu';
-      mainMenu.style.display = 'flex';
-      uiLayer.style.display = 'none';
-      mobileControls.style.display = 'none';
-      pauseBgm();
-    });
-  }
+  bindDualListener(dawnReturnBtn, () => {
+    const dawnScreen = document.getElementById('dawn-victory-screen');
+    if (dawnScreen) dawnScreen.style.display = 'none';
+    globals.gameState = 'mainmenu';
+    mainMenu.style.display = 'flex';
+    uiLayer.style.display = 'none';
+    mobileControls.style.display = 'none';
+    pauseBgm();
+  });
 
 
   // Ad Reward - Honor Revive Click Listener
@@ -1524,9 +1501,9 @@ export function populateGrimoireGrid() {
         </div>
 
         <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #1e293b; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#475569;">
-          <span style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#090d16'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #1e293b'}; color:${req1Met ? '#86efac' : '#64748b'};">? ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
+          <span style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#090d16'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #1e293b'}; color:${req1Met ? '#86efac' : '#64748b'};">📜 ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
           <span>+</span>
-          <span style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#090d16'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #1e293b'}; color:${req2Met ? '#86efac' : '#64748b'};">? ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
+          <span style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#090d16'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #1e293b'}; color:${req2Met ? '#86efac' : '#64748b'};">📜 ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
         </div>
       `;
     }
@@ -1544,7 +1521,7 @@ export const HEROES_DATA = [
     descEn: 'The traditional stickmurai swordsman. Well-rounded agility, blade range, and recovery.',
     descJa: '伝統を受け継ぐ棒人間サムライ。速さ・刃のリーチ・隙の少なさの全てが高水準で調和した万能の型。',
     cost: 0,
-    image: 'sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0001.png',
+    image: 'sprites/portraits/portrait_ronin.png',
     atk: '100%',
     spd: '100%',
     specialEn: 'Balanced Arts (Baseline Stance)',
@@ -1559,7 +1536,7 @@ export const HEROES_DATA = [
     descEn: 'Wields an ethereal celestial greatsword. +25% Slash AoE, +1 Base Slash DMG, and +2 Iaijutsu Shockwave DMG.',
     descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+25%、基礎威力+1、抜刀衝撃波威力+2。',
     cost: 3000,
-    image: 'sprites/HeroLuneblade/idle_0.png',
+    image: 'sprites/portraits/portrait_luneblade.png',
     atk: '130%',
     spd: '95%',
     specialEn: 'Lunar Resonance (+25% AoE, +2 Iai DMG)',
@@ -1574,7 +1551,7 @@ export const HEROES_DATA = [
     descEn: 'Master of lethal shadow-stepping. +15% Movement Speed, -20% Dash Cooldown, and +10% Attack Speed.',
     descJa: '闇に潜み急所を討つ達人。移動速度+15%、瞬歩クールダウン-20%、攻撃速度+10%。',
     cost: 5000,
-    image: 'sprites/HeroNinja/idle_0.png',
+    image: 'sprites/portraits/portrait_ninja.png',
     atk: '110%',
     spd: '120%',
     specialEn: 'Phantom Step (-20% Dash CD, +15% Speed)',
@@ -1609,7 +1586,7 @@ export function populateDojoHeroGrid() {
     // Hero portrait container
     const portraitHtml = `
       <div style="width: 100%; height: 110px; background: rgba(0,0,0,0.5); border-radius: 6px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 4px;">
-        <img src="${hero.image}" alt="${hero.nameEn}" style="max-height: 90px; max-width: 90px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(192,132,252,0.3));" />
+        <img src="${hero.image}" alt="${hero.nameEn}" style="width: 90px; height: 90px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(192,132,252,0.3));" />
       </div>
     `;
 
@@ -1650,10 +1627,9 @@ export function populateDojoHeroGrid() {
     grid.appendChild(card);
   });
 
-  // Attach pointerdown and click listeners to Equip and Buy buttons
+  // Attach pointerdown and click listeners to Equip and Buy buttons using bindDualListener
   grid.querySelectorAll('.equip-hero-btn').forEach(btn => {
-    const handleEquip = (e: Event) => {
-      e.stopPropagation();
+    bindDualListener(btn as HTMLElement, () => {
       const heroId = (btn as HTMLElement).dataset.hero;
       if (!heroId) return;
       globals.selectedHero = heroId;
@@ -1661,14 +1637,11 @@ export function populateDojoHeroGrid() {
       globals.player?.updateHeroType();
       playSynthesizedTempleBell();
       populateDojoHeroGrid();
-    };
-    btn.addEventListener('click', handleEquip);
-    btn.addEventListener('pointerdown', handleEquip);
+    });
   });
 
   grid.querySelectorAll('.buy-hero-btn').forEach(btn => {
-    const handleBuy = (e: Event) => {
-      e.stopPropagation();
+    bindDualListener(btn as HTMLElement, () => {
       const heroId = (btn as HTMLElement).dataset.hero;
       if (!heroId) return;
       const hero = HEROES_DATA.find(h => h.id === heroId);
@@ -1688,9 +1661,7 @@ export function populateDojoHeroGrid() {
       globals.player?.updateHeroType();
       playSynthesizedFusionUnlock();
       populateDojoHeroGrid();
-    };
-    btn.addEventListener('click', handleBuy);
-    btn.addEventListener('pointerdown', handleBuy);
+    });
   });
 }
 
