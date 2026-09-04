@@ -7,9 +7,11 @@ import {
   FloatingText,
   Shockwave,
   Projectile,
-  Slash
+  Slash,
+  AnimatedEffect
 } from './entities';
 import { playSound, sfx } from './audio';
+import { vfxAnims } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
@@ -268,6 +270,14 @@ export class Player extends Entity {
         this.dashStartY = this.y;
         this.lastAfterimageX = this.x;
         this.lastAfterimageY = this.y;
+
+        // Spawn directional dash dust puff opposite to player motion vector
+        const dustFrames = (vfxAnims as any).player?.dashDust;
+        if (dustFrames && dustFrames.length > 0) {
+          const moveAngle = Math.atan2(this.vy, this.vx) || (this.dir === 1 ? 0 : Math.PI);
+          const footY = this.y + (this.yOffset || 0) + 18;
+          globals.animatedEffects.push(new AnimatedEffect(this.x, footY, dustFrames, 0.28, 1.4, moveAngle + Math.PI));
+        }
         
         // Reset attack cooldown on dash so combos trigger instantly and reliably!
         this.attackCooldown = 0;
@@ -675,6 +685,21 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.arc(0, 0, radius - 20, 0, Math.PI * 2);
       ctx.stroke();
 
+      // Animated pixel art wind barrier sprite
+      const windFrames = (vfxAnims as any).skills?.windAegis;
+      if (windFrames && windFrames.length > 0) {
+        const frameIdx = Math.floor((performance.now() / 65) % windFrames.length);
+        const wImg = windFrames[frameIdx];
+        if (wImg && wImg.complete && wImg.naturalWidth > 0) {
+          ctx.save();
+          ctx.globalAlpha = 0.85 * this.shieldVisualScale;
+          const wScale = (radius * 2 / 128) * 1.08;
+          ctx.scale(wScale, wScale);
+          ctx.drawImage(wImg, -wImg.width / 2, -wImg.height / 2);
+          ctx.restore();
+        }
+      }
+
       ctx.restore();
     }
 
@@ -715,6 +740,30 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.beginPath();
       ctx.arc(0, 0, radius - 20, 0, Math.PI * 2);
       ctx.stroke();
+
+      // Animated pixel art fire arcs from Tiny Swords orbiting the blade
+      const fireFrames = (vfxAnims as any).skills?.firewheel;
+      if (fireFrames && fireFrames.length > 0) {
+        const frameIdx = Math.floor((performance.now() / 70) % fireFrames.length);
+        const fImg = fireFrames[frameIdx];
+        if (fImg && fImg.complete && fImg.naturalWidth > 0) {
+          ctx.save();
+          ctx.globalAlpha = 0.9 * this.firewheelVisualScale;
+          const arcCount = 3;
+          for (let i = 0; i < arcCount; i++) {
+            ctx.save();
+            const angle = time + (i * Math.PI * 2 / arcCount);
+            ctx.rotate(angle);
+            ctx.translate(radius * 0.82, 0);
+            ctx.rotate(Math.PI / 2);
+            const fScale = 1.05 * (1 + 0.15 * (globals.playerStats.firewheelRangeLevel || 0));
+            ctx.scale(fScale, fScale);
+            ctx.drawImage(fImg, -fImg.width / 2, -fImg.height / 2);
+            ctx.restore();
+          }
+          ctx.restore();
+        }
+      }
 
       ctx.restore();
     }

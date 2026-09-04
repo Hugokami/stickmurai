@@ -1096,6 +1096,10 @@ export class Enemy extends Entity {
       globals.screenShake = Math.max(globals.screenShake, 24);
       globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8'));
       globals.shockwaves.push(new Shockwave(this.x, this.y, '#fbbf24'));
+      const bossImpact = (vfxAnims as any).boss?.slamImpact;
+      const bossDust = (vfxAnims as any).boss?.slamDust;
+      if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));
+      if (bossDust?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossDust, 0.55, 2.2));
       globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 65, "COLOSSUS CRUSH! ⚡", "#38bdf8", 30));
       playSynthesizedThunder();
 
@@ -1121,6 +1125,10 @@ export class Enemy extends Entity {
       globals.screenShake = Math.max(globals.screenShake, 24);
       globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444'));
       globals.shockwaves.push(new Shockwave(this.x, this.y, '#ffffff'));
+      const bossImpact = (vfxAnims as any).boss?.slamImpact;
+      const bossDust = (vfxAnims as any).boss?.slamDust;
+      if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));
+      if (bossDust?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossDust, 0.55, 2.2));
       globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "WARLORD CLEAVE! 💀", "#ef4444", 28));
       playSound(sfx.enemySlash, 0.5);
 
@@ -1245,6 +1253,21 @@ export class Enemy extends Entity {
     else if (this.type === 'enemy05') headOffset = 26;
     else if (this.type === 'enemy_orc') headOffset = 44;
     else if (this.type === 'enemy_barrel') headOffset = 52;
+
+    // Perilous Attack Danger Telegraph ("!") for charging bosses, unblockable lunges, and locked aim
+    if (this.state === 'charge' && (this.isAimLocked || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' || this.subType === 'giant')) {
+      const alertFrames = (vfxAnims as any).combat?.perilAlert;
+      if (alertFrames && alertFrames.length > 0) {
+        const aIdx = Math.floor((performance.now() / 65) % alertFrames.length);
+        const aImg = alertFrames[aIdx];
+        if (aImg && aImg.complete && aImg.naturalWidth > 0) {
+          ctx.save();
+          const alertY = (effectiveRy - (headOffset + 24) * this.scaleMult) | 0;
+          ctx.drawImage(aImg, (rx - aImg.width / 2) | 0, (alertY - aImg.height / 2) | 0);
+          ctx.restore();
+        }
+      }
+    }
 
     // HP bar directly above enemy head
     if (this.state !== 'dead' && this.hp < this.maxHp) {
@@ -1382,6 +1405,10 @@ export function triggerBarrelExplosion(barrel: Enemy) {
 
   globals.screenShake = Math.max(globals.screenShake, 18);
   globals.shockwaves.push(new Shockwave(barrel.x, barrel.y, '#f97316'));
+  const barrelExp = (vfxAnims as any).explosions?.barrel;
+  if (barrelExp && barrelExp.length > 0) {
+    globals.animatedEffects.push(new AnimatedEffect(barrel.x, barrel.y, barrelExp, 0.55, 1.8));
+  }
   playSynthesizedThunder();
   playExplosionSfx(0.7);
 

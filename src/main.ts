@@ -1295,6 +1295,10 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     triggerFlowingCounterReset();
     
     globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+    const pY = (vfxAnims as any).impacts?.parryYellow;
+    if (pY?.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, pY, 0.28, 1.8));
+    }
 
     if (globals.gameMode === 'zen' && enemy && enemy.state !== 'dead') {
       hitEnemy(enemy, 2);
@@ -1343,6 +1347,10 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     
     // Parry blast pushing nearby enemies back!
     globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, 'rgba(0, 255, 255, 0.65)'));
+    const pYParry = (vfxAnims as any).impacts?.parryYellow;
+    if (pYParry?.length > 0 && enemy) {
+      globals.animatedEffects.push(new AnimatedEffect((globals.player.x + enemy.x) / 2, (globals.player.y + enemy.y) / 2, pYParry, 0.28, 1.8));
+    }
     globals.enemies.forEach(other => {
       if (other.state === 'dead') return;
       const dx = other.x - globals.player.x;
@@ -1378,6 +1386,10 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       globals.screenShake = 35;
       playSynthesizedPerfectParry();
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+      const pYResolve = (vfxAnims as any).impacts?.parryYellow;
+      if (pYResolve?.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, pYResolve, 0.35, 2.2));
+      }
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '武士の気迫！ 🛡️' : "RONIN'S RESOLVE! 🛡️", "neon-#ffd700", 36));
       for (let i = 0; i < 20; i++) {
         const angle = Math.random() * Math.PI * 2;
@@ -1801,6 +1813,10 @@ function executeSwiftCounter() {
   const midX = startX + Math.cos(angle) * 125;
   const midY = startY + Math.sin(angle) * 125;
   globals.slashes.push(Slash.acquire(midX, midY, angle, 1.3, true, 'sakura', false, globals.player));
+  const dirBlue = (vfxAnims as any).impacts?.directionalBlue;
+  if (dirBlue && dirBlue.length > 0) {
+    globals.animatedEffects.push(new AnimatedEffect(midX, midY, dirBlue, 0.32, 1.8, angle));
+  }
   
   for (let i = 0; i <= 12; i++) {
     const ratio = i / 12;
@@ -1877,6 +1893,14 @@ function executeThunderclapAndFlash() {
   const midY = startY + (endY - startY) / 2;
   globals.slashes.push(Slash.acquire(midX, midY, angle, 2.0, true, '#fbbf24', false, globals.player));
   globals.lightningBeams.push(new LightningBeam(endX, endY));
+  const lBurst = (vfxAnims as any).skills?.lightningBurst;
+  if (lBurst && lBurst.length > 0) {
+    globals.animatedEffects.push(new AnimatedEffect(endX, endY, lBurst, 0.35, 2.0));
+  }
+  const lStrike = (vfxAnims as any).skills?.lightningStrike;
+  if (lStrike && lStrike.length > 0) {
+    globals.animatedEffects.push(new AnimatedEffect(endX, endY - 20, lStrike, 0.4, 2.2));
+  }
 
   // Hit path enemies
   let firstHit: Enemy | null = null;
@@ -2311,6 +2335,11 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.screenShake = Math.max(globals.screenShake, 30);
     globals.hitStop = 0;
     globals.shockwaves.push(new Shockwave(e.x, e.y, isBoss ? '#ffd700' : '#ff003c'));
+    const bloodFx = (vfxAnims as any).combat?.bloodSplatter;
+    if (bloodFx && bloodFx.length > 0) {
+      const bAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
+      globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, bloodFx, 0.45, isBoss ? 2.5 : 1.8, bAngle));
+    }
     addFlow(20);
 
     // Execution Magatama Bounty (boosted by Fortune & Blood Surge / Blood Tithe)
@@ -3179,6 +3208,12 @@ function update(realDt: number) {
         
         globals.decoys.push(new Decoy(globals.player.x - 90, globals.player.y));
         globals.decoys.push(new Decoy(globals.player.x + 90, globals.player.y));
+        const smokeFrames = (vfxAnims as any).skills?.decoySmoke;
+        if (smokeFrames && smokeFrames.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, smokeFrames, 0.45, 1.8));
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x - 90, globals.player.y, smokeFrames, 0.45, 1.8));
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x + 90, globals.player.y, smokeFrames, 0.45, 1.8));
+        }
         globals.decoyInvisibilityTimer = 4.0;
         globals.decoyCritPrimed = true;
 

@@ -996,16 +996,16 @@ export class Slash {
     }
 
     let frames = vfxAnims.custom.slash;
-    if (this.owner) {
-      const slashes = (vfxAnims as any).heroSlashes;
-      if (slashes) {
-        if (this.owner.type === 'heronightborne') frames = slashes.nightborne;
-        else if (this.owner.type === 'herosamurai') frames = slashes.samurai;
-        else if (this.owner.type === 'herosatyr') frames = slashes.satyr;
-        else if (this.owner.type === 'heroluneblade') frames = slashes.luneblade;
-        else if (this.owner.type === 'heroninja') frames = slashes.ninja;
-        else if (this.owner.type === 'sword') frames = slashes.ronin;
-      }
+    const slashes = (vfxAnims as any).heroSlashes;
+    if (this.isEnhanced && slashes?.dragon) {
+      frames = slashes.dragon;
+    } else if (this.owner && slashes) {
+      if (this.owner.type === 'heronightborne') frames = slashes.nightborne;
+      else if (this.owner.type === 'herosamurai') frames = slashes.samurai;
+      else if (this.owner.type === 'herosatyr') frames = slashes.satyr;
+      else if (this.owner.type === 'heroluneblade') frames = slashes.luneblade;
+      else if (this.owner.type === 'heroninja') frames = slashes.ninja;
+      else if (this.owner.type === 'sword' || this.owner.subType === 'player') frames = slashes.ronin;
     }
     const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
     const frameIdx = Math.floor(progress * frames.length);

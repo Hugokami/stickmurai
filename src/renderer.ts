@@ -488,15 +488,15 @@ export function draw() {
       ctx.stroke();
     }
     
-    // Custom vortex sprite sheet animation loop
-    const vortexFrames = vfxAnims.custom.vortex;
+    // Custom sci-fi warp vortex sprite sheet animation loop
+    const vortexFrames = (vfxAnims as any).skills?.voidWarp?.length > 0 ? (vfxAnims as any).skills.voidWarp : vfxAnims.custom.vortex;
     const vfFrameIdx = Math.floor((performance.now() / 65) % vortexFrames.length);
     const img = vortexFrames[vfFrameIdx];
     if (img && img.complete && img.naturalWidth > 0) {
-      const vfScale = 1.3 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
-      const drawW = img.width * vfScale;
-      const drawH = img.height * vfScale;
-      ctx.drawImage(img, gx - drawW / 2, gy - drawH / 2, drawW, drawH);
+      const vfScale = 1.6 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
+      const drawW = (img.width * vfScale) | 0;
+      const drawH = (img.height * vfScale) | 0;
+      ctx.drawImage(img, (gx - drawW / 2) | 0, (gy - drawH / 2) | 0, drawW, drawH);
     }
     
     ctx.restore();

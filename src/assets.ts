@@ -882,7 +882,8 @@ export const vfxAnims = {
     impact: loadVfxFrames('vfx/impact/frame_{N}.png', 7, 0, 2, false),
   },
   explosions: {
-    fire: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/fire/128/frames/frame_{N}.png', 16, 0, 3)
+    fire: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/fire/128/frames/frame_{N}.png', 16, 0, 3),
+    barrel: loadVfxFrames('vfx/explosions/barrel_explosion/frame_{N}.png', 9, 1, 2, false)
   },
   fireMage: {
     vfx1: loadVfxFrames('vfx/Pixel Art VFX - Fire Mage - FREE Version/VFX1/frames/FireMage_skill1_frame{N}.png', 7, 1),
@@ -909,8 +910,32 @@ export const vfxAnims = {
     ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 7, 1, 2, false),
     luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2, false),
     samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, false),
-    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, false),
+    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 7, 1, 2, false),
     satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, false),
+    dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, false),
+  },
+  impacts: {
+    parryYellow: loadVfxFrames('vfx/impacts/impact_parry_yellow/frame_{N}.png', 7, 1, 2, false),
+    directionalBlue: loadVfxFrames('vfx/impacts/directional_blue/frame_{N}.png', 7, 1, 2, false)
+  },
+  boss: {
+    slamImpact: loadVfxFrames('vfx/boss/slam_impact/frame_{N}.png', 8, 1, 2, false),
+    slamDust: loadVfxFrames('vfx/boss/slam_dust/frame_{N}.png', 10, 1, 2, false)
+  },
+  player: {
+    dashDust: loadVfxFrames('vfx/player/dash_dust/frame_{N}.png', 6, 1, 2, false)
+  },
+  skills: {
+    firewheel: loadVfxFrames('vfx/skills/firewheel/frame_{N}.png', 7, 1, 2, false),
+    windAegis: loadVfxFrames('vfx/skills/wind_aegis/frame_{N}.png', 18, 1, 2, false),
+    voidWarp: loadVfxFrames('vfx/skills/void_warp/frame_{N}.png', 12, 1, 2, false),
+    decoySmoke: loadVfxFrames('vfx/skills/decoy_smoke/frame_{N}.png', 12, 1, 2, false),
+    lightningBurst: loadVfxFrames('vfx/skills/lightning_burst/frame_{N}.png', 8, 1, 2, false),
+    lightningStrike: loadVfxFrames('vfx/skills/lightning_strike/frame_{N}.png', 7, 1, 2, false)
+  },
+  combat: {
+    bloodSplatter: loadVfxFrames('vfx/combat/blood_splatter/frame_{N}.png', 8, 1, 2, false),
+    perilAlert: loadVfxFrames('vfx/combat/peril_alert/frame_{N}.png', 14, 1, 2, false)
   }
 };
 
