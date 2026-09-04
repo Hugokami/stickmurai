@@ -49,7 +49,7 @@ export function getTintedImage(img: HTMLImageElement | HTMLCanvasElement, hexCol
 export class Entity {
   x = 0; y = 0; vx = 0; vy = 0;
   yOffset = 0; yVelocity = 0; // Simulated vertical juggle height physics
-  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' = 'sword';
+  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' = 'sword';
   subType?: string;
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
@@ -77,7 +77,7 @@ export class Entity {
     if (currentAnim && currentAnim.length > 0) {
       let currentFps = this.fps;
       if (this.state === 'attack') {
-         const isPlayerHero = this.subType === 'player' || this.type === 'sword' || this.type === 'heroluneblade' || this.type === 'heroninja' || this.type === 'heronightborne' || this.type === 'herosamurai';
+         const isPlayerHero = this.subType === 'player' || this.type === 'sword' || this.type === 'heroluneblade' || this.type === 'heroninja' || this.type === 'heronightborne' || this.type === 'herosamurai' || this.type === 'herosatyr';
          let attackDuration = isPlayerHero ? globals.playerStats.attackCooldownBase : 0.4;
          if (isPlayerHero && globals.flowState === 'awakened') attackDuration *= 0.5;
          currentFps = currentAnim.length / attackDuration;
@@ -134,6 +134,8 @@ export class Entity {
       scale *= 3.4;
     } else if (this.type === 'herosamurai') {
       scale *= 2.9;
+    } else if (this.type === 'herosatyr') {
+      scale *= 3.8;
     } else if (this.type === 'toaster_bot') {
       scale *= 3.2;
     }
@@ -999,6 +1001,7 @@ export class Slash {
       if (slashes) {
         if (this.owner.type === 'heronightborne') frames = slashes.nightborne;
         else if (this.owner.type === 'herosamurai') frames = slashes.samurai;
+        else if (this.owner.type === 'herosatyr') frames = slashes.satyr;
         else if (this.owner.type === 'heroluneblade') frames = slashes.luneblade;
         else if (this.owner.type === 'heroninja') frames = slashes.ninja;
         else if (this.owner.type === 'sword') frames = slashes.ronin;

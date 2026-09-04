@@ -6,7 +6,7 @@ import { pvpManager } from './pvpIaijutsuManager';
 import { AdManager } from './adManager';
 import { FUSION_RECIPES } from './powerups';
 import { YOMI_SEALS } from './shrine';
-import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell } from './audio';
+import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered } from './audio';
 import { FloatingText, Shockwave } from './entities';
 
 
@@ -1950,6 +1950,21 @@ export const HEROES_DATA = [
     spd: '110%',
     specialEn: 'Abyssal Calamity (+1 Heart & +25 🔮 on Executions)',
     specialJa: '深淵の天災（処刑時体力回復・追加勾玉獲得・虚無焔）'
+  },
+  {
+    id: 'satyr',
+    nameEn: 'Primal Satyr Sovereign',
+    nameJa: '原始の森神（サテュロス）',
+    titleEn: 'Apex Nature Titan',
+    titleJa: '深林を支配せし森羅の主',
+    descEn: 'Ancient demigod of wild tempest and stone. -40% Atk CD, +4 Slash DMG, +8 Iai DMG, +50% Slash AoE. Executions trigger Earthshaker Tremor staggering all foes!',
+    descJa: '大自然の怒りと剛力を宿す太古の半神。攻撃クールダウン-40%、斬撃+4、抜刀+8、斬撃範囲+50%。処刑成功時に大地を震撼させ全周囲の敵を圧倒する！',
+    cost: 300000,
+    image: '/sprites/portraits/portrait_satyr.png',
+    atk: '185%',
+    spd: '125%',
+    specialEn: 'Earthshaker Tremor (Screen Emerald Tremor on Executions, Emerald Thorns)',
+    specialJa: '天変地異の震撃（処刑時全周囲震撃・翡翠の棘刃・花嵐疾走）'
   }
 ];
 
@@ -2054,6 +2069,7 @@ export function populateDojoHeroGrid() {
       } catch(err) {}
       globals.player?.updateHeroType();
       playSynthesizedFusionUnlock();
+      playShrineBlessing(0.85);
       populateDojoHeroGrid();
     });
   });
@@ -2196,6 +2212,7 @@ export function triggerDawnVictory(_stats?: any) {
   const isJa = globals.currentLang === 'ja';
   playSynthesizedSingingBowl();
   playSynthesizedFusionUnlock();
+  playStageConquered(0.9);
 
   if (!globals.unlockedSeals.includes(7)) {
     globals.unlockedSeals.push(7);
@@ -2334,6 +2351,7 @@ export function populateAscensionUpgrades() {
             localStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));
           } catch(e) {}
           playSynthesizedFusionUnlock();
+          playShrineBlessing(0.8);
           const treasuryEl = document.getElementById('stage-clear-magatama');
           if (treasuryEl) treasuryEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
           populateAscensionUpgrades();
@@ -2357,6 +2375,7 @@ export function triggerStageClear() {
   const isJa = globals.currentLang === 'ja';
   playSynthesizedSingingBowl();
   playSynthesizedFusionUnlock();
+  playStageConquered(0.9);
 
   const currentStage = globals.currentStage || 1;
   const fortuneMult = globals.playerStats?.fortuneMult || 1.0;

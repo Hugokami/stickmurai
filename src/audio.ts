@@ -62,13 +62,108 @@ export const sfx = {
     createAudio('audio/slash.wav'),
     createAudio('audio/slash.wav')
   ],
-  gameStart: [createAudio('audio/game_start.wav')]
+  gameStart: [createAudio('audio/game_start.wav')],
+  swordClash: [
+    createAudio('audio/sfx_sword_clash.wav'),
+    createAudio('audio/sfx_sword_clash.wav'),
+    createAudio('audio/sfx_sword_clash.wav'),
+    createAudio('audio/sfx_sword_clash.wav')
+  ],
+  energyBeam: [
+    createAudio('audio/sfx_energy_beam.mp3'),
+    createAudio('audio/sfx_energy_beam.mp3'),
+    createAudio('audio/sfx_energy_beam.mp3'),
+    createAudio('audio/sfx_energy_beam.mp3')
+  ],
+  teleport: [
+    createAudio('audio/sfx_teleport.ogg'),
+    createAudio('audio/sfx_teleport.ogg'),
+    createAudio('audio/sfx_teleport.ogg')
+  ],
+  sciExplosion: [
+    createAudio('audio/sfx_sci_explosion.ogg'),
+    createAudio('audio/sfx_sci_explosion.ogg'),
+    createAudio('audio/sfx_sci_explosion.ogg')
+  ],
+  affixAlert: [
+    createAudio('audio/sfx_affix_alert.ogg'),
+    createAudio('audio/sfx_affix_alert.ogg')
+  ],
+  magatamaPickup: [
+    createAudio('audio/sfx_magatama_pickup.wav'),
+    createAudio('audio/sfx_magatama_pickup.wav'),
+    createAudio('audio/sfx_magatama_pickup.wav'),
+    createAudio('audio/sfx_magatama_pickup.wav')
+  ],
+  shrineBlessing: [
+    createAudio('audio/sfx_shrine_blessing.wav'),
+    createAudio('audio/sfx_shrine_blessing.wav')
+  ],
+  primalZap: [
+    createAudio('audio/sfx_primal_zap.wav'),
+    createAudio('audio/sfx_primal_zap.wav'),
+    createAudio('audio/sfx_primal_zap.wav')
+  ],
+  stageConquered: [
+    createAudio('audio/sfx_stage_conquered.wav'),
+    createAudio('audio/sfx_stage_conquered.wav')
+  ]
 };
 
 const fetchedBuffers: Record<string, ArrayBuffer> = {};
 const audioBuffers: Record<string, AudioBuffer> = {};
 
-const sfxFiles = ['audio/dash.wav', 'audio/enemy_slash.wav', 'audio/slash.wav', 'audio/game_start.wav'];
+const sfxFiles = [
+  'audio/dash.wav',
+  'audio/enemy_slash.wav',
+  'audio/slash.wav',
+  'audio/game_start.wav',
+  'audio/sfx_sword_clash.wav',
+  'audio/sfx_energy_beam.mp3',
+  'audio/sfx_teleport.ogg',
+  'audio/sfx_sci_explosion.ogg',
+  'audio/sfx_affix_alert.ogg',
+  'audio/sfx_magatama_pickup.wav',
+  'audio/sfx_shrine_blessing.wav',
+  'audio/sfx_primal_zap.wav',
+  'audio/sfx_stage_conquered.wav'
+];
+
+export function playSwordClash(volumeMult: number = 1.0) {
+  playSound(sfx.swordClash, volumeMult);
+}
+
+export function playEnergyBeam(volumeMult: number = 1.0) {
+  playSound(sfx.energyBeam, volumeMult);
+}
+
+export function playTeleportSfx(volumeMult: number = 1.0) {
+  playSound(sfx.teleport, volumeMult);
+}
+
+export function playExplosionSfx(volumeMult: number = 1.0) {
+  playSound(sfx.sciExplosion, volumeMult);
+}
+
+export function playAffixAlert(volumeMult: number = 1.0) {
+  playSound(sfx.affixAlert, volumeMult);
+}
+
+export function playMagatamaPickup(volumeMult: number = 1.0) {
+  playSound(sfx.magatamaPickup, volumeMult);
+}
+
+export function playShrineBlessing(volumeMult: number = 1.0) {
+  playSound(sfx.shrineBlessing, volumeMult);
+}
+
+export function playPrimalZap(volumeMult: number = 1.0) {
+  playSound(sfx.primalZap, volumeMult);
+}
+
+export function playStageConquered(volumeMult: number = 1.0) {
+  playSound(sfx.stageConquered, volumeMult);
+}
 sfxFiles.forEach(src => {
   fetch(src)
     .then(r => r.arrayBuffer())

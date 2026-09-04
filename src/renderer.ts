@@ -40,6 +40,7 @@ function getEntityFootY(e: Entity): number {
     case 'heroninja': baseFoot = 48; break;
     case 'heronightborne': baseFoot = 52; break;
     case 'herosamurai': baseFoot = 56; break;
+    case 'herosatyr': baseFoot = 46; break;
     case 'toaster_bot': baseFoot = 20; break;
     case 'sword':
     default:

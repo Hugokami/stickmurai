@@ -2,7 +2,7 @@ import { globals } from './globals';
 import { callbacks } from './callbacks';
 import { Entity, Particle, FloatingText, Projectile, AnimatedEffect, Shockwave } from './entities';
 import { Player } from './player';
-import { playSound, sfx, playSynthesizedThunder } from './audio';
+import { playSound, sfx, playSynthesizedThunder, playEnergyBeam, playTeleportSfx, playExplosionSfx } from './audio';
 import { vfxAnims, loadEnemyAssetsNow } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 
@@ -766,37 +766,70 @@ export class Enemy extends Entity {
       this.vx = this.lungeCos * curLungeSpeed * decay;
       this.vy = this.lungeSin * curLungeSpeed * decay;
 
-      if (this.subType === 'musketeer') {
+      if (this.subType === 'musketeer' || this.subType === 'toaster_bot') {
         this.burstShotTimer += effectiveDt;
-        // First shot fires at 0.05s
-        if (this.burstShotsFired === 0 && this.stateTime >= 0.05) {
-          const proj1 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
-          (proj1 as any).shooter = this;
-          globals.projectiles.push(proj1);
-          this.burstShotsFired = 1;
-          playSound(sfx.enemySlash, 0.25);
+        if (this.subType === 'musketeer') {
+          // First shot fires at 0.05s
+          if (this.burstShotsFired === 0 && this.stateTime >= 0.05) {
+            const proj1 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+            (proj1 as any).shooter = this;
+            globals.projectiles.push(proj1);
+            this.burstShotsFired = 1;
+            playSound(sfx.enemySlash, 0.25);
+          }
+          // Second shot fires 0.18s later in rapid succession!
+          else if (this.burstShotsFired === 1 && this.burstShotTimer >= 0.18) {
+            const proj2 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+            (proj2 as any).shooter = this;
+            globals.projectiles.push(proj2);
+            this.burstShotsFired = 2;
+            this.attackLanded = true;
+            playSound(sfx.enemySlash, 0.25);
+          }
         }
-        // Second shot fires 0.18s later in rapid succession!
-        else if (this.burstShotsFired === 1 && this.burstShotTimer >= 0.18) {
-          const proj2 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
-          (proj2 as any).shooter = this;
-          globals.projectiles.push(proj2);
-          this.burstShotsFired = 2;
-          this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.25);
+      }
+      
+      if (this.subType === 'toaster_bot') {
+        const isOverclocked = globals.activeStageAffix?.id === 'overclocked_circuitry';
+        if (isOverclocked) {
+          // 3-round rapid plasma burst in Overclocked Circuitry!
+          if (this.burstShotsFired === 0 && (this.animFrame >= 12 || this.stateTime >= 0.26)) {
+            const proj1 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+            (proj1 as any).shooter = this;
+            (proj1 as any).colorTint = '#38bdf8';
+            globals.projectiles.push(proj1);
+            this.burstShotsFired = 1;
+            this.burstShotTimer = 0;
+            playEnergyBeam(0.45);
+          } else if (this.burstShotsFired === 1 && this.burstShotTimer >= 0.12) {
+            const proj2 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+            (proj2 as any).shooter = this;
+            (proj2 as any).colorTint = '#00ffff';
+            globals.projectiles.push(proj2);
+            this.burstShotsFired = 2;
+            this.burstShotTimer = 0;
+            playEnergyBeam(0.45);
+          } else if (this.burstShotsFired === 2 && this.burstShotTimer >= 0.12) {
+            const proj3 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+            (proj3 as any).shooter = this;
+            (proj3 as any).colorTint = '#f43f5e';
+            globals.projectiles.push(proj3);
+            this.burstShotsFired = 3;
+            this.attackLanded = true;
+            playEnergyBeam(0.5);
+          }
+        } else {
+          // Standard single plasma blast
+          if (!this.attackLanded && (this.animFrame >= 12 || this.stateTime >= 0.32)) {
+            const proj = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+            (proj as any).shooter = this;
+            (proj as any).colorTint = '#38bdf8';
+            globals.projectiles.push(proj);
+            this.attackLanded = true;
+            playEnergyBeam(0.45);
+          }
         }
-      } else if (this.subType === 'toaster_bot') {
-        // Toaster Bot plasma blast at frame 12 or 0.32s
-        if (!this.attackLanded && (this.animFrame >= 12 || this.stateTime >= 0.32)) {
-          const proj = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
-          (proj as any).shooter = this;
-          (proj as any).colorTint = '#38bdf8';
-          globals.projectiles.push(proj);
-          this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.3);
-          playSynthesizedThunder();
-        }
-      } else if (!this.attackLanded) {
+      } else if (this.subType !== 'musketeer' && !this.attackLanded) {
         const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
         const enemyHitRadius = (this.scaleMult - 1) * 60; 
         const threshold = 140 + enemyHitRadius;
@@ -841,6 +874,7 @@ export class Enemy extends Entity {
       
       const tpOut = new AnimatedEffect(this.x, this.y, vfxAnims.starcaller.vfx1, 0.4, 1.5);
       globals.animatedEffects.push(tpOut);
+      playTeleportSfx(0.45);
       
       this.x = targetX;
       this.y = targetY;
@@ -1349,6 +1383,7 @@ export function triggerBarrelExplosion(barrel: Enemy) {
   globals.screenShake = Math.max(globals.screenShake, 18);
   globals.shockwaves.push(new Shockwave(barrel.x, barrel.y, '#f97316'));
   playSynthesizedThunder();
+  playExplosionSfx(0.7);
 
   // Fire explosion particle spray
   const pCount = globals.graphicsSettings === 'low' ? 8 : 22;

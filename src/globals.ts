@@ -399,13 +399,68 @@ export const STAGE_AFFIXES: StageAffix[] = [
     icon: '🌌',
     desc: 'Flow generates 40% faster, but enemies move 15% swifter',
     descJa: '気力蓄積+40%加速、ただし敵の移動速度+15%'
+  },
+  // ENDLESS ABYSS AFFIXES (Escalating Every 5 Floors)
+  {
+    id: 'overclocked_circuitry',
+    name: 'Overclocked Circuitry',
+    nameJa: '超過駆動回路',
+    icon: '⚙️',
+    desc: 'Toaster Bots are hyper-clocked, discharging deadly 3-round rapid plasma bursts!',
+    descJa: 'トースターボットが過負荷駆動し、驚異の3連プラズマバーストを放つ！'
+  },
+  {
+    id: 'infernal_domain',
+    name: 'Infernal Domain',
+    nameJa: '焦熱の地獄',
+    icon: '🌋',
+    desc: 'The floor scorches with subterranean magma. Slain foes leave pools of burning embers.',
+    descJa: '討伐した敵が大地を焼き焦がし、残留する灼熱の溶岩溜まりを生み出す。'
+  },
+  {
+    id: 'gravity_collapse',
+    name: 'Void Collapse',
+    nameJa: '重力崩壊',
+    icon: '🌀',
+    desc: 'Dimensional gravity fractures, periodically drawing entities toward a cosmic vortex.',
+    descJa: '空間重力が崩壊し、全存在を中心へ引き寄せる重力渦が周期的に発生する。'
+  },
+  {
+    id: 'phantom_ambush',
+    name: 'Phantom Convergence',
+    nameJa: '幻影の狂宴',
+    icon: '👥',
+    desc: 'Ethereal shadow phantoms emerge from the abyss mist upon enemy deaths.',
+    descJa: '深淵の霧より幻影の刺客が現れ、討伐時の背後から急襲する。'
+  },
+  {
+    id: 'blood_tithe',
+    name: 'Blood Tithe',
+    nameJa: '深淵の血誓',
+    icon: '🩸',
+    desc: 'Enemies gain +25% attack speed and deal +1 damage, but Magatama drops are TRIPLED (3×)!',
+    descJa: '敵の速度+25%＆攻撃力+1、ただし全ての勾玉獲得量が3倍に増大！'
   }
 ];
 
 export function getStageAffix(stage: number): StageAffix | null {
-  if (stage < 6 || stage % 5 === 0) return null; // Standard & Boss stages don't have affixes
-  const index = (stage * 7 + 3) % STAGE_AFFIXES.length;
-  return STAGE_AFFIXES[index];
+  if (stage < 6) return null; // Stages 1-5 have no affixes
+  // Endless Abyss Escalation (Stages 11+)
+  if (stage >= 11) {
+    if (stage <= 15) return STAGE_AFFIXES.find(a => a.id === 'overclocked_circuitry')!;
+    if (stage <= 20) return STAGE_AFFIXES.find(a => a.id === 'infernal_domain')!;
+    if (stage <= 25) return STAGE_AFFIXES.find(a => a.id === 'gravity_collapse')!;
+    if (stage <= 30) return STAGE_AFFIXES.find(a => a.id === 'phantom_ambush')!;
+    // Floor 31+ rotates through highest tier affixes every 5 floors
+    const tierCycle = Math.floor((stage - 31) / 5) % 5;
+    const endlessIds = ['blood_tithe', 'overclocked_circuitry', 'infernal_domain', 'gravity_collapse', 'phantom_ambush'];
+    return STAGE_AFFIXES.find(a => a.id === endlessIds[tierCycle])!;
+  }
+  // Standard Calamity Winds for Stages 6-10 (non-boss)
+  if (stage % 5 === 0) return null;
+  const standardPool = STAGE_AFFIXES.slice(0, 4);
+  const index = (stage * 7 + 3) % standardPool.length;
+  return standardPool[index];
 }
 
 export function getAscendantRank(maxStage: number): { title: string; titleJa: string; badge: string; color: string } {

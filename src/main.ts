@@ -20,7 +20,13 @@ import {
   playSynthesizedClash,
   playSynthesizedTempleBell,
   playSynthesizedSingingBowl,
-  startBgm
+  startBgm,
+  playSwordClash,
+  playEnergyBeam,
+  playTeleportSfx,
+  playAffixAlert,
+  playMagatamaPickup,
+  playPrimalZap
 } from './audio';
 import {
   Afterimage,
@@ -46,6 +52,7 @@ let remoteRematchReady = false;
 let stormLightningTimer = 0.0;
 let isZanFinisherActive = false;
 let thunderGaleTimer = 0.0;
+let gravityCollapseTimer = 0.0;
 import { WeatherEngine } from './weather';
 import { checkShrineSpawns, triggerCalamityCheck, YOMI_SEALS, spawnShrine, notifyFeatMilestone } from './shrine';
 let bossEncounterDamaged = false;
@@ -952,6 +959,13 @@ function initGame() {
     globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 3;
     globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 6;
     globals.playerStats.slashSizeMult *= 1.40;
+  } else if (globals.selectedHero === 'satyr') {
+    globals.playerStats.moveSpeedMult *= 1.25;
+    globals.playerStats.attackCooldownBase *= 0.60; // -40% attack cooldown (Primal Dominance)
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 4;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 8;
+    globals.playerStats.slashSizeMult *= 1.50; // +50% slash AoE
+    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + 15;
   } else {
     // Default Classic Ronin (Parry Prodigy)
     globals.playerStats.moveSpeedMult *= 1.05;
@@ -1009,6 +1023,7 @@ function initGame() {
   globals.stageKills = 0;
   isZanFinisherActive = false;
   thunderGaleTimer = 0.0;
+  gravityCollapseTimer = 0.0;
   const currentStage = globals.currentStage || 1;
   const isBossStage = currentStage % 5 === 0;
   const stageTargets: Record<number, number> = {
@@ -1020,7 +1035,7 @@ function initGame() {
     globals.stageTargetKills = stageTargets[currentStage] || Math.min(90, 35 + currentStage * 4);
   }
 
-  // Active Stage Affix (Calamity Winds for Stages >= 6)
+  // Active Stage Affix (Calamity Winds & Endless Abyss Affixes)
   if (globals.gameMode === 'classic') {
     globals.activeStageAffix = getStageAffix(currentStage);
     if (globals.activeStageAffix?.id === 'thunder_gale') {
@@ -1031,12 +1046,17 @@ function initGame() {
     }
     if (globals.activeStageAffix) {
       const isJa = globals.currentLang === 'ja';
+      const isAbyss = currentStage >= 11;
+      const affixPrefix = isJa
+        ? (isAbyss ? '【深淵の呪詛】' : '【災厄の風】')
+        : (isAbyss ? 'ABYSS AFFIX:' : 'CALAMITY WIND:');
       const affixText = isJa
-        ? `${globals.activeStageAffix.icon} 【災厄の風】${globals.activeStageAffix.nameJa}`
-        : `${globals.activeStageAffix.icon} CALAMITY WIND: ${globals.activeStageAffix.name.toUpperCase()}`;
+        ? `${globals.activeStageAffix.icon} ${affixPrefix}${globals.activeStageAffix.nameJa}`
+        : `${globals.activeStageAffix.icon} ${affixPrefix} ${globals.activeStageAffix.name.toUpperCase()}`;
       globals.delayedActions.push({
         delay: 0.8,
         run: () => {
+          playAffixAlert(0.85);
           globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, affixText, '#fca5a5', 24));
         }
       });
@@ -1177,8 +1197,8 @@ function triggerFlowingCounterReset() {
 function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   if (globals.invulnTimer > 0) return;
 
-  // Blood Surge Affix: Enemies deal +1 damage
-  if (globals.activeStageAffix?.id === 'blood_surge') {
+  // Blood Surge & Blood Tithe Affixes: Enemies deal +1 damage
+  if (globals.activeStageAffix?.id === 'blood_surge' || globals.activeStageAffix?.id === 'blood_tithe') {
     damageAmount += 1;
   }
 
@@ -1728,6 +1748,7 @@ function executeSwiftCounter() {
   globals.player.y += Math.sin(angle) * 250;
   globals.player.vx = 0;
   globals.player.vy = 0;
+  playTeleportSfx(0.6);
   
   globals.screenShake += 8;
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, "SWIFT COUNTER!", "#ffb7c5", 22));
@@ -2151,6 +2172,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   // Skeleton Warlord Guard Stance Parry & Counter-Thrust
   if (e.subType === 'skeleton_warlord' && e.state === 'react') {
     playSynthesizedParry();
+    playSwordClash();
     globals.screenShake = Math.max(globals.screenShake, 18);
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 60, globals.currentLang === 'ja' ? '骨刃受け流し！ 🛡️' : 'BONE DEFLECTION! 🛡️', '#cbd5e1', 26));
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#f59e0b'));
@@ -2247,11 +2269,12 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.shockwaves.push(new Shockwave(e.x, e.y, isBoss ? '#ffd700' : '#ff003c'));
     addFlow(20);
 
-    // Execution Magatama Bounty (boosted by Fortune & Blood Surge)
-    const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : 1;
+    // Execution Magatama Bounty (boosted by Fortune & Blood Surge / Blood Tithe)
+    const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : (globals.activeStageAffix?.id === 'blood_tithe' ? 3 : 1);
     const execMag = Math.round((isBoss ? 15 : 3) * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
     globals.magatama = (globals.magatama || 0) + execMag;
     try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+    playMagatamaPickup(0.65);
     globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🔮`, '#c084fc', 22));
 
     // Nightborne Sovereign execution passive: Soul Siphon restores +1 Heart and siphons +25 extra Magatama
@@ -2259,8 +2282,33 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       globals.lives = Math.min(globals.maxLives, globals.lives + 1);
       globals.magatama = (globals.magatama || 0) + 25;
       try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+      playMagatamaPickup(1.0);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "+1 ❤️ SOUL SIPHON! (+25 🔮)", "#c084fc", 26));
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
+    }
+
+    // Primal Satyr Sovereign execution passive: Earthshaker Tremor
+    if (globals.selectedHero === 'satyr') {
+      globals.screenShake = Math.max(globals.screenShake, 25);
+      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#10b981'));
+      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#34d399'));
+      playPrimalZap(0.9);
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "EARTHSHAKER TREMOR! 🌿", "#10b981", 28));
+      
+      // Stagger and damage nearby enemies
+      for (let i = 0; i < globals.enemies.length; i++) {
+        const other = globals.enemies[i];
+        if (!other || other === e || other.state === 'dead') continue;
+        const odx = other.x - globals.player.x;
+        const ody = other.y - globals.player.y;
+        if (odx * odx + ody * ody < 350 * 350) {
+          other.addPostureDamage(60);
+          other.knockbackTimer = 0.5;
+          const kAng = Math.atan2(ody, odx);
+          other.knockbackVx = Math.cos(kAng) * 600;
+          other.knockbackVy = Math.sin(kAng) * 600;
+        }
+      }
     }
 
     const mangaCutin = document.getElementById('manga-cutin');
@@ -2381,14 +2429,15 @@ function killEnemy(e: Enemy) {
     triggerBarrelExplosion(e);
   }
 
-  // Corpse Ignition Stage Affix (slain enemies burst into burning embers)
-  if (globals.activeStageAffix?.id === 'corpse_ignition') {
+  // Corpse Ignition & Infernal Domain Stage Affix (slain enemies burst into burning embers)
+  if (globals.activeStageAffix?.id === 'corpse_ignition' || globals.activeStageAffix?.id === 'infernal_domain') {
     playSynthesizedFirewheel();
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#ef4444'));
-    for (let p = 0; p < 12; p++) {
+    const emberCount = globals.activeStageAffix?.id === 'infernal_domain' ? 20 : 12;
+    for (let p = 0; p < emberCount; p++) {
       const pAngle = Math.random() * Math.PI * 2;
-      const pSpeed = 80 + Math.random() * 160;
-      globals.particles.push(Particle.acquire(e.x, e.y, '#f97316', pSpeed, 0.5, 3.5, pAngle));
+      const pSpeed = 80 + Math.random() * 200;
+      globals.particles.push(Particle.acquire(e.x, e.y, '#f97316', pSpeed, 0.6, 4.0, pAngle));
     }
     // Harm nearby enemies (cap 5 targets per rule 2, squared distance check)
     let hitCount = 0;
@@ -2397,13 +2446,26 @@ function killEnemy(e: Enemy) {
       if (other !== e && other.state !== 'dead') {
         const dx = other.x - e.x;
         const dy = other.y - e.y;
-        if (dx * dx + dy * dy < 12100) { // 110^2
+        if (dx * dx + dy * dy < 14400) { // 120^2
           hitCount++;
-          callbacks.hitEnemy(other, 4);
+          callbacks.hitEnemy(other, globals.activeStageAffix?.id === 'infernal_domain' ? 6 : 4);
           if (hitCount >= 5) break;
         }
       }
     }
+  }
+
+  // Phantom Convergence / Phantom Ambush Stage Affix (Ethereal shadow phantoms flank on death)
+  if (globals.activeStageAffix?.id === 'phantom_ambush' && Math.random() < 0.25) {
+    playTeleportSfx(0.45);
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, "👥 PHANTOM AMBUSH!", "#a855f7", 20));
+    globals.shockwaves.push(new Shockwave(e.x, e.y, '#a855f7'));
+    const phantom = new Enemy(e.x + (Math.random() - 0.5) * 60, e.y + (Math.random() - 0.5) * 60, globals.player);
+    phantom.subType = 'assassin';
+    (phantom as any).colorTint = 'rgba(168, 85, 247, 0.85)';
+    phantom.hp = 6;
+    phantom.maxHp = 6;
+    globals.enemies.push(phantom);
   }
 
   // Stage Mode Progress & Clear Condition (Visceral "斬" Finisher Trigger)
@@ -2441,15 +2503,16 @@ function killEnemy(e: Enemy) {
     spawnShrine(5);
   }
 
-  // Award Yomi Magatama based on enemy tier (boosted by Fortune & Blood Surge)
+  // Award Yomi Magatama based on enemy tier (boosted by Fortune & Blood Surge / Blood Tithe)
   const isBossEnemy = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss;
   const isEliteOrRanged = e.subType === 'musketeer' || e.subType === 'pyromancer' || e.subType === 'necromancer' || e.subType === 'orc_brute';
   const fortuneMult = globals.playerStats?.fortuneMult || 1.0;
-  const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : 1;
+  const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : (globals.activeStageAffix?.id === 'blood_tithe' ? 3 : 1);
   const earnedMagatama = Math.round((isBossEnemy ? 50 : (isEliteOrRanged ? 3 : 1)) * fortuneMult * bloodSurgeMult);
   globals.magatama = (globals.magatama || 0) + earnedMagatama;
   try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
   if (isBossEnemy || Math.random() < 0.35) {
+    playMagatamaPickup(0.45);
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `+${earnedMagatama} 🔮`, '#c084fc', isBossEnemy ? 26 : 18));
   }
 
@@ -2681,6 +2744,19 @@ function update(realDt: number) {
             globals.floatingTexts.push(FloatingText.acquire(t.x, t.y - 40, "⚡ GALE STRIKE", "#38bdf8", 18));
           }
         }
+      }
+    }
+
+    // Endless Abyss Affix: Void Collapse (Gravity Collapse) periodic vortex
+    if (globals.activeStageAffix?.id === 'gravity_collapse') {
+      gravityCollapseTimer += realDt;
+      if (gravityCollapseTimer >= 14.0) {
+        gravityCollapseTimer = 0.0;
+        globals.gravityWellX = globals.player.x + (Math.random() - 0.5) * 220;
+        globals.gravityWellY = globals.player.y + (Math.random() - 0.5) * 220;
+        globals.gravityWellTimer = 3.5;
+        playSynthesizedSingingBowl();
+        globals.floatingTexts.push(FloatingText.acquire(globals.gravityWellX, globals.gravityWellY - 60, "🌀 VOID COLLAPSE!", "#c084fc", 24));
       }
     }
 
@@ -4066,6 +4142,7 @@ function update(realDt: number) {
         globals.gravityWellX = bhX;
         globals.gravityWellY = bhY;
         globals.singularityCleaveCD = 4.0;
+        playEnergyBeam(0.6);
         globals.shockwaves.push(new Shockwave(bhX, bhY, '#a855f7'));
         if (vfxAnims.gigapack?.explosion?.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));
@@ -4120,6 +4197,22 @@ function update(realDt: number) {
             px, py,
             Math.random() > 0.5 ? '#8b5cf6' : '#c084fc',
             50,
+            0.35 + Math.random() * 0.2,
+            12 + Math.random() * 8
+          ));
+        }
+      }
+
+      // Primal Satyr Sovereign passive: emerald nature thorns along slash trajectory
+      if (globals.selectedHero === 'satyr') {
+        playPrimalZap(0.35);
+        for (let i = 0; i < 4; i++) {
+          const px = globals.player.x + Math.cos(angle) * (32 + i * 25) + (Math.random() - 0.5) * 16;
+          const py = globals.player.y + Math.sin(angle) * (32 + i * 25) + (Math.random() - 0.5) * 16;
+          globals.particles.push(Particle.acquire(
+            px, py,
+            Math.random() > 0.5 ? '#10b981' : '#34d399',
+            55,
             0.35 + Math.random() * 0.2,
             12 + Math.random() * 8
           ));

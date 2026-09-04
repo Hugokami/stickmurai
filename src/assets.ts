@@ -588,6 +588,7 @@ const enemyFolderMap: Record<string, string> = {
   boss_skeleton: 'BossSkeleton',
   heronightborne: 'HeroNightborne',
   herosamurai: 'HeroSamurai',
+  herosatyr: 'HeroSatyr',
   toaster_bot: 'EnemyToasterBot'
 };
 
@@ -760,6 +761,14 @@ export const anims = {
     dash: loadCustomEnemyAnim('HeroSamurai', 'dash', 8),
     dead: loadCustomEnemyAnim('HeroSamurai', 'dead', 8),
   },
+  herosatyr: {
+    idle: loadCustomEnemyAnim('HeroSatyr', 'idle', 6),
+    walk: loadCustomEnemyAnim('HeroSatyr', 'walk', 8),
+    attack: loadCustomEnemyAnim('HeroSatyr', 'attack', 10),
+    hit: loadCustomEnemyAnim('HeroSatyr', 'hit', 4),
+    dash: loadCustomEnemyAnim('HeroSatyr', 'dash', 6),
+    dead: loadCustomEnemyAnim('HeroSatyr', 'dead', 10),
+  },
   toaster_bot: {
     idle: loadCustomEnemyAnim('EnemyToasterBot', 'idle', 10),
     walk: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 16),
@@ -901,6 +910,7 @@ export const vfxAnims = {
     luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2, false),
     samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, false),
     nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, false),
+    satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, false),
   }
 };
 

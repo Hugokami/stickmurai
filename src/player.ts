@@ -52,6 +52,8 @@ export class Player extends Entity {
       this.type = 'herosamurai';
     } else if (globals.selectedHero === 'nightborne') {
       this.type = 'heronightborne';
+    } else if (globals.selectedHero === 'satyr') {
+      this.type = 'herosatyr';
     } else {
       this.type = 'sword';
     }
@@ -544,6 +546,8 @@ export class Player extends Entity {
           trailColor = '#7c3aed';
         } else if (this.type === 'herosamurai') {
           trailColor = '#fbbf24';
+        } else if (this.type === 'herosatyr') {
+          trailColor = '#10b981';
         } else if ((globals.flowState as string) === 'storm_god') {
           trailColor = '#fbbf24';
         } else if ((globals.flowState as string) === 'awakened') {
@@ -1065,7 +1069,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.fill();
 
       // 2. Permanent Neon Ellipse Ring (calibrated to dynamic hero feet baseline)
-      const playerFootOffsetY = this.type === 'heroluneblade' ? 30 : (this.type === 'heroninja' ? 48 : (this.type === 'heronightborne' ? 52 : (this.type === 'herosamurai' ? 56 : 62)));
+      const playerFootOffsetY = this.type === 'heroluneblade' ? 30 : (this.type === 'heroninja' ? 48 : (this.type === 'heronightborne' ? 52 : (this.type === 'herosamurai' ? 56 : (this.type === 'herosatyr' ? 46 : 62))));
       const ringX = px | 0;
       const ringY = (py + playerFootOffsetY) | 0;
 
@@ -1094,7 +1098,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // Physical ground contact shadow (anchored at world ground baseline)
-    const playerFootOffsetY = this.type === 'heroluneblade' ? 30 : (this.type === 'heroninja' ? 48 : (this.type === 'heronightborne' ? 52 : (this.type === 'herosamurai' ? 56 : 62)));
+    const playerFootOffsetY = this.type === 'heroluneblade' ? 30 : (this.type === 'heroninja' ? 48 : (this.type === 'heronightborne' ? 52 : (this.type === 'herosamurai' ? 56 : (this.type === 'herosatyr' ? 46 : 62))));
     const groundShadowRx = (this.x - cx + globals.vw / 2) | 0;
     const groundShadowRy = ((this.y - cy + globals.vh / 2) + playerFootOffsetY) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
