@@ -82,7 +82,19 @@ export function debouncedResize() {
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
   const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
-  ctx.fillStyle = isKamisori ? '#e5e5e5' : '#4a607a';
+  let skyColor = '#4a607a';
+  if (isKamisori) {
+    skyColor = '#e5e5e5';
+  } else if (globals.calamityEvent === 'blood_moon') {
+    skyColor = '#3b0808';
+  } else if (globals.dayNightPhase === 'sunset') {
+    skyColor = '#5c241c';
+  } else if (globals.dayNightPhase === 'midnight') {
+    skyColor = '#0d0f1f';
+  } else if (globals.dayNightPhase === 'final_showdown') {
+    skyColor = '#2e1018';
+  }
+  ctx.fillStyle = skyColor;
   ctx.fillRect(0, 0, globals.width, globals.height);
   ctx.imageSmoothingEnabled = false;
 
@@ -253,6 +265,57 @@ export function draw() {
   globals.afterimages.forEach(a => a.draw(ctx, globals.camera.x, globals.camera.y));
   if (globals.graphicsSettings !== 'low' && globals.groundScarsEnabled === 'on') {
     globals.groundScars.forEach(s => s.draw(ctx, globals.camera.x, globals.camera.y));
+  }
+
+  // Draw Yomi Shrine & Wandering Hermit
+  if (globals.activeShrine) {
+    ctx.save();
+    ctx.translate(-globals.camera.x + globals.vw/2, -globals.camera.y + globals.vh/2);
+    globals.activeShrine.draw(ctx);
+    ctx.restore();
+  }
+
+  if (globals.activeHermit) {
+    ctx.save();
+    ctx.translate(-globals.camera.x + globals.vw/2, -globals.camera.y + globals.vh/2);
+    globals.activeHermit.draw(ctx);
+    ctx.restore();
+  }
+
+  // Draw Plasma Tempest electric fire trails
+  if (globals.plasmaTrails && globals.plasmaTrails.length > 0) {
+    ctx.save();
+    ctx.translate(-globals.camera.x + globals.vw/2, -globals.camera.y + globals.vh/2);
+    for (const pt of globals.plasmaTrails) {
+      const alpha = Math.max(0, pt.life / pt.maxLife);
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(56, 189, 248, ${alpha * 0.35})`;
+      ctx.fill();
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = `rgba(251, 191, 36, ${alpha * 0.75})`;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // Draw Kamaitachi bouncing wind sickles
+  if (globals.bouncingSickles && globals.bouncingSickles.length > 0) {
+    ctx.save();
+    ctx.translate(-globals.camera.x + globals.vw/2, -globals.camera.y + globals.vh/2);
+    const sickleRot = performance.now() * 0.012;
+    for (const s of globals.bouncingSickles) {
+      ctx.save();
+      ctx.translate(s.x, s.y);
+      ctx.rotate(sickleRot);
+      ctx.beginPath();
+      ctx.arc(0, 0, s.radius, 0, Math.PI * 1.3);
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
   }
 
   // Draw Gravity Well Vortex

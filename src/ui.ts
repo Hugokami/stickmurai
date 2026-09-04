@@ -4,6 +4,11 @@ import { bgmAudio, pauseBgm } from './audio';
 import { callbacks } from './callbacks';
 import { pvpManager } from './pvpIaijutsuManager';
 import { AdManager } from './adManager';
+import { FUSION_RECIPES } from './powerups';
+import { YOMI_SEALS } from './shrine';
+import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl } from './audio';
+import { FloatingText, Shockwave } from './entities';
+
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
 
@@ -171,6 +176,151 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   });
 
   document.getElementById('restart-btn')!.addEventListener('click', onRestartCallback);
+
+  // Grimoire & Chronicle screen listeners
+  const grimoireScreen = document.getElementById('grimoire-screen');
+  const openGrimoireBtn = document.getElementById('open-grimoire-btn');
+  const pauseGrimoireBtn = document.getElementById('pause-grimoire-btn');
+  const closeGrimoireBtn = document.getElementById('close-grimoire-btn');
+
+  const openGrimoire = () => {
+    if (grimoireScreen) {
+      grimoireScreen.style.display = 'flex';
+      populateGrimoireGrid();
+    }
+  };
+
+  if (openGrimoireBtn) openGrimoireBtn.addEventListener('click', openGrimoire);
+  if (pauseGrimoireBtn) pauseGrimoireBtn.addEventListener('click', openGrimoire);
+  if (closeGrimoireBtn) {
+    closeGrimoireBtn.addEventListener('click', () => {
+      if (grimoireScreen) grimoireScreen.style.display = 'none';
+    });
+  }
+
+  const chronicleScreen = document.getElementById('chronicle-screen');
+  const openChronicleBtn = document.getElementById('open-chronicle-btn');
+  const closeChronicleBtn = document.getElementById('close-chronicle-btn');
+
+  if (openChronicleBtn) {
+    openChronicleBtn.addEventListener('click', () => {
+      if (chronicleScreen) {
+        chronicleScreen.style.display = 'flex';
+        populateChronicleList();
+      }
+    });
+  }
+  if (closeChronicleBtn) {
+    closeChronicleBtn.addEventListener('click', () => {
+      if (chronicleScreen) chronicleScreen.style.display = 'none';
+    });
+  }
+
+  // Shrine & Hermit Modal Listeners
+  const shrineCommuneBtn = document.getElementById('shrine-commune-btn');
+  const shrineLeaveBtn = document.getElementById('shrine-leave-btn');
+  if (shrineCommuneBtn) {
+    shrineCommuneBtn.addEventListener('click', () => {
+      if (globals.activeShrine) {
+        const sealId = globals.activeShrine.sealId;
+        if (!globals.unlockedSeals.includes(sealId)) {
+          globals.unlockedSeals.push(sealId);
+          try { localStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals)); } catch(e) {}
+          YOMI_SEALS[sealId]?.applyPermanentReward();
+          playSynthesizedFusionUnlock();
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '⛩️ 黄泉の封印解除！ 恒久恩恵獲得！' : '⛩️ YOMI SEAL BROKEN! PERMANENT BLESSING!', '#ffd700', 32));
+          globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+        }
+        globals.activeShrine = null;
+      }
+      closeShrineModal();
+    });
+  }
+  if (shrineLeaveBtn) shrineLeaveBtn.addEventListener('click', closeShrineModal);
+
+  const hermitChoice1Btn = document.getElementById('hermit-pact-choice-1');
+  const hermitChoice2Btn = document.getElementById('hermit-pact-choice-2');
+  const hermitLeaveBtn = document.getElementById('hermit-leave-btn');
+
+  if (hermitChoice1Btn) {
+    hermitChoice1Btn.addEventListener('click', () => {
+      const hermit = globals.activeHermit;
+      const isJa = globals.currentLang === 'ja';
+      if (hermit) {
+        if (hermit.pactType === 'blade') {
+          if (globals.maxLives > 1) {
+            globals.maxLives--;
+            globals.lives = Math.min(globals.lives, globals.maxLives);
+            globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 2;
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '血刀の誓い成立！ +2 攻撃力' : 'BLOODBLADE SEALED! +2 DMG', '#ef4444', 28));
+          }
+        } else if (hermit.pactType === 'speed') {
+          if (globals.maxLives > 1) {
+            globals.maxLives--;
+            globals.lives = Math.min(globals.lives, globals.maxLives);
+            globals.playerStats.dashCooldownBase *= 0.65;
+            globals.playerStats.moveSpeedMult += 0.25;
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '疾風の生贄成立！ 神速化' : 'GALE PACT SEALED! RAPID DASH', '#38bdf8', 28));
+          }
+        } else {
+          if (globals.maxLives > 1) {
+            globals.maxLives--;
+            globals.lives = Math.min(globals.lives, globals.maxLives);
+            globals.playerStats.flowGenMult *= 1.6;
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '心眼の覚醒成立！ 気力急増' : 'MIND EYE SEALED! +60% FLOW', '#a855f7', 28));
+          }
+        }
+        playSynthesizedSingingBowl();
+        globals.activeHermit = null;
+        closeHermitModal();
+        callbacks.updateUI();
+      }
+    });
+  }
+
+  if (hermitChoice2Btn) {
+    hermitChoice2Btn.addEventListener('click', () => {
+      const hermit = globals.activeHermit;
+      const isJa = globals.currentLang === 'ja';
+      if (hermit) {
+        if (hermit.pactType === 'blade') {
+          globals.flow = Math.max(0, globals.flow * 0.5);
+          globals.playerStats.slashSizeMult += 0.50;
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '巨刃の瞑想成立！ +50% 範囲' : 'COLOSSUS SEALED! +50% SIZE', '#ffd700', 28));
+        } else if (hermit.pactType === 'speed') {
+          callbacks.addFlow(globals.playerStats.flowMax);
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '薄氷の修羅！ 気力全開' : 'GLASS ASURA! FULL FLOW', '#f97316', 28));
+        } else {
+          globals.petalArmorActive = false;
+          globals.petalArmorCooldown = 30;
+          globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 1;
+          globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 2;
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '天恵拝領！ 抜刀威力向上' : 'ASCETIC GIFT! +2 IAI DMG', '#10b981', 28));
+        }
+        playSynthesizedSingingBowl();
+        globals.activeHermit = null;
+        closeHermitModal();
+        callbacks.updateUI();
+      }
+    });
+  }
+
+  if (hermitLeaveBtn) hermitLeaveBtn.addEventListener('click', closeHermitModal);
+
+  // Dawn Victory return button
+  const dawnReturnBtn = document.getElementById('dawn-return-btn');
+  if (dawnReturnBtn) {
+    dawnReturnBtn.addEventListener('click', () => {
+      const dawnScreen = document.getElementById('dawn-victory-screen');
+      if (dawnScreen) dawnScreen.style.display = 'none';
+      globals.gameState = 'mainmenu';
+      mainMenu.style.display = 'flex';
+      uiLayer.style.display = 'none';
+      mobileControls.style.display = 'none';
+      pauseBgm();
+    });
+  }
+
 
   // Ad Reward - Honor Revive Click Listener
   const adReviveBtn = document.getElementById('ad-revive-btn');
@@ -1185,3 +1335,248 @@ export function updateBlessingSelectionUI() {
     }
   }
 }
+
+
+// ----------------------------------------------------
+// Grimoire, Chronicle, Shrine & Victory UI Implementation
+// ----------------------------------------------------
+
+export function populateGrimoireGrid() {
+  const grid = document.getElementById('grimoire-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const isJa = globals.currentLang === 'ja';
+
+  FUSION_RECIPES.forEach(recipe => {
+    const isDiscovered = globals.discoveredFusions.includes(recipe.key) || globals.activeFusions.has(recipe.key);
+    const card = document.createElement('div');
+    card.className = 'grimoire-card' + (isDiscovered ? ' discovered' : ' locked');
+    card.style.background = isDiscovered ? 'rgba(30, 41, 59, 0.95)' : 'rgba(15, 23, 42, 0.7)';
+    card.style.border = isDiscovered ? '1px solid #ffd700' : '1px solid #334155';
+    card.style.borderRadius = '8px';
+    card.style.padding = '16px';
+    card.style.display = 'flex';
+    card.style.flexDirection = 'column';
+    card.style.gap = '8px';
+    card.style.boxShadow = isDiscovered ? '0 0 15px rgba(255, 215, 0, 0.2)' : 'none';
+    
+    if (isDiscovered) {
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">${isJa ? recipe.nameJa : recipe.nameEn}</span>
+          <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e;">${isJa ? '解読済' : 'DISCOVERED'}</span>
+        </div>
+        <div style="font-size:13px; color:#e2e8f0; line-height:1.4;">${isJa ? recipe.descJa : recipe.descEn}</div>
+        <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #334155; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#94a3b8;">
+          <span style="background:#0f172a; padding:3px 8px; border-radius:4px; border:1px solid #475569;">⚔️ ${isJa ? recipe.req1Ja : recipe.req1En}</span>
+          <span>+</span>
+          <span style="background:#0f172a; padding:3px 8px; border-radius:4px; border:1px solid #475569;">⚡ ${isJa ? recipe.req2Ja : recipe.req2En}</span>
+        </div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#64748b;">??? [${isJa ? '未解読の奥義' : 'LOCKED FUSION'}]</span>
+          <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(148,163,184,0.1); color:#64748b; border:1px solid #475569;">${isJa ? '未修得' : 'LOCKED'}</span>
+        </div>
+        <div style="font-size:13px; color:#475569; font-style:italic; line-height:1.4;">
+          ${isJa 
+            ? '二つの異なる流派の極致を同時に極めし時、この禁断の秘奥義は開眼する…' 
+            : 'When two opposing disciplines reach their zenith in a single battle, this secret art shall awaken...'}
+        </div>
+        <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #1e293b; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#475569;">
+          <span style="background:#090d16; padding:3px 8px; border-radius:4px; border:1px solid #1e293b;">? ${isJa ? recipe.req1Ja : recipe.req1En}</span>
+          <span>+</span>
+          <span style="background:#090d16; padding:3px 8px; border-radius:4px; border:1px solid #1e293b;">? ${isJa ? recipe.req2Ja : recipe.req2En}</span>
+        </div>
+      `;
+    }
+    grid.appendChild(card);
+  });
+}
+
+export function populateChronicleList() {
+  const countEl = document.getElementById('seals-unlocked-count');
+  if (countEl) countEl.textContent = `${globals.unlockedSeals.length} / 7`;
+
+  const list = document.getElementById('chronicle-list');
+  if (!list) return;
+  list.innerHTML = '';
+
+  const isJa = globals.currentLang === 'ja';
+
+  for (let i = 1; i <= 7; i++) {
+    const seal = YOMI_SEALS[i];
+    if (!seal) continue;
+    const isUnlocked = globals.unlockedSeals.includes(seal.id);
+    const card = document.createElement('div');
+    card.style.background = isUnlocked ? 'rgba(15, 23, 42, 0.9)' : 'rgba(10, 15, 26, 0.6)';
+    card.style.border = isUnlocked ? '1px solid #38bdf8' : '1px solid #1e293b';
+    card.style.borderRadius = '8px';
+    card.style.padding = '16px';
+    card.style.display = 'flex';
+    card.style.flexDirection = 'column';
+    card.style.gap = '8px';
+    card.style.boxShadow = isUnlocked ? '0 0 15px rgba(56, 189, 248, 0.15)' : 'none';
+
+    if (isUnlocked) {
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#38bdf8;">⛩️ ${isJa ? seal.titleJa : seal.titleEn}</span>
+          <span style="font-size:11px; padding:2px 8px; border-radius:4px; background:rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8;">${isJa ? '封印解除' : 'SEAL BROKEN'}</span>
+        </div>
+        <div style="font-size:13px; color:#cbd5e1;"><strong>${isJa ? '【達成試練】' : '【FEAT CLEARED】'}</strong> ${isJa ? seal.featDescJa : seal.featDescEn}</div>
+        <div style="font-size:13px; color:#94a3b8; font-style:italic; border-left:3px solid #38bdf8; padding-left:10px; margin:4px 0;">"${isJa ? seal.loreFragmentJa : seal.loreFragmentEn}"</div>
+        <div style="margin-top:auto; font-size:13px; color:#ffd700; font-weight:500;">✨ ${isJa ? seal.rewardJa : seal.rewardEn}</div>
+      `;
+    } else {
+      card.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#64748b;">⛩️ Seal ${seal.id}: ???</span>
+          <span style="font-size:11px; padding:2px 8px; border-radius:4px; background:rgba(148,163,184,0.1); color:#64748b; border:1px solid #334155;">${isJa ? '封印中' : 'SEALED'}</span>
+        </div>
+        <div style="font-size:13px; color:#94a3b8;">
+          <strong>${isJa ? '【解呪条件】' : '【FEAT OBJECTIVE】'}</strong> ${isJa ? seal.featDescJa : seal.featDescEn}
+        </div>
+        <div style="font-size:12px; color:#475569; font-style:italic;">
+          "${isJa ? '記憶は黄泉の冥流に沈みて判読不能…' : 'The memory remains submerged in Yomi\'s river, awaiting your triumph...'}"
+        </div>
+        <div style="margin-top:auto; font-size:12px; color:#64748b;">
+          🔒 ${isJa ? seal.rewardJa : seal.rewardEn}
+        </div>
+      `;
+    }
+    list.appendChild(card);
+  }
+}
+
+export function openShrineCommuneModal(sealId: number) {
+  const modal = document.getElementById('shrine-modal');
+  if (!modal) return;
+  const seal = YOMI_SEALS[sealId];
+  if (!seal) return;
+
+  const isJa = globals.currentLang === 'ja';
+  const titleEl = document.getElementById('shrine-modal-title');
+  const kanjiEl = document.getElementById('shrine-kanji');
+  const descEl = document.getElementById('shrine-modal-desc');
+  const loreEl = document.getElementById('shrine-modal-lore');
+
+  if (titleEl) titleEl.textContent = isJa ? seal.titleJa : seal.titleEn;
+  if (kanjiEl) kanjiEl.textContent = '祠';
+  if (descEl) descEl.innerHTML = `<strong>${isJa ? '【試練達成】' : '【FEAT COMPLETED】'}</strong> ${isJa ? seal.featDescJa : seal.featDescEn}<br><br><span style="color:#ffd700;">${isJa ? seal.rewardJa : seal.rewardEn}</span>`;
+  if (loreEl) loreEl.textContent = `"${isJa ? seal.loreFragmentJa : seal.loreFragmentEn}"`;
+
+  modal.style.display = 'flex';
+}
+
+export function closeShrineModal() {
+  const modal = document.getElementById('shrine-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+export function openHermitPactModal() {
+  const hermit = globals.activeHermit;
+  if (!hermit) return;
+  const modal = document.getElementById('hermit-modal');
+  if (!modal) return;
+
+  const isJa = globals.currentLang === 'ja';
+  const titleEl = document.getElementById('hermit-modal-title');
+  const descEl = document.getElementById('hermit-modal-desc');
+  const choice1Btn = document.getElementById('hermit-pact-choice-1');
+  const choice2Btn = document.getElementById('hermit-pact-choice-2');
+
+  if (titleEl) titleEl.textContent = isJa ? '世捨て人の深紅の契約' : "THE HERMIT'S CRIMSON PACT";
+  if (descEl) descEl.textContent = isJa 
+    ? '「生きてこの地を出られると思うな。だが力を求めるなら…血を捧げよ。」' 
+    : '"None leave this realm unscathed, ronin. If you crave divine strength... pay in blood."';
+
+  if (hermit.pactType === 'blade') {
+    if (choice1Btn) {
+      choice1Btn.innerHTML = `<strong>${isJa ? '【血刀の誓い】' : '【Pact of the Bloodblade】'}</strong><br>${isJa ? '最大体力 -1 ハート ➔ 恒久斬撃ダメージ +35%' : 'Sacrifice 1 Max Heart ➔ +35% Slash Damage'}`;
+    }
+    if (choice2Btn) {
+      choice2Btn.innerHTML = `<strong>${isJa ? '【巨刃の瞑想】' : '【Meditation of the Colossus】'}</strong><br>${isJa ? '現在の気力 50% を消費 ➔ 斬撃範囲 +50%' : 'Sacrifice 50% Current Flow ➔ +50% Slash Radius'}`;
+    }
+  } else if (hermit.pactType === 'speed') {
+    if (choice1Btn) {
+      choice1Btn.innerHTML = `<strong>${isJa ? '【疾風の生贄】' : '【Pact of the Gale】'}</strong><br>${isJa ? '最大体力 -1 ハート ➔ 瞬歩クールダウン -35% ＆ 移動速度 +25%' : 'Sacrifice 1 Max Heart ➔ -35% Dash Cooldown & +25% Speed'}`;
+    }
+    if (choice2Btn) {
+      choice2Btn.innerHTML = `<strong>${isJa ? '【薄氷の修羅】' : '【Curse of the Glass Asura】'}</strong><br>${isJa ? '気力を全開まで即座に充填' : 'Instant 100% Full Flow Energy'}`;
+    }
+  } else {
+    if (choice1Btn) {
+      choice1Btn.innerHTML = `<strong>${isJa ? '【心眼の覚醒】' : "【Pact of the Mind's Eye】"}</strong><br>${isJa ? '最大体力 -1 ハート ➔ 気力蓄積速度 +60%' : 'Sacrifice 1 Max Heart ➔ +60% Flow Generation'}`;
+    }
+    if (choice2Btn) {
+      choice2Btn.innerHTML = `<strong>${isJa ? '【天恵の即時拝領】' : '【Gift of the Ascetic】'}</strong><br>${isJa ? '障壁を解除 ➔ 基礎攻撃力+1 ＆ 抜刀威力+2' : 'Shatter barriers ➔ Base DMG +1 & Iai DMG +2'}`;
+    }
+  }
+
+  modal.style.display = 'flex';
+}
+
+export function closeHermitModal() {
+  const modal = document.getElementById('hermit-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+export function triggerDawnVictory(_stats?: any) {
+  globals.gameState = 'gameover';
+  const modal = document.getElementById('dawn-victory-screen');
+  if (!modal) return;
+
+  const isJa = globals.currentLang === 'ja';
+  playSynthesizedSingingBowl();
+  playSynthesizedFusionUnlock();
+
+  if (!globals.unlockedSeals.includes(7)) {
+    globals.unlockedSeals.push(7);
+    try { localStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals)); } catch(e) {}
+    YOMI_SEALS[7]?.applyPermanentReward();
+  }
+
+  const contentEl = document.getElementById('dawn-stats-content');
+  if (contentEl) {
+    const min = Math.floor(globals.runTime / 60);
+    const sec = Math.floor(globals.runTime % 60);
+    const timeStr = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+
+    contentEl.innerHTML = `
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
+        <span>${isJa ? '夜明け到達生存時間' : 'Time Survived Until Dawn'}:</span>
+        <span style="color:#ffd700; font-weight:bold;">${timeStr} (10:00)</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
+        <span>${isJa ? '討伐した敵兵' : 'Enemies Slain'}:</span>
+        <span style="color:#38bdf8; font-weight:bold;">${globals.runStats.kills}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
+        <span>${isJa ? '討伐した将軍・幹部' : 'Bosses Succeeded'}:</span>
+        <span style="color:#f43f5e; font-weight:bold;">${globals.runStats.bossesKilled}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
+        <span>${isJa ? '解除した黄泉の封印' : 'Yomi Seals Awakened'}:</span>
+        <span style="color:#a855f7; font-weight:bold;">${globals.unlockedSeals.length} / 7</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #334155; padding-bottom:6px;">
+        <span>${isJa ? '開眼した禁断の融合' : 'Active Fusions'}:</span>
+        <span style="color:#22c55e; font-weight:bold;">${globals.activeFusions.size}</span>
+      </div>
+      <div style="font-size:13px; color:#cbd5e1; font-style:italic; line-height:1.5; text-align:center; padding:12px; background:rgba(255,215,0,0.08); border-radius:6px; border:1px solid rgba(255,215,0,0.2);">
+        "${isJa 
+          ? '「刃は折れず、魂は遂に宵闇を裂いた。朝日が差し込み、黄泉の悪夢は朝露の如く消え去る…」' 
+          : '"The blade remains unbroken. With the Supreme Shogun slain, golden sunlight pierces the dark of Yomi. You are finally free."'}
+      </div>
+    `;
+  }
+
+  modal.style.display = 'flex';
+}
+
+callbacks.openShrineCommuneModal = openShrineCommuneModal;
+callbacks.openHermitPactModal = openHermitPactModal;
+callbacks.triggerDawnVictory = triggerDawnVictory;

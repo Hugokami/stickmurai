@@ -297,6 +297,18 @@ export class Player extends Entity {
           }
 
           callbacks.triggerFlowingCounterReset?.();
+
+          if (globals.activeFusions.has('hundred_phantoms')) {
+            globals.decoys.push({
+              x: this.x,
+              y: this.y,
+              life: 3.5,
+              maxLife: 3.5,
+              dir: this.dir,
+              animFrame: this.animFrame
+            });
+            globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 100, globals.currentLang === 'ja' ? '百影の幻惑！' : 'HUNDRED PHANTOMS!', '#a855f7', 28));
+          }
         }
         let angle: number;
         if (globals.useMobileDashAimAngle || (globals.mobileDashAimActive && (globals.flowState === 'awakened' || globals.flowState === 'storm_god'))) {
@@ -511,6 +523,16 @@ export class Player extends Entity {
         afterimg.life = 0.35;
         afterimg.maxLife = 0.35;
         globals.afterimages.push(afterimg);
+
+        if (globals.activeFusions.has('plasma_tempest')) {
+          globals.plasmaTrails.push({
+            x: this.x,
+            y: this.y,
+            life: 3.5,
+            maxLife: 3.5,
+            radius: 50
+          });
+        }
       }
 
       // smoke particles

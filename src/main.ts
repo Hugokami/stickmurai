@@ -18,6 +18,7 @@ import {
   playSynthesizedGravity,
   playSynthesizedLevelUp,
   playSynthesizedClash,
+  playSynthesizedTempleBell,
   startBgm
 } from './audio';
 import {
@@ -43,6 +44,9 @@ let localRematchReady = false;
 let remoteRematchReady = false;
 let stormLightningTimer = 0.0;
 import { WeatherEngine } from './weather';
+import { checkShrineSpawns, triggerCalamityCheck, YOMI_SEALS, spawnShrine } from './shrine';
+let bossEncounterDamaged = false;
+let shogunSpawned = false;
 
 // Import helper modules
 import { initInput, pollGamepad } from './input';
@@ -664,6 +668,7 @@ function initGame() {
   globals.delayedActions = [];
   globals.runStats = {
     kills: 0,
+    bossesKilled: 0,
     maxCombo: 0,
     parries: 0,
     perfectParries: 0,
@@ -728,10 +733,30 @@ function initGame() {
   globals.bloodThirstBleedTimer = 45.0;
   globals.curseOfGreedActive = false;
   globals.scoreMultiplier = 1;
-  globals.activeBladeClash = null;
   globals.ultCooldown = 0;
   globals.ultCooldownMax = 6.0;
   globals.roninResolveCooldown = 0;
+  globals.runTime = 0;
+  globals.dayNightPhase = 'dawn';
+  globals.calamityEvent = 'none';
+  globals.calamityTimer = 0;
+  globals.activeShrine = null;
+  globals.activeHermit = null;
+  globals.shadowDoppelganger = null;
+  globals.consecutiveParries = 0;
+  globals.lowHpSurviveTimer = 0;
+  globals.shogunDefeatedAtDawn = false;
+  bossEncounterDamaged = false;
+  shogunSpawned = false;
+  globals.bladeClashVictories = 0;
+  globals.activeFusions.clear();
+  globals.bouncingSickles = [];
+  globals.plasmaTrails = [];
+
+  // Apply permanent Yomi Seal breakthrough bonuses
+  globals.unlockedSeals.forEach(id => {
+    YOMI_SEALS[id]?.applyPermanentReward();
+  });
   
   if (globals.gameMode === 'zen') {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
@@ -740,6 +765,8 @@ function initGame() {
   const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 12.0 : (globals.selectedSkill === 'dash' ? 2.8 : (globals.selectedSkill === 'firewheel' ? 12.0 : (globals.selectedSkill === 'gravity' ? 10.0 : (globals.selectedSkill === 'parry_master' ? 10.0 : (globals.selectedSkill === 'decoy_illusion' ? 14.0 : 16.0))))));
   const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 3.5 : (globals.selectedSkill === 'dash' ? 0.3 : (globals.selectedSkill === 'firewheel' ? 5.0 : (globals.selectedSkill === 'gravity' ? 4.0 : (globals.selectedSkill === 'parry_master' ? 3.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
   globals.playerStats = { 
+    slashBonusDmg: 0,
+    iaijutsuBonusDmg: 0,
     slashSizeMult: 1.0, 
     attackCooldownBase: 0.3, 
     dashCooldownBase: 1.2, 
@@ -1022,12 +1049,17 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   
   if (globals.player.state !== 'dead') {
     playSynthesizedHurt();
+    globals.consecutiveParries = 0;
+    const isAnyBossAlive = globals.enemies.some(en => en.state !== 'dead' && (en.subType === 'oni_boss' || en.subType === 'shogun_boss' || (en as any).isBoss));
+    if (isAnyBossAlive) {
+      bossEncounterDamaged = true;
+    }
     
     // Step 3: Ronin's Resolve (Lethal One-Shot Protection)
     if (globals.lives >= 2 && globals.lives - damageAmount <= 0 && globals.roninResolveCooldown <= 0) {
       globals.lives = 1; // Preserve samurai on brink of defeat!
       globals.roninResolveCooldown = 60.0; // 60s cooldown
-      globals.invulnTimer = 1.5; // Emergency i-frames
+      globals.invulnTimer = globals.unlockedSeals.includes(2) ? 2.5 : 1.5; // Emergency i-frames (buffed by Seal II)
       globals.screenShake = 35;
       playSynthesizedPerfectParry();
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
@@ -1544,7 +1576,7 @@ function executeMirrorStrike(angle: number, baseDmg: number) {
   }
 }
 
-function triggerChainLightning(startEnemy: Enemy) {
+function triggerChainLightning(startEnemy: Enemy, chainDmg = 2) {
   const chainLimit = 4;
   let currentSource = startEnemy;
   const hitSet = new Set<Enemy>([startEnemy]);
@@ -1579,7 +1611,7 @@ function triggerChainLightning(startEnemy: Enemy) {
       globals.particles.push(Particle.acquire(px + perpX, py + perpY, '#fbbf24', 0, 0.25, 2.0));
     }
     
-    hitEnemy(closest, 2);
+    hitEnemy(closest, chainDmg);
     closest.stunTimer = Math.max(closest.stunTimer || 0, 1.5);
     
     hitSet.add(closest);
@@ -1801,6 +1833,9 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     e.burnTimer = 3.0;
     if (e.burnTickTimer <= 0) e.burnTickTimer = 0.5;
   }
+  if (globals.activeFusions.has('plasma_tempest') && e.burnTimer > 0) {
+    triggerChainLightning(e, 8);
+  }
   if (globals.frostStanceActive) {
     e.chillTimer = 3.0;
   }
@@ -1958,6 +1993,20 @@ function killEnemy(e: Enemy) {
   addCombo();
   globals.runStats.kills++;
   checkVampireHeal(e);
+  if (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss) {
+    globals.runStats.bossesKilled++;
+    if ((e as any).isSupremeShogun || (globals.runTime >= 540 && e.subType === 'shogun_boss')) {
+      globals.shogunDefeatedAtDawn = true;
+      callbacks.triggerDawnVictory();
+    }
+    if (!bossEncounterDamaged && !globals.unlockedSeals.includes(3)) {
+      spawnShrine(3);
+    }
+  }
+  if ((e as any).isShadowDoppelganger && !globals.unlockedSeals.includes(5)) {
+    spawnShrine(5);
+  }
+
 
   if (globals.activeBounty && globals.activeBounty.type === 'slay') {
     globals.activeBounty.current++;
@@ -2110,6 +2159,114 @@ function update(realDt: number) {
     if (globals.level >= globals.levelModeTarget) {
       triggerVictory();
       return;
+    }
+  }
+
+  // Progression: Run Time, Day/Night Phase, Calamities, Shrines & Hermit
+  if (globals.gameState === 'playing') {
+    globals.runTime += realDt;
+    if (globals.runTime < 180) {
+      globals.dayNightPhase = 'dawn';
+    } else if (globals.runTime < 360) {
+      globals.dayNightPhase = 'sunset';
+    } else if (globals.runTime < 540) {
+      globals.dayNightPhase = 'midnight';
+    } else {
+      globals.dayNightPhase = 'final_showdown';
+    }
+
+    // 10-Minute Showdown: Supreme Shogun Boss Spawn
+    if (globals.runTime >= 540 && globals.gameMode !== 'zen' && !shogunSpawned) {
+      shogunSpawned = true;
+      playSynthesizedTempleBell();
+      const shogun = new Enemy(globals.player.x + 350, globals.player.y, globals.player);
+      shogun.subType = 'shogun_boss';
+      shogun.hp = 350;
+      shogun.maxHp = 350;
+      (shogun as any).isBoss = true;
+      (shogun as any).isSupremeShogun = true;
+      globals.enemies.push(shogun);
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, globals.currentLang === 'ja' ? '【最終決戦】最高司令官・将軍 顕現！ ⚔️' : '【FINAL SHOWDOWN】 SUPREME SHOGUN HAS AWAKENED! ⚔️', 'neon-#ef4444', 36));
+      globals.shockwaves.push(new Shockwave(shogun.x, shogun.y, '#ffd700'));
+    }
+
+    // Calamity & Shrine checks
+    triggerCalamityCheck(realDt);
+    checkShrineSpawns();
+
+    // Interaction checks with Active Shrine & Wandering Hermit
+    const isInteractRequested = globals.keys['Space'] || globals.mouse.justReleased || globals.mobileAttackJustPressed;
+    if (globals.activeShrine) {
+      globals.activeShrine.update(realDt);
+      const dSq = (globals.player.x - globals.activeShrine.x) ** 2 + (globals.player.y - globals.activeShrine.y) ** 2;
+      if (dSq < globals.activeShrine.radius ** 2 && isInteractRequested) {
+        callbacks.openShrineCommuneModal(globals.activeShrine.sealId);
+      }
+    }
+
+    if (globals.activeHermit) {
+      globals.activeHermit.update(realDt);
+      const dSq = (globals.player.x - globals.activeHermit.x) ** 2 + (globals.player.y - globals.activeHermit.y) ** 2;
+      if (dSq < globals.activeHermit.radius ** 2 && isInteractRequested) {
+        callbacks.openHermitPactModal();
+      }
+    }
+
+    // Low HP Survival Tracking for Seal II
+    if (globals.lives === 1 && globals.gameMode !== 'zen') {
+      globals.lowHpSurviveTimer += realDt;
+      if (globals.lowHpSurviveTimer >= 25 && !globals.unlockedSeals.includes(2)) {
+        spawnShrine(2);
+      }
+    } else {
+      globals.lowHpSurviveTimer = 0;
+    }
+
+    // Plasma Tempest Trails Update
+    for (let i = globals.plasmaTrails.length - 1; i >= 0; i--) {
+      const pt = globals.plasmaTrails[i];
+      pt.life -= realDt;
+      if (pt.life <= 0) {
+        globals.plasmaTrails.splice(i, 1);
+        continue;
+      }
+      const rSq = (pt.radius || 50) ** 2;
+      for (let j = 0; j < globals.enemies.length; j++) {
+        const en = globals.enemies[j];
+        if (en.state === 'dead') continue;
+        const dSq = (en.x - pt.x) ** 2 + (en.y - pt.y) ** 2;
+        if (dSq < rSq) {
+          en.burnTimer = 3.0;
+          hitEnemy(en, 6 * realDt);
+        }
+      }
+    }
+
+    // Kamaitachi Bouncing Sickles Update
+    for (let i = globals.bouncingSickles.length - 1; i >= 0; i--) {
+      const s = globals.bouncingSickles[i];
+      s.life -= realDt;
+      if (s.life <= 0) {
+        globals.bouncingSickles.splice(i, 1);
+        continue;
+      }
+      s.x += s.vx * realDt;
+      s.y += s.vy * realDt;
+      if (s.x < 50) { s.x = 50; s.vx = Math.abs(s.vx); }
+      else if (s.x > globals.width - 50) { s.x = globals.width - 50; s.vx = -Math.abs(s.vx); }
+      if (s.y < 50) { s.y = 50; s.vy = Math.abs(s.vy); }
+      else if (s.y > globals.height - 50) { s.y = globals.height - 50; s.vy = -Math.abs(s.vy); }
+
+      const rSq = (s.radius || 30) ** 2;
+      for (let j = 0; j < globals.enemies.length; j++) {
+        const en = globals.enemies[j];
+        if (en.state === 'dead') continue;
+        const dSq = (en.x - s.x) ** 2 + (en.y - s.y) ** 2;
+        if (dSq < rSq) {
+          hitEnemy(en, s.damage || 5);
+          globals.particles.push(Particle.acquire(s.x, s.y, '#4ade80', 180, 0.3, 2));
+        }
+      }
     }
   }
 
@@ -2958,6 +3115,10 @@ function update(realDt: number) {
         globals.activeBladeClash = null;
         globals.shockwaves.push(new Shockwave(clash.x, clash.y, '#ffd700'));
         globals.floatingTexts.push(FloatingText.acquire(clash.x, clash.y - 65, t('clashVictoryText') || "CLASH VICTORY! ⚔️", "neon-#ffd700", 32));
+        globals.bladeClashVictories++;
+        if (globals.bladeClashVictories >= 3 && !globals.unlockedSeals.includes(1)) {
+          spawnShrine(1);
+        }
         playSynthesizedAwaken();
         globals.screenShake = Math.max(globals.screenShake, 25);
         addFlow(10);
@@ -3077,6 +3238,30 @@ function update(realDt: number) {
           if (isPerfect) {
             globals.runStats.perfectParries++;
             globals.runStats.parries++;
+            globals.consecutiveParries++;
+            if (globals.consecutiveParries >= 10 && !globals.unlockedSeals.includes(6)) {
+              spawnShrine(6);
+            }
+            if (globals.unlockedSeals.includes(6)) {
+              e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
+            }
+            if (globals.activeFusions.has('asura_storm')) {
+              let asuraHits = 0;
+              const nearby = globals.enemies.filter(other => other.state !== 'dead' && Math.hypot(other.x - globals.player.x, other.y - globals.player.y) < 320);
+              nearby.forEach((other, idx) => {
+                if (idx < 6) {
+                  asuraHits++;
+                  hitEnemy(other, 8);
+                  globals.slashes.push(Slash.acquire(other.x, other.y, Math.PI / 4 + (idx * Math.PI / 3), 1.8, true, '#ef4444'));
+                  globals.shockwaves.push(new Shockwave(other.x, other.y, '#ef4444'));
+                }
+              });
+              if (asuraHits >= 3) {
+                globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+                globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '阿修羅の嵐！ 心臓再生！' : "ASURA'S STORM! HEART RESTORED!", '#ef4444', 32));
+                callbacks.updateUI();
+              }
+            }
             addCombo();
             addCombo();
             globals.hitStop = 0; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 35;
@@ -3287,6 +3472,41 @@ function update(realDt: number) {
 
       if (isDragonFuryActive) {
         globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, dmg, true));
+      }
+      if (globals.activeFusions.has('kamaitachi')) {
+        const sSpd = 650;
+        globals.bouncingSickles.push({
+          x: globals.player.x,
+          y: globals.player.y,
+          vx: Math.cos(angle - 0.35) * sSpd,
+          vy: Math.sin(angle - 0.35) * sSpd,
+          life: 4.0,
+          maxLife: 4.0,
+          radius: 32,
+          damage: 6
+        });
+        globals.bouncingSickles.push({
+          x: globals.player.x,
+          y: globals.player.y,
+          vx: Math.cos(angle + 0.35) * sSpd,
+          vy: Math.sin(angle + 0.35) * sSpd,
+          life: 4.0,
+          maxLife: 4.0,
+          radius: 32,
+          damage: 6
+        });
+        playSound(sfx.slash, 0.5);
+      }
+      if (globals.activeFusions.has('singularity_cleave')) {
+        const bhX = globals.player.x + Math.cos(angle) * 150;
+        const bhY = globals.player.y + Math.sin(angle) * 150;
+        globals.gravityWellTimer = 3.5;
+        globals.gravityWellX = bhX;
+        globals.gravityWellY = bhY;
+        globals.shockwaves.push(new Shockwave(bhX, bhY, '#a855f7'));
+      }
+      if (globals.playerStats.slashBonusDmg) {
+        dmg += globals.playerStats.slashBonusDmg;
       }
       
       if (attackPower >= 1.7) {

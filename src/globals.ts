@@ -43,6 +43,7 @@ export const globals = {
 
   runStats: {
     kills: 0,
+    bossesKilled: 0,
     maxCombo: 0,
     parries: 0,
     perfectParries: 0,
@@ -51,6 +52,8 @@ export const globals = {
   },
 
   playerStats: { 
+    slashBonusDmg: 0,
+    iaijutsuBonusDmg: 0,
     slashSizeMult: 1.0, 
     attackCooldownBase: 0.3, 
     dashCooldownBase: 1.2, 
@@ -235,7 +238,37 @@ export const globals = {
   scoreMultiplier: 1,
 
   // Option 2: Blade Clash (Tsubazeriai)
-  activeBladeClash: null as BladeClashState | null
+  activeBladeClash: null as BladeClashState | null,
+
+  // Curiosity, Fusions, Shrines & 10-Minute Dawn Progression
+  discoveredFusions: (() => {
+    try {
+      const stored = localStorage.getItem('stickmurai_fusions');
+      if (stored) return JSON.parse(stored);
+    } catch(e) {}
+    return [] as string[];
+  })() as string[],
+  unlockedSeals: (() => {
+    try {
+      const stored = localStorage.getItem('stickmurai_seals');
+      if (stored) return JSON.parse(stored);
+    } catch(e) {}
+    return [] as number[];
+  })() as number[],
+  activeFusions: new Set<string>(),
+  runTime: 0,
+  dayNightPhase: 'dawn' as 'dawn' | 'noon' | 'sunset' | 'midnight' | 'final_showdown',
+  calamityEvent: 'none' as 'none' | 'blood_moon' | 'wandering_hermit' | 'shadow_duel',
+  calamityTimer: 0,
+  activeShrine: null as any,
+  activeHermit: null as any,
+  shadowDoppelganger: null as any,
+  consecutiveParries: 0,
+  lowHpSurviveTimer: 0,
+  shogunDefeatedAtDawn: false,
+  bladeClashVictories: 0,
+  bouncingSickles: [] as any[],
+  plasmaTrails: [] as any[]
 };
 
 export interface BladeClashState {

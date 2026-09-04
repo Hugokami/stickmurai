@@ -708,6 +708,105 @@ export function playSynthesizedCharge() {
   } catch (e) {}
 }
 
+export function playSynthesizedTempleBell() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.7);
+
+    // Fundamental and metallic minor third overtone
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gainNode = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(110, now);
+    osc1.frequency.exponentialRampToValueAtTime(108, now + 3.5);
+
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(228, now);
+    osc2.frequency.exponentialRampToValueAtTime(224, now + 3.5);
+
+    gainNode.gain.setValueAtTime(Math.max(0.001, volume), now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 3.5);
+
+    osc1.connect(gainNode);
+    osc2.connect(gainNode);
+    gainNode.connect(getSoundDestination(ctx));
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 3.51);
+    osc2.stop(now + 3.51);
+  } catch(e) {}
+}
+
+export function playSynthesizedSingingBowl() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.6);
+
+    const osc = ctx.createOscillator();
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    const gainNode = ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(432, now); // Sacred frequency
+
+    // Gentle 2.5Hz pulsating shimmer
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(2.5, now);
+    lfoGain.gain.setValueAtTime(3.0, now);
+
+    lfo.connect(osc.frequency);
+    gainNode.gain.setValueAtTime(0.001, now);
+    gainNode.gain.linearRampToValueAtTime(Math.max(0.001, volume), now + 0.4);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 4.0);
+
+    osc.connect(gainNode);
+    gainNode.connect(getSoundDestination(ctx));
+
+    lfo.start(now);
+    osc.start(now);
+    lfo.stop(now + 4.01);
+    osc.stop(now + 4.01);
+  } catch(e) {}
+}
+
+export function playSynthesizedFusionUnlock() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.65);
+
+    // Fast celestial arpeggio: C5(523), E5(659), G5(784), B5(987), E6(1318)
+    const notes = [523.25, 659.25, 783.99, 987.77, 1318.51];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const noteTime = now + idx * 0.08;
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, noteTime);
+
+      gain.gain.setValueAtTime(0.001, noteTime);
+      gain.gain.linearRampToValueAtTime(volume, noteTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 1.2);
+
+      osc.connect(gain);
+      gain.connect(getSoundDestination(ctx));
+
+      osc.start(noteTime);
+      osc.stop(noteTime + 1.25);
+    });
+  } catch(e) {}
+}
+
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {

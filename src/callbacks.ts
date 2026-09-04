@@ -24,6 +24,9 @@ export const callbacks = {
   triggerElementalExplosion: (_x: number, _y: number, _wasChilled: boolean, _wasBurning: boolean) => {},
   triggerPvPEmote: (_id: number) => {},
   revivePlayer: () => {},
+  openShrineCommuneModal: (_sealId: number) => {},
+  openHermitPactModal: () => {},
+  triggerDawnVictory: () => {},
 };
 
 export const assetCallbacks = {

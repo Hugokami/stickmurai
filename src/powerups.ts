@@ -5,6 +5,7 @@ import {
   playSynthesizedLevelUp,
   playSynthesizedAwaken,
   playSynthesizedThunder,
+  playSynthesizedFusionUnlock,
   playSound,
   sfx
 } from './audio';
@@ -18,6 +19,8 @@ export interface PowerUp {
   apply: () => void;
   skill?: 'enhance' | 'shield' | 'dash' | 'firewheel' | 'gravity' | 'parry_master';
   isCorrupted?: boolean;
+  isFusion?: boolean;
+  fusionKey?: string;
 }
 
 export const powerUps: PowerUp[] = [
@@ -113,6 +116,130 @@ export const powerUps: PowerUp[] = [
   }
 ];
 
+export interface FusionRecipe {
+  key: string;
+  nameKey: string;
+  descKey: string;
+  nameEn: string;
+  nameJa: string;
+  descEn: string;
+  descJa: string;
+  req1En: string;
+  req1Ja: string;
+  req2En: string;
+  req2Ja: string;
+  checkPrereqs: () => boolean;
+  apply: () => void;
+}
+
+export const FUSION_RECIPES: FusionRecipe[] = [
+  {
+    key: 'plasma_tempest',
+    nameKey: 'fuPlasmaName',
+    descKey: 'fuPlasmaDesc',
+    nameEn: 'Plasma Tempest (天雷業火)',
+    nameJa: '天雷業火（プラズマ・テンペスト）',
+    descEn: 'Dashes leave crackling electric firewalls (6 DMG/s). Slashing burned enemies unleashes room-clearing chain lightning for 10 DMG.',
+    descJa: 'ダッシュ軌道に電磁火炎壁を展開（秒間6ダメ）。炎上中の敵を斬撃すると画面全域へ10ダメの連鎖雷撃を放出。',
+    req1En: 'Inferno Sweep (or Fire upgrades)',
+    req1Ja: '業火の回天（または炎属性強化）',
+    req2En: 'Raijin Step (or Thunder upgrades)',
+    req2Ja: '雷神の瞬歩（または雷属性強化）',
+    checkPrereqs: () => {
+      const hasFire = globals.selectedSkill === 'firewheel' || (globals.playerStats.firewheelBlazeLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Fire'));
+      const hasThunder = globals.selectedSkill === 'dash' || (globals.playerStats.dashThunderLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Thunder') || k.includes('Feather'));
+      return hasFire && hasThunder && globals.level >= 3;
+    },
+    apply: () => {
+      globals.activeFusions.add('plasma_tempest');
+    }
+  },
+  {
+    key: 'singularity_cleave',
+    nameKey: 'fuSingularityName',
+    descKey: 'fuSingularityDesc',
+    nameEn: 'Singularity Cleave (虚無の太刀)',
+    nameJa: '虚無の太刀（シンギュラリティ・クリーブ）',
+    descEn: 'Basic slashes fire traveling micro black holes that devour enemy bullets, pull in mobs, and implode for 20 AoE DMG.',
+    descJa: '通常斬撃がマイクロ・ブラックホールを射出。敵弾を消滅させ敵を吸引し、最後に20ダメの特異点爆発を起こす。',
+    req1En: 'Gravity Well (or Void Stance)',
+    req1Ja: '重力崩壊（または虚無の型）',
+    req2En: "Dragon's Fury (or High Damage)",
+    req2Ja: '竜の激昂（または攻撃力強化）',
+    checkPrereqs: () => {
+      const hasGravity = globals.selectedSkill === 'gravity' || (globals.playerStats.gravityExplosionLevel || 0) > 0 || globals.voidStanceActive;
+      const hasDragon = globals.selectedSkill === 'enhance' || globals.playerStats.enhanceBonusDmg >= 2 || globals.chosenPowerUps.some(k => k.includes('Lethal') || k.includes('Giant'));
+      return hasGravity && hasDragon && globals.level >= 3;
+    },
+    apply: () => {
+      globals.activeFusions.add('singularity_cleave');
+    }
+  },
+  {
+    key: 'hundred_phantoms',
+    nameKey: 'fuPhantomsName',
+    descKey: 'fuPhantomsDesc',
+    nameEn: 'Hundred Demon March (百鬼夜行)',
+    nameJa: '百鬼夜行（ハンドレッド・ファントム）',
+    descEn: 'Every Perfect Dodge or Finisher spawns an immortal shadow samurai duplicate for 12s that mirrors all your slashes.',
+    descJa: '見切り回避またはコンボフィニッシャー発動時、12秒間プレイヤーの全斬撃を完全模倣する影武者を召喚。',
+    req1En: 'Shadow Step / Clones',
+    req1Ja: '影遁・分身術',
+    req2En: 'Glass Edge (or Cursed Relic)',
+    req2Ja: '玻璃の刃（または呪物）',
+    checkPrereqs: () => {
+      const hasShadow = globals.selectedSkill === 'decoy_illusion' || (globals.playerStats.shadowClonesLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Clones') || k.includes('Decoy'));
+      const hasCursed = globals.maxLives === 1 || globals.bloodThirstCurseActive || globals.chosenPowerUps.some(k => k.includes('Cursed'));
+      return hasShadow && hasCursed && globals.level >= 3;
+    },
+    apply: () => {
+      globals.activeFusions.add('hundred_phantoms');
+    }
+  },
+  {
+    key: 'kamaitachi',
+    nameKey: 'fuKamaitachiName',
+    descKey: 'fuKamaitachiDesc',
+    nameEn: 'Kamaitachi Sickle-Wind (鎌鼬の風)',
+    nameJa: '鎌鼬の風（カマイタチ・シックル）',
+    descEn: 'Slashes unleash 2 razor crescent wind discs that ricochet off arena borders up to 3 times, slicing through hordes for 8 DMG.',
+    descJa: '斬撃から2つの超高速真空鎌を射出。画面端で最大3回跳ね返り、敵軍団を貫通して8ダメージを与える。',
+    req1En: 'Wind Aegis (or Wind Stance)',
+    req1Ja: '烈風の加護（または風属性）',
+    req2En: 'Deflect Damage >= 4',
+    req2Ja: '弾き返しダメージ強化',
+    checkPrereqs: () => {
+      const hasWind = globals.selectedSkill === 'shield' || globals.chosenPowerUps.some(k => k.includes('Wind') || k.includes('Shield') || k.includes('Gale'));
+      const hasDeflect = (globals.playerStats.deflectedDmg || 1) >= 4 || globals.chosenPowerUps.some(k => k.includes('Echo') || k.includes('Iron'));
+      return hasWind && hasDeflect && globals.level >= 3;
+    },
+    apply: () => {
+      globals.activeFusions.add('kamaitachi');
+    }
+  },
+  {
+    key: 'asura_storm',
+    nameKey: 'fuAsuraName',
+    descKey: 'fuAsuraDesc',
+    nameEn: "Asura's Blade Storm (修羅の六腕)",
+    nameJa: '修羅の六腕（アスラ・ストーム）',
+    descEn: 'Parrying any attack triggers a 360° storm of 6 phantom cross-slashes (12 DMG each) and restores 1 Heart if 3+ enemies are struck.',
+    descJa: '攻撃をパリィすると全方位360度に6本の幻影斬撃（各12ダメ）が爆発。3体以上命中時にハートを1回復。',
+    req1En: 'Parry Master',
+    req1Ja: '弾きの極意',
+    req2En: 'Blood Thirst (or Vampire Chance)',
+    req2Ja: '血の渇き（または吸血確率）',
+    checkPrereqs: () => {
+      const hasParry = globals.selectedSkill === 'parry_master' || globals.chosenPowerUps.some(k => k.includes('Parry'));
+      const hasBlood = globals.bloodThirstCurseActive || globals.playerStats.vampireChance > 0 || globals.chosenPowerUps.some(k => k.includes('Blood'));
+      return hasParry && hasBlood && globals.level >= 3;
+    },
+    apply: () => {
+      globals.activeFusions.add('asura_storm');
+    }
+  }
+];
+
 export function triggerLevelUp() {
   playSynthesizedLevelUp();
   globals.gameState = 'levelup';
@@ -160,13 +287,38 @@ export function triggerLevelUp() {
   const shuffledNormal = [...normalPowers].sort(() => 0.5 - Math.random());
   const choices: PowerUp[] = [];
 
+  // Check for available, unacquired Forbidden Fusion Arts!
+  const readyFusion = FUSION_RECIPES.find(f => !globals.activeFusions.has(f.key) && f.checkPrereqs());
+  if (readyFusion) {
+    choices.push({
+      nameKey: readyFusion.nameKey,
+      descKey: readyFusion.descKey,
+      isFusion: true,
+      fusionKey: readyFusion.key,
+      apply: () => {
+        readyFusion.apply();
+        playSynthesizedFusionUnlock();
+        if (!globals.discoveredFusions.includes(readyFusion.key)) {
+          globals.discoveredFusions.push(readyFusion.key);
+          try {
+            localStorage.setItem('stickmurai_fusions', JSON.stringify(globals.discoveredFusions));
+          } catch(e) {}
+        }
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '【神聖合一奥義習得！】' : 'FORBIDDEN FUSION SYNTHESIZED!', '#ffd700', 36));
+      }
+    });
+  }
+
   // 35% chance to offer a Cursed Blessing in non-zen mode when level >= 3
-  const offerCurse = (globals.gameMode !== 'zen' && globals.level >= 3 && Math.random() < 0.35 && cursedPowers.length > 0);
+  const offerCurse = (globals.gameMode !== 'zen' && globals.level >= 3 && Math.random() < 0.35 && cursedPowers.length > 0 && choices.length === 0);
   if (offerCurse) {
     const randomCurse = cursedPowers[Math.floor(Math.random() * cursedPowers.length)];
     choices.push(shuffledNormal[0], shuffledNormal[1], randomCurse);
   } else {
-    choices.push(...shuffledNormal.slice(0, 3));
+    while (choices.length < 3 && shuffledNormal.length > 0) {
+      choices.push(shuffledNormal.shift()!);
+    }
   }
   
   choices.forEach((power, index) => {
@@ -177,7 +329,12 @@ export function triggerLevelUp() {
     
     let category = 'basic';
     const nk = power.nameKey;
-    if (power.isCorrupted) {
+    if (power.isFusion) {
+      card.style.borderColor = '#ffd700';
+      card.style.background = 'linear-gradient(135deg, rgba(35, 20, 5, 0.98), rgba(60, 30, 10, 0.98))';
+      card.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6)';
+      card.innerHTML = `<span style="display:inline-block; font-size:10px; font-weight:900; letter-spacing:1.5px; color:#ffd700; background:rgba(255,215,0,0.2); padding:3px 10px; border-radius:10px; margin-bottom:8px; border:1px solid rgba(255,215,0,0.6);">⚡ FORBIDDEN FUSION</span><h3 style="color:#fef08a;">${t(power.nameKey)}</h3><p style="color:#fde047;">${t(power.descKey)}</p>`;
+    } else if (power.isCorrupted) {
       category = 'cursed';
       card.style.borderColor = 'rgba(239, 68, 68, 0.7)';
       card.style.background = 'linear-gradient(135deg, rgba(30, 10, 20, 0.95), rgba(15, 5, 10, 0.98))';

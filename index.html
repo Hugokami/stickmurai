@@ -243,6 +243,8 @@
               <button id="level-mode-btn" class="menu-btn" style="border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);" data-i18n="playLevel">Level Mode</button>
               <button id="zen-btn" class="menu-btn" style="border-color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);" data-i18n="playZen">Zen Mode</button>
               <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">Iaijutsu PvP</button>
+              <button id="open-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">📜 Grimoire (秘伝書)</button>
+              <button id="open-chronicle-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛩️ Chronicle (記憶の書)</button>
               <button id="open-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
             </div>
           </div>
@@ -431,6 +433,7 @@
             <div style="font-size: 11px; color: rgba(255, 255, 255, 0.4); margin-bottom: 20px; font-family: 'Outfit', sans-serif; letter-spacing: 1px; font-weight: 500;">[ ESC / P TO RESUME ]</div>
             <div class="menu-buttons">
               <button id="resume-btn" class="menu-btn" data-i18n="resume">Resume Game</button>
+              <button id="pause-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);">📜 Grimoire (秘伝書)</button>
               <button id="pause-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
               <button id="quit-btn" class="menu-btn exit-btn" data-i18n="quit">Quit to Menu</button>
             </div>
@@ -634,6 +637,82 @@
         </div>
       </div>
     </div>
+
+      <!-- Forbidden Grimoire Modal (Secret Weapon Fusions) -->
+      <div id="grimoire-screen" class="overlay" style="display:none; z-index: 9200;">
+        <div class="menu-box" style="max-width: 750px; width: 92vw; max-height: 85vh; display: flex; flex-direction: column; border-color: #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.25);">
+          <h2 style="font-family: 'Shojumaru', cursive; color: #ffd700; margin: 0 0 6px 0; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);">FORBIDDEN GRIMOIRE (秘伝書)</h2>
+          <p style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 12px; margin: 0 0 16px 0; letter-spacing: 0.5px;">Master elemental disciplines to synthesize screen-clearing god-tier hybrid arts.</p>
+          <div id="grimoire-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; overflow-y: auto; padding-right: 6px; flex: 1; margin-bottom: 15px;">
+            <!-- Populated dynamically by UI.ts -->
+          </div>
+          <button id="close-grimoire-btn" class="menu-btn" style="max-width: 200px; align-self: center; border-color: #ffd700; color: #ffd700;">Close Grimoire</button>
+        </div>
+      </div>
+
+      <!-- Chronicle of Yomi (The 7 Memory Seals) -->
+      <div id="chronicle-screen" class="overlay" style="display:none; z-index: 9200;">
+        <div class="menu-box" style="max-width: 780px; width: 94vw; max-height: 88vh; display: flex; flex-direction: column; border-color: #38bdf8; box-shadow: 0 0 30px rgba(56, 189, 248, 0.25);">
+          <h2 style="font-family: 'Shojumaru', cursive; color: #38bdf8; margin: 0 0 6px 0; text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);">CHRONICLE OF YOMI (黄泉の記憶の書)</h2>
+          <p style="color: #94a3b8; font-family: 'Space Mono', monospace; font-size: 12px; margin: 0 0 16px 0; letter-spacing: 0.5px;">Break the 7 seals of purgatory through samurai mastery to uncover the truth of your murder.</p>
+          <div id="chronicle-list" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 6px; flex: 1; margin-bottom: 15px;">
+            <!-- Populated dynamically by UI.ts -->
+          </div>
+          <button id="close-chronicle-btn" class="menu-btn" style="max-width: 200px; align-self: center; border-color: #38bdf8; color: #38bdf8;">Close Chronicle</button>
+        </div>
+      </div>
+
+      <!-- In-Game Memory Shrine Communion Modal -->
+      <div id="shrine-modal" class="overlay" style="display:none; z-index: 9500; background: rgba(5, 10, 20, 0.92); backdrop-filter: blur(8px);">
+        <div class="menu-box" style="max-width: 580px; width: 90vw; text-align: center; border-color: #38bdf8; box-shadow: 0 0 35px rgba(56, 189, 248, 0.35); padding: 28px;">
+          <div style="font-size: 32px; margin-bottom: 10px;">⛩️</div>
+          <h2 id="shrine-modal-title" style="font-family: 'Shojumaru', cursive; color: #38bdf8; margin-bottom: 8px; text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);">SEAL AWAKENED</h2>
+          <div id="shrine-modal-feat" style="color: #94a3b8; font-family: 'Space Mono', monospace; font-size: 11px; margin-bottom: 18px; letter-spacing: 1px; text-transform: uppercase;">FEAT FULFILLED</div>
+          <div id="shrine-modal-lore" style="background: rgba(15, 23, 42, 0.7); border-left: 3px solid #38bdf8; padding: 16px; margin-bottom: 20px; font-family: 'Georgia', serif; font-size: 14px; line-height: 1.7; color: #e2e8f0; font-style: italic; text-align: left;">
+            <!-- Lore fragment text -->
+          </div>
+          <div id="shrine-modal-reward" style="color: #fef08a; background: rgba(254, 240, 138, 0.1); border: 1px solid rgba(254, 240, 138, 0.3); border-radius: 8px; padding: 10px; font-family: 'Space Mono', monospace; font-size: 12px; margin-bottom: 24px; font-weight: bold;">
+            <!-- Permanent reward description -->
+          </div>
+          <button id="shrine-claim-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); width: 100%;">SHATTER THE SEAL</button>
+        </div>
+      </div>
+
+      <!-- In-Game Wandering Hermit Campfire Pact Modal -->
+      <div id="hermit-modal" class="overlay" style="display:none; z-index: 9500; background: rgba(15, 8, 5, 0.92); backdrop-filter: blur(8px);">
+        <div class="menu-box" style="max-width: 520px; width: 90vw; text-align: center; border-color: #f97316; box-shadow: 0 0 35px rgba(249, 115, 22, 0.35); padding: 26px;">
+          <div style="font-size: 32px; margin-bottom: 10px;">🔥</div>
+          <h2 style="font-family: 'Shojumaru', cursive; color: #f97316; margin-bottom: 8px; text-shadow: 0 0 15px rgba(249, 115, 22, 0.5);">WANDERING HERMIT</h2>
+          <p id="hermit-dialogue" style="color: #cbd5e1; font-family: 'Georgia', serif; font-size: 14px; line-height: 1.6; margin-bottom: 20px; font-style: italic;">
+            "A wandering ghost seeking vengeance in Yomi? The fire is warm, but steel demands sacrifice. What say you to a bargain?"
+          </p>
+          <div id="hermit-pact-card" style="background: rgba(30, 15, 5, 0.85); border: 1px solid #f97316; border-radius: 10px; padding: 14px; margin-bottom: 22px; text-align: left;">
+            <div id="hermit-pact-title" style="color: #fed7aa; font-weight: bold; font-family: 'Orbitron'; font-size: 14px; margin-bottom: 6px;">FAUSTIAN BLADE</div>
+            <div id="hermit-pact-cost" style="color: #ef4444; font-size: 12px; margin-bottom: 4px; font-family: 'Space Mono';">SACRIFICE: -1 Maximum Heart</div>
+            <div id="hermit-pact-gain" style="color: #22c55e; font-size: 12px; font-family: 'Space Mono';">GAIN: +80% Katana Range & Permanent Shockwaves</div>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <button id="hermit-refuse-btn" class="menu-btn exit-btn" style="flex: 1; margin: 0;">Decline</button>
+            <button id="hermit-accept-btn" class="menu-btn" style="flex: 1; margin: 0; border-color: #f97316; color: #f97316;">Accept Pact</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10-Minute Dawn Victory Celebration Screen -->
+      <div id="dawn-victory-screen" class="overlay" style="display:none; z-index: 9800; background: linear-gradient(to bottom, rgba(20, 10, 5, 0.95), rgba(40, 20, 10, 0.98)); backdrop-filter: blur(10px);">
+        <div class="menu-box" style="max-width: 620px; width: 92vw; text-align: center; border-color: #ffd700; box-shadow: 0 0 50px rgba(255, 215, 0, 0.4); padding: 32px;">
+          <div style="font-size: 48px; margin-bottom: 12px; animation: pulse 2s infinite;">🌅</div>
+          <h1 style="font-family: 'Shojumaru', cursive; color: #ffd700; font-size: 36px; margin: 0 0 8px 0; text-shadow: 0 0 25px rgba(255, 215, 0, 0.6); letter-spacing: 2px;">DAWN HAS BROKEN</h1>
+          <div style="color: #fef08a; font-family: 'Orbitron', sans-serif; font-size: 14px; margin-bottom: 20px; letter-spacing: 1.5px; text-transform: uppercase;">VICTORY // THE SHOGUN HAS FALLEN</div>
+          <div id="dawn-victory-stats" style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 12px; padding: 18px; margin-bottom: 25px; font-family: 'Space Mono', monospace; font-size: 13px; line-height: 1.9; color: #cbd5e1; text-align: left;">
+            <!-- Stats populated dynamically -->
+          </div>
+          <div style="display: flex; gap: 14px; width: 100%;">
+            <button id="dawn-endless-btn" class="menu-btn" style="flex: 1; margin: 0; border-color: #ef4444; color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);">Enter Endless Torment</button>
+            <button id="dawn-menu-btn" class="menu-btn" style="flex: 1; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);">Return to Title</button>
+          </div>
+        </div>
+      </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
