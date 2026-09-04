@@ -857,22 +857,23 @@ export class Enemy extends Entity {
   }
 
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1) {
-    const rx = this.x - cx + globals.vw/2;
-    const ry = this.y - cy + globals.vh/2;
+    const rx = (this.x - cx + globals.vw/2) | 0;
+    const ry = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
+    const effectiveRy = (ry - (this.airborneZ || 0)) | 0;
     const buffer = 150 * this.scaleMult;
-    if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
+    if (rx < -buffer || rx > globals.vw + buffer || effectiveRy < -buffer || effectiveRy > globals.vh + buffer) {
       return;
     }
 
     if (this.state === 'charge') {
       ctx.save();
-      ctx.translate(rx, ry);
+      ctx.translate(rx, effectiveRy);
 
       const p = Math.min(1, this.stateTime / this.chargeTimeMax);
       ctx.rotate(this.targetAngle);
 
       const isRanged = (this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'astromancer' || this.subType === 'necromancer');
-      const laserLen = isRanged ? 520 * this.scaleMult : Math.max(180, (this.lungeSpeed * this.lungeDuration * 0.5 + 120) * this.scaleMult);
+      const laserLen = isRanged ? 520 * this.scaleMult : Math.max(160, (this.lungeSpeed * this.lungeDuration * 0.5 + 100) * this.scaleMult);
 
       if (isRanged) {
         // Precision laser sight with target reticle
@@ -907,28 +908,29 @@ export class Enemy extends Entity {
           ctx.stroke();
         }
       } else {
-        // Melee lunge corridor & hitbox telegraph
-        const halfWidth = (22 + (this.scaleMult - 1) * 20);
+        // Melee lunge corridor & hitbox telegraph strictly matching physical body collision
+        const baseWidth = (this.type === 'enemy03' ? 20 : (this.type === 'skeleton' ? 44 : (this.type === 'evil_wizard' ? 32 : 22)));
+        const halfWidth = (baseWidth * this.scaleMult) | 0;
 
         // Translucent danger corridor fill
-        ctx.fillStyle = this.isAimLocked ? `rgba(255, 30, 30, ${0.15 + p * 0.15})` : `rgba(255, 60, 60, ${0.08 + p * 0.12})`;
+        ctx.fillStyle = this.isAimLocked ? `rgba(255, 30, 30, ${0.15 + p * 0.18})` : `rgba(255, 60, 60, ${0.08 + p * 0.12})`;
         ctx.fillRect(0, -halfWidth, laserLen, halfWidth * 2);
 
         // Boundary strokes
-        ctx.strokeStyle = this.isAimLocked ? `rgba(255, 50, 50, 0.9)` : `rgba(255, 80, 80, ${0.3 + p * 0.4})`;
-        ctx.lineWidth = this.isAimLocked ? 2 : 1;
+        ctx.strokeStyle = this.isAimLocked ? `rgba(255, 50, 50, 0.95)` : `rgba(255, 80, 80, ${0.35 + p * 0.45})`;
+        ctx.lineWidth = this.isAimLocked ? 2 : 1.2;
         ctx.setLineDash(this.isAimLocked ? [] : [10, 8]);
         ctx.strokeRect(0, -halfWidth, laserLen, halfWidth * 2);
 
         // Progress charge bar advancing down the corridor
-        ctx.fillStyle = `rgba(255, 50, 50, ${0.3 + p * 0.5})`;
+        ctx.fillStyle = `rgba(255, 50, 50, ${0.28 + p * 0.52})`;
         ctx.fillRect(0, -halfWidth, laserLen * p, halfWidth * 2);
 
         // Direction arrow at front
         ctx.beginPath();
         ctx.moveTo(laserLen, 0);
-        ctx.lineTo(laserLen - 12, -halfWidth * 0.6);
-        ctx.lineTo(laserLen - 12, halfWidth * 0.6);
+        ctx.lineTo(laserLen - 14, -halfWidth * 0.65);
+        ctx.lineTo(laserLen - 14, halfWidth * 0.65);
         ctx.closePath();
         ctx.fillStyle = this.isAimLocked ? '#ff2222' : `rgba(255, 80, 80, ${p})`;
         ctx.fill();
@@ -937,12 +939,15 @@ export class Enemy extends Entity {
       ctx.restore();
     }
 
-    // HP bar above enemy
+    // Dynamic head height offset per enemy type for cleanly anchored HP and Posture bars
+    const headOffset = (this.type === 'enemy03' ? 28 : (this.type === 'enemy05' ? 32 : (this.type === 'skeleton' ? 85 : (this.type === 'evil_wizard' ? 75 : 44))));
+
+    // HP bar directly above enemy head
     if (this.state !== 'dead' && this.hp < this.maxHp) {
-      const barW = 50 * this.scaleMult;
+      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' ? 80 : 48) * this.scaleMult;
       const barH = 5;
-      const barY = ry - 60 * this.scaleMult;
-      const barX = rx - barW / 2;
+      const barY = (effectiveRy - headOffset * this.scaleMult) | 0;
+      const barX = (rx - barW / 2) | 0;
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
       ctx.fillRect(barX, barY, barW, barH);
@@ -963,10 +968,10 @@ export class Enemy extends Entity {
 
     // Posture bar directly under HP bar (for bosses, elites, or when posture > 0)
     if (this.state !== 'dead' && (this.posture > 0 || this.postureBrokenTimer > 0 || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'giant' || this.subType === 'berserker')) {
-      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' ? 70 : 45) * this.scaleMult;
+      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' ? 80 : 44) * this.scaleMult;
       const barH = 3.5;
-      const barY = ry - 53 * this.scaleMult;
-      const barX = rx - barW / 2;
+      const barY = (effectiveRy - headOffset * this.scaleMult + 6) | 0;
+      const barX = (rx - barW / 2) | 0;
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.65)';
       ctx.fillRect(barX, barY, barW, barH);

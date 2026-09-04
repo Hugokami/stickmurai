@@ -106,16 +106,20 @@ export class Entity {
     const rx = (this.x - cx + globals.vw/2) | 0;
     const ry = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
     let scale = 0.5 * this.scaleMult;
-    if (this.type === 'enemy01' || this.type === 'enemy02') {
-      scale *= 2.9;
-    } else if (this.type === 'enemy03' || this.type === 'enemy05') {
-      scale *= 5.0;
+    if (this.type === 'enemy01') {
+      scale *= 7.0;
+    } else if (this.type === 'enemy02') {
+      scale *= 7.8;
+    } else if (this.type === 'enemy03') {
+      scale *= 2.6;
+    } else if (this.type === 'enemy05') {
+      scale *= 4.0;
     } else if (this.type === 'skeleton') {
-      scale *= 6.0;
+      scale *= 2.4;
     } else if (this.type === 'heroluneblade') {
-      scale *= 2.1;
+      scale *= 7.5;
     } else if (this.type === 'heroninja') {
-      scale *= 4.5;
+      scale *= 5.2;
     } else if (this.type === 'evil_wizard') {
       scale *= 2.6;
     }
