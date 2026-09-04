@@ -39,8 +39,18 @@ export class Player extends Entity {
 
   constructor() {
     super();
-    this.type = 'sword';
+    this.updateHeroType();
     this.subType = 'player';
+  }
+
+  updateHeroType() {
+    if (globals.selectedHero === 'luneblade') {
+      this.type = 'heroluneblade';
+    } else if (globals.selectedHero === 'ninja') {
+      this.type = 'heroninja';
+    } else {
+      this.type = 'sword';
+    }
   }
   
   setState(newState: string) {
@@ -53,6 +63,7 @@ export class Player extends Entity {
   }
   
   update(dt: number) {
+    this.updateHeroType();
     // Stance/Skill visual scale transitions
     const targetShield = (!this.isPvpRemote && globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) ? 1 : 0;
     this.shieldVisualScale += (targetShield - this.shieldVisualScale) * Math.min(1, 12 * dt);

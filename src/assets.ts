@@ -617,8 +617,38 @@ export const anims = {
     attack: loadCustomEnemyAnim('Enemy05', 'attack', 4),
     dash: loadCustomEnemyAnim('Enemy05', 'walk', 8),
     dead: loadCustomEnemyAnim('Enemy05', 'hit', 8),
+  },
+  heroluneblade: {
+    idle: loadCustomEnemyAnim('HeroLuneblade', 'idle', 7),
+    walk: loadCustomEnemyAnim('HeroLuneblade', 'walk', 8),
+    attack: loadCustomEnemyAnim('HeroLuneblade', 'attack', 10),
+    dash: loadCustomEnemyAnim('HeroLuneblade', 'dash', 12),
+    dead: loadCustomEnemyAnim('HeroLuneblade', 'dead', 18),
+  },
+  heroninja: {
+    idle: loadCustomEnemyAnim('HeroNinja', 'idle', 2),
+    walk: loadCustomEnemyAnim('HeroNinja', 'walk', 8),
+    attack: loadCustomEnemyAnim('HeroNinja', 'attack', 8),
+    dash: loadCustomEnemyAnim('HeroNinja', 'dash', 8),
+    dead: loadCustomEnemyAnim('HeroNinja', 'dead', 7),
+  },
+  evil_wizard: {
+    idle: loadCustomEnemyAnim('EvilWizard', 'idle', 8),
+    walk: loadCustomEnemyAnim('EvilWizard', 'walk', 8),
+    attack: loadCustomEnemyAnim('EvilWizard', 'attack', 8),
+    dash: loadCustomEnemyAnim('EvilWizard', 'walk', 8),
+    dead: loadCustomEnemyAnim('EvilWizard', 'dead', 5),
   }
 };
+
+export const propImages: HTMLImageElement[] = [];
+for (let i = 1; i <= 18; i++) {
+  const img = new Image();
+  registerAssetToLoad(img);
+  const frameStr = i.toString().padStart(2, '0');
+  img.src = encodeURI(`sprites/props/deco_${frameStr}.png`);
+  propImages.push(img);
+}
 
 function loadSkeletonAnim(prefix: string, count: number) {
   const images: HTMLImageElement[] = [];
@@ -699,6 +729,11 @@ export const vfxAnims = {
     invincible: loadVfxFrames('vfx/invincible/Starcaller_spell_3_frame_{N}.png', 15, 1),
     starfall: loadVfxFrames('vfx/starfall/Starcaller_spell_2_frame_{N}.png', 8, 1),
     vortex: loadVfxFrames('vfx/vortex/FireMage_skill3_frame{N}.png', 12, 1)
+  },
+  gigapack: {
+    explosion: loadVfxFrames('vfx/explosion/frame_{N}.png', 13, 0, 2),
+    lightning: loadVfxFrames('vfx/lightning/frame_{N}.png', 7, 0, 2),
+    impact: loadVfxFrames('vfx/impact/frame_{N}.png', 7, 0, 2),
   },
   slashes: {
     slash1: {

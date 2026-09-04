@@ -268,7 +268,32 @@ export const globals = {
   shogunDefeatedAtDawn: false,
   bladeClashVictories: 0,
   bouncingSickles: [] as any[],
-  plasmaTrails: [] as any[]
+  plasmaTrails: [] as any[],
+
+  // In-Game Economy, Hero Armory & Props
+  magatama: (() => {
+    try { return parseInt(localStorage.getItem('stickmurai_magatama') || '0', 10) || 0; } catch(e) { return 0; }
+  })(),
+  unlockedHeroes: (() => {
+    try {
+      const stored = localStorage.getItem('stickmurai_unlocked_heroes');
+      return stored ? JSON.parse(stored) : ['default'];
+    } catch(e) {
+      return ['default'];
+    }
+  })() as string[],
+  selectedHero: (() => {
+    try { return localStorage.getItem('stickmurai_selected_hero') || 'default'; } catch(e) { return 'default'; }
+  })(),
+  destructibleProps: [] as {
+    x: number;
+    y: number;
+    hp: number;
+    maxHp: number;
+    propType: number;
+    scale: number;
+    broken: boolean;
+  }[]
 };
 
 export interface BladeClashState {

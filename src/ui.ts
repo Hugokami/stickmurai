@@ -51,6 +51,8 @@ let lastBtnUltReady = false;
 let lastBtnDashReady = false;
 let lastBtnEnhanceReady = false;
 let lastBtnEnhanceBuff = false;
+let lastRenderedMagatama = -1;
+let hudMagatamaElement: HTMLElement | null = null;
 
 export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void, onRestartCallback: () => void) {
   // DOM queries
@@ -216,6 +218,57 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     });
   }
 
+  // Dojo & Heroes Screen listeners
+  const dojoScreen = document.getElementById('dojo-screen');
+  const openDojoBtn = document.getElementById('open-dojo-btn');
+  const closeDojoBtn = document.getElementById('close-dojo-btn');
+  const tributeSmallBtn = document.getElementById('tribute-small-btn');
+  const tributeGrandBtn = document.getElementById('tribute-grand-btn');
+
+  const openDojo = () => {
+    if (dojoScreen) {
+      dojoScreen.style.display = 'flex';
+      populateDojoHeroGrid();
+    }
+  };
+
+  const closeDojo = () => {
+    if (dojoScreen) dojoScreen.style.display = 'none';
+  };
+
+  if (openDojoBtn) {
+    openDojoBtn.addEventListener('click', openDojo);
+    openDojoBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); openDojo(); });
+  }
+  if (closeDojoBtn) {
+    closeDojoBtn.addEventListener('click', closeDojo);
+    closeDojoBtn.addEventListener('pointerdown', (e) => { e.stopPropagation(); closeDojo(); });
+  }
+
+  if (tributeSmallBtn) {
+    const handleSmallTribute = (e: Event) => {
+      e.stopPropagation();
+      globals.magatama = (globals.magatama || 0) + 200;
+      try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+      playSynthesizedTempleBell();
+      populateDojoHeroGrid();
+    };
+    tributeSmallBtn.addEventListener('click', handleSmallTribute);
+    tributeSmallBtn.addEventListener('pointerdown', handleSmallTribute);
+  }
+
+  if (tributeGrandBtn) {
+    const handleGrandTribute = (e: Event) => {
+      e.stopPropagation();
+      globals.magatama = (globals.magatama || 0) + 1000;
+      try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+      playSynthesizedSealShatter();
+      populateDojoHeroGrid();
+    };
+    tributeGrandBtn.addEventListener('click', handleGrandTribute);
+    tributeGrandBtn.addEventListener('pointerdown', handleGrandTribute);
+  }
+
   // Shrine & Hermit Modal Listeners
   const onShatterSeal = () => {
     if (globals.activeShrine) {
@@ -223,10 +276,14 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       if (!globals.unlockedSeals.includes(sealId)) {
         globals.unlockedSeals.push(sealId);
         try { localStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals)); } catch(e) {}
+        // Award Magatama for breaking seal
+        const sealReward = 200;
+        globals.magatama = (globals.magatama || 0) + sealReward;
+        try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
         YOMI_SEALS[sealId]?.applyPermanentReward();
         playSynthesizedSealShatter();
         globals.screenShake = Math.max(globals.screenShake, 42);
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '⛩️ 封印砕散！ 恒久恩恵開眼！' : '⛩️ SEAL SHATTERED! PERMANENT BLESSING UNLEASHED!', '#ffd700', 34));
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? `⛩️ 封印砕散！ +${sealReward} 🔮` : `⛩️ SEAL SHATTERED! +${sealReward} 🔮`, '#ffd700', 34));
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
       }
@@ -1088,6 +1145,12 @@ export function updateUI() {
     lastRenderedScore = globals.score;
   }
 
+  if (globals.magatama !== lastRenderedMagatama) {
+    const el = hudMagatamaElement || (hudMagatamaElement = document.getElementById('hud-magatama-count'));
+    if (el) el.textContent = (globals.magatama || 0).toLocaleString();
+    lastRenderedMagatama = globals.magatama;
+  }
+
   const objDisplay = objectiveDisplayElement || (objectiveDisplayElement = document.getElementById('objective-display'));
   if (objDisplay) {
     if (globals.gameState === 'playing') {
@@ -1363,6 +1426,14 @@ export function populateGrimoireGrid() {
 
   const isJa = globals.currentLang === 'ja';
 
+  const recipeIcons: Record<string, string> = {
+    plasma_tempest: 'icons/release_v1.2-single_38.png',
+    singularity_cleave: 'icons/release_v1.2-single_15.png',
+    hundred_phantoms: 'icons/release_v1.2-single_77.png',
+    kamaitachi: 'icons/release_v1.2-single_5.png',
+    asura_storm: 'icons/release_v1.2-single_88.png'
+  };
+
   FUSION_RECIPES.forEach(recipe => {
     const isDiscovered = globals.discoveredFusions.includes(recipe.key) || globals.activeFusions.has(recipe.key);
     const card = document.createElement('div');
@@ -1398,11 +1469,15 @@ export function populateGrimoireGrid() {
     }
 
     const synergyPct = ((req1Met ? 1 : 0) + (req2Met ? 1 : 0)) * 50;
+    const iconSrc = recipeIcons[recipe.key] || 'icons/release_v1.2-single_1.png';
 
     if (isDiscovered) {
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">${isJa ? recipe.nameJa : recipe.nameEn}</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <img src="${iconSrc}" alt="icon" style="width:28px; height:28px; image-rendering:pixelated; border-radius:4px; border:1px solid #ffd700;" />
+            <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">${isJa ? recipe.nameJa : recipe.nameEn}</span>
+          </div>
           <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e;">${isJa ? '解読済' : 'DISCOVERED'}</span>
         </div>
         <div style="font-size:13px; color:#e2e8f0; line-height:1.4;">${isJa ? recipe.descJa : recipe.descEn}</div>
@@ -1426,7 +1501,10 @@ export function populateGrimoireGrid() {
     } else {
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#64748b;">??? [${isJa ? '未解読の奥義' : 'LOCKED FUSION'}]</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="width:28px; height:28px; background:#1e293b; border-radius:4px; border:1px dashed #475569; display:flex; justify-content:center; align-items:center; color:#64748b; font-size:14px;">?</div>
+            <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#64748b;">??? [${isJa ? '未解読の奥義' : 'LOCKED FUSION'}]</span>
+          </div>
           <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(148,163,184,0.1); color:#64748b; border:1px solid #475569;">${isJa ? '未修得' : 'LOCKED'}</span>
         </div>
         <div style="font-size:13px; color:#475569; font-style:italic; line-height:1.4;">
@@ -1455,6 +1533,167 @@ export function populateGrimoireGrid() {
     grid.appendChild(card);
   });
 }
+
+export const HEROES_DATA = [
+  {
+    id: 'default',
+    nameEn: 'Classic Ronin',
+    nameJa: '霧の浪人 (クラシック)',
+    titleEn: 'Ronin of the Mist',
+    titleJa: '疾風怒濤の流浪剣士',
+    descEn: 'The traditional stickmurai swordsman. Well-rounded agility, blade range, and recovery.',
+    descJa: '伝統を受け継ぐ棒人間サムライ。速さ・刃のリーチ・隙の少なさの全てが高水準で調和した万能の型。',
+    cost: 0,
+    image: 'sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0001.png',
+    atk: '100%',
+    spd: '100%',
+    specialEn: 'Balanced Arts (Baseline Stance)',
+    specialJa: '中段の構え（基本型）'
+  },
+  {
+    id: 'luneblade',
+    nameEn: 'Luneblade Ascendant',
+    nameJa: '月影の剣聖（ルーンブレイド）',
+    titleEn: 'Axion Swordsman',
+    titleJa: '星海を切り裂く双刃の英傑',
+    descEn: 'Wields an ethereal celestial greatsword. +25% Slash AoE, +1 Base Slash DMG, and +2 Iaijutsu Shockwave DMG.',
+    descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+25%、基礎威力+1、抜刀衝撃波威力+2。',
+    cost: 3000,
+    image: 'sprites/HeroLuneblade/idle_0.png',
+    atk: '130%',
+    spd: '95%',
+    specialEn: 'Lunar Resonance (+25% AoE, +2 Iai DMG)',
+    specialJa: '月華共鳴（広範囲斬撃・衝撃波強化）'
+  },
+  {
+    id: 'ninja',
+    nameEn: 'Shadow Shinobi',
+    nameJa: '闇夜の忍（シャドウ・シノビ）',
+    titleEn: 'Silent Assassin',
+    titleJa: '影を纏いし暗殺の達人',
+    descEn: 'Master of lethal shadow-stepping. +15% Movement Speed, -20% Dash Cooldown, and +10% Attack Speed.',
+    descJa: '闇に潜み急所を討つ達人。移動速度+15%、瞬歩クールダウン-20%、攻撃速度+10%。',
+    cost: 5000,
+    image: 'sprites/HeroNinja/idle_0.png',
+    atk: '110%',
+    spd: '120%',
+    specialEn: 'Phantom Step (-20% Dash CD, +15% Speed)',
+    specialJa: '幻影瞬歩（高速離脱・移動速度上昇）'
+  }
+];
+
+export function populateDojoHeroGrid() {
+  const grid = document.getElementById('dojo-hero-grid');
+  const countEl = document.getElementById('dojo-magatama-count');
+  if (countEl) countEl.textContent = (globals.magatama || 0).toLocaleString();
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  const isJa = globals.currentLang === 'ja';
+
+  HEROES_DATA.forEach(hero => {
+    const isUnlocked = globals.unlockedHeroes.includes(hero.id);
+    const isEquipped = globals.selectedHero === hero.id;
+
+    const card = document.createElement('div');
+    card.className = 'hero-card';
+    card.style.background = isEquipped ? 'rgba(88, 28, 135, 0.4)' : (isUnlocked ? 'rgba(30, 41, 59, 0.85)' : 'rgba(15, 23, 42, 0.8)');
+    card.style.border = isEquipped ? '2px solid #c084fc' : (isUnlocked ? '1px solid #94a3b8' : '1px solid #334155');
+    card.style.borderRadius = '10px';
+    card.style.padding = '14px';
+    card.style.display = 'flex';
+    card.style.flexDirection = 'column';
+    card.style.gap = '8px';
+    card.style.boxShadow = isEquipped ? '0 0 20px rgba(192, 132, 252, 0.4)' : 'none';
+
+    // Hero portrait container
+    const portraitHtml = `
+      <div style="width: 100%; height: 110px; background: rgba(0,0,0,0.5); border-radius: 6px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 4px;">
+        <img src="${hero.image}" alt="${hero.nameEn}" style="max-height: 90px; max-width: 90px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(192,132,252,0.3));" />
+      </div>
+    `;
+
+    // Stats badge row
+    const statsHtml = `
+      <div style="display: flex; gap: 6px; font-family: 'Orbitron', monospace; font-size: 11px; margin-top: 2px;">
+        <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 2px 6px; border-radius: 4px;">⚔️ ${hero.atk}</span>
+        <span style="background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); color: #7dd3fc; padding: 2px 6px; border-radius: 4px;">⚡ ${hero.spd}</span>
+      </div>
+    `;
+
+    let actionBtnHtml = '';
+    if (isEquipped) {
+      actionBtnHtml = `<button class="menu-btn" disabled style="margin: 0; min-height: 40px; background: #166534; border-color: #22c55e; color: #bbf7d0; font-size: 12px; cursor: default;">✓ ${isJa ? '装備中' : 'EQUIPPED'}</button>`;
+    } else if (isUnlocked) {
+      actionBtnHtml = `<button class="menu-btn equip-hero-btn" data-hero="${hero.id}" style="margin: 0; min-height: 40px; border-color: #38bdf8; color: #38bdf8; font-size: 12px; cursor: pointer;">${isJa ? '装備する' : 'EQUIP HERO'}</button>`;
+    } else {
+      const canAfford = (globals.magatama || 0) >= hero.cost;
+      actionBtnHtml = `<button class="menu-btn buy-hero-btn" data-hero="${hero.id}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 40px; border-color: ${canAfford ? '#ffd700' : '#64748b'}; color: ${canAfford ? '#ffd700' : '#94a3b8'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 15px rgba(255,215,0,0.25)' : 'none'}; font-size: 12px; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">${isJa ? `解放: ${hero.cost.toLocaleString()} 🔮` : `UNLOCK: ${hero.cost.toLocaleString()} 🔮`}</button>`;
+    }
+
+    card.innerHTML = `
+      ${portraitHtml}
+      <div style="display: flex; justify-content: space-between; align-items: baseline;">
+        <span style="font-family: 'Shojumaru', cursive; font-size: 14px; color: ${isEquipped ? '#c084fc' : '#f1f5f9'}; font-weight: bold;">${isJa ? hero.nameJa : hero.nameEn}</span>
+        <span style="font-size: 10px; color: #a855f7; font-family: monospace;">${isJa ? hero.titleJa : hero.titleEn}</span>
+      </div>
+      <div style="font-size: 11px; color: #94a3b8; line-height: 1.4; min-height: 32px;">${isJa ? hero.descJa : hero.descEn}</div>
+      ${statsHtml}
+      <div style="font-size: 11px; color: #fef08a; background: rgba(254, 240, 138, 0.08); padding: 4px 8px; border-radius: 4px; border-left: 2px solid #ffd700; margin-top: 2px;">
+        ✨ ${isJa ? hero.specialJa : hero.specialEn}
+      </div>
+      <div style="margin-top: auto; padding-top: 6px;">
+        ${actionBtnHtml}
+      </div>
+    `;
+
+    grid.appendChild(card);
+  });
+
+  // Attach pointerdown and click listeners to Equip and Buy buttons
+  grid.querySelectorAll('.equip-hero-btn').forEach(btn => {
+    const handleEquip = (e: Event) => {
+      e.stopPropagation();
+      const heroId = (btn as HTMLElement).dataset.hero;
+      if (!heroId) return;
+      globals.selectedHero = heroId;
+      try { localStorage.setItem('stickmurai_selected_hero', heroId); } catch(err) {}
+      globals.player?.updateHeroType();
+      playSynthesizedTempleBell();
+      populateDojoHeroGrid();
+    };
+    btn.addEventListener('click', handleEquip);
+    btn.addEventListener('pointerdown', handleEquip);
+  });
+
+  grid.querySelectorAll('.buy-hero-btn').forEach(btn => {
+    const handleBuy = (e: Event) => {
+      e.stopPropagation();
+      const heroId = (btn as HTMLElement).dataset.hero;
+      if (!heroId) return;
+      const hero = HEROES_DATA.find(h => h.id === heroId);
+      if (!hero) return;
+      if ((globals.magatama || 0) < hero.cost) return;
+
+      globals.magatama -= hero.cost;
+      if (!globals.unlockedHeroes.includes(heroId)) {
+        globals.unlockedHeroes.push(heroId);
+      }
+      globals.selectedHero = heroId;
+      try {
+        localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+        localStorage.setItem('stickmurai_unlocked_heroes', JSON.stringify(globals.unlockedHeroes));
+        localStorage.setItem('stickmurai_selected_hero', heroId);
+      } catch(err) {}
+      globals.player?.updateHeroType();
+      playSynthesizedFusionUnlock();
+      populateDojoHeroGrid();
+    };
+    btn.addEventListener('click', handleBuy);
+    btn.addEventListener('pointerdown', handleBuy);
+  });
+}
+
 export function populateChronicleList() {
   const countEl = document.getElementById('seals-unlocked-count');
   if (countEl) countEl.textContent = `${globals.unlockedSeals.length} / 7`;
@@ -1599,7 +1838,12 @@ export function triggerDawnVictory(_stats?: any) {
     YOMI_SEALS[7]?.applyPermanentReward();
   }
 
-  const contentEl = document.getElementById('dawn-stats-content');
+  // Award Dawn Victory Magatama
+  const dawnReward = 500;
+  globals.magatama = (globals.magatama || 0) + dawnReward;
+  try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
+
+  const contentEl = document.getElementById('dawn-victory-stats') || document.getElementById('dawn-stats-content');
   if (contentEl) {
     const min = Math.floor(globals.runTime / 60);
     const sec = Math.floor(globals.runTime % 60);
@@ -1617,6 +1861,10 @@ export function triggerDawnVictory(_stats?: any) {
       <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
         <span>${isJa ? '討伐した将軍・幹部' : 'Bosses Succeeded'}:</span>
         <span style="color:#f43f5e; font-weight:bold;">${globals.runStats.bossesKilled}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
+        <span>${isJa ? '黄泉の勾玉獲得' : 'Yomi Magatama Dawn Tribute'}:</span>
+        <span style="color:#c084fc; font-weight:bold;">+${dawnReward} 🔮</span>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
         <span>${isJa ? '解除した黄泉の封印' : 'Yomi Seals Awakened'}:</span>

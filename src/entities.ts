@@ -47,7 +47,7 @@ export function getTintedImage(img: HTMLImageElement, hexColor: string): HTMLCan
 export class Entity {
   x = 0; y = 0; vx = 0; vy = 0;
   yOffset = 0; yVelocity = 0; // Simulated vertical juggle height physics
-  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' = 'sword';
+  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' = 'sword';
   subType?: string;
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
@@ -75,8 +75,9 @@ export class Entity {
     if (currentAnim && currentAnim.length > 0) {
       let currentFps = this.fps;
       if (this.state === 'attack') {
-         let attackDuration = this.type === 'sword' ? globals.playerStats.attackCooldownBase : 0.4;
-         if (this.type === 'sword' && globals.flowState === 'awakened') attackDuration *= 0.5;
+         const isPlayerHero = this.subType === 'player' || this.type === 'sword' || this.type === 'heroluneblade' || this.type === 'heroninja';
+         let attackDuration = isPlayerHero ? globals.playerStats.attackCooldownBase : 0.4;
+         if (isPlayerHero && globals.flowState === 'awakened') attackDuration *= 0.5;
          currentFps = currentAnim.length / attackDuration;
       }
       this.animTimer += dt;
@@ -107,6 +108,12 @@ export class Entity {
       scale *= 5.0;
     } else if (this.type === 'skeleton') {
       scale *= 6.0;
+    } else if (this.type === 'heroluneblade') {
+      scale *= 2.1;
+    } else if (this.type === 'heroninja') {
+      scale *= 4.5;
+    } else if (this.type === 'evil_wizard') {
+      scale *= 2.6;
     }
     const buffer = Math.max(img.width, img.height) * scale + 60;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {

@@ -753,6 +753,24 @@ function initGame() {
   globals.bouncingSickles = [];
   globals.plasmaTrails = [];
 
+  globals.destructibleProps = [];
+  // Spawn breakable props (barrels, crates, lanterns) across the arena
+  const propCount = 8;
+  const spreadX = 2600;
+  for (let i = 0; i < propCount; i++) {
+    const xPos = globals.player.x - spreadX / 2 + (spreadX / (propCount - 1)) * i + (Math.random() - 0.5) * 80;
+    if (Math.abs(xPos - globals.player.x) < 140) continue;
+    globals.destructibleProps.push({
+      x: xPos,
+      y: globals.player.y + 12,
+      hp: 1,
+      maxHp: 1,
+      propType: Math.floor(Math.random() * 18),
+      scale: 1.8 + Math.random() * 0.4,
+      broken: false
+    });
+  }
+
   // Apply permanent Yomi Seal breakthrough bonuses
   globals.unlockedSeals.forEach(id => {
     YOMI_SEALS[id]?.applyPermanentReward();
@@ -800,6 +818,18 @@ function initGame() {
     magneticDrawLevel: 0,
     reapersMarkLevel: 0
   };
+
+  // Apply Hero Archetype Perks & update sprite type
+  if (globals.selectedHero === 'luneblade') {
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 1;
+    globals.playerStats.slashSizeMult *= 1.25;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 2;
+  } else if (globals.selectedHero === 'ninja') {
+    globals.playerStats.moveSpeedMult *= 1.15;
+    globals.playerStats.dashCooldownBase *= 0.8;
+    globals.playerStats.attackCooldownBase *= 0.9;
+  }
+  globals.player?.updateHeroType();
   
   // Apply pre-game Stance Blessings
   if (globals.activeBlessing === 'swift_strike') {
@@ -1093,6 +1123,9 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
 
 export function triggerStormGodLightning(x: number, y: number) {
   globals.lightningBeams.push(new LightningBeam(x, y));
+  if (vfxAnims.gigapack?.lightning?.length > 0) {
+    globals.animatedEffects.push(new AnimatedEffect(x, y - 20, vfxAnims.gigapack.lightning, 0.45, 2.2));
+  }
   
   const radius = 200;
   const hitEnemies: Enemy[] = [];
@@ -2015,6 +2048,16 @@ function killEnemy(e: Enemy) {
   }
   if ((e as any).isShadowDoppelganger && !globals.unlockedSeals.includes(5)) {
     spawnShrine(5);
+  }
+
+  // Award Yomi Magatama based on enemy tier
+  const isBossEnemy = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss;
+  const isEliteOrRanged = e.subType === 'musketeer' || e.subType === 'pyromancer' || e.subType === 'necromancer';
+  const earnedMagatama = isBossEnemy ? 50 : (isEliteOrRanged ? 3 : 1);
+  globals.magatama = (globals.magatama || 0) + earnedMagatama;
+  try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+  if (isBossEnemy || Math.random() < 0.35) {
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `+${earnedMagatama} 🔮`, '#c084fc', isBossEnemy ? 26 : 18));
   }
 
 
@@ -3564,6 +3607,9 @@ function update(realDt: number) {
         globals.gravityWellX = bhX;
         globals.gravityWellY = bhY;
         globals.shockwaves.push(new Shockwave(bhX, bhY, '#a855f7'));
+        if (vfxAnims.gigapack?.explosion?.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));
+        }
       }
       if (globals.playerStats.slashBonusDmg) {
         dmg += globals.playerStats.slashBonusDmg;
@@ -3751,6 +3797,39 @@ function update(realDt: number) {
               e.knockbackVx = Math.cos(knockbackAngle) * 2600;
               e.knockbackVy = Math.sin(knockbackAngle) * 2600;
               e.setState('idle');
+            }
+          }
+        }
+      }
+
+      // Destructible props collision check (Barrels, crates, lanterns)
+      if (globals.destructibleProps) {
+        for (let pIdx = 0; pIdx < globals.destructibleProps.length; pIdx++) {
+          const prop = globals.destructibleProps[pIdx];
+          if (prop.broken) continue;
+          const pdx = prop.x - globals.player.x;
+          const pdy = prop.y - globals.player.y;
+          const pDistSq = pdx * pdx + pdy * pdy;
+          const propHitRange = 260 * size + 40;
+          if (pDistSq < propHitRange * propHitRange) {
+            const pa = Math.atan2(pdy, pdx);
+            let diff = Math.abs(pa - angle);
+            if (diff > Math.PI) diff = Math.PI * 2 - diff;
+            if (diff < Math.PI / 1.5 || isRiposteStrike) {
+              prop.broken = true;
+              // Spawn debris particles
+              for (let k = 0; k < 12; k++) {
+                const spd = 200 + Math.random() * 300;
+                const spdAngle = Math.random() * Math.PI * 2;
+                globals.particles.push(Particle.acquire(prop.x, prop.y, Math.random() > 0.5 ? '#d97706' : '#78350f', spd, 0.45, 3 + Math.random() * 2, spdAngle));
+              }
+              playSynthesizedHit();
+              globals.screenShake = Math.max(globals.screenShake, 6);
+              // Award Magatama
+              const reward = 5 + Math.floor(Math.random() * 11);
+              globals.magatama = (globals.magatama || 0) + reward;
+              try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+              globals.floatingTexts.push(FloatingText.acquire(prop.x, prop.y - 40, `+${reward} 🔮`, '#c084fc', 22));
             }
           }
         }

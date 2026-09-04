@@ -605,6 +605,7 @@ export function startBloodMoonCalamity() {
   // Spawn the Mirror Soul Shadow Doppelganger
   const clone = new Enemy(globals.player.x + (Math.random() > 0.5 ? 260 : -260), globals.player.y, globals.player);
   clone.subType = 'ronin';
+  clone.type = 'evil_wizard';
   clone.colorTint = '#9333ea';
   clone.hp = 120;
   clone.maxHp = 120;

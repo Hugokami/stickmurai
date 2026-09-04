@@ -252,7 +252,7 @@ export class Enemy extends Entity {
       this.speed = 260;
       this.maxPosture = 250;
     } else { // shogun_boss
-      this.type = 'skeleton';
+      this.type = 'evil_wizard';
       this.lungeSpeed = 1300; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
       this.scaleMult = 2.0; this.hp = this.maxHp = 100; this.expValue = 20;
       this.colorTint = 'none';
