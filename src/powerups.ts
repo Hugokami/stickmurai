@@ -628,6 +628,9 @@ export function triggerMangaCutin(type: 'shadow' | 'omni' | 'storm' | 'zen') {
     
     const video = mangaCutin.querySelector('video');
     if (video) {
+      if (!video.src && video.dataset.src) {
+        video.src = video.dataset.src;
+      }
       video.currentTime = 0;
       video.play().catch(err => console.log("Video playback error:", err));
     }

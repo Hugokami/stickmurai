@@ -539,6 +539,8 @@ export const loaderTips: Record<string, string[]> = {
   ]
 };
 
+const lazyImageQueue: Array<{ img: HTMLImageElement, src: string }> = [];
+
 export function registerAssetToLoad(img: HTMLImageElement) {
   globals.totalAssetsToLoad++;
   img.onload = onAssetLoaded;
@@ -552,24 +554,42 @@ function onAssetLoaded() {
 
 function pad(n: number) { return n.toString().padStart(4, '0'); }
 
-function loadAnim(folder: string, prefix: string, start: number, end: number) {
+function loadAnim(folder: string, prefix: string, start: number, end: number, isPriority = false) {
   const images: HTMLImageElement[] = [];
   for (let i = start; i <= end; i++) {
     const img = new Image();
-    registerAssetToLoad(img);
-    img.src = encodeURI(`sprites/Stick Figure Character Sprites 2D/${folder}/${prefix}_${pad(i)}.png`);
+    const src = encodeURI(`sprites/Stick Figure Character Sprites 2D/${folder}/${prefix}_${pad(i)}.png`);
+    if (isPriority) {
+      registerAssetToLoad(img);
+      img.src = src;
+    } else {
+      lazyImageQueue.push({ img, src });
+    }
     images.push(img);
   }
   return images;
 }
 
+export function startBackgroundAssetLoading() {
+  const batchSize = 16;
+  const processBatch = () => {
+    if (lazyImageQueue.length === 0) return;
+    const batch = lazyImageQueue.splice(0, batchSize);
+    for (const item of batch) {
+      item.img.src = item.src;
+    }
+    setTimeout(processBatch, 35);
+  };
+  setTimeout(processBatch, 150);
+}
+
 export const anims = {
   sword: {
-    idle: loadAnim('Sword sprites', 'sword_Idle', 1, 8),
-    walk: loadAnim('Sword sprites', 'sword_run', 17, 24),
-    attack: loadAnim('Sword sprites', 'sword_combo', 65, 75),
-    dash: loadAnim('Sword sprites', 'sword_dash', 33, 38),
-    dead: loadAnim('Sword sprites', 'sword_death', 52, 61),
+    idle: loadAnim('Sword sprites', 'sword_Idle', 1, 8, true),
+    walk: loadAnim('Sword sprites', 'sword_run', 17, 24, true),
+    attack: loadAnim('Sword sprites', 'sword_combo', 65, 75, true),
+    dash: loadAnim('Sword sprites', 'sword_dash', 33, 38, true),
+    dead: loadAnim('Sword sprites', 'sword_death', 52, 61, true),
   },
   fighter: {
     idle: loadAnim('Fighter sprites', 'fighter_Idle', 1, 8),
@@ -593,18 +613,18 @@ export const anims = {
     dead: loadSkeletonAnim('dead', 25),
   },
   enemy01: {
-    idle: loadCustomEnemyAnim('Enemy01', 'idle', 6),
-    walk: loadCustomEnemyAnim('Enemy01', 'walk', 8),
-    attack: loadCustomEnemyAnim('Enemy01', 'attack', 7),
-    dash: loadCustomEnemyAnim('Enemy01', 'walk', 8),
-    dead: loadCustomEnemyAnim('Enemy01', 'hit', 4),
+    idle: loadCustomEnemyAnim('Enemy01', 'idle', 6, true),
+    walk: loadCustomEnemyAnim('Enemy01', 'walk', 8, true),
+    attack: loadCustomEnemyAnim('Enemy01', 'attack', 7, true),
+    dash: loadCustomEnemyAnim('Enemy01', 'walk', 8, true),
+    dead: loadCustomEnemyAnim('Enemy01', 'hit', 4, true),
   },
   enemy02: {
-    idle: loadCustomEnemyAnim('Enemy02', 'idle', 6),
-    walk: loadCustomEnemyAnim('Enemy02', 'walk', 8),
-    attack: loadCustomEnemyAnim('Enemy02', 'attack', 8),
-    dash: loadCustomEnemyAnim('Enemy02', 'walk', 8),
-    dead: loadCustomEnemyAnim('Enemy02', 'hit', 4),
+    idle: loadCustomEnemyAnim('Enemy02', 'idle', 6, true),
+    walk: loadCustomEnemyAnim('Enemy02', 'walk', 8, true),
+    attack: loadCustomEnemyAnim('Enemy02', 'attack', 8, true),
+    dash: loadCustomEnemyAnim('Enemy02', 'walk', 8, true),
+    dead: loadCustomEnemyAnim('Enemy02', 'hit', 4, true),
   },
   enemy03: {
     idle: loadCustomEnemyAnim('Enemy03', 'idle', 6),
@@ -665,32 +685,35 @@ export const anims = {
 };
 
 export const propImages: HTMLImageElement[] = [];
-for (let i = 1; i <= 18; i++) {
-  const img = new Image();
-  registerAssetToLoad(img);
-  const frameStr = i.toString().padStart(2, '0');
-  img.src = encodeURI(`sprites/props/deco_${frameStr}.png`);
-  propImages.push(img);
-}
 
-function loadSkeletonAnim(prefix: string, count: number) {
+function loadSkeletonAnim(prefix: string, count: number, isPriority = false) {
   const images: HTMLImageElement[] = [];
   for (let i = 1; i <= count; i++) {
     const img = new Image();
-    registerAssetToLoad(img);
-    img.src = encodeURI(`sprites/Skeleton/${prefix}_${i}.png`);
+    const src = encodeURI(`sprites/Skeleton/${prefix}_${i}.png`);
+    if (isPriority) {
+      registerAssetToLoad(img);
+      img.src = src;
+    } else {
+      lazyImageQueue.push({ img, src });
+    }
     images.push(img);
   }
   return images;
 }
 
-function loadCustomEnemyAnim(folder: string, prefix: string, count: number) {
+function loadCustomEnemyAnim(folder: string, prefix: string, count: number, isPriority = false) {
   const images: HTMLImageElement[] = [];
   for (let i = 1; i <= count; i++) {
     const img = new Image();
-    registerAssetToLoad(img);
     const frameStr = i.toString().padStart(2, '0');
-    img.src = encodeURI(`sprites/${folder}/${prefix}${frameStr}.png`);
+    const src = encodeURI(`sprites/${folder}/${prefix}${frameStr}.png`);
+    if (isPriority) {
+      registerAssetToLoad(img);
+      img.src = src;
+    } else {
+      lazyImageQueue.push({ img, src });
+    }
     images.push(img);
   }
   return images;
@@ -732,14 +755,19 @@ export const skillsData = [
   { id: 'decoy_illusion', nameKey: 'skillDecoyName', descKey: 'skillDecoyDesc' }
 ];
 
-function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0) {
+function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, isPriority = false) {
   const frames: HTMLImageElement[] = [];
   for (let i = 0; i < count; i++) {
     const frameNum = startIdx + i;
     const numStr = padSize > 0 ? frameNum.toString().padStart(padSize, '0') : frameNum.toString();
     const img = new Image();
-    registerAssetToLoad(img);
-    img.src = encodeURI(pathPattern.replace('{N}', numStr));
+    const src = encodeURI(pathPattern.replace('{N}', numStr));
+    if (isPriority) {
+      registerAssetToLoad(img);
+      img.src = src;
+    } else {
+      lazyImageQueue.push({ img, src });
+    }
     frames.push(img);
   }
   return frames;
@@ -747,8 +775,8 @@ function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize
 
 export const vfxAnims = {
   custom: {
-    slash: loadVfxFrames('vfx/Frames/Slash_color5_frame{N}.png', 9, 1),
-    dragonFury: loadVfxFrames('vfx/Dragon_fury/Slash_color4_frame{N}.png', 9, 1),
+    slash: loadVfxFrames('vfx/Frames/Slash_color5_frame{N}.png', 9, 1, 0, true),
+    dragonFury: loadVfxFrames('vfx/Dragon_fury/Slash_color4_frame{N}.png', 9, 1, 0, true),
     invincible: loadVfxFrames('vfx/invincible/Starcaller_spell_3_frame_{N}.png', 15, 1),
     starfall: loadVfxFrames('vfx/starfall/Starcaller_spell_2_frame_{N}.png', 8, 1),
     vortex: loadVfxFrames('vfx/vortex/FireMage_skill3_frame{N}.png', 12, 1)
@@ -756,58 +784,10 @@ export const vfxAnims = {
   gigapack: {
     explosion: loadVfxFrames('vfx/explosion/frame_{N}.png', 13, 0, 2),
     lightning: loadVfxFrames('vfx/lightning/frame_{N}.png', 7, 0, 2),
-    impact: loadVfxFrames('vfx/impact/frame_{N}.png', 7, 0, 2),
-  },
-  slashes: {
-    slash1: {
-      color1: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color1/Frames/Slash_color1_frame{N}.png', 9, 1),
-      color2: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color2/Frames/Slash_color2_frame{N}.png', 9, 1),
-      color3: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color3/Frames/Slash_color3_frame{N}.png', 9, 1),
-      color4: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color4/Frames/Slash_color4_frame{N}.png', 9, 1),
-      color5: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 1/color5/Frames/Slash_color5_frame{N}.png', 9, 1),
-    },
-    slash2: {
-      color1: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color1/Frames/Slash2_color1_frame{N}.png', 7, 1),
-      color2: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color2/Frames/Slash2_color2_frame{N}.png', 7, 1),
-      color3: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color3/Frames/Slash2_color3_frame{N}.png', 7, 1),
-      color4: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color4/Frames/Slash2_color4_frame{N}.png', 7, 1),
-      color5: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 2/color5/Frames/Slash2_color5_frame{N}.png', 7, 1),
-    },
-    slash3: {
-      color1: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color1/Frames/Slash3_color1_frame{N}.png', 9, 1),
-      color2: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color2/Frames/Slash3_color2_frame{N}.png', 9, 1),
-      color3: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color3/Frames/Slash3_color3_frame{N}.png', 9, 1),
-      color4: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color4/Frames/Slash3_color4_frame{N}.png', 9, 1),
-      color5: loadVfxFrames('vfx/Pixel Art Animations - Slashes/128x128/Slash 3/color5/Frames/Slash3_color5_frame{N}.png', 9, 1),
-    }
-  },
-  auras: {
-    arcane: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/arcane/128/frames/frame_{N}.png', 16, 0, 3),
-    fire: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/fire/128/frames/frame_{N}.png', 16, 0, 3),
-    ice: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/ice/128/frames/frame_{N}.png', 16, 0, 3),
-    poison: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/poison/128/frames/frame_{N}.png', 16, 0, 3),
-    holy: loadVfxFrames('vfx/vfx/fx_pack_01/aura_fire_0004/holy/128/frames/frame_{N}.png', 16, 0, 3)
+    impact: loadVfxFrames('vfx/impact/frame_{N}.png', 7, 0, 2, true),
   },
   explosions: {
-    arcane: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/arcane/128/frames/frame_{N}.png', 16, 0, 3),
-    fire: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/fire/128/frames/frame_{N}.png', 16, 0, 3),
-    ice: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/ice/128/frames/frame_{N}.png', 16, 0, 3),
-    poison: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/poison/128/frames/frame_{N}.png', 16, 0, 3),
-    holy: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/holy/128/frames/frame_{N}.png', 16, 0, 3)
-  },
-  impacts: {
-    arcane: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/arcane/128/frames/frame_{N}.png', 16, 0, 3),
-    fire: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/fire/128/frames/frame_{N}.png', 16, 0, 3),
-    ice: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/ice/128/frames/frame_{N}.png', 16, 0, 3),
-    poison: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/poison/128/frames/frame_{N}.png', 16, 0, 3),
-    holy: loadVfxFrames('vfx/vfx/fx_pack_01/impact_fire_0002/holy/128/frames/frame_{N}.png', 16, 0, 3)
-  },
-  heals: {
-    arcane: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/arcane/128/frames/frame_{N}.png', 16, 0, 3),
-    fire: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/fire/128/frames/frame_{N}.png', 16, 0, 3),
-    ice: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/ice/128/frames/frame_{N}.png', 16, 0, 3),
-    poison: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/poison/128/frames/frame_{N}.png', 16, 0, 3),
-    holy: loadVfxFrames('vfx/vfx/fx_pack_01/heal_fire_0005/holy/128/frames/frame_{N}.png', 16, 0, 3)
+    fire: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/fire/128/frames/frame_{N}.png', 16, 0, 3)
   },
   fireMage: {
     vfx1: loadVfxFrames('vfx/Pixel Art VFX - Fire Mage - FREE Version/VFX1/frames/FireMage_skill1_frame{N}.png', 7, 1),

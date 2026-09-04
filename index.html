@@ -15,6 +15,7 @@
       #loader-screen.hidden { display: none !important; }
     </style>
 
+    <meta name="theme-color" content="#090a0f" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -24,7 +25,11 @@
     <meta name="screen-orientation" content="landscape" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shojumaru&family=Outfit:wght@300;400;500;600;700;900&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shojumaru&family=Outfit:wght@300;400;500;600;700;900&family=Orbitron:wght@600;700;900&display=swap">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shojumaru&family=Outfit:wght@300;400;500;600;700;900&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shojumaru&family=Outfit:wght@300;400;500;600;700;900&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
+    </noscript>
     <title>Super Samurai Sticky</title>
   </head>
   <body style="background:#090a0f;margin:0;padding:0;">
@@ -47,7 +52,7 @@
       <div id="manga-cutin">
         <div class="manga-slice"></div>
         <div class="manga-character-wrap">
-          <video class="manga-character" src="stickmurai_animation.mp4" autoplay loop muted playsinline></video>
+          <video class="manga-character" preload="none" loop muted playsinline data-src="stickmurai_animation.mp4"></video>
         </div>
       </div>
       <canvas id="gameCanvas"></canvas>

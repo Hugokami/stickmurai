@@ -1,7 +1,7 @@
 import './style.css';
 import { globals } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
-import { i18n, loaderTips } from './assets';
+import { i18n, loaderTips, startBackgroundAssetLoading } from './assets';
 import {
   playSound,
   sfx,
@@ -503,75 +503,80 @@ function checkOrientationAndFullscreen() {
 }
 
 function startApp() {
-  if (isMobile) {
-    checkOrientationAndFullscreen();
-    window.addEventListener('resize', checkOrientationAndFullscreen);
-    window.addEventListener('orientationchange', checkOrientationAndFullscreen);
-  }
-
-  const canvasElement = document.getElementById('gameCanvas') as HTMLCanvasElement;
-  
-  // Initialize Sub-systems
-  initRenderer(canvasElement);
-  initInput();
-  initUI(
-    () => { initGame(); }, // Classic start
-    () => { initGame(); }, // Zen start
-    () => { initGame(); }  // Restart run
-  );
-
-  initPvPLobby(() => {
-    globals.gameMode = 'pvp';
-    initGame();
-  });
-
-  setupPvpRematchListeners();
-
-  // Allow early tap-to-skip on loader screen
-  const loaderScreen = document.getElementById('loader-screen');
-  if (loaderScreen) {
-    const earlySkip = (e: Event) => {
-      e.stopPropagation();
-      finishLoading();
-    };
-    loaderScreen.addEventListener('click', earlySkip, { once: true });
-    loaderScreen.addEventListener('touchstart', earlySkip, { once: true });
-    loaderScreen.addEventListener('pointerdown', earlySkip, { once: true });
-  }
-
-  // Setup loader video events and programmatically trigger play
-  const loaderVideo = document.getElementById('loader-video') as HTMLVideoElement;
-  if (loaderVideo) {
-    const handleVideoPlay = () => {
-      loaderVideo.classList.add('video-loaded');
-      const spinner = document.querySelector('.loader-spinner') as HTMLElement;
-      if (spinner) {
-        spinner.style.opacity = '0';
-        setTimeout(() => {
-          spinner.style.display = 'none';
-        }, 500);
-      }
-    };
-
-    if (!loaderVideo.paused) {
-      handleVideoPlay();
+  try {
+    if (isMobile) {
+      checkOrientationAndFullscreen();
+      window.addEventListener('resize', checkOrientationAndFullscreen);
+      window.addEventListener('orientationchange', checkOrientationAndFullscreen);
     }
-    loaderVideo.addEventListener('playing', handleVideoPlay);
-    loaderVideo.addEventListener('play', handleVideoPlay);
 
-    // Call play programmatically in case autoplay policy blocks it
-    loaderVideo.play().catch(err => {
-      console.warn("Loader video autoplay blocked or failed:", err);
+    const canvasElement = document.getElementById('gameCanvas') as HTMLCanvasElement;
+    
+    // Initialize Sub-systems
+    initRenderer(canvasElement);
+    initInput();
+    initUI(
+      () => { initGame(); }, // Classic start
+      () => { initGame(); }, // Zen start
+      () => { initGame(); }  // Restart run
+    );
+
+    initPvPLobby(() => {
+      globals.gameMode = 'pvp';
+      initGame();
     });
+
+    setupPvpRematchListeners();
+
+    // Allow early tap-to-skip on loader screen
+    const loaderScreen = document.getElementById('loader-screen');
+    if (loaderScreen) {
+      const earlySkip = (e: Event) => {
+        e.stopPropagation();
+        finishLoading();
+      };
+      loaderScreen.addEventListener('click', earlySkip, { once: true });
+      loaderScreen.addEventListener('touchstart', earlySkip, { once: true });
+      loaderScreen.addEventListener('pointerdown', earlySkip, { once: true });
+    }
+
+    // Setup loader video events and programmatically trigger play
+    const loaderVideo = document.getElementById('loader-video') as HTMLVideoElement;
+    if (loaderVideo) {
+      const handleVideoPlay = () => {
+        loaderVideo.classList.add('video-loaded');
+        const spinner = document.querySelector('.loader-spinner') as HTMLElement;
+        if (spinner) {
+          spinner.style.opacity = '0';
+          setTimeout(() => {
+            spinner.style.display = 'none';
+          }, 500);
+        }
+      };
+
+      if (!loaderVideo.paused) {
+        handleVideoPlay();
+      }
+      loaderVideo.addEventListener('playing', handleVideoPlay);
+      loaderVideo.addEventListener('play', handleVideoPlay);
+
+      // Call play programmatically in case autoplay policy blocks it
+      loaderVideo.play().catch(err => {
+        console.warn("Loader video autoplay blocked or failed:", err);
+      });
+    }
+
+    startLoaderStickmanAnimation();
+    startBackgroundAssetLoading();
+    setTimeout(updateLoaderProgress, 0);
+  } catch (err) {
+    console.error("Critical error in startApp:", err);
   }
 
-  startLoaderStickmanAnimation();
-  setTimeout(updateLoaderProgress, 0);
-
-  // Hard safety timeout: if assets hang on mobile WebKit/cellular, finish loading after 2.5s
+  // Hard safety timeout: if assets hang on mobile WebKit/cellular, finish loading after 1.5s
   loaderTimeoutId = setTimeout(() => {
     finishLoading();
-  }, 2500);
+  }, 1500);
 }
 
 if (document.readyState === 'loading') {

@@ -1425,11 +1425,6 @@ export function initPvPLobby(onStartMatch: () => void) {
       }
     });
   }
-
-  // Trigger Supabase login and invite subscription on startup in the background
-  initSupabaseAuth().catch(err => {
-    console.error("Failed to initialize social auth on startup:", err);
-  });
 }
 
 /**
