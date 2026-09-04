@@ -49,7 +49,7 @@ export function getTintedImage(img: HTMLImageElement | HTMLCanvasElement, hexCol
 export class Entity {
   x = 0; y = 0; vx = 0; vy = 0;
   yOffset = 0; yVelocity = 0; // Simulated vertical juggle height physics
-  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' = 'sword';
+  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' = 'sword';
   subType?: string;
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
@@ -121,6 +121,12 @@ export class Entity {
     } else if (this.type === 'heroninja') {
       scale *= 5.2;
     } else if (this.type === 'evil_wizard') {
+      scale *= 2.6;
+    } else if (this.type === 'enemy_orc') {
+      scale *= 7.8;
+    } else if (this.type === 'enemy_barrel') {
+      scale *= 2.4;
+    } else if (this.type === 'boss_agis') {
       scale *= 2.6;
     }
     const buffer = Math.max(img.width, img.height) * scale + 60;

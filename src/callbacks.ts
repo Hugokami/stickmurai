@@ -27,6 +27,7 @@ export const callbacks = {
   openShrineCommuneModal: (_sealId: number) => {},
   openHermitPactModal: () => {},
   triggerDawnVictory: () => {},
+  triggerStageClear: () => {},
 };
 
 export const assetCallbacks = {

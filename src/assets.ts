@@ -638,6 +638,27 @@ export const anims = {
     attack: loadCustomEnemyAnim('EvilWizard', 'attack', 8),
     dash: loadCustomEnemyAnim('EvilWizard', 'walk', 8),
     dead: loadCustomEnemyAnim('EvilWizard', 'dead', 5),
+  },
+  enemy_orc: {
+    idle: loadCustomEnemyAnim('EnemyOrc', 'idle', 6),
+    walk: loadCustomEnemyAnim('EnemyOrc', 'walk', 8),
+    attack: loadCustomEnemyAnim('EnemyOrc', 'attack', 6),
+    dash: loadCustomEnemyAnim('EnemyOrc', 'dash', 8),
+    dead: loadCustomEnemyAnim('EnemyOrc', 'dead', 4),
+  },
+  enemy_barrel: {
+    idle: loadCustomEnemyAnim('EnemyBarrel', 'idle', 6),
+    walk: loadCustomEnemyAnim('EnemyBarrel', 'walk', 6),
+    attack: loadCustomEnemyAnim('EnemyBarrel', 'attack', 6),
+    dash: loadCustomEnemyAnim('EnemyBarrel', 'dash', 6),
+    dead: loadCustomEnemyAnim('EnemyBarrel', 'dead', 6),
+  },
+  boss_agis: {
+    idle: loadCustomEnemyAnim('BossAgis', 'idle', 6),
+    walk: loadCustomEnemyAnim('BossAgis', 'walk', 6),
+    attack: loadCustomEnemyAnim('BossAgis', 'attack', 8),
+    dash: loadCustomEnemyAnim('BossAgis', 'dash', 6),
+    dead: loadCustomEnemyAnim('BossAgis', 'dead', 4),
   }
 };
 

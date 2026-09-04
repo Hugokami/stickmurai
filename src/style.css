@@ -504,6 +504,40 @@ canvas.inverted {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
 }
 
+/* Compact button variants for hero cards, modals & grid menus */
+.btn-compact {
+  padding: 8px 18px !important;
+  font-size: 13px !important;
+  min-height: 36px !important;
+  max-width: 200px !important;
+  letter-spacing: 0.05em !important;
+}
+
+.btn-card {
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+  min-height: 36px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  letter-spacing: 0.04em !important;
+  border-radius: 6px !important;
+}
+
+.menu-grid-2x2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  max-width: 280px;
+}
+
+.menu-grid-2x2 .menu-btn {
+  max-width: 100%;
+  padding: 8px 6px;
+  font-size: 11px;
+  min-height: 38px;
+}
+
 /* Shine Reflection Sweep Effect */
 .menu-btn::after, .power-card::after {
   content: '';

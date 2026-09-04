@@ -53,6 +53,95 @@ let lastBtnEnhanceReady = false;
 let lastBtnEnhanceBuff = false;
 let lastRenderedMagatama = -1;
 let hudMagatamaElement: HTMLElement | null = null;
+let cachedOnPlayCallback: (() => void) | null = null;
+
+export const STAGES = [
+  { id: 1, name: 'STAGE 1: BAMBOO GROVE', nameJa: 'ステージ1: 竹林の覚醒', desc: 'Target: 12 Kills // Grunts & Rogues' },
+  { id: 2, name: 'STAGE 2: FOREST OUTPOST', nameJa: 'ステージ2: 狼の群れ', desc: 'Target: 15 Kills // Wolf Packs & Assassins' },
+  { id: 3, name: 'STAGE 3: SIEGE WORKSHOP', nameJa: 'ステージ3: 機巧工房', desc: 'Target: 18 Kills // Barrel Bombers & Musketeers' },
+  { id: 4, name: 'STAGE 4: IRON BASTION', nameJa: 'ステージ4: 鉄壁の要塞', desc: 'Target: 22 Kills // Heavy Orc Brutes & Frost Sentinels' },
+  { id: 5, name: 'STAGE 5: YOMI GATEWAY', nameJa: 'ステージ5: 黄泉の門', desc: 'BOSS BATTLE // Skeleton Oni Overlord' },
+  { id: 6, name: 'STAGE 6: CURSED GRAVEYARD', nameJa: 'ステージ6: 呪われた墓所', desc: 'Target: 25 Kills // Necromancers & Barrel Bombers' },
+  { id: 7, name: 'STAGE 7: BLOOD RIVER', nameJa: 'ステージ7: 血潮の河原', desc: 'Target: 28 Kills // Chaos Vanguard & Pyromancers' },
+  { id: 8, name: 'STAGE 8: CASTLE RAMPARTS', nameJa: 'ステージ8: 漆黒の城壁', desc: 'Target: 30 Kills // Shogun Guards & Orc Brutes' },
+  { id: 9, name: 'STAGE 9: THRONE ANTECHAMBER', nameJa: 'ステージ9: 謁見の間', desc: 'Target: 35 Kills // Purgatory Elite Rampage' },
+  { id: 10, name: 'STAGE 10: SANCTUM OF OBLIVION', nameJa: 'ステージ10: 忘却の聖域', desc: 'FINAL BOSS // Colossus Agis & Divine Shogun' }
+];
+
+export const ASCENSION_UPGRADES = [
+  {
+    id: 'slashDamage',
+    name: 'Katana Sharpness',
+    nameJa: '刃の研鑽',
+    icon: '🗡️',
+    max: 10,
+    desc: '+1 Slash DMG per level',
+    descJa: '通常斬撃ダメージ+1',
+    baseCost: 100,
+    costMult: 100,
+  },
+  {
+    id: 'iaijutsuPower',
+    name: 'Iaijutsu Shockwave',
+    nameJa: '居合波の極意',
+    icon: '🌊',
+    max: 10,
+    desc: '+2 Shockwave DMG & +10% Width',
+    descJa: '衝撃波ダメージ+2 & 幅+10%',
+    baseCost: 150,
+    costMult: 150,
+  },
+  {
+    id: 'maxLives',
+    name: 'Bushido Fortitude',
+    nameJa: '武士の生命力',
+    icon: '🛡️',
+    max: 5,
+    desc: '+1 Max Heart Slot',
+    descJa: '最大体力+1スロット',
+    baseCost: 300,
+    costMult: 300,
+  },
+  {
+    id: 'dashCooldown',
+    name: 'Phantom Stride',
+    nameJa: '瞬歩・神速',
+    icon: '⚡',
+    max: 5,
+    desc: '-10% Dash CD & +5% Move Speed',
+    descJa: 'ダッシュCT-10% & 移動速度+5%',
+    baseCost: 250,
+    costMult: 250,
+  },
+  {
+    id: 'spiritResonance',
+    name: 'Spiritual Resonance',
+    nameJa: '魂の共鳴',
+    icon: '🧘',
+    max: 5,
+    desc: '+25% Flow Gen & +1.5s Ult Duration',
+    descJa: '気力生成+25% & 奥義持続+1.5秒',
+    baseCost: 300,
+    costMult: 300,
+  }
+];
+
+export function updateStageSelectionUI() {
+  const current = globals.currentStage || 1;
+  const stageData = STAGES[Math.min(STAGES.length - 1, Math.max(0, current - 1))];
+  const nameEl = document.getElementById('stage-select-name');
+  const descEl = document.getElementById('stage-select-desc');
+  if (nameEl && stageData) {
+    nameEl.textContent = globals.currentLang === 'ja' ? stageData.nameJa : stageData.name;
+  }
+  if (descEl && stageData) {
+    descEl.textContent = stageData.desc;
+  }
+  const prevBtn = document.getElementById('stage-prev-btn') as HTMLButtonElement;
+  const nextBtn = document.getElementById('stage-next-btn') as HTMLButtonElement;
+  if (prevBtn) prevBtn.disabled = current <= 1;
+  if (nextBtn) nextBtn.disabled = current >= Math.min(10, globals.maxStageUnlocked || 1);
+}
 
 export function bindDualListener(el: HTMLElement | null | undefined, handler: (e: Event) => void) {
   if (!el) return;
@@ -93,6 +182,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const settingsScreen = document.getElementById('settings-screen')!;
   const skillSelectScreen = document.getElementById('skill-select-screen')!;
   const pauseScreen = document.getElementById('pause-screen')!;
+  cachedOnPlayCallback = onPlayCallback;
   const uiLayer = document.getElementById('ui-layer')!;
   const mobileControls = document.getElementById('mobile-controls')!;
   const bgmVolumeSlider = document.getElementById('bgm-volume') as HTMLInputElement;
@@ -105,25 +195,93 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     globals.activeBlessing = null;
     updateBlessingSelectionUI();
     renderSkillChoicesPregame();
+    updateStageSelectionUI();
   });
 
-  document.getElementById('level-mode-btn')!.addEventListener('click', () => {
-    mainMenu.style.display = 'none';
-    globals.gameMode = 'level';
-    skillSelectScreen.style.display = 'flex';
-    globals.activeBlessing = null;
-    updateBlessingSelectionUI();
-    renderSkillChoicesPregame();
-  });
+  const prevStageBtn = document.getElementById('stage-prev-btn');
+  if (prevStageBtn) {
+    bindDualListener(prevStageBtn, () => {
+      if ((globals.currentStage || 1) > 1) {
+        globals.currentStage--;
+        try { localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString()); } catch(e) {}
+        updateStageSelectionUI();
+      }
+    });
+  }
 
-  document.getElementById('zen-btn')!.addEventListener('click', () => {
-    mainMenu.style.display = 'none';
-    globals.gameMode = 'zen';
-    skillSelectScreen.style.display = 'flex';
-    globals.activeBlessing = null;
-    updateBlessingSelectionUI();
-    renderSkillChoicesPregame();
-  });
+  const nextStageBtn = document.getElementById('stage-next-btn');
+  if (nextStageBtn) {
+    bindDualListener(nextStageBtn, () => {
+      if ((globals.currentStage || 1) < Math.min(10, globals.maxStageUnlocked || 1)) {
+        globals.currentStage++;
+        try { localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString()); } catch(e) {}
+        updateStageSelectionUI();
+      }
+    });
+  }
+
+  // Stage Clear modal actions
+  const stageClearModal = document.getElementById('stage-clear-modal');
+  const stageClearNextBtn = document.getElementById('stage-clear-next-btn');
+  const stageClearReplayBtn = document.getElementById('stage-clear-replay-btn');
+  const stageClearMenuBtn = document.getElementById('stage-clear-menu-btn');
+
+  if (stageClearNextBtn) {
+    bindDualListener(stageClearNextBtn, () => {
+      if (stageClearModal) stageClearModal.style.display = 'none';
+      if ((globals.currentStage || 1) < 10) {
+        globals.currentStage = (globals.currentStage || 1) + 1;
+        globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, globals.currentStage);
+        try {
+          localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
+          localStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString());
+        } catch(e) {}
+      }
+      if (cachedOnPlayCallback) cachedOnPlayCallback();
+    });
+  }
+
+  if (stageClearReplayBtn) {
+    bindDualListener(stageClearReplayBtn, () => {
+      if (stageClearModal) stageClearModal.style.display = 'none';
+      if (cachedOnPlayCallback) cachedOnPlayCallback();
+    });
+  }
+
+  if (stageClearMenuBtn) {
+    bindDualListener(stageClearMenuBtn, () => {
+      if (stageClearModal) stageClearModal.style.display = 'none';
+      globals.gameState = 'mainmenu';
+      mainMenu.style.display = 'flex';
+      uiLayer.style.display = 'none';
+      mobileControls.style.display = 'none';
+      pauseBgm();
+    });
+  }
+
+  const lvlModeBtn = document.getElementById('level-mode-btn');
+  if (lvlModeBtn) {
+    lvlModeBtn.addEventListener('click', () => {
+      mainMenu.style.display = 'none';
+      globals.gameMode = 'level';
+      skillSelectScreen.style.display = 'flex';
+      globals.activeBlessing = null;
+      updateBlessingSelectionUI();
+      renderSkillChoicesPregame();
+    });
+  }
+
+  const zenBtn = document.getElementById('zen-btn');
+  if (zenBtn) {
+    zenBtn.addEventListener('click', () => {
+      mainMenu.style.display = 'none';
+      globals.gameMode = 'zen';
+      skillSelectScreen.style.display = 'flex';
+      globals.activeBlessing = null;
+      updateBlessingSelectionUI();
+      renderSkillChoicesPregame();
+    });
+  }
 
   document.getElementById('skill-back-btn')!.addEventListener('click', () => {
     skillSelectScreen.style.display = 'none';
@@ -1157,6 +1315,21 @@ export function updateUI() {
           objDisplay.style.color = 'inherit';
           lastObjectiveText = text;
         }
+      } else if (globals.gameMode === 'classic') {
+        if (lastObjectiveDisplay !== 'block') {
+          objDisplay.style.display = 'block';
+          lastObjectiveDisplay = 'block';
+        }
+        const isBoss = globals.currentStage === 5 || globals.currentStage >= 10;
+        const text = isBoss
+          ? `STAGE ${globals.currentStage}: ${globals.currentStage === 5 ? 'SKELETON ONI BOSS' : 'AGIS COLOSSUS BOSS'}`
+          : `STAGE ${globals.currentStage}: ${globals.stageKills} / ${globals.stageTargetKills} KILLS`;
+        if (text !== lastObjectiveText) {
+          objDisplay.textContent = text;
+          objDisplay.style.borderColor = isBoss ? 'rgba(239, 68, 68, 0.7)' : 'rgba(255, 215, 0, 0.4)';
+          objDisplay.style.color = isBoss ? '#ef4444' : '#ffd700';
+          lastObjectiveText = text;
+        }
       } else {
         if (lastObjectiveDisplay !== 'none') {
           objDisplay.style.display = 'none';
@@ -1583,12 +1756,12 @@ export function populateDojoHeroGrid() {
 
     let actionBtnHtml = '';
     if (isEquipped) {
-      actionBtnHtml = `<button class="menu-btn" disabled style="margin: 0; min-height: 40px; background: #166534; border-color: #22c55e; color: #bbf7d0; font-size: 12px; cursor: default;">✓ ${isJa ? '装備中' : 'EQUIPPED'}</button>`;
+      actionBtnHtml = `<button class="menu-btn btn-card" disabled style="margin: 0; background: #166534; border-color: #22c55e; color: #bbf7d0; cursor: default;">✓ ${isJa ? '装備中' : 'EQUIPPED'}</button>`;
     } else if (isUnlocked) {
-      actionBtnHtml = `<button class="menu-btn equip-hero-btn" data-hero="${hero.id}" style="margin: 0; min-height: 40px; border-color: #38bdf8; color: #38bdf8; font-size: 12px; cursor: pointer;">${isJa ? '装備する' : 'EQUIP HERO'}</button>`;
+      actionBtnHtml = `<button class="menu-btn btn-card equip-hero-btn" data-hero="${hero.id}" style="margin: 0; border-color: #38bdf8; color: #38bdf8; cursor: pointer;">${isJa ? '装備する' : 'EQUIP HERO'}</button>`;
     } else {
       const canAfford = (globals.magatama || 0) >= hero.cost;
-      actionBtnHtml = `<button class="menu-btn buy-hero-btn" data-hero="${hero.id}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 40px; border-color: ${canAfford ? '#ffd700' : '#64748b'}; color: ${canAfford ? '#ffd700' : '#94a3b8'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 15px rgba(255,215,0,0.25)' : 'none'}; font-size: 12px; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">${isJa ? `解放: ${hero.cost.toLocaleString()} 🔮` : `UNLOCK: ${hero.cost.toLocaleString()} 🔮`}</button>`;
+      actionBtnHtml = `<button class="menu-btn btn-card buy-hero-btn" data-hero="${hero.id}" ${canAfford ? '' : 'disabled'} style="margin: 0; border-color: ${canAfford ? '#ffd700' : '#64748b'}; color: ${canAfford ? '#ffd700' : '#94a3b8'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 15px rgba(255,215,0,0.25)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">${isJa ? `解放: ${hero.cost.toLocaleString()} 🔮` : `UNLOCK: ${hero.cost.toLocaleString()} 🔮`}</button>`;
     }
 
     card.innerHTML = `
@@ -1839,6 +2012,145 @@ export function triggerDawnVictory(_stats?: any) {
   modal.style.display = 'flex';
 }
 
+export function populateAscensionUpgrades() {
+  const container = document.getElementById('ascension-upgrade-grid');
+  if (!container) return;
+  const isJa = globals.currentLang === 'ja';
+  container.innerHTML = '';
+
+  const upgrades = globals.campaignUpgrades || {
+    slashDamage: 0,
+    iaijutsuPower: 0,
+    maxLives: 0,
+    dashCooldown: 0,
+    spiritResonance: 0
+  };
+
+  ASCENSION_UPGRADES.forEach(u => {
+    const curLevel = (upgrades as any)[u.id] || 0;
+    const isMax = curLevel >= u.max;
+    const cost = isMax ? 0 : u.baseCost + curLevel * u.costMult;
+    const canAfford = !isMax && (globals.magatama || 0) >= cost;
+
+    let pips = '';
+    for (let i = 0; i < u.max; i++) {
+      pips += i < curLevel ? '● ' : '○ ';
+    }
+
+    const card = document.createElement('div');
+    card.style.cssText = `
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid ${isMax ? 'rgba(34, 197, 94, 0.4)' : (canAfford ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.1)')};
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: all 0.2s ease;
+    `;
+
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'Shojumaru', cursive; color: ${isMax ? '#4ade80' : '#ffd700'}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+          <span>${u.icon}</span> ${isJa ? u.nameJa : u.name}
+        </span>
+        <span style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : '#38bdf8'}; font-weight: bold;">
+          ${isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`}
+        </span>
+      </div>
+      <div style="font-family: monospace; font-size: 10px; color: #a855f7; letter-spacing: 1px;">
+        ${pips}
+      </div>
+      <div style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.3;">
+        ${isJa ? u.descJa : u.desc}
+      </div>
+      <div style="margin-top: 4px;">
+        ${isMax ? `
+          <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;">✓ MASTERED</button>
+        ` : `
+          <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? '#ffd700' : '#475569'}; color: ${canAfford ? '#ffd700' : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">
+            ${isJa ? `強化: ${cost.toLocaleString()} 🔮` : `UPGRADE: ${cost.toLocaleString()} 🔮`}
+          </button>
+        `}
+      </div>
+    `;
+
+    const buyBtn = card.querySelector('.buy-ascension-btn');
+    if (buyBtn && canAfford) {
+      bindDualListener(buyBtn as HTMLElement, () => {
+        if ((globals.magatama || 0) >= cost && curLevel < u.max) {
+          globals.magatama -= cost;
+          (globals.campaignUpgrades as any)[u.id] = curLevel + 1;
+          try {
+            localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+            localStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));
+          } catch(e) {}
+          playSynthesizedFusionUnlock();
+          const treasuryEl = document.getElementById('stage-clear-magatama');
+          if (treasuryEl) treasuryEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
+          populateAscensionUpgrades();
+        }
+      });
+    }
+
+    container.appendChild(card);
+  });
+}
+
+export function triggerStageClear() {
+  globals.gameState = 'paused';
+  const modal = document.getElementById('stage-clear-modal');
+  if (!modal) return;
+
+  const isJa = globals.currentLang === 'ja';
+  playSynthesizedSingingBowl();
+  playSynthesizedFusionUnlock();
+
+  const currentStage = globals.currentStage || 1;
+  const stageReward = currentStage * 100;
+  globals.magatama = (globals.magatama || 0) + stageReward;
+  try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
+
+  // Unlock next stage
+  const nextStage = Math.min(10, currentStage + 1);
+  globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, nextStage);
+  try { localStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString()); } catch(e) {}
+
+  const titleEl = document.getElementById('stage-clear-title');
+  if (titleEl) {
+    titleEl.textContent = isJa ? `ステージ ${currentStage} 突破！` : `STAGE ${currentStage} CONQUERED!`;
+  }
+
+  const killsEl = document.getElementById('stage-clear-kills');
+  if (killsEl) killsEl.textContent = globals.runStats.kills.toString();
+
+  const timeEl = document.getElementById('stage-clear-time');
+  if (timeEl) {
+    const min = Math.floor(globals.runTime / 60);
+    const sec = Math.floor(globals.runTime % 60);
+    timeEl.textContent = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+  }
+
+  const rewardEl = document.getElementById('stage-clear-reward');
+  if (rewardEl) rewardEl.textContent = `+${stageReward} 🔮`;
+
+  const magEl = document.getElementById('stage-clear-magatama');
+  if (magEl) magEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
+
+  const nextBtn = document.getElementById('stage-clear-next-btn');
+  if (nextBtn) {
+    if (currentStage >= 10) {
+      nextBtn.textContent = isJa ? '🏆 全ステージ制覇！' : '🏆 ALL STAGES CLEARED!';
+    } else {
+      nextBtn.textContent = isJa ? `⚔️ ステージ ${currentStage + 1} へ進む` : `⚔️ ADVANCE TO STAGE ${currentStage + 1}`;
+    }
+  }
+
+  populateAscensionUpgrades();
+  modal.style.display = 'flex';
+}
+
 callbacks.openShrineCommuneModal = openShrineCommuneModal;
 callbacks.openHermitPactModal = openHermitPactModal;
 callbacks.triggerDawnVictory = triggerDawnVictory;
+callbacks.triggerStageClear = triggerStageClear;

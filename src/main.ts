@@ -37,7 +37,7 @@ import {
 import { pvpManager } from './pvpIaijutsuManager';
 import { initPvPLobby, updatePvpHud, showRoundBanner, updateTurnBadge, recordMatchResult } from './pvpLobby';
 import { Player } from './player';
-import { Enemy } from './enemy';
+import { Enemy, triggerBarrelExplosion } from './enemy';
 import { vfxAnims } from './assets';
 
 let localRematchReady = false;
@@ -754,24 +754,7 @@ function initGame() {
   globals.activeFusions.clear();
   globals.bouncingSickles = [];
   globals.plasmaTrails = [];
-
   globals.destructibleProps = [];
-  // Spawn breakable props (barrels, crates, lanterns) across the arena
-  const propCount = 8;
-  const spreadX = 2600;
-  for (let i = 0; i < propCount; i++) {
-    const xPos = globals.player.x - spreadX / 2 + (spreadX / (propCount - 1)) * i + (Math.random() - 0.5) * 80;
-    if (Math.abs(xPos - globals.player.x) < 140) continue;
-    globals.destructibleProps.push({
-      x: xPos,
-      y: globals.player.y + 12,
-      hp: 1,
-      maxHp: 1,
-      propType: Math.floor(Math.random() * 18),
-      scale: 1.8 + Math.random() * 0.4,
-      broken: false
-    });
-  }
 
   // Apply permanent Yomi Seal breakthrough bonuses
   globals.unlockedSeals.forEach(id => {
@@ -854,6 +837,24 @@ function initGame() {
     });
   }
   globals.activeBlessing = null; // Clear so it only applies to the current run
+
+  // Apply Campaign / Ascension Upgrades (Permanent progression)
+  if (globals.campaignUpgrades) {
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + (globals.campaignUpgrades.katana_dmg || 0) * 2;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + (globals.campaignUpgrades.iaijutsu_shock || 0) * 4;
+    globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + (globals.campaignUpgrades.iaijutsu_shock || 0) * 0.15;
+    globals.maxLives += (globals.campaignUpgrades.bushido_hp || 0);
+    globals.lives = globals.maxLives;
+    globals.playerStats.dashCooldownBase = Math.max(0.4, globals.playerStats.dashCooldownBase - (globals.campaignUpgrades.phantom_dash || 0) * 0.15);
+    globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) + (globals.campaignUpgrades.flow_resonance || 0) * 0.25;
+  }
+
+  // Initialize Stage Mode Objectives
+  globals.stageKills = 0;
+  const stageTargets: Record<number, number> = {
+    1: 12, 2: 15, 3: 18, 4: 22, 5: 1, 6: 25, 7: 28, 8: 30, 9: 35, 10: 1
+  };
+  globals.stageTargetKills = stageTargets[globals.currentStage || 1] || (globals.currentStage * 4);
 
   document.getElementById('level-display')!.textContent = globals.level.toString();
   updateEnhanceButton();
@@ -1082,7 +1083,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   if (globals.player.state !== 'dead') {
     playSynthesizedHurt();
     globals.consecutiveParries = 0;
-    const isAnyBossAlive = globals.enemies.some(en => en.state !== 'dead' && (en.subType === 'oni_boss' || en.subType === 'shogun_boss' || (en as any).isBoss));
+    const isAnyBossAlive = globals.enemies.some(en => en.state !== 'dead' && (en.subType === 'oni_boss' || en.subType === 'shogun_boss' || en.subType === 'agis_colossus' || (en as any).isBoss));
     if (isAnyBossAlive) {
       bossEncounterDamaged = true;
     }
@@ -1915,7 +1916,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if (isExecution) {
     (e as any).postureBrokenTimer = 0;
     (e as any).posture = 0;
-    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss;
+    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss;
     if (isBoss) {
       // Boss execution: lower to ~12% max HP (capped at 25, min 12), stun boss for 2.5s
       finalDmg = Math.min(25, Math.max(12, Math.round((e.maxHp || 100) * 0.12)));
@@ -1981,6 +1982,17 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       (e as any).addPostureDamage(10);
     }
   }
+
+  // Deflect Karakuri Barrel Bomber into enemy ranks
+  if (e.subType === 'barrel_bomber') {
+    const dx = e.x - globals.player.x;
+    const dy = e.y - globals.player.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    e.knockbackTimer = 0.6;
+    e.knockbackVx = (dx / dist) * 1200;
+    e.knockbackVy = (dy / dist) * 1200;
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 30, "DEFLECTED! 🎯", "#f97316", 20));
+  }
   
   e.hp -= finalDmg;
   e.hitFlash = 0.15;
@@ -2038,7 +2050,25 @@ function killEnemy(e: Enemy) {
   addCombo();
   globals.runStats.kills++;
   checkVampireHeal(e);
-  if (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss) {
+
+  if (e.subType === 'barrel_bomber') {
+    triggerBarrelExplosion(e);
+  }
+
+  // Stage Mode Progress & Clear Condition
+  globals.stageKills = (globals.stageKills || 0) + 1;
+  if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
+    const stage = globals.currentStage || 1;
+    const isBossStage = stage === 5 || stage >= 10;
+    const isBossDefeated = (stage === 5 && e.subType === 'oni_boss') || (stage >= 10 && (e.subType === 'agis_colossus' || e.subType === 'shogun_boss'));
+    if ((isBossStage && isBossDefeated) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
+      if (callbacks.triggerStageClear) {
+        callbacks.triggerStageClear();
+      }
+    }
+  }
+
+  if (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss) {
     globals.runStats.bossesKilled++;
     if ((e as any).isSupremeShogun || (globals.runTime >= 540 && e.subType === 'shogun_boss')) {
       globals.shogunDefeatedAtDawn = true;
@@ -2053,8 +2083,8 @@ function killEnemy(e: Enemy) {
   }
 
   // Award Yomi Magatama based on enemy tier
-  const isBossEnemy = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss;
-  const isEliteOrRanged = e.subType === 'musketeer' || e.subType === 'pyromancer' || e.subType === 'necromancer';
+  const isBossEnemy = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss;
+  const isEliteOrRanged = e.subType === 'musketeer' || e.subType === 'pyromancer' || e.subType === 'necromancer' || e.subType === 'orc_brute';
   const earnedMagatama = isBossEnemy ? 50 : (isEliteOrRanged ? 3 : 1);
   globals.magatama = (globals.magatama || 0) + earnedMagatama;
   try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
@@ -2984,7 +3014,7 @@ function update(realDt: number) {
 
   if (globals.comboTimer > 0 && globals.gameState === 'playing') {
     // Step 5: Freeze combo timer during Blade Clash, boss windups, and execution cut-in
-    const isBossCharging = globals.enemies.some(e => e.state !== 'dead' && (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || (e as any).isBoss) && (e.state === 'charge' || e.state === 'attack'));
+    const isBossCharging = globals.enemies.some(e => e.state !== 'dead' && (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss) && (e.state === 'charge' || e.state === 'attack'));
     const isExecutionCutinActive = globals.flowState === 'omnislash' || (document.getElementById('manga-cutin')?.style.display === 'block');
     const isClashActive = globals.activeBladeClash !== null;
 
@@ -3822,39 +3852,6 @@ function update(realDt: number) {
         }
       }
 
-      // Destructible props collision check (Barrels, crates, lanterns)
-      if (globals.destructibleProps) {
-        for (let pIdx = 0; pIdx < globals.destructibleProps.length; pIdx++) {
-          const prop = globals.destructibleProps[pIdx];
-          if (prop.broken) continue;
-          const pdx = prop.x - globals.player.x;
-          const pdy = prop.y - globals.player.y;
-          const pDistSq = pdx * pdx + pdy * pdy;
-          const propHitRange = 260 * size + 40;
-          if (pDistSq < propHitRange * propHitRange) {
-            const pa = Math.atan2(pdy, pdx);
-            let diff = Math.abs(pa - angle);
-            if (diff > Math.PI) diff = Math.PI * 2 - diff;
-            if (diff < Math.PI / 1.5 || isRiposteStrike) {
-              prop.broken = true;
-              // Spawn debris particles
-              for (let k = 0; k < 12; k++) {
-                const spd = 200 + Math.random() * 300;
-                const spdAngle = Math.random() * Math.PI * 2;
-                globals.particles.push(Particle.acquire(prop.x, prop.y, Math.random() > 0.5 ? '#d97706' : '#78350f', spd, 0.45, 3 + Math.random() * 2, spdAngle));
-              }
-              playSynthesizedHit();
-              globals.screenShake = Math.max(globals.screenShake, 6);
-              // Award Magatama
-              const reward = 5 + Math.floor(Math.random() * 11);
-              globals.magatama = (globals.magatama || 0) + reward;
-              try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
-              globals.floatingTexts.push(FloatingText.acquire(prop.x, prop.y - 40, `+${reward} 🔮`, '#c084fc', 22));
-            }
-          }
-        }
-      }
-
       if (globals.bladeEchoesActive && globals.flowState === 'awakened') {
         const topY = globals.player.y - 90;
         const bottomY = globals.player.y + 90;
@@ -4201,7 +4198,7 @@ function update(realDt: number) {
   }
   inplaceFilter(globals.enemies, e => {
     if (e.isPvpRemote || e.state !== 'dead') return true;
-    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss';
+    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus';
     const maxDeadTime = isBoss ? 3.0 : 0.8;
     return e.deadTimer !== undefined && e.deadTimer < maxDeadTime;
   });

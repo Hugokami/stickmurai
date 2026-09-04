@@ -286,15 +286,30 @@ export const globals = {
   selectedHero: (() => {
     try { return localStorage.getItem('stickmurai_selected_hero') || 'default'; } catch(e) { return 'default'; }
   })(),
-  destructibleProps: [] as {
-    x: number;
-    y: number;
-    hp: number;
-    maxHp: number;
-    propType: number;
-    scale: number;
-    broken: boolean;
-  }[]
+  // Campaign & Stage Progression
+  currentStage: (() => {
+    try { return parseInt(localStorage.getItem('stickmurai_current_stage') || '1', 10) || 1; } catch(e) { return 1; }
+  })(),
+  maxStageUnlocked: (() => {
+    try { return parseInt(localStorage.getItem('stickmurai_max_stage') || '1', 10) || 1; } catch(e) { return 1; }
+  })(),
+  stageKills: 0,
+  stageTargetKills: 12,
+  campaignUpgrades: (() => {
+    const defaults = {
+      slashDamage: 0,     // Level 0..10 (+1 DMG per level)
+      iaijutsuPower: 0,   // Level 0..10 (+2 DMG & +10% width per level)
+      maxLives: 0,        // Level 0..5 (+1 max heart per level)
+      dashCooldown: 0,    // Level 0..5 (-10% dash CD & +5% speed per level)
+      spiritResonance: 0  // Level 0..5 (+25% flow gen & +1.5s ult per level)
+    };
+    try {
+      const stored = localStorage.getItem('stickmurai_campaign_upgrades');
+      if (stored) return { ...defaults, ...JSON.parse(stored) };
+    } catch(e) {}
+    return defaults;
+  })(),
+  destructibleProps: [] as any[]
 };
 
 export interface BladeClashState {

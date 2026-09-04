@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { bgLayers, bgImages, vfxAnims, propImages } from './assets';
+import { bgLayers, bgImages, vfxAnims } from './assets';
 import { Entity } from './entities';
 
 let canvas: HTMLCanvasElement;
@@ -316,31 +316,6 @@ export function draw() {
     ctx.save();
     ctx.translate(-globals.camera.x + globals.vw/2, -globals.camera.y + globals.vh/2);
     globals.activeHermit.draw(ctx);
-    ctx.restore();
-  }
-
-  // Draw Destructible Props (Barrels, crates, lanterns)
-  if (globals.destructibleProps && globals.destructibleProps.length > 0) {
-    ctx.save();
-    ctx.translate((-globals.camera.x + globals.vw/2) | 0, (-globals.camera.y + globals.vh/2) | 0);
-    for (let i = 0; i < globals.destructibleProps.length; i++) {
-      const p = globals.destructibleProps[i];
-      if (p.broken) continue;
-      if (p.x < minX || p.x > maxX || p.y < minY || p.y > maxY) continue;
-      const img = propImages[p.propType % propImages.length];
-      if (img && img.complete && img.naturalWidth > 0) {
-        const drawW = (img.width * p.scale) | 0;
-        const drawH = (img.height * p.scale) | 0;
-        const dx = (p.x - drawW / 2) | 0;
-        const dy = (p.y - drawH + 15) | 0;
-        // Soft ground contact shadow
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
-        ctx.beginPath();
-        ctx.ellipse(p.x | 0, (p.y + 10) | 0, (drawW * 0.35) | 0, (drawH * 0.12) | 0, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.drawImage(img, dx, dy, drawW, drawH);
-      }
-    }
     ctx.restore();
   }
 

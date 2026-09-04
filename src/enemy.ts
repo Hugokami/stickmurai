@@ -8,7 +8,7 @@ import { pvpManager } from './pvpIaijutsuManager';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer';
+export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer' | 'barrel_bomber' | 'orc_brute' | 'agis_colossus';
 
 export class Enemy extends Entity {
   target!: Player;
@@ -127,21 +127,79 @@ export class Enemy extends Entity {
       else if (globals.score > 40) this.subType = 'shogun_boss';
       else this.subType = 'necromancer';
     } else {
-      const roll = Math.random();
-      if (roll < 0.15) this.subType = 'brawler';
-      else if (roll < 0.30) this.subType = 'samurai';
-      else if (roll < 0.40) this.subType = 'ronin';
-      else if (roll < 0.50) this.subType = 'berserker';
-      else if (roll < 0.58) this.subType = 'giant';
-      else if (roll < 0.66) this.subType = 'assassin';
-      else if (roll < 0.76) this.subType = 'musketeer';
-      else if (roll < 0.82 && globals.score > 5) this.subType = 'pyromancer';
-      else if (roll < 0.88 && globals.score > 8) this.subType = 'glacial_sentinel';
-      else if (roll < 0.94 && globals.score > 12) this.subType = 'astromancer';
-      else if (roll < 0.97 && globals.score > 18) this.subType = 'necromancer';
-      else if (roll < 0.99 && globals.score > 20) this.subType = 'oni_boss';
-      else if (globals.score > 40) this.subType = 'shogun_boss';
-      else this.subType = 'brawler'; // Fallback
+      // Stage Mode Campaign Spawning
+      const stage = globals.currentStage || 1;
+      if (stage === 1) {
+        // Stage 1: Bamboo Grove - Grunts & Rogues
+        const r = Math.random();
+        this.subType = r < 0.60 ? 'brawler' : 'samurai';
+      } else if (stage === 2) {
+        // Stage 2: Forest Outpost - Wolf Pack & Assassins
+        const r = Math.random();
+        if (r < 0.35) this.subType = 'brawler';
+        else if (r < 0.65) this.subType = 'samurai';
+        else if (r < 0.85) this.subType = 'ronin';
+        else this.subType = 'assassin';
+      } else if (stage === 3) {
+        // Stage 3: Siege Workshop - Gunpowder, Musketeers & Barrel Bombers
+        const r = Math.random();
+        if (r < 0.30) this.subType = 'brawler';
+        else if (r < 0.55) this.subType = 'musketeer';
+        else if (r < 0.80) this.subType = 'barrel_bomber';
+        else this.subType = 'pyromancer';
+      } else if (stage === 4) {
+        // Stage 4: Iron Bastion - Heavy Orc Brutes & Elites
+        const r = Math.random();
+        if (r < 0.30) this.subType = 'berserker';
+        else if (r < 0.60) this.subType = 'orc_brute';
+        else if (r < 0.80) this.subType = 'giant';
+        else this.subType = 'glacial_sentinel';
+      } else if (stage === 5) {
+        // Stage 5: Yomi Gateway - Oni Boss Encounter
+        const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'oni_boss');
+        if (!bossAlive && (globals.stageKills || 0) === 0) {
+          this.subType = 'oni_boss';
+        } else {
+          const r = Math.random();
+          this.subType = r < 0.5 ? 'brawler' : 'samurai';
+        }
+      } else if (stage === 6) {
+        // Stage 6: Cursed Graveyard - Sorcery & Barrel Bombers
+        const r = Math.random();
+        if (r < 0.25) this.subType = 'necromancer';
+        else if (r < 0.50) this.subType = 'astromancer';
+        else if (r < 0.75) this.subType = 'barrel_bomber';
+        else this.subType = 'orc_brute';
+      } else if (stage === 7) {
+        // Stage 7: Blood River - Chaos Vanguard
+        const r = Math.random();
+        if (r < 0.25) this.subType = 'assassin';
+        else if (r < 0.50) this.subType = 'berserker';
+        else if (r < 0.75) this.subType = 'barrel_bomber';
+        else this.subType = 'pyromancer';
+      } else if (stage === 8) {
+        // Stage 8: Castle Ramparts - Shogun's Guard
+        const r = Math.random();
+        if (r < 0.25) this.subType = 'orc_brute';
+        else if (r < 0.50) this.subType = 'glacial_sentinel';
+        else if (r < 0.75) this.subType = 'musketeer';
+        else this.subType = 'giant';
+      } else if (stage === 9) {
+        // Stage 9: Throne Ante-Chamber - Purgatory Rampage
+        const elitePool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'necromancer', 'astromancer', 'berserker', 'assassin', 'pyromancer'];
+        this.subType = elitePool[Math.floor(Math.random() * elitePool.length)];
+      } else {
+        // Stage 10+: Sanctum of Oblivion - Agis Colossus Boss
+        const agisAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'agis_colossus');
+        if (!agisAlive && (globals.stageKills || 0) === 0) {
+          this.subType = 'agis_colossus';
+        } else {
+          const r = Math.random();
+          if (r < 0.4) this.subType = 'barrel_bomber';
+          else if (r < 0.7) this.subType = 'orc_brute';
+          else this.subType = 'berserker';
+        }
+      }
     }
 
     // Enforce active ranged density cap (Max 3-4 simultaneous ranged casters)
@@ -149,7 +207,7 @@ export class Enemy extends Entity {
       const activeRangedCount = globals.enemies ? globals.enemies.filter(e => e && e.state !== 'dead' && e.isRanged?.()).length : 0;
       const maxRanged = globals.difficulty === 'insane' ? 4 : 3;
       if (activeRangedCount >= maxRanged) {
-        const meleePool: EnemySubType[] = ['samurai', 'ronin', 'brawler', 'berserker', 'giant'];
+        const meleePool: EnemySubType[] = ['samurai', 'ronin', 'brawler', 'berserker', 'giant', 'orc_brute', 'barrel_bomber'];
         this.subType = meleePool[Math.floor(Math.random() * meleePool.length)];
       }
     }
@@ -251,6 +309,27 @@ export class Enemy extends Entity {
       this.colorTint = 'none';
       this.speed = 260;
       this.maxPosture = 250;
+    } else if (this.subType === 'barrel_bomber') {
+      this.type = 'enemy_barrel';
+      this.lungeSpeed = 1000; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
+      this.scaleMult = 1.1; this.hp = this.maxHp = 3; this.expValue = 2;
+      this.colorTint = 'none';
+      this.speed = 340;
+      this.maxPosture = 35;
+    } else if (this.subType === 'orc_brute') {
+      this.type = 'enemy_orc';
+      this.lungeSpeed = 800; this.chargeTimeMax = 1.8; this.lungeDuration = 0.65;
+      this.scaleMult = 1.2; this.hp = this.maxHp = 10; this.expValue = 4;
+      this.colorTint = 'none';
+      this.speed = 220;
+      this.maxPosture = 130;
+    } else if (this.subType === 'agis_colossus') {
+      this.type = 'boss_agis';
+      this.lungeSpeed = 650; this.chargeTimeMax = 2.4; this.lungeDuration = 0.8;
+      this.scaleMult = 1.6; this.hp = this.maxHp = 180; this.expValue = 30;
+      this.colorTint = 'none';
+      this.speed = 180;
+      this.maxPosture = 360;
     } else { // shogun_boss
       this.type = 'evil_wizard';
       this.lungeSpeed = 1300; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
@@ -670,6 +749,11 @@ export class Enemy extends Entity {
   }
 
   executeAttack() {
+    if (this.subType === 'barrel_bomber') {
+      triggerBarrelExplosion(this);
+      this.attackLanded = true;
+      return;
+    }
     let currentTarget: any = this.target;
     if (globals.decoys && globals.decoys.length > 0) {
       if (globals.decoys.length === 1) {
@@ -693,7 +777,13 @@ export class Enemy extends Entity {
       }
     }
     if (currentTarget === this.target) {
-      callbacks.checkPlayerHit(this);
+      if (this.subType === 'orc_brute') {
+        globals.screenShake = Math.max(globals.screenShake, 14);
+        globals.shockwaves.push(new Shockwave(this.x, this.y, '#ea580c'));
+        callbacks.checkPlayerHit(this, 2);
+      } else {
+        callbacks.checkPlayerHit(this);
+      }
     }
   }
 
@@ -838,6 +928,31 @@ export class Enemy extends Entity {
         globals.projectiles.push(skullProj);
       }
       this.attackLanded = true;
+    } else if (this.subType === 'agis_colossus') {
+      // Colossus Seismic Shockwave + Tri-Orb Plasma Spray
+      globals.screenShake = Math.max(globals.screenShake, 24);
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8'));
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#fbbf24'));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 65, "COLOSSUS CRUSH! ⚡", "#38bdf8", 30));
+      playSynthesizedThunder();
+
+      // Tri-orb spread projectiles
+      const baseAng = this.targetAngle;
+      const spreadAngles = [baseAng - 0.28, baseAng, baseAng + 0.28];
+      for (const ang of spreadAngles) {
+        const proj = Projectile.acquire(this.x, this.y, ang, true);
+        (proj as any).shooter = this;
+        (proj as any).colorTint = '#38bdf8';
+        globals.projectiles.push(proj);
+      }
+
+      // Heavy ground tremor damaging player if in range
+      const pdx = globals.player.x - this.x;
+      const pdy = globals.player.y - this.y;
+      if (pdx * pdx + pdy * pdy < 190 * 190 && globals.player.state !== 'dead') {
+        callbacks.checkPlayerHit(this, 2);
+      }
+      this.attackLanded = true;
     }
   }
 
@@ -909,7 +1024,7 @@ export class Enemy extends Entity {
         }
       } else {
         // Melee lunge corridor & hitbox telegraph strictly matching physical body collision
-        const baseWidth = (this.type === 'enemy03' ? 36 : (this.type === 'skeleton' ? 44 : (this.type === 'evil_wizard' ? 32 : 24)));
+        const baseWidth = (this.type === 'enemy03' ? 36 : (this.type === 'skeleton' ? 44 : (this.type === 'evil_wizard' ? 32 : (this.type === 'boss_agis' ? 55 : (this.type === 'enemy_orc' ? 34 : (this.type === 'enemy_barrel' ? 30 : 24))))));
         const halfWidth = (baseWidth * this.scaleMult) | 0;
 
         // Translucent danger corridor fill
@@ -940,11 +1055,11 @@ export class Enemy extends Entity {
     }
 
     // Dynamic head height offset per enemy type for cleanly anchored HP and Posture bars
-    const headOffset = (this.type === 'enemy03' ? 48 : (this.type === 'enemy05' ? 32 : (this.type === 'skeleton' ? 85 : (this.type === 'evil_wizard' ? 75 : 44))));
+    const headOffset = (this.type === 'enemy03' ? 48 : (this.type === 'enemy05' ? 32 : (this.type === 'skeleton' ? 85 : (this.type === 'evil_wizard' ? 75 : (this.type === 'boss_agis' ? 85 : (this.type === 'enemy_orc' ? 50 : (this.type === 'enemy_barrel' ? 35 : 44)))))));
 
     // HP bar directly above enemy head
     if (this.state !== 'dead' && this.hp < this.maxHp) {
-      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' ? 80 : 48) * this.scaleMult;
+      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' ? 80 : 48) * this.scaleMult;
       const barH = 5;
       const barY = (effectiveRy - headOffset * this.scaleMult) | 0;
       const barX = (rx - barW / 2) | 0;
@@ -967,8 +1082,8 @@ export class Enemy extends Entity {
     }
 
     // Posture bar directly under HP bar (for bosses, elites, or when posture > 0)
-    if (this.state !== 'dead' && (this.posture > 0 || this.postureBrokenTimer > 0 || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'giant' || this.subType === 'berserker')) {
-      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' ? 80 : 44) * this.scaleMult;
+    if (this.state !== 'dead' && (this.posture > 0 || this.postureBrokenTimer > 0 || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'giant' || this.subType === 'berserker' || this.subType === 'orc_brute')) {
+      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' ? 80 : 44) * this.scaleMult;
       const barH = 3.5;
       const barY = (effectiveRy - headOffset * this.scaleMult + 6) | 0;
       const barX = (rx - barW / 2) | 0;
@@ -1060,6 +1175,54 @@ export class Enemy extends Entity {
         ctx.stroke();
       });
       ctx.restore();
+    }
+  }
+}
+
+export function triggerBarrelExplosion(barrel: Enemy) {
+  if ((barrel as any).hasExploded) return;
+  (barrel as any).hasExploded = true;
+  barrel.hp = 0;
+  barrel.setState('dead');
+
+  globals.screenShake = Math.max(globals.screenShake, 18);
+  globals.shockwaves.push(new Shockwave(barrel.x, barrel.y, '#f97316'));
+  playSynthesizedThunder();
+
+  // Fire explosion particle spray
+  const pCount = globals.graphicsSettings === 'low' ? 8 : 22;
+  for (let i = 0; i < pCount; i++) {
+    const pAng = Math.random() * Math.PI * 2;
+    const pSpd = 200 + Math.random() * 450;
+    globals.particles.push(Particle.acquire(barrel.x, barrel.y, Math.random() < 0.5 ? '#f97316' : '#ef4444', pSpd, 0.45, 3 + Math.random() * 3, pAng));
+  }
+
+  // Was it kicked / deflected by the player?
+  const isDeflected = barrel.knockbackTimer > 0;
+  if (isDeflected) {
+    // Kicked barrel explodes into enemies!
+    globals.floatingTexts.push(FloatingText.acquire(barrel.x, barrel.y - 45, "BARREL DETONATION! 💥", "#f97316", 26));
+    for (let i = 0; i < globals.enemies.length; i++) {
+      const other = globals.enemies[i];
+      if (!other || other === barrel || other.state === 'dead') continue;
+      const edx = other.x - barrel.x;
+      const edy = other.y - barrel.y;
+      if (edx * edx + edy * edy < 220 * 220) {
+        callbacks.hitEnemy(other, 12);
+        other.addPostureDamage(45);
+        other.knockbackTimer = 0.4;
+        const ang = Math.atan2(edy, edx);
+        other.knockbackVx = Math.cos(ang) * 900;
+        other.knockbackVy = Math.sin(ang) * 900;
+      }
+    }
+  } else {
+    // Detonates on player if in blast radius
+    const pdx = globals.player.x - barrel.x;
+    const pdy = globals.player.y - barrel.y;
+    if (pdx * pdx + pdy * pdy < 140 * 140 && globals.player.state !== 'dead') {
+      callbacks.checkPlayerHit(barrel, 2);
+      globals.floatingTexts.push(FloatingText.acquire(barrel.x, barrel.y - 40, "BOOM! 💥", "#ef4444", 24));
     }
   }
 }

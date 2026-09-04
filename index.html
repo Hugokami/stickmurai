@@ -242,14 +242,16 @@
           <div class="menu-left">
             <h1 class="game-title" data-i18n="title">SUPER<br>SAMURAI<br>STICKY</h1>
             <div class="menu-buttons">
-              <button id="start-btn" class="menu-btn" data-i18n="play">Play</button>
-              <button id="level-mode-btn" class="menu-btn" style="border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);" data-i18n="playLevel">Level Mode</button>
-              <button id="zen-btn" class="menu-btn" style="border-color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);" data-i18n="playZen">Zen Mode</button>
-              <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">Iaijutsu PvP</button>
-              <button id="open-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">📜 Grimoire (秘伝書)</button>
-              <button id="open-chronicle-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛩️ Chronicle (記憶の書)</button>
-              <button id="open-dojo-btn" class="menu-btn" style="border-color: #c084fc; color: #c084fc; box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);">🏯 Dojo & Heroes (武芸所)</button>
-              <button id="open-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
+              <button id="start-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); font-weight: bold; letter-spacing: 1px;">⚔️ STAGE MODE (CAMPAIGN)</button>
+              <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">⚔️ Iaijutsu PvP (1v1)</button>
+              <div class="menu-grid-2x2">
+                <button id="open-dojo-btn" class="menu-btn" style="border-color: #c084fc; color: #c084fc; box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);">🏯 Dojo</button>
+                <button id="open-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">📜 Grimoire</button>
+                <button id="open-chronicle-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛩️ Chronicle</button>
+                <button id="open-settings-btn" class="menu-btn" data-i18n="settings">⚙️ Settings</button>
+              </div>
+              <button id="level-mode-btn" style="display:none;"></button>
+              <button id="zen-btn" style="display:none;"></button>
             </div>
           </div>
           <div class="menu-right">
@@ -423,9 +425,21 @@
               <button class="lvl-opt-btn" id="lvl-15-btn" style="flex: 1; margin: 0;">Lvl 15</button>
             </div>
           </div>
+          <!-- Campaign Stage Selector -->
+          <div id="pregame-stage-selector" style="margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-direction: column; width: 100%;">
+            <label class="pregame-section-label">Campaign Stage</label>
+            <div style="display: flex; align-items: center; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
+              <button id="stage-prev-btn" class="menu-btn btn-compact" style="width: 44px; min-width: 44px; padding: 6px 0 !important; font-size: 16px; margin: 0;">◀</button>
+              <div id="stage-select-card" style="background: rgba(0,0,0,0.45); border: 1px solid rgba(255,215,0,0.4); border-radius: 8px; padding: 10px 16px; text-align: center; flex: 1; box-shadow: 0 0 15px rgba(255,215,0,0.1);">
+                <div id="stage-select-name" style="font-family: 'Shojumaru', cursive; color: #ffd700; font-size: 15px; letter-spacing: 1px;">STAGE 1: BAMBOO GROVE</div>
+                <div id="stage-select-desc" style="font-family: 'Space Mono', monospace; font-size: 11px; color: #94a3b8; margin-top: 3px;">Target: 12 Kills // Grunts & Rogues</div>
+              </div>
+              <button id="stage-next-btn" class="menu-btn btn-compact" style="width: 44px; min-width: 44px; padding: 6px 0 !important; font-size: 16px; margin: 0;">▶</button>
+            </div>
+          </div>
           <div style="display: flex; gap: 14px; justify-content: center; width: 100%; margin-top: 6px;">
             <button id="skill-back-btn" class="menu-btn" style="max-width: 140px; margin: 0;" data-i18n="back">Back</button>
-            <button id="start-run-btn" class="menu-btn" style="max-width: 200px; margin: 0;" data-i18n="play">Play</button>
+            <button id="start-run-btn" class="menu-btn" style="max-width: 200px; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.25);">⚔️ ENTER STAGE</button>
           </div>
         </div>
       </div>
@@ -650,7 +664,7 @@
           <div id="grimoire-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; overflow-y: auto; padding-right: 6px; flex: 1; margin-bottom: 15px;">
             <!-- Populated dynamically by UI.ts -->
           </div>
-          <button id="close-grimoire-btn" class="menu-btn" style="max-width: 200px; align-self: center; border-color: #ffd700; color: #ffd700;">Close Grimoire</button>
+          <button id="close-grimoire-btn" class="menu-btn btn-compact" style="align-self: center; border-color: #ffd700; color: #ffd700;">Close Grimoire</button>
         </div>
       </div>
 
@@ -662,7 +676,7 @@
           <div id="chronicle-list" style="display: flex; flex-direction: column; gap: 12px; overflow-y: auto; padding-right: 6px; flex: 1; margin-bottom: 15px;">
             <!-- Populated dynamically by UI.ts -->
           </div>
-          <button id="close-chronicle-btn" class="menu-btn" style="max-width: 200px; align-self: center; border-color: #38bdf8; color: #38bdf8;">Close Chronicle</button>
+          <button id="close-chronicle-btn" class="menu-btn btn-compact" style="align-self: center; border-color: #38bdf8; color: #38bdf8;">Close Chronicle</button>
         </div>
       </div>
 
@@ -686,7 +700,7 @@
 
           <!-- Karmic Vault removed: was an infinite currency exploit -->
 
-          <button id="close-dojo-btn" class="menu-btn" style="max-width: 200px; align-self: center; border-color: #c084fc; color: #c084fc;">Leave Dojo</button>
+          <button id="close-dojo-btn" class="menu-btn btn-compact" style="align-self: center; border-color: #c084fc; color: #c084fc;">Leave Dojo</button>
         </div>
       </div>
 
@@ -703,8 +717,8 @@
             <!-- Permanent reward description -->
           </div>
           <div style="display: flex; gap: 12px; width: 100%;">
-            <button id="shrine-leave-btn" class="menu-btn exit-btn" style="flex: 1; margin: 0; min-height: 48px;">Leave</button>
-            <button id="shrine-claim-btn" class="menu-btn" style="flex: 2; margin: 0; border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); min-height: 48px;">SHATTER THE SEAL</button>
+            <button id="shrine-leave-btn" class="menu-btn exit-btn btn-compact" style="flex: 1; margin: 0; min-height: 38px;">Leave</button>
+            <button id="shrine-claim-btn" class="menu-btn btn-compact" style="flex: 2; margin: 0; border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); min-height: 38px;">SHATTER THE SEAL</button>
           </div>
         </div>
       </div>
@@ -718,10 +732,10 @@
             "A wandering ghost seeking vengeance in Yomi? The fire is warm, but steel demands sacrifice. What say you to a bargain?"
           </p>
           <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-            <button id="hermit-pact-choice-1" class="menu-btn" style="border-color: #f97316; color: #fed7aa; text-align: left; padding: 12px; line-height: 1.4;"></button>
-            <button id="hermit-pact-choice-2" class="menu-btn" style="border-color: #f97316; color: #fed7aa; text-align: left; padding: 12px; line-height: 1.4;"></button>
+            <button id="hermit-pact-choice-1" class="menu-btn btn-card" style="border-color: #f97316; color: #fed7aa; text-align: left; padding: 12px; line-height: 1.4;"></button>
+            <button id="hermit-pact-choice-2" class="menu-btn btn-card" style="border-color: #f97316; color: #fed7aa; text-align: left; padding: 12px; line-height: 1.4;"></button>
           </div>
-          <button id="hermit-leave-btn" class="menu-btn exit-btn" style="width: 100%; margin: 0; min-height: 48px;">Leave Campfire</button>
+          <button id="hermit-leave-btn" class="menu-btn exit-btn btn-compact" style="width: 100%; margin: 0; min-height: 38px;">Leave Campfire</button>
         </div>
       </div>
 
@@ -735,8 +749,42 @@
             <!-- Stats populated dynamically -->
           </div>
           <div style="display: flex; gap: 14px; width: 100%;">
-            <button id="dawn-endless-btn" class="menu-btn" style="flex: 1; margin: 0; border-color: #ef4444; color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);">Enter Endless Torment</button>
-            <button id="dawn-menu-btn" class="menu-btn" style="flex: 1; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);">Return to Title</button>
+            <button id="dawn-endless-btn" class="menu-btn btn-compact" style="flex: 1; margin: 0; border-color: #ef4444; color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);">Enter Endless Torment</button>
+            <button id="dawn-menu-btn" class="menu-btn btn-compact" style="flex: 1; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);">Return to Title</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage Clear & Ascension Upgrade Shrine Modal -->
+      <div id="stage-clear-modal" class="overlay" style="display:none; z-index: 9700; background: rgba(8, 10, 18, 0.95); backdrop-filter: blur(10px);">
+        <div class="menu-box" style="max-width: 760px; width: 94vw; max-height: 90vh; display: flex; flex-direction: column; border-color: #ffd700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.35); padding: 22px;">
+          <div style="text-align: center; margin-bottom: 12px;">
+            <div style="font-size: 36px; margin-bottom: 4px;">⛩️</div>
+            <h2 id="stage-clear-title" style="font-family: 'Shojumaru', cursive; color: #ffd700; font-size: 26px; margin: 0 0 4px 0; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); letter-spacing: 2px;">STAGE 1 CONQUERED!</h2>
+            <p style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0; letter-spacing: 1px;">PURGATORY RECLAIMED // ASCEND IN THE SHRINE OF BUSHIDO</p>
+          </div>
+
+          <!-- Stage Performance Bar -->
+          <div style="display: flex; justify-content: space-around; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,215,0,0.25); border-radius: 8px; padding: 10px 14px; margin-bottom: 14px; font-family: 'Orbitron', monospace; font-size: 13px; color: #e2e8f0; flex-wrap: wrap; gap: 8px;">
+            <div>🗡️ KILLS: <span id="stage-clear-kills" style="color: #ffd700; font-weight: bold;">0</span></div>
+            <div>⏱️ TIME: <span id="stage-clear-time" style="color: #38bdf8; font-weight: bold;">0:00</span></div>
+            <div>🔮 REWARD: <span id="stage-clear-reward" style="color: #c084fc; font-weight: bold;">+100</span></div>
+            <div>💰 TREASURY: <span id="stage-clear-magatama" style="color: #4ade80; font-weight: bold;">0 🔮</span></div>
+          </div>
+
+          <!-- Ascension Upgrade Grid -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-bottom: 10px;">
+            <h3 style="font-family: 'Shojumaru', cursive; color: #38bdf8; font-size: 15px; margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);">SHRINE OF ASCENSION (PERMANENT UPGRADES)</h3>
+            <div id="ascension-upgrade-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; max-height: 42vh; overflow-y: auto; padding-right: 6px;">
+              <!-- Populated dynamically by UI.ts -->
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display: flex; gap: 10px; width: 100%; margin-top: auto; flex-wrap: wrap;">
+            <button id="stage-clear-menu-btn" class="menu-btn exit-btn btn-compact" style="flex: 1; min-width: 130px; margin: 0;">Title Menu</button>
+            <button id="stage-clear-replay-btn" class="menu-btn btn-compact" style="flex: 1; min-width: 140px; margin: 0; border-color: #94a3b8; color: #cbd5e1;">🔄 Replay Stage</button>
+            <button id="stage-clear-next-btn" class="menu-btn btn-compact" style="flex: 2; min-width: 180px; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); font-weight: bold;">⚔️ NEXT STAGE</button>
           </div>
         </div>
       </div>
