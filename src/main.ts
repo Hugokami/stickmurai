@@ -736,6 +736,8 @@ function initGame() {
   globals.ultCooldown = 0;
   globals.ultCooldownMax = 6.0;
   globals.roninResolveCooldown = 0;
+  globals.singularityCleaveCD = 0;
+  globals.gravityWellTimer = 0;
   globals.runTime = 0;
   globals.dayNightPhase = 'dawn';
   globals.calamityEvent = 'none';
@@ -2794,7 +2796,7 @@ function update(realDt: number) {
     const pullRadius = 300 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
     const pullRadiusSq = pullRadius * pullRadius;
     const pullSpeed = 1200;
-    const tickDmg = 2 + 2 * (globals.playerStats.gravityDamageLevel || 0);
+    const tickDmg = 1 + 1 * (globals.playerStats.gravityDamageLevel || 0);
     
     if (Math.random() < 0.5) {
       const angle = Math.random() * Math.PI * 2;
@@ -2868,7 +2870,7 @@ function update(realDt: number) {
     
     if (globals.gravityWellTimer <= 0) {
       globals.gravityWellTimer = 0;
-      const explosionDmg = 12 + 10 * (globals.playerStats.gravityExplosionLevel || 0);
+      const explosionDmg = 6 + 5 * (globals.playerStats.gravityExplosionLevel || 0);
       
       globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#8b008b'));
       globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#ff00ff'));
@@ -2916,6 +2918,10 @@ function update(realDt: number) {
   if (globals.roninResolveCooldown > 0) {
     globals.roninResolveCooldown -= realDt;
     if (globals.roninResolveCooldown < 0) globals.roninResolveCooldown = 0;
+  }
+  if (globals.singularityCleaveCD > 0) {
+    globals.singularityCleaveCD -= realDt;
+    if (globals.singularityCleaveCD < 0) globals.singularityCleaveCD = 0;
   }
   
   const autoUltCondition = globals.autoUltEnabled === 'on' && globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
@@ -3613,12 +3619,13 @@ function update(realDt: number) {
         });
         playSound(sfx.slash, 0.5);
       }
-      if (globals.activeFusions.has('singularity_cleave')) {
+      if (globals.activeFusions.has('singularity_cleave') && globals.singularityCleaveCD <= 0) {
         const bhX = globals.player.x + Math.cos(angle) * 150;
         const bhY = globals.player.y + Math.sin(angle) * 150;
-        globals.gravityWellTimer = 3.5;
+        globals.gravityWellTimer = 2.0;
         globals.gravityWellX = bhX;
         globals.gravityWellY = bhY;
+        globals.singularityCleaveCD = 4.0;
         globals.shockwaves.push(new Shockwave(bhX, bhY, '#a855f7'));
         if (vfxAnims.gigapack?.explosion?.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));

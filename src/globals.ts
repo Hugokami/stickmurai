@@ -40,6 +40,7 @@ export const globals = {
   gravityWellTimer: 0,
   gravityWellX: 0,
   gravityWellY: 0,
+  singularityCleaveCD: 0,
 
   runStats: {
     kills: 0,

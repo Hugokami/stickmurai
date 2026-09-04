@@ -230,9 +230,6 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const dojoScreen = document.getElementById('dojo-screen');
   const openDojoBtn = document.getElementById('open-dojo-btn');
   const closeDojoBtn = document.getElementById('close-dojo-btn');
-  const tributeSmallBtn = document.getElementById('tribute-small-btn');
-  const tributeGrandBtn = document.getElementById('tribute-grand-btn');
-
   const openDojo = () => {
     if (dojoScreen) {
       dojoScreen.style.display = 'flex';
@@ -246,20 +243,6 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
 
   bindDualListener(openDojoBtn, openDojo);
   bindDualListener(closeDojoBtn, closeDojo);
-
-  bindDualListener(tributeSmallBtn, () => {
-    globals.magatama = (globals.magatama || 0) + 200;
-    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
-    playSynthesizedTempleBell();
-    populateDojoHeroGrid();
-  });
-
-  bindDualListener(tributeGrandBtn, () => {
-    globals.magatama = (globals.magatama || 0) + 1000;
-    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
-    playSynthesizedSealShatter();
-    populateDojoHeroGrid();
-  });
 
   // Shrine & Hermit Modal Listeners
   const onShatterSeal = () => {
@@ -1535,7 +1518,7 @@ export const HEROES_DATA = [
     titleJa: '星海を切り裂く双刃の英傑',
     descEn: 'Wields an ethereal celestial greatsword. +25% Slash AoE, +1 Base Slash DMG, and +2 Iaijutsu Shockwave DMG.',
     descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+25%、基礎威力+1、抜刀衝撃波威力+2。',
-    cost: 3000,
+    cost: 100000,
     image: 'sprites/portraits/portrait_luneblade.png',
     atk: '130%',
     spd: '95%',
@@ -1550,7 +1533,7 @@ export const HEROES_DATA = [
     titleJa: '影を纏いし暗殺の達人',
     descEn: 'Master of lethal shadow-stepping. +15% Movement Speed, -20% Dash Cooldown, and +10% Attack Speed.',
     descJa: '闇に潜み急所を討つ達人。移動速度+15%、瞬歩クールダウン-20%、攻撃速度+10%。',
-    cost: 5000,
+    cost: 150000,
     image: 'sprites/portraits/portrait_ninja.png',
     atk: '110%',
     spd: '120%',

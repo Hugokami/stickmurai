@@ -211,15 +211,15 @@ export class Enemy extends Entity {
       this.maxPosture = 40;
     } else if (this.subType === 'musketeer') {
       this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.2; this.lungeDuration = 0.55; // Double-shot projectile
-      this.scaleMult = 1; this.hp = this.maxHp = 2; this.expValue = 2;
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.5; this.lungeDuration = 0.55; // Double-shot projectile
+      this.scaleMult = 1.6; this.hp = this.maxHp = 2; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 180;
       this.maxPosture = 45;
     } else if (this.subType === 'pyromancer') {
       this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.2; this.lungeDuration = 0.55;
-      this.scaleMult = 1.2; this.hp = this.maxHp = 8; this.expValue = 4;
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.5; this.lungeDuration = 0.55;
+      this.scaleMult = 1.5; this.hp = this.maxHp = 8; this.expValue = 4;
       this.colorTint = '#ff4400';
       this.speed = 160;
       this.maxPosture = 70;
@@ -232,15 +232,15 @@ export class Enemy extends Entity {
       this.maxPosture = 110;
     } else if (this.subType === 'astromancer') {
       this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.9; this.lungeDuration = 0.5;
-      this.scaleMult = 1.1; this.hp = this.maxHp = 6; this.expValue = 5;
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.3; this.lungeDuration = 0.5;
+      this.scaleMult = 1.5; this.hp = this.maxHp = 6; this.expValue = 5;
       this.colorTint = '#f43f5e';
       this.speed = 210;
       this.maxPosture = 60;
     } else if (this.subType === 'necromancer') {
       this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.4; this.lungeDuration = 0.6;
-      this.scaleMult = 1.5; this.hp = this.maxHp = 20; this.expValue = 8;
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.7; this.lungeDuration = 0.6;
+      this.scaleMult = 1.8; this.hp = this.maxHp = 20; this.expValue = 8;
       this.colorTint = '#a855f7';
       this.speed = 150;
       this.maxPosture = 120;
@@ -872,8 +872,8 @@ export class Enemy extends Entity {
       const p = Math.min(1, this.stateTime / this.chargeTimeMax);
       ctx.rotate(this.targetAngle);
 
-      const isRanged = (this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'astromancer' || this.subType === 'necromancer');
-      const laserLen = isRanged ? 520 * this.scaleMult : Math.max(160, (this.lungeSpeed * this.lungeDuration * 0.5 + 100) * this.scaleMult);
+      const isRanged = this.isRanged();
+      const laserLen = isRanged ? 520 * this.scaleMult : Math.max(160, this.lungeSpeed * this.lungeDuration * 0.5 + 75 * this.scaleMult);
 
       if (isRanged) {
         // Precision laser sight with target reticle
@@ -909,7 +909,7 @@ export class Enemy extends Entity {
         }
       } else {
         // Melee lunge corridor & hitbox telegraph strictly matching physical body collision
-        const baseWidth = (this.type === 'enemy03' ? 20 : (this.type === 'skeleton' ? 44 : (this.type === 'evil_wizard' ? 32 : 22)));
+        const baseWidth = (this.type === 'enemy03' ? 36 : (this.type === 'skeleton' ? 44 : (this.type === 'evil_wizard' ? 32 : 24)));
         const halfWidth = (baseWidth * this.scaleMult) | 0;
 
         // Translucent danger corridor fill
@@ -940,7 +940,7 @@ export class Enemy extends Entity {
     }
 
     // Dynamic head height offset per enemy type for cleanly anchored HP and Posture bars
-    const headOffset = (this.type === 'enemy03' ? 28 : (this.type === 'enemy05' ? 32 : (this.type === 'skeleton' ? 85 : (this.type === 'evil_wizard' ? 75 : 44))));
+    const headOffset = (this.type === 'enemy03' ? 48 : (this.type === 'enemy05' ? 32 : (this.type === 'skeleton' ? 85 : (this.type === 'evil_wizard' ? 75 : 44))));
 
     // HP bar directly above enemy head
     if (this.state !== 'dead' && this.hp < this.maxHp) {

@@ -444,7 +444,7 @@ export class Projectile {
     this.hitEnemies.clear();
     this.life = 2.0;
     this.shooter = undefined;
-    const speed = isEnemy ? 800 : (isEcho ? 2800 : 3000);
+    const speed = isEnemy ? 600 : (isEcho ? 2800 : 3000);
     this.vx = Math.cos(angle) * speed;
     this.vy = Math.sin(angle) * speed;
   }
@@ -641,15 +641,15 @@ export class Projectile {
       }
 
       ctx.beginPath();
-      ctx.arc(0, 0, 15, 0, Math.PI*2);
+      ctx.arc(0, 0, 22, 0, Math.PI*2);
       ctx.fillStyle = primary;
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(0, 0, 10, 0, Math.PI*2);
+      ctx.arc(0, 0, 16, 0, Math.PI*2);
       ctx.fillStyle = secondary;
       ctx.fill();
       ctx.beginPath();
-      ctx.arc(0, 0, 5, 0, Math.PI*2);
+      ctx.arc(0, 0, 8, 0, Math.PI*2);
       ctx.fillStyle = '#ffffff';
       ctx.fill();
     } else if (this.isDeflected) {
