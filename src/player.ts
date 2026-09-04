@@ -1055,19 +1055,23 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.arc(px, py - 10, 42, 0, Math.PI * 2);
       ctx.fill();
 
-      // 2. Permanent Neon Ellipse Ring (at the feet)
+      // 2. Permanent Neon Ellipse Ring (calibrated to dynamic hero feet baseline)
+      const playerFootOffsetY = this.type === 'heroluneblade' ? 30 : (this.type === 'heroninja' ? 48 : 62);
+      const ringX = px | 0;
+      const ringY = (py + playerFootOffsetY) | 0;
+
       // Layer 1: Glow
       ctx.strokeStyle = rgbaColor + '0.35)';
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.ellipse(px, py + 22, 22, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(ringX, ringY, 22, 7, 0, 0, Math.PI * 2);
       ctx.stroke();
 
       // Layer 2: Core
       ctx.strokeStyle = playerColor;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.ellipse(px, py + 22, 22, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(ringX, ringY, 22, 7, 0, 0, Math.PI * 2);
       ctx.stroke();
 
       ctx.restore();
@@ -1080,17 +1084,20 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       finalTint = 'none';
     }
 
-    if (this.airborneZ > 0) {
-      ctx.save();
-      const rx = this.x - cx + globals.vw/2;
-      const ry = this.y - cy + globals.vh/2;
-      const shadowScale = Math.max(0.3, 1.0 - this.airborneZ / 250);
-      ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
-      ctx.beginPath();
-      ctx.ellipse(rx, ry, 24 * shadowScale, 8 * shadowScale, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
+    // Physical ground contact shadow (anchored at world ground baseline)
+    const playerFootOffsetY = this.type === 'heroluneblade' ? 30 : (this.type === 'heroninja' ? 48 : 62);
+    const groundShadowRx = (this.x - cx + globals.vw / 2) | 0;
+    const groundShadowRy = ((this.y - cy + globals.vh / 2) + playerFootOffsetY) | 0;
+    const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
+    const shadowScale = totalElevation > 0 ? Math.max(0.25, 1.0 - totalElevation / 260) : 1.0;
+    const shadowAlpha = (this.state === 'dead' ? alpha * 0.2 : 0.38) * shadowScale;
+
+    ctx.save();
+    ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(groundShadowRx, groundShadowRy, (22 * shadowScale) | 0, (7 * shadowScale) | 0, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
     // Call super.draw to use the animated sprites
     super.draw(ctx, cx, cy, alpha, finalTint);

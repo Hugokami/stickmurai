@@ -1278,15 +1278,22 @@ export class Collectible {
   }
 
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    const rx = this.x - cx + globals.vw/2;
-    const ry = this.y - cy + globals.vh/2;
+    const rx = (this.x - cx + globals.vw/2) | 0;
+    const ry = (this.y - cy + globals.vh/2) | 0;
     if (rx < -40 || rx > globals.vw + 40 || ry < -40 || ry > globals.vh + 40) return;
 
     ctx.save();
     ctx.translate(rx, ry);
     
+    // Ground contact shadow to ground floating items
     const bob = Math.sin(performance.now() / 150 + this.x) * 4;
-    ctx.translate(0, bob);
+    const shadowScale = Math.max(0.6, 1.0 - bob / 12);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    ctx.beginPath();
+    ctx.ellipse(0, 10, (6 * shadowScale) | 0, (2.5 * shadowScale) | 0, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(0, (bob - 3) | 0);
 
     if (this.type === 'exp') {
       // EXP Gem (Gold diamond)

@@ -22,7 +22,30 @@ interface SkyEffect {
 const skyEffects: SkyEffect[] = [];
 
 const visibleEntities: Entity[] = [];
-const depthCompare = (a: Entity, b: Entity) => a.y - b.y;
+
+function getEntityFootY(e: Entity): number {
+  let baseFoot = 62;
+  switch (e.type) {
+    case 'boss_agis': baseFoot = 143; break;
+    case 'enemy_barrel': baseFoot = 42; break;
+    case 'enemy02': baseFoot = 39; break;
+    case 'skeleton': baseFoot = 38; break;
+    case 'enemy01': baseFoot = 35; break;
+    case 'evil_wizard': baseFoot = 33; break;
+    case 'heroluneblade': baseFoot = 30; break;
+    case 'enemy_orc': baseFoot = 27; break;
+    case 'enemy05': baseFoot = 18; break;
+    case 'enemy03': baseFoot = 17; break;
+    case 'heroninja': baseFoot = 48; break;
+    case 'sword':
+    default:
+      baseFoot = 62;
+      break;
+  }
+  return e.y + baseFoot * (e.scaleMult || 1);
+}
+
+const depthCompare = (a: Entity, b: Entity) => getEntityFootY(a) - getEntityFootY(b);
 
 
 

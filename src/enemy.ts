@@ -1055,7 +1055,16 @@ export class Enemy extends Entity {
     }
 
     // Dynamic head height offset per enemy type for cleanly anchored HP and Posture bars
-    const headOffset = (this.type === 'enemy03' ? 48 : (this.type === 'enemy05' ? 32 : (this.type === 'skeleton' ? 85 : (this.type === 'evil_wizard' ? 75 : (this.type === 'boss_agis' ? 85 : (this.type === 'enemy_orc' ? 50 : (this.type === 'enemy_barrel' ? 35 : 44)))))));
+    let headOffset = 46;
+    if (this.type === 'boss_agis') headOffset = 160;
+    else if (this.type === 'evil_wizard') headOffset = 52;
+    else if (this.type === 'skeleton') headOffset = 22;
+    else if (this.type === 'enemy01') headOffset = 50;
+    else if (this.type === 'enemy02') headOffset = 44;
+    else if (this.type === 'enemy03') headOffset = 26;
+    else if (this.type === 'enemy05') headOffset = 26;
+    else if (this.type === 'enemy_orc') headOffset = 44;
+    else if (this.type === 'enemy_barrel') headOffset = 52;
 
     // HP bar directly above enemy head
     if (this.state !== 'dead' && this.hp < this.maxHp) {
@@ -1114,15 +1123,20 @@ export class Enemy extends Entity {
       ctx.strokeRect(barX, barY, barW, barH);
     }
 
-    if (this.airborneZ > 0) {
-      ctx.save();
-      const shadowScale = Math.max(0.3, 1.0 - this.airborneZ / 250);
-      ctx.fillStyle = `rgba(0, 0, 0, ${0.45 * shadowScale})`;
-      ctx.beginPath();
-      ctx.ellipse(rx, ry, 22 * this.scaleMult * shadowScale, 8 * this.scaleMult * shadowScale, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
+    // Ground contact shadow (drawn anchored at entity's physical feet baseline)
+    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37))))))) * this.scaleMult;
+    const shadowGroundRy = ((this.y - cy + globals.vh/2) + footOffsetY) | 0;
+    const shadowGroundRx = (this.x - cx + globals.vw/2) | 0;
+    const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
+    const shadowScale = totalElevation > 0 ? Math.max(0.25, 1.0 - totalElevation / 260) : 1.0;
+    const shadowAlpha = (this.state === 'dead' ? alpha * 0.25 : 0.35) * shadowScale;
+    
+    ctx.save();
+    ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+    ctx.beginPath();
+    ctx.ellipse(shadowGroundRx, shadowGroundRy, ((this.subType === 'agis_colossus' ? 65 : 22) * this.scaleMult * shadowScale) | 0, ((this.subType === 'agis_colossus' ? 18 : 7) * this.scaleMult * shadowScale) | 0, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
 
     let tint = this.hitFlash > 0 ? '#ffffff' : this.colorTint;
     if (this.chillTimer > 0 && this.hitFlash <= 0) {
