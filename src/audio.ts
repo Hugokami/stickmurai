@@ -341,8 +341,17 @@ export function playSynthesizedHurt() {
   } catch (e) {}
 }
 
+export function triggerHapticFeedback(pattern: number | number[] = 15) {
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+    try {
+      navigator.vibrate(pattern);
+    } catch (e) {}
+  }
+}
+
 export function playSynthesizedParry() {
   try {
+    triggerHapticFeedback(15);
     const nowTime = performance.now();
     if (nowTime - lastParryTime < 50) return;
     lastParryTime = nowTime;
@@ -381,6 +390,7 @@ export function playSynthesizedParry() {
 
 export function playSynthesizedClash() {
   try {
+    triggerHapticFeedback(25);
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
@@ -417,6 +427,7 @@ export function playSynthesizedClash() {
 
 export function playSynthesizedPerfectParry() {
   try {
+    triggerHapticFeedback([35, 45, 35]);
     const nowTime = performance.now();
     if (nowTime - lastPerfectParryTime < 100) return;
     lastPerfectParryTime = nowTime;

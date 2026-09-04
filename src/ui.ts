@@ -6,26 +6,26 @@ import { pvpManager } from './pvpIaijutsuManager';
 import { AdManager } from './adManager';
 import { FUSION_RECIPES } from './powerups';
 import { YOMI_SEALS } from './shrine';
-import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered } from './audio';
+import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered, triggerHapticFeedback } from './audio';
 import { FloatingText, Shockwave } from './entities';
 
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
 
 // DOM cache
-let enhanceCooldownOverlay: HTMLElement;
-let enhanceCooldownText: HTMLElement;
-let dashCooldownOverlay: HTMLElement;
-let dashCooldownText: HTMLElement;
-let attackCooldownOverlay: HTMLElement;
-let ultCooldownOverlay: HTMLElement;
+let enhanceCooldownOverlay: HTMLElement | null = null;
+let enhanceCooldownText: HTMLElement | null = null;
+let dashCooldownOverlay: HTMLElement | null = null;
+let dashCooldownText: HTMLElement | null = null;
+let attackCooldownOverlay: HTMLElement | null = null;
+let ultCooldownOverlay: HTMLElement | null = null;
 let ultCooldownText: HTMLElement | null = null;
-let flowMeterFill: HTMLElement;
-let flowMeterContainer: HTMLElement;
-let expMeterFill: HTMLElement;
-let scoreDisplay: HTMLElement;
-let comboDisplay: HTMLElement;
-let heartsElements: NodeListOf<Element>;
+let flowMeterFill: HTMLElement | null = null;
+let flowMeterContainer: HTMLElement | null = null;
+let expMeterFill: HTMLElement | null = null;
+let scoreDisplay: HTMLElement | null = null;
+let comboDisplay: HTMLElement | null = null;
+let heartsElements: NodeListOf<Element> | null = null;
 
 let lastEnhanceOverlayHeight = -1;
 let lastEnhanceTextContent = '';
@@ -294,45 +294,45 @@ export function bindDualListener(el: HTMLElement | null | undefined, handler: (e
 
 export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void, onRestartCallback: () => void) {
   // DOM queries
-  enhanceCooldownOverlay = document.getElementById('enhance-cooldown-overlay')!;
-  enhanceCooldownText = document.getElementById('enhance-cooldown-text')!;
-  dashCooldownOverlay = document.getElementById('dash-cooldown-overlay')!;
-  dashCooldownText = document.getElementById('dash-cooldown-text')!;
-  attackCooldownOverlay = document.getElementById('attack-cooldown-overlay')!;
-  ultCooldownOverlay = document.getElementById('ult-cooldown-overlay')!;
+  enhanceCooldownOverlay = document.getElementById('enhance-cooldown-overlay');
+  enhanceCooldownText = document.getElementById('enhance-cooldown-text');
+  dashCooldownOverlay = document.getElementById('dash-cooldown-overlay');
+  dashCooldownText = document.getElementById('dash-cooldown-text');
+  attackCooldownOverlay = document.getElementById('attack-cooldown-overlay');
+  ultCooldownOverlay = document.getElementById('ult-cooldown-overlay');
   ultCooldownText = document.getElementById('ult-cooldown-text');
   
-  flowMeterFill = document.getElementById('flow-meter-fill')!;
-  flowMeterContainer = document.getElementById('flow-meter-container')!;
-  expMeterFill = document.getElementById('exp-meter-fill')!;
-  scoreDisplay = document.getElementById('score-display')!;
-  comboDisplay = document.getElementById('combo-display')!;
+  flowMeterFill = document.getElementById('flow-meter-fill');
+  flowMeterContainer = document.getElementById('flow-meter-container');
+  expMeterFill = document.getElementById('exp-meter-fill');
+  scoreDisplay = document.getElementById('score-display');
+  comboDisplay = document.getElementById('combo-display');
   heartsElements = document.querySelectorAll('.heart');
   btnUltElement = document.getElementById('btn-ult');
   btnEnhanceElement = document.getElementById('btn-enhance');
   btnDashElement = document.getElementById('btn-dash');
   objectiveDisplayElement = document.getElementById('objective-display');
 
-  const mainMenu = document.getElementById('main-menu')!;
-  const settingsScreen = document.getElementById('settings-screen')!;
-  const skillSelectScreen = document.getElementById('skill-select-screen')!;
-  const pauseScreen = document.getElementById('pause-screen')!;
+  const mainMenu = document.getElementById('main-menu');
+  const settingsScreen = document.getElementById('settings-screen');
+  const skillSelectScreen = document.getElementById('skill-select-screen');
+  const pauseScreen = document.getElementById('pause-screen');
   cachedOnPlayCallback = onPlayCallback;
-  const uiLayer = document.getElementById('ui-layer')!;
-  const mobileControls = document.getElementById('mobile-controls')!;
-  const bgmVolumeSlider = document.getElementById('bgm-volume') as HTMLInputElement;
+  const uiLayer = document.getElementById('ui-layer');
+  const mobileControls = document.getElementById('mobile-controls');
+  const bgmVolumeSlider = document.getElementById('bgm-volume') as HTMLInputElement | null;
 
   // menu listeners
   const startBtn = document.getElementById('start-btn');
   if (startBtn) {
     bindDualListener(startBtn, () => {
-      mainMenu.style.display = 'none';
+      if (mainMenu) mainMenu.style.display = 'none';
       globals.gameMode = 'classic';
       globals.difficulty = 'normal';
       globals.timerLimit = 'endless';
       // Default to the current highest stage reached
       globals.currentStage = Math.max(1, globals.maxStageUnlocked || 1);
-      skillSelectScreen.style.display = 'flex';
+      if (skillSelectScreen) skillSelectScreen.style.display = 'flex';
       globals.activeBlessing = null;
       updateBlessingSelectionUI();
       renderSkillChoicesPregame();
@@ -392,9 +392,9 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     bindDualListener(stageClearMenuBtn, () => {
       if (stageClearModal) stageClearModal.style.display = 'none';
       globals.gameState = 'mainmenu';
-      mainMenu.style.display = 'flex';
-      uiLayer.style.display = 'none';
-      mobileControls.style.display = 'none';
+      if (mainMenu) mainMenu.style.display = 'flex';
+      if (uiLayer) uiLayer.style.display = 'none';
+      if (mobileControls) mobileControls.style.display = 'none';
       pauseBgm();
     });
   }
@@ -404,9 +404,9 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     bindDualListener(stageClearXBtn, () => {
       if (stageClearModal) stageClearModal.style.display = 'none';
       globals.gameState = 'mainmenu';
-      mainMenu.style.display = 'flex';
-      uiLayer.style.display = 'none';
-      mobileControls.style.display = 'none';
+      if (mainMenu) mainMenu.style.display = 'flex';
+      if (uiLayer) uiLayer.style.display = 'none';
+      if (mobileControls) mobileControls.style.display = 'none';
       pauseBgm();
     });
   }
@@ -414,9 +414,9 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const lvlModeBtn = document.getElementById('level-mode-btn');
   if (lvlModeBtn) {
     lvlModeBtn.addEventListener('click', () => {
-      mainMenu.style.display = 'none';
+      if (mainMenu) mainMenu.style.display = 'none';
       globals.gameMode = 'level';
-      skillSelectScreen.style.display = 'flex';
+      if (skillSelectScreen) skillSelectScreen.style.display = 'flex';
       globals.activeBlessing = null;
       updateBlessingSelectionUI();
       renderSkillChoicesPregame();
@@ -426,24 +426,24 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const zenBtn = document.getElementById('zen-btn');
   if (zenBtn) {
     zenBtn.addEventListener('click', () => {
-      mainMenu.style.display = 'none';
+      if (mainMenu) mainMenu.style.display = 'none';
       globals.gameMode = 'zen';
-      skillSelectScreen.style.display = 'flex';
+      if (skillSelectScreen) skillSelectScreen.style.display = 'flex';
       globals.activeBlessing = null;
       updateBlessingSelectionUI();
       renderSkillChoicesPregame();
     });
   }
 
-  document.getElementById('skill-back-btn')!.addEventListener('click', () => {
-    skillSelectScreen.style.display = 'none';
-    mainMenu.style.display = 'flex';
+  bindDualListener(document.getElementById('skill-back-btn'), () => {
+    if (skillSelectScreen) skillSelectScreen.style.display = 'none';
+    if (mainMenu) mainMenu.style.display = 'flex';
     globals.activeBlessing = null;
     updateBlessingSelectionUI();
   });
 
-  document.getElementById('start-run-btn')!.addEventListener('click', () => {
-    skillSelectScreen.style.display = 'none';
+  bindDualListener(document.getElementById('start-run-btn'), () => {
+    if (skillSelectScreen) skillSelectScreen.style.display = 'none';
     if (globals.gameMode === 'zen') {
       onZenPlayCallback();
     } else {
@@ -451,57 +451,60 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     }
   });
 
-  document.getElementById('open-settings-btn')!.addEventListener('click', () => {
-    settingsScreen.style.display = 'flex';
+  bindDualListener(document.getElementById('open-settings-btn'), () => {
+    if (settingsScreen) settingsScreen.style.display = 'flex';
   });
 
-  document.getElementById('close-settings-btn')!.addEventListener('click', () => {
-    settingsScreen.style.display = 'none';
-    if (globals.gameState === 'paused') {
+  bindDualListener(document.getElementById('close-settings-btn'), () => {
+    if (settingsScreen) settingsScreen.style.display = 'none';
+    if (globals.gameState === 'paused' && pauseScreen) {
       pauseScreen.style.display = 'flex';
     }
   });
 
-  document.getElementById('pause-settings-btn')!.addEventListener('click', () => {
-    pauseScreen.style.display = 'none';
-    settingsScreen.style.display = 'flex';
+  bindDualListener(document.getElementById('pause-settings-btn'), () => {
+    if (pauseScreen) pauseScreen.style.display = 'none';
+    if (settingsScreen) settingsScreen.style.display = 'flex';
   });
 
-  document.getElementById('quit-btn')!.addEventListener('click', () => {
-    pauseScreen.style.display = 'none';
+  bindDualListener(document.getElementById('quit-btn'), () => {
+    if (pauseScreen) pauseScreen.style.display = 'none';
     if (globals.gameMode === 'pvp') {
       pvpManager.disconnect();
     } else {
       globals.gameState = 'mainmenu';
-      mainMenu.style.display = 'flex';
-      uiLayer.style.display = 'none';
-      mobileControls.style.display = 'none';
+      if (mainMenu) mainMenu.style.display = 'flex';
+      if (uiLayer) uiLayer.style.display = 'none';
+      if (mobileControls) mobileControls.style.display = 'none';
       pauseBgm();
     }
   });
 
   const gameOverQuitBtn = document.getElementById('game-over-quit-btn');
   if (gameOverQuitBtn) {
-    gameOverQuitBtn.addEventListener('click', () => {
-      document.getElementById('game-over')!.style.display = 'none';
+    bindDualListener(gameOverQuitBtn, () => {
+      const gameOverEl = document.getElementById('game-over');
+      if (gameOverEl) gameOverEl.style.display = 'none';
       if (globals.gameMode === 'pvp') {
         pvpManager.disconnect();
       } else {
         globals.gameState = 'mainmenu';
-        mainMenu.style.display = 'flex';
-        uiLayer.style.display = 'none';
-        mobileControls.style.display = 'none';
+        if (mainMenu) mainMenu.style.display = 'flex';
+        if (uiLayer) uiLayer.style.display = 'none';
+        if (mobileControls) mobileControls.style.display = 'none';
         pauseBgm();
       }
     });
   }
 
-  bgmVolumeSlider.addEventListener('input', (e) => {
-    const vol = parseFloat((e.target as HTMLInputElement).value);
-    if (bgmAudio) bgmAudio.volume = vol;
-  });
+  if (bgmVolumeSlider) {
+    bgmVolumeSlider.addEventListener('input', (e) => {
+      const vol = parseFloat((e.target as HTMLInputElement).value);
+      if (bgmAudio) bgmAudio.volume = vol;
+    });
+  }
 
-  document.getElementById('restart-btn')!.addEventListener('click', onRestartCallback);
+  bindDualListener(document.getElementById('restart-btn'), onRestartCallback);
 
   // Grimoire & Chronicle screen listeners
   const grimoireScreen = document.getElementById('grimoire-screen');
@@ -563,6 +566,48 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   bindDualListener(closeDojoBtn, closeDojo);
   const closeDojoXBtn = document.getElementById('close-dojo-x-btn');
   bindDualListener(closeDojoXBtn, closeDojo);
+
+  // Secret Redeem Code Modal Listeners
+  const redeemModal = document.getElementById('redeem-modal');
+  const openRedeemSettingsBtn = document.getElementById('open-redeem-settings-btn');
+  const openRedeemDojoBtn = document.getElementById('open-redeem-dojo-btn');
+  const closeRedeemXBtn = document.getElementById('close-redeem-x-btn');
+  const redeemCancelBtn = document.getElementById('redeem-cancel-btn');
+  const redeemSubmitBtn = document.getElementById('redeem-submit-btn');
+  const redeemInput = document.getElementById('redeem-input') as HTMLInputElement | null;
+  const redeemStatus = document.getElementById('redeem-status-msg');
+
+  const openRedeemModal = () => {
+    if (redeemModal) {
+      redeemModal.style.display = 'flex';
+      if (redeemStatus) {
+        redeemStatus.textContent = '';
+        redeemStatus.style.color = '';
+      }
+      if (redeemInput) {
+        redeemInput.value = '';
+        setTimeout(() => redeemInput.focus(), 80);
+      }
+    }
+  };
+
+  const closeRedeemModal = () => {
+    if (redeemModal) redeemModal.style.display = 'none';
+  };
+
+  bindDualListener(openRedeemSettingsBtn, openRedeemModal);
+  bindDualListener(openRedeemDojoBtn, openRedeemModal);
+  bindDualListener(closeRedeemXBtn, closeRedeemModal);
+  bindDualListener(redeemCancelBtn, closeRedeemModal);
+  bindDualListener(redeemSubmitBtn, () => processRedeemCode());
+
+  if (redeemInput) {
+    redeemInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        processRedeemCode();
+      }
+    });
+  }
 
   // Shrine & Hermit Modal Listeners
   const onShatterSeal = () => {
@@ -667,9 +712,9 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     const dawnScreen = document.getElementById('dawn-victory-screen');
     if (dawnScreen) dawnScreen.style.display = 'none';
     globals.gameState = 'mainmenu';
-    mainMenu.style.display = 'flex';
-    uiLayer.style.display = 'none';
-    mobileControls.style.display = 'none';
+    if (mainMenu) mainMenu.style.display = 'flex';
+    if (uiLayer) uiLayer.style.display = 'none';
+    if (mobileControls) mobileControls.style.display = 'none';
     pauseBgm();
   });
 
@@ -735,19 +780,19 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     });
   }
 
-  document.getElementById('pause-btn')!.addEventListener('click', () => {
+  bindDualListener(document.getElementById('pause-btn'), () => {
     if (globals.gameMode === 'pvp') return; // Disable pausing in PvP
     if (globals.gameState === 'playing') {
       globals.gameState = 'paused';
-      pauseScreen.style.display = 'flex';
+      if (pauseScreen) pauseScreen.style.display = 'flex';
       updatePauseUpgradesList();
     }
   });
 
-  document.getElementById('resume-btn')!.addEventListener('click', () => {
+  bindDualListener(document.getElementById('resume-btn'), () => {
     if (globals.gameState === 'paused') {
       globals.gameState = 'playing';
-      pauseScreen.style.display = 'none';
+      if (pauseScreen) pauseScreen.style.display = 'none';
     }
   });
 
@@ -756,11 +801,11 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       if (globals.gameMode === 'pvp') return; // Disable pausing in PvP
       if (globals.gameState === 'playing') {
         globals.gameState = 'paused';
-        pauseScreen.style.display = 'flex';
+        if (pauseScreen) pauseScreen.style.display = 'flex';
         updatePauseUpgradesList();
       } else if (globals.gameState === 'paused') {
         globals.gameState = 'playing';
-        pauseScreen.style.display = 'none';
+        if (pauseScreen) pauseScreen.style.display = 'none';
       }
     }
   });
@@ -1031,6 +1076,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
 
   // load translation / layout init
   updateStaticText();
+  refreshAllMagatamaDisplays();
 }
 
 export function updatePregameOptionsUI() {
@@ -1437,7 +1483,7 @@ let lastRenderedScore = -1;
 let lastRenderedMaxLives = -1;
 
 export function updateUI() {
-  if (!flowMeterFill || !expMeterFill || !scoreDisplay) return;
+  if (!flowMeterFill || !expMeterFill || !scoreDisplay || !flowMeterContainer) return;
   
   const flowPct = Math.round((globals.flow / globals.playerStats.flowMax) * 100);
   if (flowPct !== lastFlowWidth) {
@@ -1553,22 +1599,24 @@ export function updateUI() {
   }
   
   if (globals.lives !== lastLives || globals.maxLives !== lastRenderedMaxLives) {
-    heartsElements.forEach((h, i) => {
-      if (i >= globals.maxLives) {
-        (h as HTMLElement).style.display = 'none';
-      } else {
-        (h as HTMLElement).style.display = '';
-      }
-      if (i < globals.lives) {
-        h.classList.add('active');
-        h.classList.remove('damaged');
-      } else {
-        h.classList.remove('active');
-        if (i < lastLives) {
-          h.classList.add('damaged');
+    if (heartsElements) {
+      heartsElements.forEach((h, i) => {
+        if (i >= globals.maxLives) {
+          (h as HTMLElement).style.display = 'none';
+        } else {
+          (h as HTMLElement).style.display = '';
         }
-      }
-    });
+        if (i < globals.lives) {
+          h.classList.add('active');
+          h.classList.remove('damaged');
+        } else {
+          h.classList.remove('active');
+          if (i < lastLives) {
+            h.classList.add('damaged');
+          }
+        }
+      });
+    }
     lastLives = globals.lives;
     lastRenderedMaxLives = globals.maxLives;
   }
@@ -1968,6 +2016,116 @@ export const HEROES_DATA = [
   }
 ];
 
+export function refreshAllMagatamaDisplays() {
+  const formatted = (globals.magatama || 0).toLocaleString();
+  const hudEl = document.getElementById('hud-magatama-count');
+  if (hudEl) hudEl.textContent = formatted;
+  const dojoEl = document.getElementById('dojo-magatama-count');
+  if (dojoEl) dojoEl.textContent = formatted;
+  const pregameEl = document.getElementById('pregame-magatama-count');
+  if (pregameEl) pregameEl.textContent = formatted;
+  const stageClearEl = document.getElementById('stage-clear-magatama');
+  if (stageClearEl) stageClearEl.textContent = formatted + ' 🔮';
+}
+
+function processRedeemCode() {
+  const inputEl = document.getElementById('redeem-input') as HTMLInputElement | null;
+  const msgEl = document.getElementById('redeem-status-msg');
+  if (!inputEl || !msgEl) return;
+  
+  const rawCode = inputEl.value.trim().toUpperCase();
+  if (!rawCode) {
+    msgEl.style.color = '#ef4444';
+    msgEl.textContent = globals.currentLang === 'ja' ? 'コードを入力してください。' : 'Please enter a cipher code.';
+    return;
+  }
+
+  let redeemed: string[] = [];
+  try {
+    redeemed = JSON.parse(localStorage.getItem('stickmurai_redeemed_codes') || '[]');
+  } catch(e) {
+    redeemed = [];
+  }
+
+  if (rawCode === 'LT160224') {
+    // Master developer testing code: adds 50,000,000 Magatama!
+    const amount = 50000000;
+    globals.magatama = (globals.magatama || 0) + amount;
+    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
+    refreshAllMagatamaDisplays();
+    populateDojoHeroGrid();
+
+    playShrineBlessing(1.0);
+    triggerHapticFeedback([50, 60, 50, 60, 120]);
+    globals.screenShake = Math.max(globals.screenShake, 35);
+    const px = globals.player ? globals.player.x : 0;
+    const py = globals.player ? globals.player.y - 80 : 0;
+    globals.floatingTexts.push(FloatingText.acquire(px, py, '🎉 MASTER CODE! +50M 🔮', '#ffd700', 42));
+
+    msgEl.style.color = '#10b981';
+    msgEl.textContent = globals.currentLang === 'ja' 
+      ? '🎉 マスターコード認証！ +50,000,000 勾玉獲得！' 
+      : '🎉 MASTER CODE ACTIVATED! +50,000,000 MAGATAMA!';
+    inputEl.value = '';
+    return;
+  }
+
+  if (redeemed.includes(rawCode)) {
+    msgEl.style.color = '#f59e0b';
+    msgEl.textContent = globals.currentLang === 'ja' ? 'このコードは既に使用されています。' : 'This code has already been redeemed.';
+    return;
+  }
+
+  let rewardMagatama = 0;
+  let rewardTitle = '';
+
+  switch(rawCode) {
+    case 'STICKMURAI':
+      rewardMagatama = 100000;
+      rewardTitle = 'STICKMURAI TRIBUTE (+100,000 🔮)';
+      break;
+    case 'NIGHTBORNE':
+      rewardMagatama = 200000;
+      rewardTitle = 'NIGHTBORNE SOVEREIGN (+200,000 🔮)';
+      break;
+    case 'SOVEREIGN':
+      rewardMagatama = 300000;
+      rewardTitle = 'SATYR SOVEREIGN (+300,000 🔮)';
+      break;
+    case 'CHAMPION':
+      rewardMagatama = 500000;
+      rewardTitle = 'GRAND CHAMPION BOUNTY (+500,000 🔮)';
+      break;
+    case 'SAMURAI2026':
+      rewardMagatama = 150000;
+      rewardTitle = 'KENSEI TREASURE (+150,000 🔮)';
+      break;
+    default:
+      msgEl.style.color = '#ef4444';
+      msgEl.textContent = globals.currentLang === 'ja' 
+        ? '無効な暗号コードです。' 
+        : 'Invalid secret code. Please verify and try again.';
+      return;
+  }
+
+  globals.magatama = (globals.magatama || 0) + rewardMagatama;
+  try {
+    localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+    redeemed.push(rawCode);
+    localStorage.setItem('stickmurai_redeemed_codes', JSON.stringify(redeemed));
+  } catch(e) {}
+
+  refreshAllMagatamaDisplays();
+  populateDojoHeroGrid();
+  playShrineBlessing(0.9);
+  triggerHapticFeedback([40, 50, 80]);
+  globals.screenShake = Math.max(globals.screenShake, 20);
+
+  msgEl.style.color = '#10b981';
+  msgEl.textContent = `🎉 ${rewardTitle}`;
+  inputEl.value = '';
+}
+
 export function populateDojoHeroGrid() {
   const grid = document.getElementById('dojo-hero-grid');
   const countEl = document.getElementById('dojo-magatama-count');
@@ -2070,6 +2228,7 @@ export function populateDojoHeroGrid() {
       globals.player?.updateHeroType();
       playSynthesizedFusionUnlock();
       playShrineBlessing(0.85);
+      refreshAllMagatamaDisplays();
       populateDojoHeroGrid();
     });
   });

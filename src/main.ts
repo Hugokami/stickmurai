@@ -111,6 +111,9 @@ function finishLoading() {
     clearTimeout(loaderTimeoutId);
     loaderTimeoutId = null;
   }
+  if (typeof (window as any).__loaderFailSafeTimer !== 'undefined') {
+    clearTimeout((window as any).__loaderFailSafeTimer);
+  }
 
   const fill = document.getElementById('loader-fill');
   const flare = document.getElementById('loader-bar-flare');
@@ -148,22 +151,29 @@ function finishLoading() {
         loaderScreen.classList.add('fade-out');
         setTimeout(() => {
           loaderScreen.classList.add('hidden');
+          loaderScreen.style.display = 'none';
           const mainMenu = document.getElementById('main-menu');
           if (mainMenu) mainMenu.style.display = 'flex';
-        }, 500);
+        }, 350);
       };
 
-      tryEnterFullscreen(proceedToMenu);
+      // Guaranteed direct progression to menu
+      proceedToMenu();
+
+      // Optional fullscreen attempt on user gesture
+      if (e && e.isTrusted) {
+        tryEnterFullscreen(() => {});
+      }
     };
 
     loaderScreen.addEventListener('click', onContinue);
     loaderScreen.addEventListener('touchstart', onContinue);
     loaderScreen.addEventListener('pointerdown', onContinue);
 
-    // Auto-proceed after 800ms so mobile players don't need to guess to tap
+    // Auto-proceed after 600ms so mobile players don't need to guess to tap
     setTimeout(() => {
       onContinue();
-    }, 800);
+    }, 600);
   }
 }
 
@@ -337,7 +347,8 @@ export function showFullscreenPrompt(onComplete: () => void) {
 }
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-let rotatePromptDismissed = false;
+let rotatePromptDismissed = typeof window !== 'undefined' && localStorage.getItem('stickmurai_rotate_dismissed') === 'true';
+let rotateAutoDismissTimer: any = null;
 
 function checkOrientationAndFullscreen() {
   if (!isMobile) return;
@@ -354,6 +365,13 @@ function checkOrientationAndFullscreen() {
   const dismissRotate = (e?: Event) => {
     if (e) e.stopPropagation();
     rotatePromptDismissed = true;
+    try {
+      localStorage.setItem('stickmurai_rotate_dismissed', 'true');
+    } catch(err) {}
+    if (rotateAutoDismissTimer) {
+      clearTimeout(rotateAutoDismissTimer);
+      rotateAutoDismissTimer = null;
+    }
     rotatePrompt.style.display = 'none';
   };
 
@@ -396,6 +414,11 @@ function checkOrientationAndFullscreen() {
 
   if (isPortrait) {
     rotatePrompt.style.display = 'flex';
+    if (!rotateAutoDismissTimer) {
+      rotateAutoDismissTimer = setTimeout(() => {
+        dismissRotate();
+      }, 5000);
+    }
     if (rotateMessage) {
       if (!fsApproved) {
         rotateMessage.innerHTML = '<strong data-i18n="rotatePrompt">' + t('rotatePrompt') + '</strong>';
@@ -407,6 +430,12 @@ function checkOrientationAndFullscreen() {
             const enterFS = (e?: Event) => {
               if (e) e.stopPropagation();
               localStorage.setItem('stickmurai_fs_approved', 'true');
+              localStorage.setItem('stickmurai_rotate_dismissed', 'true');
+              rotatePromptDismissed = true;
+              if (rotateAutoDismissTimer) {
+                clearTimeout(rotateAutoDismissTimer);
+                rotateAutoDismissTimer = null;
+              }
               const requestFS = docEl.requestFullscreen || 
                                 docEl.webkitRequestFullscreen || 
                                 docEl.mozRequestFullScreen || 
@@ -444,6 +473,11 @@ function checkOrientationAndFullscreen() {
   } else {
     if (canGoFullscreen && !fsApproved && !isCurrentlyFS) {
       rotatePrompt.style.display = 'flex';
+      if (!rotateAutoDismissTimer) {
+        rotateAutoDismissTimer = setTimeout(() => {
+          dismissRotate();
+        }, 5000);
+      }
       if (rotateMessage) {
         rotateMessage.innerHTML = '<strong data-i18n="rotatePrompt">' + t('rotatePrompt') + '</strong>';
       }
@@ -455,6 +489,12 @@ function checkOrientationAndFullscreen() {
           const enterFS = (e?: Event) => {
             if (e) e.stopPropagation();
             localStorage.setItem('stickmurai_fs_approved', 'true');
+            localStorage.setItem('stickmurai_rotate_dismissed', 'true');
+            rotatePromptDismissed = true;
+            if (rotateAutoDismissTimer) {
+              clearTimeout(rotateAutoDismissTimer);
+              rotateAutoDismissTimer = null;
+            }
             const requestFS = docEl.requestFullscreen || 
                               docEl.webkitRequestFullscreen || 
                               docEl.mozRequestFullScreen || 
@@ -481,6 +521,10 @@ function checkOrientationAndFullscreen() {
       }
       if (iosPwaTip) iosPwaTip.style.display = 'none';
     } else {
+      if (rotateAutoDismissTimer) {
+        clearTimeout(rotateAutoDismissTimer);
+        rotateAutoDismissTimer = null;
+      }
       rotatePrompt.style.display = 'none';
       if (canGoFullscreen && !isCurrentlyFS && fsApproved) {
         const triggerFSOnGesture = () => {
