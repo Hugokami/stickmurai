@@ -807,6 +807,160 @@ export function playSynthesizedFusionUnlock() {
   } catch(e) {}
 }
 
+export function playSynthesizedShakuhachi() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.7);
+
+    // Traditional Japanese bamboo flute (Shakuhachi) - D4 bending to F4 with breath noise
+    const osc = ctx.createOscillator();
+    const lfo = ctx.createOscillator();
+    const lfoGain = ctx.createGain();
+    const mainGain = ctx.createGain();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(293.66, now); // D4
+    osc.frequency.exponentialRampToValueAtTime(349.23, now + 0.35); // grace note bend to F4
+    osc.frequency.setValueAtTime(349.23, now + 1.2);
+    osc.frequency.exponentialRampToValueAtTime(293.66, now + 2.0); // drop back down
+
+    // 5.5Hz natural human vibrato
+    lfo.type = 'sine';
+    lfo.frequency.setValueAtTime(5.5, now);
+    lfoGain.gain.setValueAtTime(0, now);
+    lfoGain.gain.linearRampToValueAtTime(4.5, now + 0.5); // vibrato fades in after onset
+
+    lfo.connect(osc.frequency);
+
+    mainGain.gain.setValueAtTime(0.001, now);
+    mainGain.gain.linearRampToValueAtTime(volume, now + 0.15);
+    mainGain.gain.setValueAtTime(volume * 0.85, now + 1.5);
+    mainGain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
+
+    osc.connect(mainGain);
+    mainGain.connect(getSoundDestination(ctx));
+
+    lfo.start(now);
+    osc.start(now);
+    lfo.stop(now + 2.55);
+    osc.stop(now + 2.55);
+  } catch(e) {}
+}
+
+export function playSynthesizedCampfireCrackle() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.4);
+
+    // Filtered noise buffer pop
+    const bufferSize = Math.floor(ctx.sampleRate * 0.08);
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.2));
+    }
+
+    const whiteNoise = ctx.createBufferSource();
+    whiteNoise.buffer = buffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(1400 + Math.random() * 800, now);
+    filter.Q.setValueAtTime(3.0, now);
+
+    const gainNode = ctx.createGain();
+    gainNode.gain.setValueAtTime(volume, now);
+    gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+    whiteNoise.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(getSoundDestination(ctx));
+
+    whiteNoise.start(now);
+  } catch(e) {}
+}
+
+export function playSynthesizedSealShatter() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.75);
+
+    // Deep sub-bass impact
+    const subOsc = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    subOsc.type = 'sine';
+    subOsc.frequency.setValueAtTime(90, now);
+    subOsc.frequency.exponentialRampToValueAtTime(35, now + 0.6);
+    subGain.gain.setValueAtTime(volume, now);
+    subGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+    subOsc.connect(subGain);
+    subGain.connect(getSoundDestination(ctx));
+    subOsc.start(now);
+    subOsc.stop(now + 0.82);
+
+    // Crystalline glass shattering harmonic frequencies
+    const glassNotes = [1480, 1850, 2220, 3100];
+    glassNotes.forEach(freq => {
+      const gOsc = ctx.createOscillator();
+      const gGain = ctx.createGain();
+      gOsc.type = 'sine';
+      gOsc.frequency.setValueAtTime(freq, now);
+      gOsc.frequency.exponentialRampToValueAtTime(freq * 0.8, now + 1.2);
+      gGain.gain.setValueAtTime(volume * 0.4, now);
+      gGain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      gOsc.connect(gGain);
+      gGain.connect(getSoundDestination(ctx));
+      gOsc.start(now);
+      gOsc.stop(now + 1.25);
+    });
+  } catch(e) {}
+}
+
+export function playSynthesizedBloodMoonRoar() {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.8);
+
+    // Low-frequency demon drone with opening filter
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const filter = ctx.createBiquadFilter();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sawtooth';
+    osc2.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(55, now);
+    osc2.frequency.setValueAtTime(58.5, now); // 3.5Hz sinister binaural beat
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(120, now);
+    filter.frequency.exponentialRampToValueAtTime(750, now + 0.8);
+    filter.frequency.exponentialRampToValueAtTime(80, now + 3.0);
+
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 3.2);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(gain);
+    gain.connect(getSoundDestination(ctx));
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 3.25);
+    osc2.stop(now + 3.25);
+  } catch(e) {}
+}
+
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) {

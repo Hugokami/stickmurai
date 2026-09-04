@@ -44,7 +44,7 @@ let localRematchReady = false;
 let remoteRematchReady = false;
 let stormLightningTimer = 0.0;
 import { WeatherEngine } from './weather';
-import { checkShrineSpawns, triggerCalamityCheck, YOMI_SEALS, spawnShrine } from './shrine';
+import { checkShrineSpawns, triggerCalamityCheck, YOMI_SEALS, spawnShrine, notifyFeatMilestone } from './shrine';
 let bossEncounterDamaged = false;
 let shogunSpawned = false;
 
@@ -1805,6 +1805,15 @@ export function revivePlayer() {
 /* hack: had to separate awakening execution hits from standard normal hits */
 function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if (e.state === 'dead') return;
+  // Shadow Doppelganger Mirror Counter-Parry
+  if ((e as any).isShadowDoppelganger && e.state === 'charge' && Math.random() < 0.45) {
+    playSynthesizedParry();
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 50, globals.currentLang === 'ja' ? '影の受け流し！ 🛡️' : 'SHADOW PARRY! 🛡️', '#a855f7', 26));
+    globals.shockwaves.push(new Shockwave(e.x, e.y, '#9333ea'));
+    e.setState('attack');
+    e.lungeSpeed = 1200;
+    return;
+  }
   if ((e as any).iceShieldActive) {
     (e as any).iceShieldActive = false;
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, globals.currentLang === 'ja' ? '防ぐ！' : 'BLOCKED!', '#60a5fa', 22));
@@ -2078,6 +2087,10 @@ function addCombo() {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, "FINISHER READY!", "#ffcc00", 24));
   }
 
+  if (!globals.unlockedSeals.includes(4) && (globals.combo === 25 || globals.combo === 40)) {
+    notifyFeatMilestone(4, globals.combo, 50, "Combo Streak", "コンボ数");
+  }
+
   addFlow(1.2);
   callbacks.updateComboDisplay?.();
   globals.hitStop = 0; 
@@ -2214,7 +2227,12 @@ function update(realDt: number) {
 
     // Low HP Survival Tracking for Seal II
     if (globals.lives === 1 && globals.gameMode !== 'zen') {
+      const prevInt = Math.floor(globals.lowHpSurviveTimer);
       globals.lowHpSurviveTimer += realDt;
+      const curInt = Math.floor(globals.lowHpSurviveTimer);
+      if (!globals.unlockedSeals.includes(2) && curInt !== prevInt && (curInt === 10 || curInt === 20)) {
+        notifyFeatMilestone(2, curInt, 25, "1-Heart Survival", "瀕死生存時間");
+      }
       if (globals.lowHpSurviveTimer >= 25 && !globals.unlockedSeals.includes(2)) {
         spawnShrine(2);
       }
@@ -2256,6 +2274,21 @@ function update(realDt: number) {
       else if (s.x > globals.width - 50) { s.x = globals.width - 50; s.vx = -Math.abs(s.vx); }
       if (s.y < 50) { s.y = 50; s.vy = Math.abs(s.vy); }
       else if (s.y > globals.height - 50) { s.y = globals.height - 50; s.vy = -Math.abs(s.vy); }
+
+      // Kamaitachi Projectile Deflection Vortex
+      for (let pIdx = 0; pIdx < globals.projectiles.length; pIdx++) {
+        const pr = globals.projectiles[pIdx];
+        if (pr.isEnemy && pr.active) {
+          const pdx = pr.x - s.x;
+          const pdy = pr.y - s.y;
+          if (pdx * pdx + pdy * pdy < 65 * 65) {
+            pr.isEnemy = false;
+            pr.angle = Math.atan2(-pdy, -pdx);
+            pr.speed = Math.max(pr.speed, 650);
+            globals.particles.push(Particle.acquire(pr.x, pr.y, '#4ade80', 250, 0.35, 2.5));
+          }
+        }
+      }
 
       const rSq = (s.radius || 30) ** 2;
       for (let j = 0; j < globals.enemies.length; j++) {
@@ -3116,6 +3149,9 @@ function update(realDt: number) {
         globals.shockwaves.push(new Shockwave(clash.x, clash.y, '#ffd700'));
         globals.floatingTexts.push(FloatingText.acquire(clash.x, clash.y - 65, t('clashVictoryText') || "CLASH VICTORY! ⚔️", "neon-#ffd700", 32));
         globals.bladeClashVictories++;
+        if (!globals.unlockedSeals.includes(1)) {
+          notifyFeatMilestone(1, globals.bladeClashVictories, 3, "Blade Clashes Won", "鍔迫り合い勝利数");
+        }
         if (globals.bladeClashVictories >= 3 && !globals.unlockedSeals.includes(1)) {
           spawnShrine(1);
         }
@@ -3247,18 +3283,41 @@ function update(realDt: number) {
             }
             if (globals.activeFusions.has('asura_storm')) {
               let asuraHits = 0;
-              const nearby = globals.enemies.filter(other => other.state !== 'dead' && Math.hypot(other.x - globals.player.x, other.y - globals.player.y) < 320);
+              globals.screenShake = Math.max(globals.screenShake, 38);
+              globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ef4444'));
+
+              // Hexagonal Asura ground scars & radiating crimson slashes
+              for (let a = 0; a < 6; a++) {
+                const scAngle = (a * Math.PI) / 3;
+                globals.groundScars.push({
+                  x: globals.player.x + Math.cos(scAngle) * 55,
+                  y: globals.player.y + Math.sin(scAngle) * 55,
+                  angle: scAngle,
+                  length: 90,
+                  life: 3.5,
+                  maxLife: 3.5
+                });
+                globals.slashes.push(Slash.acquire(
+                  globals.player.x + Math.cos(scAngle) * 65,
+                  globals.player.y + Math.sin(scAngle) * 65,
+                  scAngle,
+                  2.4,
+                  true,
+                  '#ef4444'
+                ));
+              }
+
+              const nearby = globals.enemies.filter(other => other.state !== 'dead' && Math.hypot(other.x - globals.player.x, other.y - globals.player.y) < 360);
               nearby.forEach((other, idx) => {
                 if (idx < 6) {
                   asuraHits++;
-                  hitEnemy(other, 8);
-                  globals.slashes.push(Slash.acquire(other.x, other.y, Math.PI / 4 + (idx * Math.PI / 3), 1.8, true, '#ef4444'));
+                  hitEnemy(other, 12);
                   globals.shockwaves.push(new Shockwave(other.x, other.y, '#ef4444'));
                 }
               });
               if (asuraHits >= 3) {
                 globals.lives = Math.min(globals.maxLives, globals.lives + 1);
-                globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '阿修羅の嵐！ 心臓再生！' : "ASURA'S STORM! HEART RESTORED!", '#ef4444', 32));
+                globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '【六腕阿修羅】血肉再生！ 心臓全快！' : "【SIX-ARMED ASURA】 FLESH REBORN! +1 HEART!", '#ef4444', 32));
                 callbacks.updateUI();
               }
             }

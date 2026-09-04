@@ -6,7 +6,8 @@ import {
   Particle,
   FloatingText,
   Shockwave,
-  Projectile
+  Projectile,
+  Slash
 } from './entities';
 import { playSound, sfx } from './audio';
 import { pvpManager } from './pvpIaijutsuManager';
@@ -304,10 +305,19 @@ export class Player extends Entity {
               y: this.y,
               life: 3.5,
               maxLife: 3.5,
-              dir: this.dir,
+              dir: -this.dir,
               animFrame: this.animFrame
             });
-            globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 100, globals.currentLang === 'ja' ? '百影の幻惑！' : 'HUNDRED PHANTOMS!', '#a855f7', 28));
+            globals.slashes.push(Slash.acquire(
+              this.x,
+              this.y,
+              this.dir === 1 ? Math.PI : 0,
+              2.2,
+              true,
+              '#a855f7'
+            ));
+            globals.shockwaves.push(new Shockwave(this.x, this.y, '#a855f7'));
+            globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 100, globals.currentLang === 'ja' ? '百影・交差反撃！' : 'PHANTOM SCISSOR CUT!', '#a855f7', 28));
           }
         }
         let angle: number;

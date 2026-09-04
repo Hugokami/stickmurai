@@ -1,5 +1,7 @@
 import { globals } from './globals';
-import { playSynthesizedSingingBowl, playSynthesizedTempleBell } from './audio';
+import { playSynthesizedSingingBowl, playSynthesizedTempleBell, playSynthesizedShakuhachi, playSynthesizedCampfireCrackle, playSynthesizedBloodMoonRoar } from './audio';
+import { callbacks } from './callbacks';
+import { Enemy } from './enemy';
 import { Particle, FloatingText, Shockwave } from './entities';
 
 export interface YomiSeal {
@@ -125,113 +127,179 @@ export class MemoryShrine {
   }
 
   update(dt: number) {
-    this.wispAngle += dt * 2.0;
+    this.wispAngle += dt * 2.2;
     this.pulseTimer += dt;
 
-    if (Math.random() < 0.15 && globals.particles.length < 350) {
+    if (Math.random() < 0.25 && globals.particles.length < 350) {
       const angle = Math.random() * Math.PI * 2;
-      const dist = 30 + Math.random() * 40;
+      const dist = 25 + Math.random() * 45;
       globals.particles.push(Particle.acquire(
         this.x + Math.cos(angle) * dist,
         this.y + Math.sin(angle) * dist,
-        Math.random() < 0.5 ? '#38bdf8' : '#818cf8',
-        25 + Math.random() * 25,
-        0.8,
-        2.0,
-        -Math.PI / 2 + (Math.random() - 0.5) * 0.5
+        Math.random() < 0.6 ? '#38bdf8' : '#818cf8',
+        30 + Math.random() * 30,
+        0.75,
+        1.8,
+        -Math.PI / 2 + (Math.random() - 0.5) * 0.4
       ));
     }
   }
 
   draw(ctx: CanvasRenderingContext2D) {
     ctx.save();
-    
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.radius * (0.85 + 0.05 * Math.sin(this.pulseTimer * 3)), 0, Math.PI * 2);
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-    ctx.lineWidth = 3;
-    ctx.stroke();
 
-    ctx.fillStyle = 'rgba(56, 189, 248, 0.25)';
-    ctx.font = 'bold 24px serif';
+    // 1. Spirit Mist Pool (Ethereal Ground Mist)
+    const mistPulse = 1.0 + Math.sin(this.pulseTimer * 2.2) * 0.08;
+    const mistRadius = this.radius * mistPulse;
+    const mistGrad = ctx.createRadialGradient(this.x, this.y, 8, this.x, this.y, mistRadius);
+    mistGrad.addColorStop(0, 'rgba(56, 189, 248, 0.32)');
+    mistGrad.addColorStop(0.65, 'rgba(129, 140, 248, 0.14)');
+    mistGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+    ctx.fillStyle = mistGrad;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, mistRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Subtle rotating spirit circle runes
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+    ctx.lineWidth = 2.0;
+    ctx.setLineDash([10, 8]);
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius * 0.88, this.pulseTimer * 0.4, this.pulseTimer * 0.4 + Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const pillarWidth = 9;
+    const shrineHeight = 74;
+    const shrineSpan = 54;
+
+    // 2. Granite Stone Pedestals (Kamebara) with moss accents
+    [-shrineSpan / 2, shrineSpan / 2].forEach(posX => {
+      ctx.fillStyle = '#334155';
+      ctx.fillRect(this.x + posX - 7, this.y - 5, 14, 7);
+      ctx.fillStyle = '#15803d'; // moss accent
+      ctx.fillRect(this.x + posX - 5, this.y - 4, 10, 2);
+    });
+
+    // 3. Vermilion Lacquer Pillars (Hashira)
+    [-shrineSpan / 2, shrineSpan / 2].forEach(posX => {
+      const pillarGrad = ctx.createLinearGradient(0, this.y - shrineHeight, 0, this.y);
+      pillarGrad.addColorStop(0, '#f43f5e'); // Vermilion red
+      pillarGrad.addColorStop(0.7, '#e11d48');
+      pillarGrad.addColorStop(1, '#881337'); // Shadow at base
+      ctx.fillStyle = pillarGrad;
+      ctx.fillRect(this.x + posX - pillarWidth / 2, this.y - shrineHeight, pillarWidth, shrineHeight);
+
+      // Inner bevel highlight
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      ctx.fillRect(this.x + posX - pillarWidth / 2 + 1, this.y - shrineHeight, 2, shrineHeight);
+    });
+
+    // 4. Lower Horizontal Crossbeam (Nuki)
+    const nukiGrad = ctx.createLinearGradient(0, this.y - shrineHeight + 18, 0, this.y - shrineHeight + 25);
+    nukiGrad.addColorStop(0, '#f43f5e');
+    nukiGrad.addColorStop(1, '#9f1239');
+    ctx.fillStyle = nukiGrad;
+    ctx.fillRect(this.x - shrineSpan / 2 - 10, this.y - shrineHeight + 18, shrineSpan + 20, 7);
+
+    // 5. Central Plaque (Gaku) with glowing kanji
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(this.x - 12, this.y - shrineHeight + 4, 24, 16);
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 1.2;
+    ctx.strokeRect(this.x - 12, this.y - shrineHeight + 4, 24, 16);
+
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 10px "Noto Serif JP", serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('祠', this.x, this.y);
+    ctx.fillText('黄泉', this.x, this.y - shrineHeight + 12);
 
-    const pillarWidth = 8;
-    const shrineHeight = 70;
-    const shrineSpan = 50;
-
-    ctx.fillStyle = '#1e293b';
-    ctx.fillRect(this.x - shrineSpan / 2 - 6, this.y - 4, 12, 6);
-    ctx.fillRect(this.x + shrineSpan / 2 - 6, this.y - 4, 12, 6);
-
-    const grad = ctx.createLinearGradient(0, this.y - shrineHeight, 0, this.y);
-    grad.addColorStop(0, '#38bdf8');
-    grad.addColorStop(1, '#0284c7');
-    ctx.fillStyle = grad;
-    ctx.fillRect(this.x - shrineSpan / 2 - pillarWidth / 2, this.y - shrineHeight, pillarWidth, shrineHeight);
-    ctx.fillRect(this.x + shrineSpan / 2 - pillarWidth / 2, this.y - shrineHeight, pillarWidth, shrineHeight);
-
+    // 6. Curved Upper Lintel (Kasagi & Shimaki) with golden upturned tips
     ctx.fillStyle = '#0f172a';
     ctx.beginPath();
-    ctx.moveTo(this.x - shrineSpan / 2 - 20, this.y - shrineHeight);
-    ctx.quadraticCurveTo(this.x, this.y - shrineHeight - 8, this.x + shrineSpan / 2 + 20, this.y - shrineHeight);
-    ctx.lineTo(this.x + shrineSpan / 2 + 16, this.y - shrineHeight + 8);
-    ctx.quadraticCurveTo(this.x, this.y - shrineHeight, this.x - shrineSpan / 2 - 16, this.y - shrineHeight + 8);
+    ctx.moveTo(this.x - shrineSpan / 2 - 24, this.y - shrineHeight - 2);
+    ctx.quadraticCurveTo(this.x, this.y - shrineHeight - 11, this.x + shrineSpan / 2 + 24, this.y - shrineHeight - 2);
+    ctx.lineTo(this.x + shrineSpan / 2 + 20, this.y - shrineHeight + 7);
+    ctx.quadraticCurveTo(this.x, this.y - shrineHeight, this.x - shrineSpan / 2 - 20, this.y - shrineHeight + 7);
     ctx.closePath();
     ctx.fill();
 
-    ctx.fillStyle = '#38bdf8';
-    ctx.fillRect(this.x - shrineSpan / 2 - 8, this.y - shrineHeight + 18, shrineSpan + 16, 6);
+    // Golden tip caps
+    ctx.fillStyle = '#ffd700';
+    [-shrineSpan / 2 - 24, shrineSpan / 2 + 20].forEach((tipX, i) => {
+      ctx.fillRect(this.x + tipX, this.y - shrineHeight - (i === 0 ? 3 : 2), 4, 8);
+    });
 
+    // 7. Sacred Shimenawa Rope with physically swaying paper tassels (Shide)
     ctx.strokeStyle = '#fef08a';
-    ctx.lineWidth = 2.5;
+    ctx.lineWidth = 3.0;
     ctx.beginPath();
-    ctx.moveTo(this.x - shrineSpan / 2, this.y - shrineHeight + 21);
-    ctx.quadraticCurveTo(this.x, this.y - shrineHeight + 28, this.x + shrineSpan / 2, this.y - shrineHeight + 21);
+    ctx.moveTo(this.x - shrineSpan / 2 + 2, this.y - shrineHeight + 22);
+    ctx.quadraticCurveTo(this.x, this.y - shrineHeight + 30, this.x + shrineSpan / 2 - 2, this.y - shrineHeight + 22);
     ctx.stroke();
 
-    [-12, 0, 12].forEach(offset => {
+    [-14, 0, 14].forEach((offset, idx) => {
+      const sway = Math.sin(this.pulseTimer * 3.2 + idx * 1.5) * 3.5;
+      const shideX = this.x + offset;
+      const shideY = this.y - shrineHeight + 26;
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.moveTo(this.x + offset, this.y - shrineHeight + 25);
-      ctx.lineTo(this.x + offset + 3, this.y - shrineHeight + 33);
-      ctx.lineTo(this.x + offset - 2, this.y - shrineHeight + 37);
-      ctx.lineTo(this.x + offset + 2, this.y - shrineHeight + 43);
-      ctx.lineTo(this.x + offset - 1, this.y - shrineHeight + 43);
+      ctx.moveTo(shideX, shideY);
+      ctx.lineTo(shideX + 4 + sway * 0.4, shideY + 8);
+      ctx.lineTo(shideX - 2 + sway * 0.7, shideY + 13);
+      ctx.lineTo(shideX + 3 + sway, shideY + 18);
+      ctx.lineTo(shideX - 1 + sway, shideY + 18);
       ctx.closePath();
       ctx.fill();
     });
 
+    // 8. Ethereal Hitodama Wisps (Teardrop Flames orbiting the Torii)
     for (let i = 0; i < 3; i++) {
       const angle = this.wispAngle + (i * Math.PI * 2) / 3;
-      const wx = this.x + Math.cos(angle) * (shrineSpan * 0.7);
-      const wy = this.y - shrineHeight * 0.5 + Math.sin(angle) * 15;
+      const wx = this.x + Math.cos(angle) * (shrineSpan * 0.75);
+      const wy = this.y - shrineHeight * 0.5 + Math.sin(angle) * 16;
+
+      // Outer cyan aura
+      const auraGrad = ctx.createRadialGradient(wx, wy, 1, wx, wy, 14);
+      auraGrad.addColorStop(0, 'rgba(56, 189, 248, 0.7)');
+      auraGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+      ctx.fillStyle = auraGrad;
       ctx.beginPath();
-      ctx.arc(wx, wy, 4, 0, Math.PI * 2);
-      ctx.fillStyle = '#7dd3fc';
-      ctx.shadowColor = '#38bdf8';
-      ctx.shadowBlur = 10;
+      ctx.arc(wx, wy, 14, 0, Math.PI * 2);
       ctx.fill();
-      ctx.shadowBlur = 0;
+
+      // Teardrop flame shape
+      ctx.beginPath();
+      ctx.arc(wx, wy + 2, 4.5, 0, Math.PI);
+      ctx.quadraticCurveTo(wx + 3.5, wy - 3, wx, wy - 11);
+      ctx.quadraticCurveTo(wx - 3.5, wy - 3, wx - 4.5, wy + 2);
+      ctx.fillStyle = '#38bdf8';
+      ctx.fill();
+
+      // White incandescent core
+      ctx.beginPath();
+      ctx.arc(wx, wy + 1, 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
     }
 
+    // 9. Interaction Prompt
     const pDistSq = (globals.player.x - this.x) ** 2 + (globals.player.y - this.y) ** 2;
     if (pDistSq < this.radius * this.radius) {
       const promptText = globals.currentLang === 'ja' ? '⛩️ [SPACE / タップで封印と交信]' : '⛩️ [PRESS SPACE / TAP TO COMMUNE]';
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 1.5;
       const textWidth = ctx.measureText(promptText).width;
-      ctx.fillRect(this.x - textWidth / 2 - 12, this.y - shrineHeight - 38, textWidth + 24, 26);
-      ctx.strokeRect(this.x - textWidth / 2 - 12, this.y - shrineHeight - 38, textWidth + 24, 26);
+      ctx.fillRect(this.x - textWidth / 2 - 14, this.y - shrineHeight - 42, textWidth + 28, 28);
+      ctx.strokeRect(this.x - textWidth / 2 - 14, this.y - shrineHeight - 42, textWidth + 28, 28);
 
       ctx.fillStyle = '#38bdf8';
       ctx.font = 'bold 12px "Cinzel", "Space Mono", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(promptText, this.x, this.y - shrineHeight - 25);
+      ctx.fillText(promptText, this.x, this.y - shrineHeight - 28);
     }
 
     ctx.restore();
@@ -242,8 +310,10 @@ export class WanderingHermit {
   x: number;
   y: number;
   active: boolean = true;
-  radius: number = 80;
+  radius: number = 85;
   fireTimer: number = 0;
+  restTimer: number = 0;
+  hasRested: boolean = false;
   pactType: 'blade' | 'speed' | 'spirit';
 
   constructor(x: number, y: number) {
@@ -255,86 +325,190 @@ export class WanderingHermit {
 
   update(dt: number) {
     this.fireTimer += dt;
-    if (Math.random() < 0.4 && globals.particles.length < 350) {
+
+    // Organic campfire ember crackle sound
+    if (Math.random() < 0.035) {
+      playSynthesizedCampfireCrackle();
+    }
+
+    // Campfire embers rising into the air
+    if (Math.random() < 0.45 && globals.particles.length < 350) {
       globals.particles.push(Particle.acquire(
-        this.x - 18 + (Math.random() - 0.5) * 8,
+        this.x - 18 + (Math.random() - 0.5) * 10,
         this.y + (Math.random() - 0.5) * 6,
-        Math.random() < 0.6 ? '#f97316' : '#eab308',
-        40 + Math.random() * 40,
-        0.45,
-        1.5 + Math.random(),
-        -Math.PI / 2 + (Math.random() - 0.5) * 0.4
+        Math.random() < 0.6 ? '#f97316' : '#fef08a',
+        45 + Math.random() * 45,
+        0.55,
+        1.5 + Math.random() * 1.5,
+        -Math.PI / 2 + (Math.random() - 0.5) * 0.45
       ));
+    }
+
+    // Campfire Rest Mechanic: Stand near fire for 2.5s to cleanse status and heal 1 heart
+    if (!this.hasRested && globals.gameState === 'playing' && globals.player.state !== 'dead') {
+      const pDistSq = (globals.player.x - (this.x - 18)) ** 2 + (globals.player.y - this.y) ** 2;
+      if (pDistSq < 75 * 75) {
+        this.restTimer += dt;
+        if (this.restTimer >= 2.5) {
+          this.hasRested = true;
+          playSynthesizedShakuhachi();
+          globals.player.chillTimer = 0;
+          globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+          globals.shockwaves.push(new Shockwave(this.x - 18, this.y, '#f97316'));
+          const isJa = globals.currentLang === 'ja';
+          globals.floatingTexts.push(FloatingText.acquire(
+            this.x - 18, 
+            this.y - 70, 
+            isJa ? '焚き火の休息：心身浄化＆体力回復！ 🔥' : 'BONFIRE REST - SPIRIT CLEANSED & HEALED! 🔥', 
+            '#f97316', 
+            26
+          ));
+          callbacks.updateUI();
+        }
+      } else {
+        this.restTimer = Math.max(0, this.restTimer - dt * 2);
+      }
     }
   }
 
   draw(ctx: CanvasRenderingContext2D) {
     ctx.save();
-    
+
+    // 1. Warm Ambient Campfire Ground Glow
+    const ambGrad = ctx.createRadialGradient(this.x - 18, this.y, 4, this.x - 18, this.y, 85);
+    ambGrad.addColorStop(0, 'rgba(249, 115, 22, 0.28)');
+    ambGrad.addColorStop(0.7, 'rgba(234, 88, 12, 0.08)');
+    ambGrad.addColorStop(1, 'rgba(249, 115, 22, 0)');
+    ctx.fillStyle = ambGrad;
+    ctx.beginPath();
+    ctx.arc(this.x - 18, this.y, 85, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 2. Stone Hearth Ring
     ctx.fillStyle = '#475569';
-    [-6, 0, 6].forEach(offset => {
+    [-8, -4, 0, 4, 8].forEach(offset => {
       ctx.beginPath();
-      ctx.arc(this.x - 18 + offset, this.y + 4, 3.5, 0, Math.PI * 2);
+      ctx.arc(this.x - 18 + offset, this.y + 4 + (Math.abs(offset) > 4 ? -2 : 0), 3.5, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    const flicker = 10 + Math.sin(this.fireTimer * 12) * 2;
+    // Glowing Inner Coals
+    ctx.fillStyle = '#ea580c';
     ctx.beginPath();
-    ctx.moveTo(this.x - 22, this.y + 2);
-    ctx.lineTo(this.x - 18, this.y - flicker);
-    ctx.lineTo(this.x - 14, this.y + 2);
+    ctx.ellipse(this.x - 18, this.y + 2, 8, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3. Multi-Layered Flickering Fire Tongues
+    const flicker1 = 12 + Math.sin(this.fireTimer * 14) * 2.5;
+    const flicker2 = 9 + Math.cos(this.fireTimer * 18) * 2;
+
+    // Outer flame (Deep Red/Orange)
+    ctx.beginPath();
+    ctx.moveTo(this.x - 24, this.y + 2);
+    ctx.quadraticCurveTo(this.x - 20, this.y - flicker1 * 0.6, this.x - 18, this.y - flicker1);
+    ctx.quadraticCurveTo(this.x - 16, this.y - flicker1 * 0.6, this.x - 12, this.y + 2);
     ctx.closePath();
     ctx.fillStyle = '#f97316';
-    ctx.shadowColor = '#fb923c';
-    ctx.shadowBlur = 12;
     ctx.fill();
-    ctx.shadowBlur = 0;
 
-    const hx = this.x + 12;
+    // Inner bright flame (Yellow)
+    ctx.beginPath();
+    ctx.moveTo(this.x - 21, this.y + 2);
+    ctx.quadraticCurveTo(this.x - 19, this.y - flicker2 * 0.5, this.x - 18, this.y - flicker2);
+    ctx.quadraticCurveTo(this.x - 17, this.y - flicker2 * 0.5, this.x - 15, this.y + 2);
+    ctx.closePath();
+    ctx.fillStyle = '#fef08a';
+    ctx.fill();
+
+    // 4. The Hermit's Silhouette
+    const hx = this.x + 14;
     const hy = this.y - 2;
 
+    // Cross-legged mat / base
     ctx.fillStyle = '#334155';
     ctx.beginPath();
     ctx.ellipse(hx, hy + 2, 14, 8, 0, 0, Math.PI * 2);
     ctx.fill();
 
+    // Robe body
     ctx.fillStyle = '#1e293b';
-    ctx.fillRect(hx - 5, hy - 20, 10, 18);
+    ctx.fillRect(hx - 6, hy - 20, 12, 18);
 
+    // Fluttering Tattered Haori Hem
+    const cloakSway = Math.sin(this.fireTimer * 5) * 3;
+    ctx.fillStyle = '#334155';
     ctx.beginPath();
-    ctx.arc(hx, hy - 25, 6, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#d97706';
-    ctx.beginPath();
-    ctx.moveTo(hx - 16, hy - 26);
-    ctx.lineTo(hx, hy - 34);
-    ctx.lineTo(hx + 16, hy - 26);
+    ctx.moveTo(hx + 6, hy - 14);
+    ctx.lineTo(hx + 14 + cloakSway, hy - 6);
+    ctx.lineTo(hx + 8, hy + 2);
     ctx.closePath();
     ctx.fill();
 
-    ctx.strokeStyle = '#94a3b8';
-    ctx.lineWidth = 2;
+    // Head
     ctx.beginPath();
-    ctx.moveTo(hx + 10, hy + 4);
-    ctx.lineTo(hx + 24, hy - 18);
+    ctx.arc(hx, hy - 25, 6.5, 0, Math.PI * 2);
+    ctx.fillStyle = '#0f172a';
+    ctx.fill();
+
+    // Braided Straw Jingasa (Conical Hat) with woven grain lines
+    ctx.fillStyle = '#d97706';
+    ctx.beginPath();
+    ctx.moveTo(hx - 18, hy - 26);
+    ctx.lineTo(hx, hy - 36);
+    ctx.lineTo(hx + 18, hy - 26);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = '#b45309';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(hx - 10, hy - 26);
+    ctx.lineTo(hx, hy - 36);
+    ctx.lineTo(hx + 10, hy - 26);
     ctx.stroke();
 
+    // Sheathed Nodachi resting by campfire
+    ctx.strokeStyle = '#94a3b8';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(hx + 10, hy + 5);
+    ctx.lineTo(hx + 26, hy - 22);
+    ctx.stroke();
+    // Gold Tsuba crossguard
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(hx + 19, hy - 12, 4, 4);
+
+    // 5. Resting Progress Bar Indicator
+    if (this.restTimer > 0 && !this.hasRested) {
+      const restPct = Math.min(1.0, this.restTimer / 2.5);
+      ctx.strokeStyle = 'rgba(249, 115, 22, 0.4)';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.arc(this.x - 18, this.y, 22, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#f97316';
+      ctx.beginPath();
+      ctx.arc(this.x - 18, this.y, 22, -Math.PI / 2, -Math.PI / 2 + restPct * Math.PI * 2);
+      ctx.stroke();
+    }
+
+    // 6. Interaction Prompt
     const pDistSq = (globals.player.x - this.x) ** 2 + (globals.player.y - this.y) ** 2;
     if (pDistSq < this.radius * this.radius) {
       const promptText = globals.currentLang === 'ja' ? '🔥 [SPACE / タップで世捨て人の契約]' : '🔥 [PRESS SPACE / TAP FOR HERMIT PACT]';
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
       ctx.strokeStyle = '#f97316';
       ctx.lineWidth = 1.5;
       const textWidth = ctx.measureText(promptText).width;
-      ctx.fillRect(this.x - textWidth / 2, this.y - 48, textWidth + 16, 24);
-      ctx.strokeRect(this.x - textWidth / 2, this.y - 48, textWidth + 16, 24);
+      ctx.fillRect(this.x - textWidth / 2, this.y - 50, textWidth + 16, 26);
+      ctx.strokeRect(this.x - textWidth / 2, this.y - 50, textWidth + 16, 26);
 
       ctx.fillStyle = '#f97316';
       ctx.font = 'bold 11px "Cinzel", "Space Mono", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(promptText, this.x + 8, this.y - 36);
+      ctx.fillText(promptText, this.x + 8, this.y - 37);
     }
 
     ctx.restore();
@@ -416,8 +590,33 @@ export function triggerCalamityCheck(realDt: number) {
 export function startBloodMoonCalamity() {
   globals.calamityEvent = 'blood_moon';
   globals.calamityTimer = 45.0;
-  globals.screenShake = 40;
+  globals.screenShake = 45;
   playSynthesizedTempleBell();
+  playSynthesizedBloodMoonRoar();
   globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ef4444'));
-  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '【災厄】血月蝕の刻！ 45秒間生き延びよ！ 🌑🩸' : '【CALAMITY】 BLOOD MOON ECLIPSE! SURVIVE 45 SECONDS! 🌑🩸', 'neon-#ef4444', 36));
+  globals.floatingTexts.push(FloatingText.acquire(
+    globals.player.x, 
+    globals.player.y - 100, 
+    globals.currentLang === 'ja' ? '【災厄】血月蝕の刻！ 45秒間生き延びよ！ 🌑🩸' : '【CALAMITY】 BLOOD MOON ECLIPSE! SURVIVE 45 SECONDS! 🌑🩸', 
+    'neon-#ef4444', 
+    36
+  ));
+
+  // Spawn the Mirror Soul Shadow Doppelganger
+  const clone = new Enemy(globals.player.x + (Math.random() > 0.5 ? 260 : -260), globals.player.y, globals.player);
+  clone.subType = 'ronin';
+  clone.colorTint = '#9333ea';
+  clone.hp = 120;
+  clone.maxHp = 120;
+  (clone as any).isBoss = true;
+  (clone as any).isShadowDoppelganger = true;
+  globals.enemies.push(clone);
+  globals.shadowDoppelganger = clone;
+}
+
+export function notifyFeatMilestone(_sealId: number, current: number, target: number, labelEn: string, labelJa: string) {
+  const isJa = globals.currentLang === 'ja';
+  const label = isJa ? labelJa : labelEn;
+  const txt = `⛩️ [${label}: ${current}/${target}]`;
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, txt, '#38bdf8', 24));
 }

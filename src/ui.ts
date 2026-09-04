@@ -6,7 +6,7 @@ import { pvpManager } from './pvpIaijutsuManager';
 import { AdManager } from './adManager';
 import { FUSION_RECIPES } from './powerups';
 import { YOMI_SEALS } from './shrine';
-import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl } from './audio';
+import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell } from './audio';
 import { FloatingText, Shockwave } from './entities';
 
 
@@ -227,9 +227,11 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
           globals.unlockedSeals.push(sealId);
           try { localStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals)); } catch(e) {}
           YOMI_SEALS[sealId]?.applyPermanentReward();
-          playSynthesizedFusionUnlock();
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '⛩️ 黄泉の封印解除！ 恒久恩恵獲得！' : '⛩️ YOMI SEAL BROKEN! PERMANENT BLESSING!', '#ffd700', 32));
+          playSynthesizedSealShatter();
+          globals.screenShake = Math.max(globals.screenShake, 42);
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '⛩️ 封印砕散！ 恒久恩恵開眼！' : '⛩️ SEAL SHATTERED! PERMANENT BLESSING UNLEASHED!', '#ffd700', 34));
           globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+          globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
         }
         globals.activeShrine = null;
       }
@@ -270,7 +272,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '心眼の覚醒成立！ 気力急増' : 'MIND EYE SEALED! +60% FLOW', '#a855f7', 28));
           }
         }
-        playSynthesizedSingingBowl();
+        playSynthesizedTempleBell();
+        globals.screenShake = Math.max(globals.screenShake, 24);
         globals.activeHermit = null;
         closeHermitModal();
         callbacks.updateUI();
@@ -297,7 +300,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
           globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 2;
           globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '天恵拝領！ 抜刀威力向上' : 'ASCETIC GIFT! +2 IAI DMG', '#10b981', 28));
         }
-        playSynthesizedSingingBowl();
+        playSynthesizedTempleBell();
+        globals.screenShake = Math.max(globals.screenShake, 24);
         globals.activeHermit = null;
         closeHermitModal();
         callbacks.updateUI();
@@ -1352,15 +1356,38 @@ export function populateGrimoireGrid() {
     const isDiscovered = globals.discoveredFusions.includes(recipe.key) || globals.activeFusions.has(recipe.key);
     const card = document.createElement('div');
     card.className = 'grimoire-card' + (isDiscovered ? ' discovered' : ' locked');
-    card.style.background = isDiscovered ? 'rgba(30, 41, 59, 0.95)' : 'rgba(15, 23, 42, 0.7)';
+    card.style.background = isDiscovered ? 'rgba(30, 41, 59, 0.95)' : 'rgba(15, 23, 42, 0.8)';
     card.style.border = isDiscovered ? '1px solid #ffd700' : '1px solid #334155';
     card.style.borderRadius = '8px';
     card.style.padding = '16px';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
     card.style.gap = '8px';
-    card.style.boxShadow = isDiscovered ? '0 0 15px rgba(255, 215, 0, 0.2)' : 'none';
+    card.style.boxShadow = isDiscovered ? '0 0 18px rgba(255, 215, 0, 0.25)' : 'none';
     
+    // Live Run Synergy Calculation
+    let req1Met = false;
+    let req2Met = false;
+
+    if (recipe.key === 'plasma_tempest') {
+      req1Met = globals.selectedSkill === 'firewheel' || (globals.playerStats.firewheelBlazeLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Fire'));
+      req2Met = globals.selectedSkill === 'dash' || (globals.playerStats.dashThunderLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Thunder') || k.includes('Feather'));
+    } else if (recipe.key === 'singularity_cleave') {
+      req1Met = globals.selectedSkill === 'gravity' || (globals.playerStats.gravityRadiusLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Gravity'));
+      req2Met = globals.selectedSkill === 'enhance' || globals.playerStats.enhanceBonusDmg >= 2 || globals.chosenPowerUps.some(k => k.includes('Lethal') || k.includes('Giant'));
+    } else if (recipe.key === 'hundred_phantoms') {
+      req1Met = (globals.playerStats.shadowClonesLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Clones') || k.includes('Echo'));
+      req2Met = globals.chosenPowerUps.includes('puCursedGlass') || globals.lives <= 2;
+    } else if (recipe.key === 'kamaitachi') {
+      req1Met = globals.galeVortexActive || globals.selectedSkill === 'shield' || globals.chosenPowerUps.some(k => k.includes('Wind') || k.includes('Gale'));
+      req2Met = globals.playerStats.deflectedDmg >= 3 || globals.chosenPowerUps.some(k => k.includes('Deflect') || k.includes('Iron'));
+    } else if (recipe.key === 'asura_storm') {
+      req1Met = globals.selectedSkill === 'parry_master' || globals.consecutiveParries >= 3 || globals.runStats.perfectParries >= 3;
+      req2Met = globals.bloodThirstCurseActive || globals.playerStats.flowGenMult >= 1.3 || globals.chosenPowerUps.some(k => k.includes('Blood'));
+    }
+
+    const synergyPct = ((req1Met ? 1 : 0) + (req2Met ? 1 : 0)) * 50;
+
     if (isDiscovered) {
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -1368,10 +1395,21 @@ export function populateGrimoireGrid() {
           <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e;">${isJa ? '解読済' : 'DISCOVERED'}</span>
         </div>
         <div style="font-size:13px; color:#e2e8f0; line-height:1.4;">${isJa ? recipe.descJa : recipe.descEn}</div>
+        
+        <div style="margin-top:4px; display:flex; flex-direction:column; gap:3px;">
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;">
+            <span>${isJa ? '出撃中の共鳴度' : 'Active Run Synergy'}: <strong style="color:${synergyPct === 100 ? '#22c55e' : (synergyPct > 0 ? '#ffd700' : '#64748b')};">${synergyPct}%</strong></span>
+            <span style="color:${synergyPct === 100 ? '#22c55e' : '#ffd700'}; font-weight:bold;">${synergyPct === 100 ? (isJa ? '⚡ 融合準備完了！' : '⚡ READY TO FORGE!') : (synergyPct === 50 ? (isJa ? '素材1つ獲得済' : '1/2 Acquired') : '')}</span>
+          </div>
+          <div style="width:100%; height:5px; background:#0f172a; border-radius:3px; overflow:hidden; border:1px solid #334155;">
+            <div style="width:${synergyPct}%; height:100%; background:${synergyPct === 100 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : 'linear-gradient(90deg, #f59e0b, #ffd700)'};"></div>
+          </div>
+        </div>
+
         <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #334155; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#94a3b8;">
-          <span style="background:#0f172a; padding:3px 8px; border-radius:4px; border:1px solid #475569;">⚔️ ${isJa ? recipe.req1Ja : recipe.req1En}</span>
+          <span style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req1Met ? '#86efac' : '#cbd5e1'};">⚔️ ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
           <span>+</span>
-          <span style="background:#0f172a; padding:3px 8px; border-radius:4px; border:1px solid #475569;">⚡ ${isJa ? recipe.req2Ja : recipe.req2En}</span>
+          <span style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req2Met ? '#86efac' : '#cbd5e1'};">⚡ ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
         </div>
       `;
     } else {
@@ -1385,17 +1423,27 @@ export function populateGrimoireGrid() {
             ? '二つの異なる流派の極致を同時に極めし時、この禁断の秘奥義は開眼する…' 
             : 'When two opposing disciplines reach their zenith in a single battle, this secret art shall awaken...'}
         </div>
+        
+        <div style="margin-top:4px; display:flex; flex-direction:column; gap:3px;">
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b;">
+            <span>${isJa ? '出撃中の共鳴度' : 'Active Run Synergy'}: <strong style="color:${synergyPct > 0 ? '#ffd700' : '#475569'};">${synergyPct}%</strong></span>
+            <span style="color:#ffd700; font-weight:bold;">${synergyPct === 100 ? (isJa ? '⚡ 融合準備完了！' : '⚡ READY TO FORGE!') : (synergyPct === 50 ? (isJa ? '素材1つ獲得済' : '1/2 Acquired') : '')}</span>
+          </div>
+          <div style="width:100%; height:5px; background:#090d16; border-radius:3px; overflow:hidden; border:1px solid #1e293b;">
+            <div style="width:${synergyPct}%; height:100%; background:${synergyPct === 100 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : 'linear-gradient(90deg, #f59e0b, #ffd700)'};"></div>
+          </div>
+        </div>
+
         <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #1e293b; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#475569;">
-          <span style="background:#090d16; padding:3px 8px; border-radius:4px; border:1px solid #1e293b;">? ${isJa ? recipe.req1Ja : recipe.req1En}</span>
+          <span style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#090d16'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #1e293b'}; color:${req1Met ? '#86efac' : '#64748b'};">? ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
           <span>+</span>
-          <span style="background:#090d16; padding:3px 8px; border-radius:4px; border:1px solid #1e293b;">? ${isJa ? recipe.req2Ja : recipe.req2En}</span>
+          <span style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#090d16'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #1e293b'}; color:${req2Met ? '#86efac' : '#64748b'};">? ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
         </div>
       `;
     }
     grid.appendChild(card);
   });
 }
-
 export function populateChronicleList() {
   const countEl = document.getElementById('seals-unlocked-count');
   if (countEl) countEl.textContent = `${globals.unlockedSeals.length} / 7`;
