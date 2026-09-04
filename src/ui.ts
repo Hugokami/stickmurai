@@ -1,4 +1,4 @@
-import { globals } from './globals';
+import { globals, getStageAffix, getAscendantRank } from './globals';
 import { i18n, skillsData } from './assets';
 import { bgmAudio, pauseBgm } from './audio';
 import { callbacks } from './callbacks';
@@ -217,14 +217,60 @@ export function getStageData(stage: number) {
 export function updateStageSelectionUI() {
   const current = globals.currentStage || 1;
   const stageData = getStageData(current);
+  const isJa = globals.currentLang === 'ja';
+
+  // 1. Ronin Ascendant Rank Badge
+  const rank = getAscendantRank(globals.maxStageUnlocked || 1);
+  const rankIconEl = document.getElementById('ronin-rank-icon');
+  const rankTextEl = document.getElementById('ronin-rank-text');
+  const rankBadgeEl = document.getElementById('ronin-rank-badge');
+  if (rankIconEl) rankIconEl.textContent = rank.badge;
+  if (rankTextEl) {
+    rankTextEl.textContent = isJa ? rank.titleJa : rank.title.toUpperCase();
+    rankTextEl.style.color = rank.color;
+  }
+  if (rankBadgeEl) {
+    rankBadgeEl.style.borderColor = `${rank.color}88`;
+  }
+
+  // 2. Stage Name & Description
   const nameEl = document.getElementById('stage-select-name');
   const descEl = document.getElementById('stage-select-desc');
   if (nameEl && stageData) {
-    nameEl.textContent = globals.currentLang === 'ja' ? stageData.nameJa : stageData.name;
+    nameEl.textContent = isJa ? stageData.nameJa : stageData.name;
   }
   if (descEl && stageData) {
     descEl.textContent = stageData.desc;
   }
+
+  // 3. Stage 3-Star Mastery Rating
+  const starsEl = document.getElementById('stage-select-stars');
+  if (starsEl) {
+    const starCount = globals.stageStars?.[current] || 0;
+    let starHtml = '';
+    for (let s = 1; s <= 3; s++) {
+      if (s <= starCount) {
+        starHtml += '<span style="color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.6);">★</span>';
+      } else {
+        starHtml += '<span style="color: #475569; opacity: 0.4;">☆</span>';
+      }
+    }
+    starsEl.innerHTML = starHtml;
+  }
+
+  // 4. Calamity Winds Stage Affix Pill
+  const affix = getStageAffix(current);
+  const affixEl = document.getElementById('stage-select-affix');
+  if (affixEl) {
+    if (affix) {
+      affixEl.style.display = 'block';
+      affixEl.innerHTML = `<strong>${affix.icon} ${isJa ? affix.nameJa : affix.name}:</strong> ${isJa ? affix.descJa : affix.desc}`;
+    } else {
+      affixEl.style.display = 'none';
+    }
+  }
+
+  // 5. Prev / Next Navigation Buttons
   const prevBtn = document.getElementById('stage-prev-btn') as HTMLButtonElement;
   const nextBtn = document.getElementById('stage-next-btn') as HTMLButtonElement;
   if (prevBtn) prevBtn.disabled = current <= 1;
@@ -2270,7 +2316,29 @@ export function triggerStageClear() {
     try { localStorage.setItem('stickmurai_cleared_stages', JSON.stringify(clearedStages)); } catch(e) {}
   }
 
-  globals.magatama = (globals.magatama || 0) + stageReward;
+  // 3-Star Mastery Evaluation
+  const isBossStage = currentStage % 5 === 0;
+  const parTime = isBossStage ? 90 : 60;
+  const star1 = true; // Stage Conquered
+  const star2 = globals.runTime <= parTime; // Speed Demon
+  const star3 = (globals.runStats?.maxCombo || 0) >= 20; // Combo Master
+
+  const earnedStars = (star1 ? 1 : 0) + (star2 ? 1 : 0) + (star3 ? 1 : 0);
+  if (!globals.stageStars) globals.stageStars = {};
+  const prevStars = globals.stageStars[currentStage] || 0;
+
+  if (earnedStars > prevStars) {
+    globals.stageStars[currentStage] = earnedStars;
+    try { localStorage.setItem('stickmurai_stage_stars', JSON.stringify(globals.stageStars)); } catch(e) {}
+  }
+
+  // Mastery Bounty: +300 Magatama when achieving 3 stars for the first time
+  let masteryBounty = 0;
+  if (earnedStars === 3 && prevStars < 3) {
+    masteryBounty = 300;
+  }
+
+  globals.magatama = (globals.magatama || 0) + stageReward + masteryBounty;
   try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
 
   // Unlock next stage (Endless progression)
@@ -2293,11 +2361,56 @@ export function triggerStageClear() {
     timeEl.textContent = `${min}:${sec < 10 ? '0' : ''}${sec}`;
   }
 
+  // Render 3-Star Mastery Card Breakdown
+  const starReq1 = document.getElementById('star-req-1');
+  const starIcon1 = document.getElementById('star-icon-1');
+  const starText1 = document.getElementById('star-text-1');
+  if (starReq1 && starIcon1 && starText1) {
+    starReq1.style.color = '#ffd700';
+    starIcon1.textContent = '⭐';
+    starText1.textContent = isJa ? '討伐達成 (ステージクリア)' : 'Stage Conquered';
+  }
+
+  const starReq2 = document.getElementById('star-req-2');
+  const starIcon2 = document.getElementById('star-icon-2');
+  const starText2 = document.getElementById('star-text-2');
+  if (starReq2 && starIcon2 && starText2) {
+    starReq2.style.color = star2 ? '#ffd700' : '#64748b';
+    starIcon2.textContent = star2 ? '⭐' : '☆';
+    starText2.textContent = isJa
+      ? `神速の剣士 (≤${parTime}秒)`
+      : `Speed Demon (≤${parTime}s)`;
+  }
+
+  const starReq3 = document.getElementById('star-req-3');
+  const starIcon3 = document.getElementById('star-icon-3');
+  const starText3 = document.getElementById('star-text-3');
+  if (starReq3 && starIcon3 && starText3) {
+    starReq3.style.color = star3 ? '#ffd700' : '#64748b';
+    starIcon3.textContent = star3 ? '⭐' : '☆';
+    starText3.textContent = isJa
+      ? `連撃の達人 (20+ 連撃)`
+      : `Combo Master (20+ Combo)`;
+  }
+
+  const bountyBadge = document.getElementById('star-bounty-badge');
+  if (bountyBadge) {
+    bountyBadge.style.display = masteryBounty > 0 ? 'inline-block' : 'none';
+    if (masteryBounty > 0) {
+      bountyBadge.textContent = isJa ? '✨ +300 🔮 完全制覇ボーナス！' : '✨ +300 🔮 MASTERY BOUNTY!';
+    }
+  }
+
   const rewardEl = document.getElementById('stage-clear-reward');
   if (rewardEl) {
-    rewardEl.innerHTML = isFirstClear
-      ? `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[FIRST CLEAR 3×]</span> +${stageReward.toLocaleString()} 🔮`
-      : `+${stageReward.toLocaleString()} 🔮`;
+    let rewardText = `+${stageReward.toLocaleString()} 🔮`;
+    if (isFirstClear) {
+      rewardText = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[FIRST CLEAR 3×]</span> ` + rewardText;
+    }
+    if (masteryBounty > 0) {
+      rewardText += ` <span style="color: #fbbf24; font-size: 11px; margin-left: 4px;">(+300 ⭐⭐⭐)</span>`;
+    }
+    rewardEl.innerHTML = rewardText;
   }
 
   const magEl = document.getElementById('stage-clear-magatama');

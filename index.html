@@ -422,12 +422,19 @@
 
           <!-- Campaign Stage Selector -->
           <div id="pregame-stage-selector" style="margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-direction: column; width: 100%;">
-            <label class="pregame-section-label">Campaign Stage</label>
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;">
+              <label class="pregame-section-label" style="margin: 0;">Campaign Stage</label>
+              <div id="ronin-rank-badge" style="display: inline-flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,215,0,0.35); border-radius: 12px; padding: 2px 10px; font-family: 'Orbitron', monospace; font-size: 11px; color: #ffd700; font-weight: bold;">
+                <span id="ronin-rank-icon">🎋</span> <span id="ronin-rank-text">RONIN ASPIRANT</span>
+              </div>
+            </div>
             <div style="display: flex; align-items: center; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
               <button id="stage-prev-btn" class="menu-btn btn-compact" style="width: 44px; min-width: 44px; padding: 6px 0 !important; font-size: 16px; margin: 0;">◀</button>
-              <div id="stage-select-card" style="background: rgba(0,0,0,0.45); border: 1px solid rgba(255,215,0,0.4); border-radius: 8px; padding: 10px 16px; text-align: center; flex: 1; box-shadow: 0 0 15px rgba(255,215,0,0.1);">
+              <div id="stage-select-card" style="background: rgba(0,0,0,0.45); border: 1px solid rgba(255,215,0,0.4); border-radius: 8px; padding: 8px 16px; text-align: center; flex: 1; box-shadow: 0 0 15px rgba(255,215,0,0.1);">
                 <div id="stage-select-name" style="font-family: 'Shojumaru', cursive; color: #ffd700; font-size: 15px; letter-spacing: 1px;">STAGE 1: BAMBOO GROVE</div>
-                <div id="stage-select-desc" style="font-family: 'Space Mono', monospace; font-size: 11px; color: #94a3b8; margin-top: 3px;">Target: 12 Kills // Grunts & Rogues</div>
+                <div id="stage-select-stars" style="font-size: 14px; letter-spacing: 4px; margin: 2px 0; color: #ffd700;">⭐⭐⭐</div>
+                <div id="stage-select-desc" style="font-family: 'Space Mono', monospace; font-size: 11px; color: #94a3b8; margin-top: 2px;">Target: 12 Kills // Grunts & Rogues</div>
+                <div id="stage-select-affix" style="display: none; margin-top: 5px; font-family: 'Outfit', sans-serif; font-size: 11px; background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.4); border-radius: 6px; padding: 3px 8px; color: #fca5a5;"></div>
               </div>
               <button id="stage-next-btn" class="menu-btn btn-compact" style="width: 44px; min-width: 44px; padding: 6px 0 !important; font-size: 16px; margin: 0;">▶</button>
             </div>
@@ -767,6 +774,25 @@
             <div>💰 TREASURY: <span id="stage-clear-magatama" style="color: #4ade80; font-weight: bold;">0 🔮</span></div>
           </div>
 
+          <!-- 3-Star Mastery Breakdown -->
+          <div id="stage-clear-stars-card" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px; padding: 8px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 10px; font-family: 'Space Mono', monospace; font-size: 11px;">
+            <div id="star-req-1" style="display: flex; align-items: center; gap: 6px; color: #ffd700;">
+              <span id="star-icon-1" style="font-size: 16px;">⭐</span>
+              <span id="star-text-1">Stage Conquered</span>
+            </div>
+            <div id="star-req-2" style="display: flex; align-items: center; gap: 6px; color: #94a3b8;">
+              <span id="star-icon-2" style="font-size: 16px;">⭐</span>
+              <span id="star-text-2">Speed Demon (&le;60s)</span>
+            </div>
+            <div id="star-req-3" style="display: flex; align-items: center; gap: 6px; color: #94a3b8;">
+              <span id="star-icon-3" style="font-size: 16px;">⭐</span>
+              <span id="star-text-3">Combo Master (20+ Combo)</span>
+            </div>
+            <div id="star-bounty-badge" style="display: none; background: rgba(255,215,0,0.15); border: 1px solid #ffd700; border-radius: 12px; padding: 3px 10px; color: #ffd700; font-weight: bold; font-family: 'Orbitron', monospace; font-size: 11px; box-shadow: 0 0 10px rgba(255,215,0,0.3);">
+              ✨ +300 🔮 MASTERY BOUNTY!
+            </div>
+          </div>
+
           <!-- Ascension Upgrade Grid -->
           <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; margin-bottom: 10px;">
             <h3 style="font-family: 'Shojumaru', cursive; color: #38bdf8; font-size: 15px; margin: 0 0 10px 0; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);">SHRINE OF ASCENSION (PERMANENT UPGRADES)</h3>
@@ -782,6 +808,14 @@
             <button id="stage-clear-next-btn" class="menu-btn btn-compact" style="flex: 2; min-width: 180px; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); font-weight: bold;">⚔️ NEXT STAGE</button>
           </div>
         </div>
+      </div>
+
+      <!-- Visceral "斬" (ZAN) Stage-Clear Finisher Calligraphy Cut-In -->
+      <div id="zan-overlay" style="display: none; position: fixed; inset: 0; pointer-events: none; z-index: 9600; justify-content: center; align-items: center; background: radial-gradient(circle, rgba(239, 68, 68, 0.45) 0%, rgba(0, 0, 0, 0.88) 80%);">
+        <div id="zan-kanji" style="font-family: 'Shojumaru', cursive; font-size: clamp(100px, 26vw, 240px); color: #ef4444; text-shadow: 0 0 40px #ff0055, 0 0 80px #ff0055, 0 0 120px #000; transform: scale(0.5); opacity: 0; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;">
+          斬
+        </div>
+        <div id="zan-slashline" style="position: absolute; width: 150vw; height: 6px; background: linear-gradient(90deg, transparent, #fff, #ffd700, #ff0055, transparent); transform: rotate(-35deg) scaleX(0); opacity: 0; box-shadow: 0 0 25px #ffd700, 0 0 50px #ff0055; transition: transform 0.18s ease-out, opacity 0.18s ease-out;"></div>
       </div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -318,6 +318,14 @@ export const globals = {
     } catch(e) {}
     return [] as number[];
   })(),
+  stageStars: (() => {
+    try {
+      const stored = localStorage.getItem('stickmurai_stage_stars');
+      if (stored) return JSON.parse(stored) as Record<number, number>;
+    } catch(e) {}
+    return {} as Record<number, number>;
+  })(),
+  activeStageAffix: null as StageAffix | null,
   campaignUpgrades: (() => {
     const defaults = {
       slashDamage: 0,     // Level 0..10 (+1 DMG per level)
@@ -348,3 +356,63 @@ export interface BladeClashState {
   x: number;
   y: number;
 }
+
+export interface StageAffix {
+  id: string;
+  name: string;
+  nameJa: string;
+  icon: string;
+  desc: string;
+  descJa: string;
+}
+
+export const STAGE_AFFIXES: StageAffix[] = [
+  {
+    id: 'corpse_ignition',
+    name: 'Corpse Ignition',
+    nameJa: '爆炎の呪',
+    icon: '🔥',
+    desc: 'Slain foes burst into burning embers that harm nearby enemies',
+    descJa: '討伐した敵が爆炎を放ち、周囲の敵を巻き込む'
+  },
+  {
+    id: 'thunder_gale',
+    name: 'Thunder Gale',
+    nameJa: '雷嵐の疾風',
+    icon: '⚡',
+    desc: 'Dash CD reduced by 15%, and periodic lightning strikes random enemies',
+    descJa: 'ダッシュCT短縮-15% & 天の稲妻が敵を定期的に討つ'
+  },
+  {
+    id: 'blood_surge',
+    name: 'Blood Surge',
+    nameJa: '狂気の血潮',
+    icon: '🩸',
+    desc: 'Enemies deal +1 damage, but ALL Magatama drops are DOUBLED (2×)',
+    descJa: '敵の攻撃力+1、ただし全ての勾玉獲得量が2倍に増大'
+  },
+  {
+    id: 'void_flux',
+    name: 'Void Flux',
+    nameJa: '虚空の歪み',
+    icon: '🌌',
+    desc: 'Flow generates 40% faster, but enemies move 15% swifter',
+    descJa: '気力蓄積+40%加速、ただし敵の移動速度+15%'
+  }
+];
+
+export function getStageAffix(stage: number): StageAffix | null {
+  if (stage < 6 || stage % 5 === 0) return null; // Standard & Boss stages don't have affixes
+  const index = (stage * 7 + 3) % STAGE_AFFIXES.length;
+  return STAGE_AFFIXES[index];
+}
+
+export function getAscendantRank(maxStage: number): { title: string; titleJa: string; badge: string; color: string } {
+  if (maxStage >= 50) return { title: 'Mythic Immortal', titleJa: '無双不死の覇神', badge: '👑', color: '#ff0055' };
+  if (maxStage >= 35) return { title: 'Ascended Sovereign', titleJa: '黄泉の修羅王', badge: '🔱', color: '#a855f7' };
+  if (maxStage >= 20) return { title: 'God of Swift Blade', titleJa: '神速の抜刀鬼', badge: '⚡', color: '#fbbf24' };
+  if (maxStage >= 10) return { title: 'Blade Saint (Kensei)', titleJa: '剣聖', badge: '⚔️', color: '#38bdf8' };
+  if (maxStage >= 5)  return { title: 'Master Swordsman', titleJa: '剣豪', badge: '🗡️', color: '#4ade80' };
+  return { title: 'Ronin Aspirant', titleJa: '孤高の浪人', badge: '🎋', color: '#94a3b8' };
+}
+

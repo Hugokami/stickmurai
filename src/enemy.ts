@@ -408,6 +408,10 @@ export class Enemy extends Entity {
       }
     }
 
+    if (globals.activeStageAffix?.id === 'void_flux') {
+      speedMult *= 1.15;
+    }
+
     this.hp = Math.max(1, Math.round(this.hp * hpMult));
     this.maxHp = this.hp;
     this.hpDelayed = this.hp;

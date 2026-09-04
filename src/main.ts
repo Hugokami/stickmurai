@@ -1,5 +1,5 @@
 import './style.css';
-import { globals } from './globals';
+import { globals, getStageAffix } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
 import { i18n, loaderTips, startBackgroundAssetLoading, loadCoreCombatAssetsNow } from './assets';
 import {
@@ -44,6 +44,8 @@ import { vfxAnims } from './assets';
 let localRematchReady = false;
 let remoteRematchReady = false;
 let stormLightningTimer = 0.0;
+let isZanFinisherActive = false;
+let thunderGaleTimer = 0.0;
 import { WeatherEngine } from './weather';
 import { checkShrineSpawns, triggerCalamityCheck, YOMI_SEALS, spawnShrine, notifyFeatMilestone } from './shrine';
 let bossEncounterDamaged = false;
@@ -988,8 +990,10 @@ function initGame() {
     globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + infRiposte * 1.5;
   }
 
-  // Initialize Stage Mode Objectives
+  // Initialize Stage Mode Objectives & Affixes
   globals.stageKills = 0;
+  isZanFinisherActive = false;
+  thunderGaleTimer = 0.0;
   const currentStage = globals.currentStage || 1;
   const isBossStage = currentStage % 5 === 0;
   const stageTargets: Record<number, number> = {
@@ -999,6 +1003,31 @@ function initGame() {
     globals.stageTargetKills = 1;
   } else {
     globals.stageTargetKills = stageTargets[currentStage] || Math.min(50, 10 + currentStage * 3);
+  }
+
+  // Active Stage Affix (Calamity Winds for Stages >= 6)
+  if (globals.gameMode === 'classic') {
+    globals.activeStageAffix = getStageAffix(currentStage);
+    if (globals.activeStageAffix?.id === 'thunder_gale') {
+      globals.playerStats.dashCooldownBase = Math.max(0.35, globals.playerStats.dashCooldownBase * 0.85);
+    }
+    if (globals.activeStageAffix?.id === 'void_flux') {
+      globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) * 1.4;
+    }
+    if (globals.activeStageAffix) {
+      const isJa = globals.currentLang === 'ja';
+      const affixText = isJa
+        ? `${globals.activeStageAffix.icon} 【災厄の風】${globals.activeStageAffix.nameJa}`
+        : `${globals.activeStageAffix.icon} CALAMITY WIND: ${globals.activeStageAffix.name.toUpperCase()}`;
+      globals.delayedActions.push({
+        delay: 0.8,
+        run: () => {
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, affixText, '#fca5a5', 24));
+        }
+      });
+    }
+  } else {
+    globals.activeStageAffix = null;
   }
 
   // Torii Fast-Forward: Catch-up perk picks when jumping straight into higher stages
@@ -1151,6 +1180,11 @@ function triggerFlowingCounterReset() {
 
 function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   if (globals.invulnTimer > 0) return;
+
+  // Blood Surge Affix: Enemies deal +1 damage
+  if (globals.activeStageAffix?.id === 'blood_surge') {
+    damageAmount += 1;
+  }
 
   if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
     if (globals.playerStats.shieldBlastLevel && globals.playerStats.shieldBlastLevel > 0 && enemy && enemy.state !== 'dead') {
@@ -1365,6 +1399,70 @@ export function triggerStormGodLightning(x: number, y: number) {
     }
     
     chainCount++;
+  }
+}
+
+export function triggerZanFinisher(onComplete: () => void) {
+  if (isZanFinisherActive) return;
+  isZanFinisherActive = true;
+
+  // 1. Visceral Audio Cues
+  playSynthesizedSingingBowl();
+  playSynthesizedTempleBell();
+  playSound(sfx.slash);
+
+  // 2. High-Impact Screen Shake & Hit Stop
+  globals.screenShake = Math.max(globals.screenShake, 45);
+  globals.hitStop = 0.25;
+  globals.invulnTimer = Math.max(globals.invulnTimer, 2.5); // Invincible during victory cinematic
+
+  // 3. Magnetic Vacuum: suck all on-screen collectibles at hyper-speed into player
+  if (globals.collectibles && globals.collectibles.length > 0) {
+    for (let i = 0; i < globals.collectibles.length; i++) {
+      const c = globals.collectibles[i];
+      globals.particles.push(Particle.acquire(c.x, c.y, '#ffd700', 40, 0.4, 3));
+      c.x = globals.player.x + (Math.random() - 0.5) * 20;
+      c.y = globals.player.y + (Math.random() - 0.5) * 20;
+    }
+  }
+
+  // 4. Speedlines activation
+  const speedlines = document.getElementById('speedlines-overlay');
+  if (speedlines) {
+    speedlines.classList.add('active');
+    setTimeout(() => speedlines.classList.remove('active'), 500);
+  }
+
+  // 5. Visceral "斬" Calligraphy Slash DOM Overlay
+  const zanOverlay = document.getElementById('zan-overlay');
+  const zanKanji = document.getElementById('zan-kanji');
+  const zanSlashline = document.getElementById('zan-slashline');
+
+  if (zanOverlay && zanKanji && zanSlashline) {
+    zanOverlay.style.display = 'flex';
+    void zanOverlay.offsetWidth; // Force layout reflow
+    zanKanji.style.transform = 'scale(1.15)';
+    zanKanji.style.opacity = '1';
+    zanSlashline.style.transform = 'rotate(-35deg) scaleX(1)';
+    zanSlashline.style.opacity = '1';
+
+    setTimeout(() => {
+      zanKanji.style.transform = 'scale(1.35)';
+      zanKanji.style.opacity = '0';
+      zanSlashline.style.opacity = '0';
+      setTimeout(() => {
+        zanOverlay.style.display = 'none';
+        zanKanji.style.transform = 'scale(0.5)';
+        zanSlashline.style.transform = 'rotate(-35deg) scaleX(0)';
+        isZanFinisherActive = false;
+        onComplete();
+      }, 250);
+    }, 900);
+  } else {
+    setTimeout(() => {
+      isZanFinisherActive = false;
+      onComplete();
+    }, 300);
   }
 }
 
@@ -2125,8 +2223,9 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.shockwaves.push(new Shockwave(e.x, e.y, isBoss ? '#ffd700' : '#ff003c'));
     addFlow(20);
 
-    // Execution Magatama Bounty (boosted by Fortune)
-    const execMag = Math.round((isBoss ? 15 : 3) * (globals.playerStats?.fortuneMult || 1.0));
+    // Execution Magatama Bounty (boosted by Fortune & Blood Surge)
+    const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : 1;
+    const execMag = Math.round((isBoss ? 15 : 3) * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
     globals.magatama = (globals.magatama || 0) + execMag;
     try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
     globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🔮`, '#c084fc', 22));
@@ -2249,15 +2348,42 @@ function killEnemy(e: Enemy) {
     triggerBarrelExplosion(e);
   }
 
-  // Stage Mode Progress & Clear Condition
+  // Corpse Ignition Stage Affix (slain enemies burst into burning embers)
+  if (globals.activeStageAffix?.id === 'corpse_ignition') {
+    playSynthesizedFirewheel();
+    globals.shockwaves.push(new Shockwave(e.x, e.y, '#ef4444'));
+    for (let p = 0; p < 12; p++) {
+      const pAngle = Math.random() * Math.PI * 2;
+      const pSpeed = 80 + Math.random() * 160;
+      globals.particles.push(Particle.acquire(e.x, e.y, '#f97316', pSpeed, 0.5, 3.5, pAngle));
+    }
+    // Harm nearby enemies (cap 5 targets per rule 2, squared distance check)
+    let hitCount = 0;
+    for (let i = 0; i < globals.enemies.length; i++) {
+      const other = globals.enemies[i];
+      if (other !== e && other.state !== 'dead') {
+        const dx = other.x - e.x;
+        const dy = other.y - e.y;
+        if (dx * dx + dy * dy < 12100) { // 110^2
+          hitCount++;
+          callbacks.hitEnemy(other, 4);
+          if (hitCount >= 5) break;
+        }
+      }
+    }
+  }
+
+  // Stage Mode Progress & Clear Condition (Visceral "斬" Finisher Trigger)
   globals.stageKills = (globals.stageKills || 0) + 1;
   if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
     const stage = globals.currentStage || 1;
     const isBossStage = stage % 5 === 0;
     const isBossDefeated = e.subType === 'oni_boss' || e.subType === 'agis_colossus' || e.subType === 'shogun_boss' || (e as any).isBoss;
     if ((isBossStage && isBossDefeated) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
-      if (callbacks.triggerStageClear) {
-        callbacks.triggerStageClear();
+      if (!isZanFinisherActive && callbacks.triggerStageClear) {
+        triggerZanFinisher(() => {
+          callbacks.triggerStageClear();
+        });
       }
     }
   }
@@ -2276,11 +2402,12 @@ function killEnemy(e: Enemy) {
     spawnShrine(5);
   }
 
-  // Award Yomi Magatama based on enemy tier (boosted by Fortune)
+  // Award Yomi Magatama based on enemy tier (boosted by Fortune & Blood Surge)
   const isBossEnemy = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss;
   const isEliteOrRanged = e.subType === 'musketeer' || e.subType === 'pyromancer' || e.subType === 'necromancer' || e.subType === 'orc_brute';
   const fortuneMult = globals.playerStats?.fortuneMult || 1.0;
-  const earnedMagatama = Math.round((isBossEnemy ? 50 : (isEliteOrRanged ? 3 : 1)) * fortuneMult);
+  const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : 1;
+  const earnedMagatama = Math.round((isBossEnemy ? 50 : (isEliteOrRanged ? 3 : 1)) * fortuneMult * bloodSurgeMult);
   globals.magatama = (globals.magatama || 0) + earnedMagatama;
   try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
   if (isBossEnemy || Math.random() < 0.35) {
@@ -2493,6 +2620,30 @@ function update(realDt: number) {
     // Calamity & Shrine checks
     triggerCalamityCheck(realDt);
     checkShrineSpawns();
+
+    // Calamity Winds Stage Affix: Thunder Gale periodic strikes
+    if (globals.activeStageAffix?.id === 'thunder_gale') {
+      thunderGaleTimer += realDt;
+      if (thunderGaleTimer >= 12.0) {
+        thunderGaleTimer = 0.0;
+        const aliveEnemies = globals.enemies.filter(e => e.state !== 'dead');
+        if (aliveEnemies.length > 0) {
+          playSynthesizedThunder();
+          globals.screenShake = Math.max(globals.screenShake, 15);
+          const targets = [aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)]];
+          if (aliveEnemies.length > 1 && Math.random() < 0.5) {
+            const rem = aliveEnemies.filter(e => e !== targets[0]);
+            if (rem.length > 0) targets.push(rem[Math.floor(Math.random() * rem.length)]);
+          }
+          for (const t of targets) {
+            globals.lightningBeams.push(new LightningBeam(t.x, t.y));
+            globals.shockwaves.push(new Shockwave(t.x, t.y, '#38bdf8'));
+            callbacks.hitEnemy(t, 8);
+            globals.floatingTexts.push(FloatingText.acquire(t.x, t.y - 40, "⚡ GALE STRIKE", "#38bdf8", 18));
+          }
+        }
+      }
+    }
 
     // Interaction checks with Active Shrine & Wandering Hermit
     const isInteractRequested = globals.keys['Space'] || globals.mouse.justReleased || globals.mobileAttackJustPressed;
@@ -3580,8 +3731,9 @@ function update(realDt: number) {
             globals.runStats.parries++;
             globals.consecutiveParries++;
 
-            // Perfect Parry Magatama Bounty (boosted by Fortune)
-            const parryMag = Math.round(2 * (globals.playerStats?.fortuneMult || 1.0));
+            // Perfect Parry Magatama Bounty (boosted by Fortune & Blood Surge)
+            const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : 1;
+            const parryMag = Math.round(2 * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
             globals.magatama = (globals.magatama || 0) + parryMag;
             try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x + 35, globals.player.y - 85, `+${parryMag} 🔮`, '#c084fc', 20));
