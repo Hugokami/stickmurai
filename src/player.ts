@@ -269,7 +269,7 @@ export class Player extends Entity {
         if ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god') {
           this.dashCooldown = 0.2;
         } else {
-          this.dashCooldown = globals.playerStats.dashCooldownBase;
+          this.dashCooldown = Math.max(0.72, globals.playerStats.dashCooldownBase);
         }
         
         this.overloadHitEnemies.clear();
@@ -280,8 +280,7 @@ export class Player extends Entity {
           if (e.state === 'dead') continue;
           const dx = e.x - this.x;
           const dy = e.y - this.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < 320) {
+          if (dx * dx + dy * dy < 102400) { // 320^2 squared distance check
             const isEnemyAttacking = e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.2);
             if (isEnemyAttacking) {
               perfectDodgeTriggered = true;

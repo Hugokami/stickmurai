@@ -24,10 +24,10 @@ export interface PowerUp {
 }
 
 export const powerUps: PowerUp[] = [
-  { nameKey: "puGiantName", descKey: "puGiantDesc", apply: () => globals.playerStats.slashSizeMult += 0.25 },
-  { nameKey: "puWindName", descKey: "puWindDesc", apply: () => globals.playerStats.attackCooldownBase *= 0.85 },
-  { skill: "dash", nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase *= 0.75 },
-  { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult += 0.20 },
+  { nameKey: "puGiantName", descKey: "puGiantDesc", apply: () => globals.playerStats.slashSizeMult = Math.min(2.2, globals.playerStats.slashSizeMult + 0.125) },
+  { nameKey: "puWindName", descKey: "puWindDesc", apply: () => globals.playerStats.attackCooldownBase = Math.max(0.18, globals.playerStats.attackCooldownBase * 0.92) },
+  { skill: "dash", nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.90) },
+  { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult = Math.min(1.50, globals.playerStats.moveSpeedMult + 0.10) },
   { nameKey: "puBloodName", descKey: "puBloodDesc", apply: () => globals.playerStats.flowGenMult += 0.15 },
   
   // Dragon's Fury (Enhance) specific
@@ -80,8 +80,8 @@ export const powerUps: PowerUp[] = [
       globals.maxLives = 1;
       globals.lives = 1;
       globals.playerStats.enhanceBonusDmg += 3;
-      globals.playerStats.slashSizeMult += 0.5;
-      globals.playerStats.dashCooldownBase *= 0.7; // +40% dash rate
+      globals.playerStats.slashSizeMult = Math.min(2.2, globals.playerStats.slashSizeMult + 0.25);
+      globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.85);
       if (globals.player) (globals.player as any).dashDuration = 0.45; // extra i-frame window
       callbacks.updateUI();
     }
@@ -102,7 +102,7 @@ export const powerUps: PowerUp[] = [
     isCorrupted: true,
     apply: () => {
       globals.playerStats.dashCooldownBase *= 1.25; // Replaces sluggish movement speed penalty with shorter dash recovery
-      globals.playerStats.slashSizeMult += 1.0; // +100% slash size
+      globals.playerStats.slashSizeMult = Math.min(2.2, globals.playerStats.slashSizeMult + 0.5);
       globals.playerStats.deflectedDmg += 6; // +6 deflected damage
     }
   },
@@ -259,8 +259,8 @@ export function triggerLevelUp() {
   let availablePowers = [...powerUps];
   if (globals.gameMode === 'zen') {
     availablePowers = [
-      { nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase *= 0.75 },
-      { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult += 0.20 },
+      { nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.90) },
+      { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult = Math.min(1.50, globals.playerStats.moveSpeedMult + 0.10) },
       { nameKey: "puBloodName", descKey: "puBloodDesc", apply: () => globals.playerStats.flowGenMult += 0.15 },
       { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => globals.playerStats.deflectedDmg += 2 },
       { nameKey: "puZenRestoreName", descKey: "puZenRestoreDesc", apply: () => { globals.lives = Math.min(3, globals.lives + 1); callbacks.updateUI(); return 0; } }
@@ -648,8 +648,8 @@ export function applyRandomStartUpgrade(): string {
   let availablePowers = [...powerUps];
   if (globals.gameMode === 'zen') {
     availablePowers = [
-      { nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase *= 0.75 },
-      { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult += 0.20 },
+      { nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.90) },
+      { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult = Math.min(1.50, globals.playerStats.moveSpeedMult + 0.10) },
       { nameKey: "puBloodName", descKey: "puBloodDesc", apply: () => globals.playerStats.flowGenMult += 0.15 },
       { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => globals.playerStats.deflectedDmg += 2 }
     ];

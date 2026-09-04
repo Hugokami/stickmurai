@@ -1971,6 +1971,144 @@ input[type="range"]::-webkit-slider-thumb:hover {
     font-size: clamp(10px, 2.8vh, 13px) !important;
     max-width: 140px !important;
   }
+
+  #dojo-screen .menu-btn, #close-dojo-btn {
+    flex: 0 0 auto !important;
+    max-width: 180px !important;
+    width: auto !important;
+    min-height: 32px !important;
+    height: 34px !important;
+    padding: 4px 16px !important;
+    margin-top: 4px !important;
+  }
+
+  #dojo-screen .menu-box {
+    padding: 10px 18px 10px 18px !important;
+    gap: 6px !important;
+    height: 92% !important;
+  }
+  #dojo-screen .hero-card {
+    padding: 8px 10px !important;
+    gap: 4px !important;
+  }
+  #dojo-screen .hero-portrait-wrap {
+    height: 65px !important;
+    margin-bottom: 2px !important;
+  }
+  #dojo-screen .hero-portrait-wrap img {
+    width: 55px !important;
+    height: 55px !important;
+  }
+  #dojo-screen .hero-card .btn-card {
+    min-height: 28px !important;
+    padding: 4px 8px !important;
+    font-size: 11px !important;
+  }
+}
+
+/* Modal Close (X) circular button */
+.modal-close-x {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 100;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  line-height: 1;
+  padding: 0;
+}
+.modal-close-x:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+.modal-close-x:active {
+  transform: scale(0.95);
+}
+
+/* Dojo screen layout & containment */
+#dojo-screen .menu-box {
+  position: relative !important;
+  max-height: 88vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+}
+
+#dojo-screen #dojo-hero-grid {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  max-height: 56vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+#dojo-screen #close-dojo-btn {
+  flex: 0 0 auto !important;
+  max-height: 36px !important;
+  min-height: 34px !important;
+  height: 36px !important;
+  width: auto !important;
+  max-width: 180px !important;
+  padding: 6px 20px !important;
+  font-size: 12px !important;
+  margin: 4px auto 0 auto !important;
+}
+
+/* Skill Lock UI styles */
+.skill-card.skill-locked {
+  opacity: 0.85;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  background: rgba(12, 13, 18, 0.75) !important;
+}
+
+.skill-card.skill-locked:hover {
+  border-color: rgba(255, 215, 0, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+.skill-lock-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 10px;
+  padding: 6px 10px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  border-radius: 6px;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  color: #ffd700;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+}
+
+.skill-lock-btn:hover {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: #ffd700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.35);
+}
+
+.skill-lock-btn:disabled {
+  border-color: rgba(148, 163, 184, 0.3);
+  color: #94a3b8;
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* pregame skill selection modal */

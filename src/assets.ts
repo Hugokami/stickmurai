@@ -58,10 +58,10 @@ export const i18n: Record<string, Record<string, string>> = {
     aerialLaunchedText: "LAUNCHED! 🌪️",
     aerialCleaveText: "HELM SPLITTER! ⚡",
     aerialPromptText: "AERIAL CLEAVE!",
-    puGiantName: "Giant Katana", puGiantDesc: "Slash Size +25%",
-    puWindName: "Wind Stance", puWindDesc: "Attack Cooldown -15%",
-    puFeatherName: "Feather Step", puFeatherDesc: "Dash Cooldown -25%",
-    puSwiftName: "Swiftness", puSwiftDesc: "Movement Speed +20%",
+    puGiantName: "Giant Katana", puGiantDesc: "Slash Size +12.5% (Max 2.2x)",
+    puWindName: "Wind Stance", puWindDesc: "Attack Cooldown -8% (Max -40%)",
+    puFeatherName: "Feather Step", puFeatherDesc: "Dash Cooldown -10% (Max -40%)",
+    puSwiftName: "Swiftness", puSwiftDesc: "Movement Speed +10% (Max +50%)",
     puBloodName: "Bloodlust", puBloodDesc: "Flow Generation +30%",
     puLethalName: "Lethal Strike", puLethalDesc: "Enhance Bonus Dmg +1",
     puColossalName: "Colossal Blade", puColossalDesc: "Enhance Size +50%",
@@ -313,10 +313,10 @@ export const i18n: Record<string, Record<string, string>> = {
     aerialLaunchedText: "打ち上げ！ 🌪️",
     aerialCleaveText: "兜割り！ ⚡",
     aerialPromptText: "空中斬り！",
-    puGiantName: "巨大な刀", puGiantDesc: "斬撃サイズ +25%",
-    puWindName: "風の型", puWindDesc: "攻撃クールダウン -15%",
-    puFeatherName: "羽の歩み", puFeatherDesc: "ダッシュクールダウン -25%",
-    puSwiftName: "迅速", puSwiftDesc: "移動速度 +20%",
+    puGiantName: "巨大な刀", puGiantDesc: "斬撃サイズ +12.5% (最大2.2倍)",
+    puWindName: "風の型", puWindDesc: "攻撃クールダウン -8% (上限-40%)",
+    puFeatherName: "羽の歩み", puFeatherDesc: "ダッシュクールダウン -10% (上限-40%)",
+    puSwiftName: "迅速", puSwiftDesc: "移動速度 +10% (最大+50%)",
     puBloodName: "血の渇き", puBloodDesc: "気（フロー）の生成 +30%",
     puLethalName: "致命撃", puLethalDesc: "強化時の追加ダメージ +1",
     puColossalName: "巨大剣", puColossalDesc: "強化時のサイズ +50%",
@@ -794,13 +794,13 @@ Object.entries(svgAssets).forEach(([name, url]) => {
 });
 
 export const skillsData = [
-  { id: 'enhance', nameKey: 'skillEnhanceName', descKey: 'skillEnhanceDesc' },
-  { id: 'shield', nameKey: 'skillShieldName', descKey: 'skillShieldDesc' },
-  { id: 'dash', nameKey: 'skillDashName', descKey: 'skillDashDesc' },
-  { id: 'firewheel', nameKey: 'skillFirewheelName', descKey: 'skillFirewheelDesc' },
-  { id: 'gravity', nameKey: 'skillGravityName', descKey: 'skillGravityDesc' },
-  { id: 'parry_master', nameKey: 'skillParryMasterName', descKey: 'skillParryMasterDesc' },
-  { id: 'decoy_illusion', nameKey: 'skillDecoyName', descKey: 'skillDecoyDesc' }
+  { id: 'enhance', nameKey: 'skillEnhanceName', descKey: 'skillEnhanceDesc', cost: 0, icon: '⚔️' },
+  { id: 'dash', nameKey: 'skillDashName', descKey: 'skillDashDesc', cost: 10000, icon: '⚡' },
+  { id: 'shield', nameKey: 'skillShieldName', descKey: 'skillShieldDesc', cost: 15000, icon: '🛡️' },
+  { id: 'parry_master', nameKey: 'skillParryMasterName', descKey: 'skillParryMasterDesc', cost: 20000, icon: '🤺' },
+  { id: 'firewheel', nameKey: 'skillFirewheelName', descKey: 'skillFirewheelDesc', cost: 25000, icon: '🔥' },
+  { id: 'decoy_illusion', nameKey: 'skillDecoyName', descKey: 'skillDecoyDesc', cost: 35000, icon: '👤' },
+  { id: 'gravity', nameKey: 'skillGravityName', descKey: 'skillGravityDesc', cost: 50000, icon: '🌀' }
 ];
 
 function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, isPriority = false) {

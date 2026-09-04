@@ -951,10 +951,16 @@ function initGame() {
 
   // Initialize Stage Mode Objectives
   globals.stageKills = 0;
+  const currentStage = globals.currentStage || 1;
+  const isBossStage = currentStage % 5 === 0;
   const stageTargets: Record<number, number> = {
     1: 12, 2: 15, 3: 18, 4: 22, 5: 1, 6: 25, 7: 28, 8: 30, 9: 35, 10: 1
   };
-  globals.stageTargetKills = stageTargets[globals.currentStage || 1] || (globals.currentStage * 4);
+  if (isBossStage) {
+    globals.stageTargetKills = 1;
+  } else {
+    globals.stageTargetKills = stageTargets[currentStage] || Math.min(50, 10 + currentStage * 3);
+  }
 
   document.getElementById('level-display')!.textContent = globals.level.toString();
   updateEnhanceButton();
@@ -2159,8 +2165,8 @@ function killEnemy(e: Enemy) {
   globals.stageKills = (globals.stageKills || 0) + 1;
   if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
     const stage = globals.currentStage || 1;
-    const isBossStage = stage === 5 || stage >= 10;
-    const isBossDefeated = (stage === 5 && e.subType === 'oni_boss') || (stage >= 10 && (e.subType === 'agis_colossus' || e.subType === 'shogun_boss'));
+    const isBossStage = stage % 5 === 0;
+    const isBossDefeated = e.subType === 'oni_boss' || e.subType === 'agis_colossus' || e.subType === 'shogun_boss' || (e as any).isBoss;
     if ((isBossStage && isBossDefeated) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
       if (callbacks.triggerStageClear) {
         callbacks.triggerStageClear();

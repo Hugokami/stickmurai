@@ -27,7 +27,21 @@ export const globals = {
   enhanceCooldown: 0,
 
   // Active Skills and Powerups State
-  selectedSkill: 'enhance' as 'enhance' | 'shield' | 'dash' | 'firewheel' | 'gravity' | 'parry_master' | 'decoy_illusion',
+  selectedSkill: (() => {
+    try {
+      const stored = localStorage.getItem('stickmurai_selected_skill');
+      if (stored) return stored as any;
+    } catch(e) {}
+    return 'enhance';
+  })() as 'enhance' | 'shield' | 'dash' | 'firewheel' | 'gravity' | 'parry_master' | 'decoy_illusion',
+  unlockedSkills: (() => {
+    try {
+      const stored = localStorage.getItem('stickmurai_unlocked_skills');
+      return stored ? JSON.parse(stored) : ['enhance'];
+    } catch(e) {
+      return ['enhance'];
+    }
+  })() as string[],
   raijinDashActive: false,
   raijinHitEnemies: new Set<any>(),
   maxLives: 5,

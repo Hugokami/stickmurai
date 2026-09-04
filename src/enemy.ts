@@ -188,8 +188,8 @@ export class Enemy extends Entity {
         // Stage 9: Throne Ante-Chamber - Purgatory Rampage
         const elitePool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'necromancer', 'astromancer', 'berserker', 'assassin', 'pyromancer'];
         this.subType = elitePool[Math.floor(Math.random() * elitePool.length)];
-      } else {
-        // Stage 10+: Sanctum of Oblivion - Agis Colossus Boss
+      } else if (stage === 10) {
+        // Stage 10: Sanctum of Oblivion - Agis Colossus Boss
         const agisAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'agis_colossus');
         if (!agisAlive && (globals.stageKills || 0) === 0) {
           this.subType = 'agis_colossus';
@@ -198,6 +198,34 @@ export class Enemy extends Entity {
           if (r < 0.4) this.subType = 'barrel_bomber';
           else if (r < 0.7) this.subType = 'orc_brute';
           else this.subType = 'berserker';
+        }
+      } else {
+        // Stage 11+ Endless Realms
+        const realm = Math.floor((stage - 1) / 5) + 1;
+        const stageInRealm = ((stage - 1) % 5) + 1;
+        if (stageInRealm === 5) {
+          // Boss stage every 5 stages
+          const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'shogun_boss'];
+          const targetBoss = bossTypes[(realm - 1) % bossTypes.length];
+          const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && (e.subType === targetBoss || (e as any).isBoss));
+          if (!bossAlive && (globals.stageKills || 0) === 0) {
+            this.subType = targetBoss;
+          } else {
+            const minionPool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'berserker', 'glacial_sentinel'];
+            this.subType = minionPool[Math.floor(Math.random() * minionPool.length)];
+          }
+        } else if (stageInRealm === 1) {
+          const pool: EnemySubType[] = ['samurai', 'ronin', 'assassin', 'brawler'];
+          this.subType = pool[Math.floor(Math.random() * pool.length)];
+        } else if (stageInRealm === 2) {
+          const pool: EnemySubType[] = ['musketeer', 'berserker', 'orc_brute', 'assassin'];
+          this.subType = pool[Math.floor(Math.random() * pool.length)];
+        } else if (stageInRealm === 3) {
+          const pool: EnemySubType[] = ['barrel_bomber', 'pyromancer', 'orc_brute', 'giant'];
+          this.subType = pool[Math.floor(Math.random() * pool.length)];
+        } else {
+          const pool: EnemySubType[] = ['glacial_sentinel', 'necromancer', 'astromancer', 'orc_brute', 'berserker'];
+          this.subType = pool[Math.floor(Math.random() * pool.length)];
         }
       }
     }
@@ -339,27 +367,45 @@ export class Enemy extends Entity {
       this.maxPosture = 280;
     }
 
-    // Apply difficulty modifiers
+    // Apply scaling modifiers
     let hpMult = 1.0;
     let speedMult = 1.0;
     let chargeMult = 1.0;
 
-    if (globals.difficulty === 'easy') {
-      hpMult = 0.3;
-      speedMult = 0.5;
-      chargeMult = 2.0;
-    } else if (globals.difficulty === 'normal') {
-      hpMult = 0.5;
-      speedMult = 0.7;
-      chargeMult = 1.6;
-    } else if (globals.difficulty === 'hard') {
-      hpMult = 1.3;
-      speedMult = 1.15;
-      chargeMult = 1.3;
-    } else if (globals.difficulty === 'insane') {
-      hpMult = 3.0;
-      speedMult = 1.35;
-      chargeMult = 1.0;
+    if (globals.gameMode === 'classic') {
+      const stage = Math.max(1, globals.currentStage || 1);
+      const isBoss = this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus';
+      
+      // Progressive endless scaling: keeps grunts killable in 1-3 clean strikes while steadily raising challenge
+      const stageHpMult = isBoss ? (1.0 + (stage - 1) * 0.15) : (1.0 + (stage - 1) * 0.08);
+      const stageSpeedMult = Math.min(1.40, 1.0 + (stage - 1) * 0.025);
+      const stageChargeMult = Math.max(0.65, 1.0 - (stage - 1) * 0.02);
+
+      hpMult = stageHpMult;
+      speedMult = stageSpeedMult;
+      chargeMult = stageChargeMult;
+
+      if (isBoss) {
+        this.maxPosture = Math.round(this.maxPosture * (1.0 + (stage - 1) * 0.06));
+      }
+    } else {
+      if (globals.difficulty === 'easy') {
+        hpMult = 0.3;
+        speedMult = 0.5;
+        chargeMult = 2.0;
+      } else if (globals.difficulty === 'normal') {
+        hpMult = 0.5;
+        speedMult = 0.7;
+        chargeMult = 1.6;
+      } else if (globals.difficulty === 'hard') {
+        hpMult = 1.3;
+        speedMult = 1.15;
+        chargeMult = 1.3;
+      } else if (globals.difficulty === 'insane') {
+        hpMult = 3.0;
+        speedMult = 1.35;
+        chargeMult = 1.0;
+      }
     }
 
     this.hp = Math.max(1, Math.round(this.hp * hpMult));

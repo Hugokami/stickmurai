@@ -126,9 +126,48 @@ export const ASCENSION_UPGRADES = [
   }
 ];
 
+export function getStageData(stage: number) {
+  if (stage <= 10 && STAGES[stage - 1]) {
+    return STAGES[stage - 1];
+  }
+  const realm = Math.floor((stage - 1) / 5) + 1;
+  const stageInRealm = ((stage - 1) % 5) + 1;
+  const isBoss = stageInRealm === 5;
+  
+  if (isBoss) {
+    const bossNames = [
+      { name: 'SKELETON ONI OVERLORD', nameJa: '冥府の鬼神・骸骨鬼王' },
+      { name: 'DIVINE SHOGUN OF YOMI', nameJa: '黄泉の神将・魔界征夷大将軍' },
+      { name: 'AGIS ASTRUM COLOSSUS', nameJa: '星海巨神・アギス・コロッサス' },
+      { name: 'VOID CALAMITY INCARNATE', nameJa: '虚無の災厄・破滅の権化' }
+    ];
+    const b = bossNames[(realm - 2) % bossNames.length];
+    return {
+      id: stage,
+      name: `STAGE ${stage}: REALM ${realm} APEX`,
+      nameJa: `ステージ ${stage}: 第${realm}界・頂点決戦`,
+      desc: `BOSS BATTLE // ${b.name} [CALAMITY TIER ${realm}]`
+    };
+  }
+
+  const subThemes = [
+    { title: 'PURGATORY WASTES', titleJa: '煉獄の荒野', desc: `Target: ${10 + stage * 3} Kills // Vanguard Rogues & Elites` },
+    { title: 'OBSIDIAN CITADEL', titleJa: '黒曜石の居城', desc: `Target: ${10 + stage * 3} Kills // Chaos Musketeers & Brutes` },
+    { title: 'BLOOD CHASM', titleJa: '血の裂け目', desc: `Target: ${10 + stage * 3} Kills // Barrel Bombers & Pyromancers` },
+    { title: 'THRONE OF PHANTOMS', titleJa: '幻影の玉座', desc: `Target: ${10 + stage * 3} Kills // Necromancers & High Guard` }
+  ];
+  const theme = subThemes[(stageInRealm - 1) % subThemes.length];
+  return {
+    id: stage,
+    name: `STAGE ${stage}: ${theme.title}`,
+    nameJa: `ステージ ${stage}: ${theme.titleJa}`,
+    desc: theme.desc
+  };
+}
+
 export function updateStageSelectionUI() {
   const current = globals.currentStage || 1;
-  const stageData = STAGES[Math.min(STAGES.length - 1, Math.max(0, current - 1))];
+  const stageData = getStageData(current);
   const nameEl = document.getElementById('stage-select-name');
   const descEl = document.getElementById('stage-select-desc');
   if (nameEl && stageData) {
@@ -140,7 +179,7 @@ export function updateStageSelectionUI() {
   const prevBtn = document.getElementById('stage-prev-btn') as HTMLButtonElement;
   const nextBtn = document.getElementById('stage-next-btn') as HTMLButtonElement;
   if (prevBtn) prevBtn.disabled = current <= 1;
-  if (nextBtn) nextBtn.disabled = current >= Math.min(10, globals.maxStageUnlocked || 1);
+  if (nextBtn) nextBtn.disabled = current >= (globals.maxStageUnlocked || 1);
 }
 
 export function bindDualListener(el: HTMLElement | null | undefined, handler: (e: Event) => void) {
@@ -188,15 +227,22 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const bgmVolumeSlider = document.getElementById('bgm-volume') as HTMLInputElement;
 
   // menu listeners
-  document.getElementById('start-btn')!.addEventListener('click', () => {
-    mainMenu.style.display = 'none';
-    globals.gameMode = 'classic';
-    skillSelectScreen.style.display = 'flex';
-    globals.activeBlessing = null;
-    updateBlessingSelectionUI();
-    renderSkillChoicesPregame();
-    updateStageSelectionUI();
-  });
+  const startBtn = document.getElementById('start-btn');
+  if (startBtn) {
+    bindDualListener(startBtn, () => {
+      mainMenu.style.display = 'none';
+      globals.gameMode = 'classic';
+      globals.difficulty = 'normal';
+      globals.timerLimit = 'endless';
+      // Default to the current highest stage reached
+      globals.currentStage = Math.max(1, globals.maxStageUnlocked || 1);
+      skillSelectScreen.style.display = 'flex';
+      globals.activeBlessing = null;
+      updateBlessingSelectionUI();
+      renderSkillChoicesPregame();
+      updateStageSelectionUI();
+    });
+  }
 
   const prevStageBtn = document.getElementById('stage-prev-btn');
   if (prevStageBtn) {
@@ -212,7 +258,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const nextStageBtn = document.getElementById('stage-next-btn');
   if (nextStageBtn) {
     bindDualListener(nextStageBtn, () => {
-      if ((globals.currentStage || 1) < Math.min(10, globals.maxStageUnlocked || 1)) {
+      if ((globals.currentStage || 1) < (globals.maxStageUnlocked || 1)) {
         globals.currentStage++;
         try { localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString()); } catch(e) {}
         updateStageSelectionUI();
@@ -229,14 +275,12 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   if (stageClearNextBtn) {
     bindDualListener(stageClearNextBtn, () => {
       if (stageClearModal) stageClearModal.style.display = 'none';
-      if ((globals.currentStage || 1) < 10) {
-        globals.currentStage = (globals.currentStage || 1) + 1;
-        globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, globals.currentStage);
-        try {
-          localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
-          localStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString());
-        } catch(e) {}
-      }
+      globals.currentStage = (globals.currentStage || 1) + 1;
+      globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, globals.currentStage);
+      try {
+        localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
+        localStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString());
+      } catch(e) {}
       if (cachedOnPlayCallback) cachedOnPlayCallback();
     });
   }
@@ -401,6 +445,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
 
   bindDualListener(openDojoBtn, openDojo);
   bindDualListener(closeDojoBtn, closeDojo);
+  const closeDojoXBtn = document.getElementById('close-dojo-x-btn');
+  bindDualListener(closeDojoXBtn, closeDojo);
 
   // Shrine & Hermit Modal Listeners
   const onShatterSeal = () => {
@@ -907,11 +953,25 @@ export function updatePregameOptionsUI() {
 
 export function renderSkillChoicesPregame() {
   const container = document.getElementById('pregame-skill-choices');
+  const countEl = document.getElementById('pregame-magatama-count');
+  if (countEl) countEl.textContent = (globals.magatama || 0).toLocaleString();
   if (!container) return;
   container.innerHTML = '';
+
+  const isJa = globals.currentLang === 'ja';
+
+  // Ensure selected skill is unlocked, otherwise fallback to enhance
+  if (!globals.unlockedSkills.includes(globals.selectedSkill)) {
+    globals.selectedSkill = 'enhance';
+    try { localStorage.setItem('stickmurai_selected_skill', 'enhance'); } catch(e) {}
+  }
+
   skillsData.forEach((skill: any) => {
+    const isUnlocked = globals.unlockedSkills.includes(skill.id);
+    const isSelected = globals.selectedSkill === skill.id;
+
     const card = document.createElement('div');
-    card.className = `skill-card ${globals.selectedSkill === skill.id ? 'active' : ''}`;
+    card.className = `skill-card ${isSelected ? 'active' : ''} ${!isUnlocked ? 'skill-locked' : ''}`;
     
     let category = 'basic';
     if (skill.id === 'enhance') category = 'vitality';
@@ -923,36 +983,60 @@ export function renderSkillChoicesPregame() {
     else if (skill.id === 'decoy_illusion') category = 'void';
     
     card.classList.add(`category-${category}`);
-    card.innerHTML = `<span class="skill-category-badge">${category}</span><h3>${t(skill.nameKey)}</h3><p>${t(skill.descKey)}</p>`;
-    card.addEventListener('click', () => {
-      globals.selectedSkill = skill.id as any;
-      document.querySelectorAll('#pregame-skill-choices .skill-card').forEach(c => c.classList.remove('active'));
-      card.classList.add('active');
-    });
+    
+    const icon = skill.icon || '⚔️';
+    const cost = skill.cost || 0;
+
+    let lockContent = '';
+    if (!isUnlocked) {
+      const canAfford = (globals.magatama || 0) >= cost;
+      lockContent = `
+        <button class="skill-lock-btn" ${canAfford ? '' : 'disabled'}>
+          🔒 ${isJa ? '解放' : 'UNLOCK'}: ${cost.toLocaleString()} 🔮
+        </button>
+      `;
+    }
+
+    card.innerHTML = `
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <span class="skill-category-badge">${category}</span>
+        <span style="font-size: 16px;">${icon}</span>
+      </div>
+      <h3>${t(skill.nameKey)}</h3>
+      <p>${t(skill.descKey)}</p>
+      ${lockContent}
+    `;
+
+    if (isUnlocked) {
+      bindDualListener(card, () => {
+        globals.selectedSkill = skill.id as any;
+        try { localStorage.setItem('stickmurai_selected_skill', skill.id); } catch(e) {}
+        renderSkillChoicesPregame();
+      });
+    } else {
+      const lockBtn = card.querySelector('.skill-lock-btn') as HTMLElement;
+      if (lockBtn) {
+        bindDualListener(lockBtn, (e) => {
+          e.stopPropagation();
+          if ((globals.magatama || 0) < cost) return;
+          globals.magatama -= cost;
+          if (!globals.unlockedSkills.includes(skill.id)) {
+            globals.unlockedSkills.push(skill.id);
+          }
+          globals.selectedSkill = skill.id as any;
+          try {
+            localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+            localStorage.setItem('stickmurai_unlocked_skills', JSON.stringify(globals.unlockedSkills));
+            localStorage.setItem('stickmurai_selected_skill', skill.id);
+          } catch(err) {}
+          playSynthesizedFusionUnlock();
+          renderSkillChoicesPregame();
+        });
+      }
+    }
+
     container.appendChild(card);
   });
-
-  // Update pre-game difficulty buttons active state on screen show
-  const diffEasyBtn = document.getElementById('diff-easy-btn');
-  const diffNormalBtn = document.getElementById('diff-normal-btn');
-  const diffHardBtn = document.getElementById('diff-hard-btn');
-  const diffInsaneBtn = document.getElementById('diff-insane-btn');
-  if (diffEasyBtn && diffNormalBtn && diffHardBtn && diffInsaneBtn) {
-    diffEasyBtn.classList.remove('active');
-    diffNormalBtn.classList.remove('active');
-    diffHardBtn.classList.remove('active');
-    diffInsaneBtn.classList.remove('active');
-    if (globals.difficulty === 'easy') diffEasyBtn.classList.add('active');
-    else if (globals.difficulty === 'normal') diffNormalBtn.classList.add('active');
-    else if (globals.difficulty === 'hard') diffHardBtn.classList.add('active');
-    else if (globals.difficulty === 'insane') diffInsaneBtn.classList.add('active');
-  }
-
-  // Show/Hide time mode / level mode pregame option panels
-  const timeOptions = document.getElementById('pregame-time-options');
-  const levelOptions = document.getElementById('pregame-level-options');
-  if (timeOptions) timeOptions.style.display = 'flex'; // Always show time limit options
-  if (levelOptions) levelOptions.style.display = globals.gameMode === 'level' ? 'flex' : 'none';
 
   // Toggle active skill selections for Zen Mode
   const skillSelectTitle = document.getElementById('skill-select-title');
@@ -1677,7 +1761,7 @@ export const HEROES_DATA = [
     descEn: 'The traditional stickmurai swordsman. Well-rounded agility, blade range, and recovery.',
     descJa: '伝統を受け継ぐ棒人間サムライ。速さ・刃のリーチ・隙の少なさの全てが高水準で調和した万能の型。',
     cost: 0,
-    image: 'sprites/portraits/portrait_ronin.png',
+    image: '/sprites/portraits/portrait_ronin.png',
     atk: '100%',
     spd: '100%',
     specialEn: 'Balanced Arts (Baseline Stance)',
@@ -1692,7 +1776,7 @@ export const HEROES_DATA = [
     descEn: 'Wields an ethereal celestial greatsword. +25% Slash AoE, +1 Base Slash DMG, and +2 Iaijutsu Shockwave DMG.',
     descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+25%、基礎威力+1、抜刀衝撃波威力+2。',
     cost: 100000,
-    image: 'sprites/portraits/portrait_luneblade.png',
+    image: '/sprites/portraits/portrait_luneblade.png',
     atk: '130%',
     spd: '95%',
     specialEn: 'Lunar Resonance (+25% AoE, +2 Iai DMG)',
@@ -1707,7 +1791,7 @@ export const HEROES_DATA = [
     descEn: 'Master of lethal shadow-stepping. +15% Movement Speed, -20% Dash Cooldown, and +10% Attack Speed.',
     descJa: '闇に潜み急所を討つ達人。移動速度+15%、瞬歩クールダウン-20%、攻撃速度+10%。',
     cost: 150000,
-    image: 'sprites/portraits/portrait_ninja.png',
+    image: '/sprites/portraits/portrait_ninja.png',
     atk: '110%',
     spd: '120%',
     specialEn: 'Phantom Step (-20% Dash CD, +15% Speed)',
@@ -1739,10 +1823,10 @@ export function populateDojoHeroGrid() {
     card.style.gap = '8px';
     card.style.boxShadow = isEquipped ? '0 0 20px rgba(192, 132, 252, 0.4)' : 'none';
 
-    // Hero portrait container
+    // Hero portrait container with luminous backlight & SVG silhouette fallback
     const portraitHtml = `
-      <div style="width: 100%; height: 110px; background: rgba(0,0,0,0.5); border-radius: 6px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 4px;">
-        <img src="${hero.image}" alt="${hero.nameEn}" style="width: 90px; height: 90px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(192,132,252,0.3));" />
+      <div class="hero-portrait-wrap" style="width: 100%; height: 110px; background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(15,23,42,0.9) 100%); border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(192,132,252,0.3); margin-bottom: 4px; box-shadow: inset 0 0 12px rgba(0,0,0,0.6);">
+        <img src="${hero.image}" alt="${hero.nameEn}" style="width: 90px; height: 90px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(255,255,255,0.45));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23c084fc\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
       </div>
     `;
 
@@ -2111,8 +2195,8 @@ export function triggerStageClear() {
   globals.magatama = (globals.magatama || 0) + stageReward;
   try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
 
-  // Unlock next stage
-  const nextStage = Math.min(10, currentStage + 1);
+  // Unlock next stage (Endless progression)
+  const nextStage = currentStage + 1;
   globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, nextStage);
   try { localStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString()); } catch(e) {}
 
@@ -2139,11 +2223,7 @@ export function triggerStageClear() {
 
   const nextBtn = document.getElementById('stage-clear-next-btn');
   if (nextBtn) {
-    if (currentStage >= 10) {
-      nextBtn.textContent = isJa ? '🏆 全ステージ制覇！' : '🏆 ALL STAGES CLEARED!';
-    } else {
-      nextBtn.textContent = isJa ? `⚔️ ステージ ${currentStage + 1} へ進む` : `⚔️ ADVANCE TO STAGE ${currentStage + 1}`;
-    }
+    nextBtn.textContent = isJa ? `⚔️ ステージ ${currentStage + 1} へ進む` : `⚔️ ADVANCE TO STAGE ${currentStage + 1}`;
   }
 
   populateAscensionUpgrades();
