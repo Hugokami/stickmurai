@@ -6,9 +6,10 @@ const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || n
 
 const tintCache = new Map<string, HTMLCanvasElement>();
 
-export function getTintedImage(img: HTMLImageElement, hexColor: string): HTMLCanvasElement | HTMLImageElement {
+export function getTintedImage(img: HTMLImageElement | HTMLCanvasElement, hexColor: string): HTMLCanvasElement | HTMLImageElement {
   if (hexColor[0] !== '#') return img;
-  const key = img.src + '_' + hexColor;
+  const srcKey = (img as HTMLImageElement).src || (img as any)._tintKey || ('canvas_' + img.width + 'x' + img.height);
+  const key = srcKey + '_' + hexColor;
   const cached = tintCache.get(key);
   if (cached) {
     return cached;
@@ -22,7 +23,8 @@ export function getTintedImage(img: HTMLImageElement, hexColor: string): HTMLCan
   }
 
   const canvas = document.createElement('canvas');
-  canvas.width = img.naturalWidth || img.width; canvas.height = img.naturalHeight || img.height;
+  canvas.width = (img as HTMLImageElement).naturalWidth || img.width; 
+  canvas.height = (img as HTMLImageElement).naturalHeight || img.height;
   const ctx = canvas.getContext('2d')!;
   
   // Draw original
@@ -93,11 +95,13 @@ export class Entity {
   }
   
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint = 'none') {
+    const typeAnims = anims[this.type] || anims.sword;
     const animState = this.state === 'charge' ? 'idle' : this.state;
-    const currentAnim = anims[this.type][animState as keyof typeof anims['sword']];
+    const currentAnim = (typeAnims as any)[animState] || typeAnims.idle || anims.sword.idle;
     if (!currentAnim || currentAnim.length === 0) return;
-    const img = currentAnim[this.animFrame];
-    if (!img || !img.complete || img.naturalWidth === 0) return;
+    const frameIdx = (this.animFrame >= 0 ? this.animFrame : 0) % currentAnim.length;
+    const img = currentAnim[frameIdx];
+    if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) return;
     
     const rx = (this.x - cx + globals.vw/2) | 0;
     const ry = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
@@ -160,12 +164,8 @@ export class Entity {
     ctx.globalAlpha = alpha;
     
     let drawImg: any = img;
-    if (colorTint !== 'none') {
-      if (colorTint[0] === '#') {
-        drawImg = getTintedImage(img, colorTint);
-      } else {
-        ctx.filter = colorTint;
-      }
+    if (colorTint !== 'none' && colorTint[0] === '#') {
+      drawImg = getTintedImage(img, colorTint);
     }
     
     ctx.drawImage(drawImg, -img.width/2 * scale, -img.height/2 * scale, img.width * scale, img.height * scale);

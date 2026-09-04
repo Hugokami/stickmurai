@@ -499,6 +499,282 @@ export function draw() {
     ctx.restore();
   }
 
+  visibleEntities.forEach(e => {
+    if (e === globals.player && globals.player.state !== 'dead') {
+      if (globals.playerStats.shadowClonesLevel && globals.playerStats.shadowClonesLevel > 0) {
+        const cloneDelays = [18];
+        if (globals.playerStats.shadowClonesLevel >= 2) {
+          cloneDelays.push(36);
+        }
+        const originalX = globals.player.x;
+        const originalY = globals.player.y;
+        const originalDir = globals.player.dir;
+        const originalState = globals.player.state;
+        const originalFrame = globals.player.animFrame;
+        
+        cloneDelays.forEach(delay => {
+          const historyIdx = globals.playerPosHistory.length - 1 - delay;
+          if (historyIdx >= 0) {
+            const hist = globals.playerPosHistory[historyIdx];
+            globals.player.x = hist.x;
+            globals.player.y = hist.y;
+            const prevHist = globals.playerPosHistory[historyIdx - 1] || hist;
+            if (hist.x !== prevHist.x) {
+              globals.player.dir = hist.x < prevHist.x ? -1 : 1;
+            }
+            globals.player.draw(ctx, globals.camera.x, globals.camera.y, 0.45, '#aa66ff');
+          }
+        });
+        
+        globals.player.x = originalX;
+        globals.player.y = originalY;
+        globals.player.dir = originalDir;
+        globals.player.state = originalState;
+        globals.player.animFrame = originalFrame;
+      }
+
+      // stance effects
+      let offsetX = 0;
+      let offsetY = 17;
+      if (globals.player.state === 'idle' || globals.player.state === 'charge') {
+        offsetX = -15 * globals.player.dir;
+        offsetY = 22;
+      } else if (globals.player.state === 'attack') {
+        offsetX = -5 * globals.player.dir;
+        offsetY = 20;
+      }
+
+      const px = (globals.player.x - globals.camera.x + globals.vw/2 + offsetX) | 0;
+      const py = (globals.player.y - globals.camera.y + globals.vh/2 + (globals.player.yOffset || 0) + offsetY - 17) | 0;
+      const auraTime = performance.now() / 1000;
+
+      if (riposteVisualScale > 0.01) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(255, 0, 85, ${0.7 * riposteVisualScale})`;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        const r = (32 + Math.sin(auraTime * 20) * 4) * (0.6 + 0.4 * riposteVisualScale);
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (frostStanceVisualScale > 0.01) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(0, 229, 255, ${0.4 * frostStanceVisualScale})`;
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        const r = (28 + Math.sin(auraTime * 6) * 2) * (0.6 + 0.4 * frostStanceVisualScale);
+        ctx.arc(px, py, r, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (voidStanceVisualScale > 0.01) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(192, 132, 252, ${0.4 * voidStanceVisualScale})`;
+        ctx.lineWidth = 2.0;
+        ctx.beginPath();
+        ctx.setLineDash([4, 6]);
+        const r = 24 * (0.6 + 0.4 * voidStanceVisualScale);
+        ctx.arc(px, py, r, -auraTime * 2, -auraTime * 2 + Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (petalArmorVisualScale > 0.01) {
+        ctx.save();
+        ctx.strokeStyle = `rgba(255, 183, 197, ${0.65 * petalArmorVisualScale})`;
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        ctx.setLineDash([6, 8]);
+        const r = 32 * (0.6 + 0.4 * petalArmorVisualScale);
+        ctx.arc(px, py, r, auraTime, auraTime + Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      if (globals.gameMode === 'zen' && globals.timeSlowDuration > 0) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(0, 255, 255, 0.75)';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.arc(px, py, 42 + Math.sin(auraTime * 8) * 4, -auraTime * 1.2, -auraTime * 1.2 + Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Dragon's Fury Active Animation Loop (programmatic energy aura and rotating blades)
+      const isDragonFuryActive = globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0;
+      if (isDragonFuryActive) {
+        ctx.save();
+        const pulse = 1.0 + Math.sin(auraTime * 15) * 0.08;
+        
+        // 1. Draw glowing background aura
+        ctx.fillStyle = 'rgba(192, 132, 252, 0.22)';
+        ctx.beginPath();
+        ctx.arc(px, py, 45 * pulse, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // 2. Draw rotating runic ring
+        ctx.strokeStyle = 'rgba(192, 132, 252, 0.8)';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([8, 12]);
+        ctx.beginPath();
+        ctx.arc(px, py, 38, auraTime * 3, auraTime * 3 + Math.PI * 2);
+        ctx.stroke();
+        
+        // 3. Draw rotating glowing dragon fury crescent blades (representing extra slash strikes)
+        const bladeCount = 3;
+        ctx.lineWidth = 3.5;
+        for (let i = 0; i < bladeCount; i++) {
+          const angle = (auraTime * 5) + (i * Math.PI * 2 / bladeCount);
+          ctx.strokeStyle = i % 2 === 0 ? 'rgba(192, 132, 252, 0.95)' : 'rgba(236, 72, 153, 0.95)';
+          
+          ctx.beginPath();
+          ctx.arc(px, py, 30 + Math.sin(auraTime * 10 + i) * 3, angle, angle + 0.6);
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+      }
+
+      // Invincibility Duration Animation Loop (shield/spells around player)
+      if (globals.invulnTimer > 0) {
+        ctx.save();
+        ctx.globalAlpha = 0.65;
+        const invFrames = vfxAnims.custom.invincible;
+        const invFrameIdx = Math.floor((performance.now() / 50) % invFrames.length);
+        const img = invFrames[invFrameIdx];
+        if (img && img.complete && img.naturalWidth > 0) {
+          ctx.drawImage(img, (px - img.width * 1.4 / 2) | 0, (py - img.height * 1.4 / 2) | 0, (img.width * 1.4) | 0, (img.height * 1.4) | 0);
+        }
+        ctx.restore();
+      }
+
+      if (globals.bladeEchoesActive && globals.flowState === 'awakened') {
+        const originalY = globals.player.y;
+        // Top clone
+        globals.player.y = originalY - 90;
+        globals.player.draw(ctx, globals.camera.x, globals.camera.y, 0.4, '#00ffff');
+        // Bottom clone
+        globals.player.y = originalY + 90;
+        globals.player.draw(ctx, globals.camera.x, globals.camera.y, 0.4, '#00ffff');
+        
+        globals.player.y = originalY;
+      }
+    }
+
+    let alpha = 1;
+    if (e.state === 'dead' && 'deadTimer' in e) {
+      alpha = Math.max(0, 1 - ((e as any).deadTimer / 3.0));
+    } else if (e === globals.player && globals.decoyInvisibilityTimer > 0) {
+      alpha = 0.35; // Translucent invisibility
+    }
+    
+    const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
+    const baseTint = (e as any).colorTint || 'none';
+    const tint = (isKamisori && e.state !== 'dead') ? '#121212' : (((e as any).hitFlash > 0) ? '#ffffff' : baseTint);
+    e.draw(ctx, globals.camera.x, globals.camera.y, alpha, tint);
+  });
+  
+  if (globals.sakuraPetals && globals.weatherEffectsEnabled === 'on' && globals.sakuraPetals.length > 0) {
+    ctx.fillStyle = '#ffb7c5';
+    globals.sakuraPetals.forEach(petal => {
+      const px = (petal.x - globals.camera.x + globals.vw/2) | 0;
+      const py = (petal.y - globals.camera.y + globals.vh/2) | 0;
+      ctx.beginPath();
+      ctx.ellipse(px, py, 11, 6, Math.PI / 4, 0, Math.PI * 2);
+      ctx.fill();
+    });
+  }
+
+  if (globals.collectibles) {
+    globals.collectibles.forEach(c => c.draw(ctx, globals.camera.x, globals.camera.y));
+  }
+
+  if (globals.judgementDomes) {
+    globals.judgementDomes.forEach(dome => {
+      ctx.save();
+      const dx = (dome.x - globals.camera.x + globals.vw/2) | 0;
+      const dy = (dome.y - globals.camera.y + globals.vh/2) | 0;
+      const radius = 180;
+      
+      ctx.strokeStyle = 'rgba(0, 255, 255, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(dx, dy, radius, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      ctx.fillStyle = 'rgba(0, 255, 255, 0.05)';
+      ctx.beginPath();
+      ctx.arc(dx, dy, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  globals.projectiles.forEach(p => p.draw(ctx, globals.camera.x, globals.camera.y));
+  if (globals.pvpShockwaves) {
+    globals.pvpShockwaves.forEach(w => w.draw(ctx, globals.camera.x, globals.camera.y));
+  }
+  globals.slashes.forEach(s => s.draw(ctx, globals.camera.x, globals.camera.y));
+  ctx.save();
+  globals.particles.forEach(p => p.draw(ctx, globals.camera.x, globals.camera.y));
+  ctx.restore();
+
+  if (globals.animatedEffects && globals.animatedEffects.length > 0) {
+    for (let i = 0; i < globals.animatedEffects.length; i++) {
+      globals.animatedEffects[i].draw(ctx, globals.camera.x, globals.camera.y);
+    }
+  }
+
+  // Draw lightning beams and shockwaves with additive composition for premium glow aesthetics
+  const hasAdditiveEffects = (globals.lightningBeams && globals.lightningBeams.length > 0) || (globals.shockwaves && globals.shockwaves.length > 0);
+  if (hasAdditiveEffects) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    if (globals.lightningBeams) {
+      globals.lightningBeams.forEach(lb => lb.draw(ctx, globals.camera.x, globals.camera.y));
+    }
+    globals.shockwaves.forEach(s => s.draw(ctx, globals.camera.x, globals.camera.y));
+    ctx.restore();
+  }
+  globals.floatingTexts.forEach(f => f.draw(ctx, globals.camera.x, globals.camera.y));
+
+  // Draw PvP Storm Mode lightning warning indicators
+  if (globals.gameState === 'game' && globals.gameMode === 'pvp' && globals.pvpStormWarningTarget) {
+    const targetX = globals.pvpStormWarningTarget === 'left' ? 300 : 1100;
+    const rx = (targetX - globals.camera.x + globals.vw / 2) | 0;
+    ctx.save();
+    
+    // Flashing neon red warning column
+    const flash = Math.sin(performance.now() * 0.035) * 0.5 + 0.5;
+    ctx.strokeStyle = `rgba(239, 68, 68, ${0.12 + flash * 0.28})`;
+    ctx.lineWidth = 24;
+    ctx.lineCap = 'butt';
+    ctx.beginPath();
+    ctx.moveTo(rx, 0);
+    ctx.lineTo(rx, globals.vh);
+    ctx.stroke();
+
+    // Warning text
+    ctx.fillStyle = '#ef4444';
+    ctx.font = "bold 13px 'Orbitron', sans-serif";
+    ctx.textAlign = 'center';
+    ctx.shadowColor = '#ef4444';
+    ctx.shadowBlur = 10;
+    ctx.fillText("⚡ WARNING: LIGHTNING INCOMING ⚡", rx, 140 + Math.sin(performance.now() * 0.01) * 3);
+    
+    ctx.restore();
+  }
+
+  if (globals.weatherEngine) {
+    globals.weatherEngine.draw(ctx, globals.camera.x, globals.camera.y);
+  }
+
   // dash aim preview
   if (globals.mobileDashAimActive && globals.player && globals.player.state !== 'dead' && globals.player.dashCooldown <= 0) {
     ctx.save();

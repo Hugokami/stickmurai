@@ -3156,6 +3156,19 @@ function update(realDt: number) {
     globals.judgementDomes.length = writeIdx;
   }
 
+  // Update AnimatedEffects (in-place compaction without heap allocation)
+  if (globals.animatedEffects) {
+    let writeIdx = 0;
+    for (let i = 0; i < globals.animatedEffects.length; i++) {
+      const fx = globals.animatedEffects[i];
+      fx.update(realDt);
+      if (fx.life > 0) {
+        globals.animatedEffects[writeIdx++] = fx;
+      }
+    }
+    globals.animatedEffects.length = writeIdx;
+  }
+
   const isAttackPressed = globals.mouse.justPressed || globals.mobileAttackJustPressed;
   const isAttackReleased = globals.mouse.justReleased || globals.mobileAttackReleased;
 
