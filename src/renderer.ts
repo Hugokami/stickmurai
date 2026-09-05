@@ -1091,7 +1091,7 @@ export function draw() {
 
       // Boss Name & Title Banner
       ctx.textAlign = 'center';
-      ctx.font = "bold 13px 'Shojumaru', cursive, sans-serif";
+      ctx.font = "bold 13px 'Shojumaru', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#ffd700';
       ctx.shadowColor = 'rgba(255, 215, 0, 0.4)';
       ctx.shadowBlur = 8;

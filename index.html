@@ -22,26 +22,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="screen-orientation" content="landscape" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shojumaru&family=Outfit:wght@300;400;500;600;700;900&family=Orbitron:wght@600;700;900&display=swap" rel="stylesheet">
     <title>Super Samurai Sticky</title>
     <script>
-      /* Non-blocking background font loader: guarantees paint is NEVER blocked by Google Fonts CDN */
-      (function() {
-        function injectFonts() {
-          var fontLink = document.createElement('link');
-          fontLink.rel = 'stylesheet';
-          fontLink.href = 'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&family=Shojumaru&family=Outfit:wght@300;400;500;600;700;900&family=Orbitron:wght@600;700;900&display=swap';
-          document.head.appendChild(fontLink);
-        }
-        if (document.readyState === 'complete') {
-          setTimeout(injectFonts, 100);
-        } else {
-          window.addEventListener('load', function() {
-            setTimeout(injectFonts, 100);
-          }, { once: true });
-        }
-      })();
-
       /* Fail-Safe Mobile Startup Watchdog: Guarantees user is NEVER stuck on loading screen */
       (function() {
         var failsafeTriggered = false;

@@ -138,7 +138,7 @@ export class AdManager {
     title.style.cssText = `
       margin: 0;
       color: #ffd700;
-      font-family: 'Shojumaru', cursive;
+      font-family: 'Shojumaru', sans-serif;
       font-size: 16px;
       letter-spacing: 2px;
       text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);

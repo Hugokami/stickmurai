@@ -2216,7 +2216,7 @@ export function populateDojoHeroGrid() {
     card.innerHTML = `
       ${portraitHtml}
       <div style="display: flex; justify-content: space-between; align-items: baseline;">
-        <span style="font-family: 'Shojumaru', cursive; font-size: 14px; color: ${isEquipped ? '#c084fc' : '#f1f5f9'}; font-weight: bold;">${isJa ? hero.nameJa : hero.nameEn}</span>
+        <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 14px; color: ${isEquipped ? '#c084fc' : '#f1f5f9'}; font-weight: bold;">${isJa ? hero.nameJa : hero.nameEn}</span>
         <span style="font-size: 10px; color: #a855f7; font-family: monospace;">${isJa ? hero.titleJa : hero.titleEn}</span>
       </div>
       <div style="font-size: 11px; color: #94a3b8; line-height: 1.4; min-height: 32px;">${isJa ? hero.descJa : hero.descEn}</div>
@@ -2524,7 +2524,7 @@ export function populateAscensionUpgrades() {
 
       card.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-family: 'Shojumaru', cursive; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+          <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
             <span>${u.icon}</span> ${isJa ? u.nameJa : u.name}
           </span>
           <span style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold;">

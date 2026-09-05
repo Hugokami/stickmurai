@@ -585,8 +585,6 @@ export const loaderTips: Record<string, string[]> = {
   ]
 };
 
-const lazyImageQueue: Array<{ img: HTMLImageElement, src: string }> = [];
-
 export function registerAssetToLoad(img: HTMLImageElement) {
   globals.totalAssetsToLoad++;
   let resolved = false;
@@ -605,23 +603,19 @@ export function registerAssetToLoad(img: HTMLImageElement) {
 
 function pad(n: number) { return n.toString().padStart(4, '0'); }
 
-function loadAnim(folder: string, prefix: string, start: number, end: number, isPriority = false) {
+function loadAnim(folder: string, prefix: string, start: number, end: number, _isPriority = true) {
   const images: HTMLImageElement[] = [];
   for (let i = start; i <= end; i++) {
     const img = new Image();
     const src = encodeURI(`sprites/Stick Figure Character Sprites 2D/${folder}/${prefix}_${pad(i)}.png`);
-    if (isPriority) {
-      registerAssetToLoad(img);
-      img.src = src;
-    } else {
-      lazyImageQueue.push({ img, src });
-    }
+    registerAssetToLoad(img);
+    img.src = src;
     images.push(img);
   }
   return images;
 }
 
-const enemyFolderMap: Record<string, string> = {
+export const enemyFolderMap: Record<string, string> = {
   sword: 'Sword sprites',
   fighter: 'Fighter sprites',
   pistol: 'Pistol sprites',
@@ -643,48 +637,16 @@ const enemyFolderMap: Record<string, string> = {
   toaster_bot: 'EnemyToasterBot'
 };
 
-export function loadEnemyAssetsNow(type: string) {
-  const folder = enemyFolderMap[type] || type;
-  for (let i = lazyImageQueue.length - 1; i >= 0; i--) {
-    const item = lazyImageQueue[i];
-    if (item.src.includes(folder)) {
-      if (!item.img.src) {
-        item.img.src = item.src;
-      }
-      lazyImageQueue.splice(i, 1);
-    }
-  }
+export function loadEnemyAssetsNow(_type: string) {
+  // All assets are eagerly loaded at startup
 }
 
 export function loadCoreCombatAssetsNow() {
-  loadEnemyAssetsNow('Sword sprites');
-  loadEnemyAssetsNow('Enemy01');
-  loadEnemyAssetsNow('Enemy02');
-  for (let i = lazyImageQueue.length - 1; i >= 0; i--) {
-    const item = lazyImageQueue[i];
-    if (item.src.includes('Slash_color') || item.src.includes('impact')) {
-      if (!item.img.src) {
-        item.img.src = item.src;
-      }
-      lazyImageQueue.splice(i, 1);
-    }
-  }
+  // All assets are eagerly loaded at startup
 }
 
 export function startBackgroundAssetLoading() {
-  const batchSize = 3;
-  const processBatch = () => {
-    if (lazyImageQueue.length === 0) return;
-    const batch = lazyImageQueue.splice(0, batchSize);
-    for (const item of batch) {
-      if (!item.img.src) {
-        item.img.src = item.src;
-      }
-    }
-    setTimeout(processBatch, 200);
-  };
-  // Begin gentle trickle loading 1.5s after page load
-  setTimeout(processBatch, 1500);
+  // All assets are eagerly loaded at startup
 }
 
 export const anims = {
@@ -832,34 +794,26 @@ export const anims = {
 
 export const propImages: HTMLImageElement[] = [];
 
-function loadSkeletonAnim(prefix: string, count: number, isPriority = false) {
+function loadSkeletonAnim(prefix: string, count: number, _isPriority = true) {
   const images: HTMLImageElement[] = [];
   for (let i = 1; i <= count; i++) {
     const img = new Image();
     const src = encodeURI(`sprites/Skeleton/${prefix}_${i}.png`);
-    if (isPriority) {
-      registerAssetToLoad(img);
-      img.src = src;
-    } else {
-      lazyImageQueue.push({ img, src });
-    }
+    registerAssetToLoad(img);
+    img.src = src;
     images.push(img);
   }
   return images;
 }
 
-function loadCustomEnemyAnim(folder: string, prefix: string, count: number, isPriority = false) {
+function loadCustomEnemyAnim(folder: string, prefix: string, count: number, _isPriority = true) {
   const images: HTMLImageElement[] = [];
   for (let i = 1; i <= count; i++) {
     const img = new Image();
     const frameStr = i.toString().padStart(2, '0');
     const src = encodeURI(`sprites/${folder}/${prefix}${frameStr}.png`);
-    if (isPriority) {
-      registerAssetToLoad(img);
-      img.src = src;
-    } else {
-      lazyImageQueue.push({ img, src });
-    }
+    registerAssetToLoad(img);
+    img.src = src;
     images.push(img);
   }
   return images;
@@ -901,19 +855,15 @@ export const skillsData = [
   { id: 'gravity', nameKey: 'skillGravityName', descKey: 'skillGravityDesc', cost: 50000, icon: '🌀' }
 ];
 
-function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, isPriority = false) {
+function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, _isPriority = true) {
   const frames: HTMLImageElement[] = [];
   for (let i = 0; i < count; i++) {
     const frameNum = startIdx + i;
     const numStr = padSize > 0 ? frameNum.toString().padStart(padSize, '0') : frameNum.toString();
     const img = new Image();
     const src = encodeURI(pathPattern.replace('{N}', numStr));
-    if (isPriority) {
-      registerAssetToLoad(img);
-      img.src = src;
-    } else {
-      lazyImageQueue.push({ img, src });
-    }
+    registerAssetToLoad(img);
+    img.src = src;
     frames.push(img);
   }
   return frames;
@@ -958,17 +908,17 @@ export const vfxAnims = {
     vfx3: loadVfxFrames('vfx/Pixel Art VFX - Warlock - FREE Version/VFX3/Frames/Warlock_skill3_frame{N}.png', 8, 1)
   },
   heroSlashes: {
-    ronin: loadVfxFrames('vfx/slashes/slash_ronin/frame_{N}.png', 9, 1, 2, true),
+    ronin: loadVfxFrames('vfx/slashes/slash_ronin/frame_{N}.png', 9, 1, 2),
     ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 9, 1, 2),
     luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2),
-    samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, true),
+    samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2),
     nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2),
     satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2),
-    dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, true),
+    dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2),
   },
   impacts: {
-    parryYellow: loadVfxFrames('vfx/impacts/impact_parry_yellow/frame_{N}.png', 7, 1, 2, true),
-    directionalBlue: loadVfxFrames('vfx/impacts/directional_blue/frame_{N}.png', 7, 1, 2, true)
+    parryYellow: loadVfxFrames('vfx/impacts/impact_parry_yellow/frame_{N}.png', 7, 1, 2),
+    directionalBlue: loadVfxFrames('vfx/impacts/directional_blue/frame_{N}.png', 7, 1, 2)
   },
   shockwaves: {
     impactGold: loadVfxFrames('vfx/shockwaves/impact_gold/frame_{N}.png', 8, 0, 2),
@@ -984,7 +934,7 @@ export const vfxAnims = {
     slamDust: loadVfxFrames('vfx/boss/slam_dust/frame_{N}.png', 10, 1, 2)
   },
   player: {
-    dashDust: loadVfxFrames('vfx/player/dash_dust/frame_{N}.png', 6, 1, 2, true)
+    dashDust: loadVfxFrames('vfx/player/dash_dust/frame_{N}.png', 6, 1, 2)
   },
   skills: {
     firewheel: loadVfxFrames('vfx/skills/firewheel/frame_{N}.png', 7, 1, 2),
@@ -1000,7 +950,7 @@ export const vfxAnims = {
   combat: {
     bloodSplatter: loadVfxFrames('vfx/combat/blood_splatter/frame_{N}.png', 8, 1, 2),
     executionBurst: loadVfxFrames('vfx/combat/execution_burst/frame_{N}.png', 11, 0, 2),
-    perilAlert: loadVfxFrames('vfx/combat/peril_alert/frame_{N}.png', 14, 1, 2, true)
+    perilAlert: loadVfxFrames('vfx/combat/peril_alert/frame_{N}.png', 14, 1, 2)
   }
 };
 
