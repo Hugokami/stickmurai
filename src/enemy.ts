@@ -1101,8 +1101,7 @@ export class Enemy extends Entity {
     } else if (this.subType === 'agis_colossus') {
       // Colossus Seismic Shockwave + Tri-Orb Plasma Spray
       globals.screenShake = Math.max(globals.screenShake, 24);
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8'));
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#fbbf24'));
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8', 220));
       const bossImpact = (vfxAnims as any).boss?.slamImpact;
       const bossDust = (vfxAnims as any).boss?.slamDust;
       if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));
@@ -1130,8 +1129,7 @@ export class Enemy extends Entity {
     } else if (this.subType === 'skeleton_warlord') {
       // Skeleton Warlord Ground-Splitting Cleave Tremor
       globals.screenShake = Math.max(globals.screenShake, 24);
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444'));
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ffffff'));
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444', 220));
       const bossImpact = (vfxAnims as any).boss?.slamImpact;
       const bossDust = (vfxAnims as any).boss?.slamDust;
       if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));

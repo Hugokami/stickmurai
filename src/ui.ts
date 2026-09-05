@@ -2182,16 +2182,18 @@ export function populateDojoHeroGrid() {
     card.style.background = isEquipped ? 'rgba(88, 28, 135, 0.4)' : (isUnlocked ? 'rgba(30, 41, 59, 0.85)' : 'rgba(15, 23, 42, 0.8)');
     card.style.border = isEquipped ? '2px solid #c084fc' : (isUnlocked ? '1px solid #94a3b8' : '1px solid #334155');
     card.style.borderRadius = '10px';
-    card.style.padding = '14px';
+    card.style.padding = '12px 14px';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
-    card.style.gap = '8px';
+    card.style.gap = '6px';
+    card.style.minHeight = '320px';
+    card.style.flexShrink = '0';
     card.style.boxShadow = isEquipped ? '0 0 20px rgba(192, 132, 252, 0.4)' : 'none';
 
     // Hero portrait container with elegant dark dojo alcove podium & SVG fallback
     const portraitHtml = `
-      <div class="hero-portrait-wrap" style="width: 100%; height: 110px; background: radial-gradient(circle at 50% 65%, rgba(192,132,252,0.18) 0%, rgba(15,23,42,0.92) 80%); border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(192,132,252,0.25); margin-bottom: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.4);">
-        <img src="${hero.image}" alt="${hero.nameEn}" style="width: 96px; height: 96px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23c084fc\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
+      <div class="hero-portrait-wrap" style="width: 100%; height: 96px; min-height: 96px; flex: 0 0 96px; flex-shrink: 0; background: radial-gradient(circle at 50% 65%, rgba(192,132,252,0.22) 0%, rgba(15,23,42,0.92) 75%); border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(192,132,252,0.28); margin-bottom: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.4);">
+        <img src="${hero.image}" alt="${hero.nameEn}" style="width: 76px; height: 76px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23c084fc\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
       </div>
     `;
 

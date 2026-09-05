@@ -372,29 +372,31 @@ export class FloatingText {
   }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
     if (globals.floatingTextEnabled === 'off') return;
+    const rx = (this.x - cx + globals.vw/2) | 0;
+    const ry = (this.y - cy + globals.vh/2) | 0;
+    if (rx < -160 || rx > globals.vw + 160 || ry < -50 || ry > globals.vh + 50) return;
+
     ctx.save();
     ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
     ctx.font = getFont(this.size);
     ctx.textAlign = 'center';
     
-    // Removed CPU-heavy shadowBlur for FloatingText to optimize performance
-    
     if (this.color === '#ff003c') {
       ctx.strokeStyle = '#ffffff';
       ctx.lineWidth = 4;
-      ctx.strokeText(this.text, this.x - cx + globals.vw/2, this.y - cy + globals.vh/2);
+      ctx.strokeText(this.text, rx, ry);
       ctx.fillStyle = this.color;
     } else if (this.color.startsWith('neon-')) {
       const neonHex = this.color.substring(5);
       ctx.strokeStyle = neonHex;
       ctx.lineWidth = 4;
-      ctx.strokeText(this.text, this.x - cx + globals.vw/2, this.y - cy + globals.vh/2);
+      ctx.strokeText(this.text, rx, ry);
       ctx.fillStyle = '#ffffff';
     } else {
       ctx.fillStyle = this.color;
     }
     
-    ctx.fillText(this.text, this.x - cx + globals.vw/2, this.y - cy + globals.vh/2);
+    ctx.fillText(this.text, rx, ry);
     ctx.restore();
   }
 }
@@ -841,17 +843,14 @@ export class Shockwave {
   constructor(x: number, y: number, color: string, maxRadius = 180) {
     this.x = x; this.y = y; this.color = color;
     this.maxRadius = maxRadius;
-    
-    // Subtle radial wind force
-    globals.windForces.push({
-      x: x,
-      y: y,
-      radius: Math.min(240, maxRadius * 1.2),
-      strength: 1.2,
-      life: 0.2,
-      maxLife: 0.2
-    });
   }
+
+  static spawn(x: number, y: number, color: string, maxRadius = 180) {
+    const maxWaves = globals.graphicsSettings === 'low' ? 1 : (isMobile ? 2 : 3);
+    if (globals.shockwaves.length >= maxWaves) return;
+    globals.shockwaves.push(new Shockwave(x, y, color, maxRadius));
+  }
+
   update(dt: number) {
     this.life -= dt;
     this.radius += (this.maxRadius - this.radius) * 24 * dt;
@@ -859,38 +858,21 @@ export class Shockwave {
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
     const rx = (this.x - cx + globals.vw/2) | 0;
     const ry = (this.y - cy + globals.vh/2) | 0;
-    const buffer = (this.radius + 30) | 0;
-    if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
+    const r = this.radius | 0;
+    if (rx < -r || rx > globals.vw + r || ry < -r || ry > globals.vh + r) {
       return;
     }
     
-    ctx.save();
-    ctx.translate(rx, ry);
     const p = Math.max(0, this.life / this.maxLife);
     const easeAlpha = p * p;
 
-    // 1. Sleek razor-thin primary kinetic ripple
     ctx.save();
     ctx.globalAlpha = 0.45 * easeAlpha;
     ctx.strokeStyle = this.color;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius | 0, 0, Math.PI * 2);
+    ctx.arc(rx, ry, r, 0, Math.PI * 2);
     ctx.stroke();
-    ctx.restore();
-
-    // 2. Faint trailing harmonic refraction ring
-    if (this.radius > 20) {
-      ctx.save();
-      ctx.globalAlpha = 0.22 * easeAlpha;
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.0;
-      ctx.beginPath();
-      ctx.arc(0, 0, (this.radius * 0.82) | 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-    
     ctx.restore();
   }
 }
@@ -1061,8 +1043,12 @@ export class AnimatedEffect {
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
     if (this.life <= 0) return;
     const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
-    const rx = Math.round(this.x - cx + globals.vw/2);
-    const ry = Math.round(this.y - cy + globals.vh/2);
+    const rx = (this.x - cx + globals.vw/2) | 0;
+    const ry = (this.y - cy + globals.vh/2) | 0;
+    const maxBound = (160 * (this.scale || 1.0)) | 0;
+    if (rx < -maxBound || rx > globals.vw + maxBound || ry < -maxBound || ry > globals.vh + maxBound) {
+      return;
+    }
 
     ctx.save();
     ctx.translate(rx, ry);
@@ -1564,8 +1550,6 @@ export class PvPShockwave {
     ctx.strokeStyle = primaryColor;
     ctx.lineWidth = (this.rallyIndex >= 8 ? 14 : (this.rallyIndex >= 4 ? 10 : 7)) * thicknessMult;
     ctx.lineCap = 'round';
-    ctx.shadowColor = primaryColor;
-    ctx.shadowBlur = 20 + this.rallyIndex * 3;
     
     ctx.beginPath();
     ctx.arc(0, 0, radius, angle - Math.PI / 2.8, angle + Math.PI / 2.8);
@@ -1574,7 +1558,6 @@ export class PvPShockwave {
     // 3. Middle Crescent (Slightly smaller, solid secondary color)
     ctx.strokeStyle = secondaryColor;
     ctx.lineWidth = (this.rallyIndex >= 8 ? 7 : (this.rallyIndex >= 4 ? 5 : 3)) * thicknessMult;
-    ctx.shadowBlur = 8;
     ctx.beginPath();
     ctx.arc(0, 0, radius, angle - Math.PI / 3, angle + Math.PI / 3);
     ctx.stroke();
@@ -1582,7 +1565,6 @@ export class PvPShockwave {
     // 4. Inner Bright Core (Pure white heat line)
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = (this.rallyIndex >= 8 ? 3.5 : (this.rallyIndex >= 4 ? 2.5 : 1.5)) * thicknessMult;
-    ctx.shadowBlur = 0;
     ctx.beginPath();
     ctx.arc(0, 0, radius, angle - Math.PI / 4, angle + Math.PI / 4);
     ctx.stroke();

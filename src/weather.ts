@@ -74,7 +74,9 @@ export class WeatherParticle {
       this.x += Math.sin(this.swayTime) * 20 * dt;
     }
 
-    windForces.forEach(force => {
+    if (!windForces || windForces.length === 0) return;
+    for (let i = 0; i < windForces.length; i++) {
+      const force = windForces[i];
       const dx = this.x - force.x;
       const dy = this.y - force.y;
       const radSq = force.radius * force.radius;
@@ -90,7 +92,7 @@ export class WeatherParticle {
           this.y += (dy / dist) * factor * 1000 * dt;
         }
       }
-    });
+    }
   }
 
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
@@ -141,6 +143,7 @@ export class WeatherEngine {
         globals.windForces[writeIdx++] = f;
       }
     }
+    if (writeIdx > 2) writeIdx = 2;
     globals.windForces.length = writeIdx;
 
     if (globals.graphicsSettings === 'low' || globals.weatherEffectsEnabled === 'off') {

@@ -780,16 +780,17 @@ export function draw() {
     }
   }
 
-  // Draw lightning beams and shockwaves with additive composition for premium glow aesthetics
-  const hasAdditiveEffects = (globals.lightningBeams && globals.lightningBeams.length > 0) || (globals.shockwaves && globals.shockwaves.length > 0);
-  if (hasAdditiveEffects) {
+  // Draw lightning beams with additive composition for glow aesthetics
+  if (globals.lightningBeams && globals.lightningBeams.length > 0) {
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    if (globals.lightningBeams) {
-      globals.lightningBeams.forEach(lb => lb.draw(ctx, globals.camera.x, globals.camera.y));
-    }
-    globals.shockwaves.forEach(s => s.draw(ctx, globals.camera.x, globals.camera.y));
+    globals.lightningBeams.forEach(lb => lb.draw(ctx, globals.camera.x, globals.camera.y));
     ctx.restore();
+  }
+
+  // Draw shockwaves smoothly without breaking canvas batching
+  if (globals.shockwaves && globals.shockwaves.length > 0) {
+    globals.shockwaves.forEach(s => s.draw(ctx, globals.camera.x, globals.camera.y));
   }
   globals.floatingTexts.forEach(f => f.draw(ctx, globals.camera.x, globals.camera.y));
 
@@ -813,8 +814,6 @@ export function draw() {
     ctx.fillStyle = '#ef4444';
     ctx.font = "bold 13px 'Orbitron', sans-serif";
     ctx.textAlign = 'center';
-    ctx.shadowColor = '#ef4444';
-    ctx.shadowBlur = 10;
     ctx.fillText("⚡ WARNING: LIGHTNING INCOMING ⚡", rx, 140 + Math.sin(performance.now() * 0.01) * 3);
     
     ctx.restore();
@@ -1097,10 +1096,7 @@ export function draw() {
       ctx.textAlign = 'center';
       ctx.font = "bold 13px 'Shojumaru', 'Noto Sans JP', sans-serif";
       ctx.fillStyle = '#ffd700';
-      ctx.shadowColor = 'rgba(255, 215, 0, 0.4)';
-      ctx.shadowBlur = 8;
       ctx.fillText(bossName, (globals.width / 2) | 0, barY - 8);
-      ctx.shadowBlur = 0;
 
       // Outer Container Box
       ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';

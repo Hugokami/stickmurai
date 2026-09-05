@@ -2086,21 +2086,34 @@ input[type="range"]::-webkit-slider-thumb:hover {
     margin-bottom: 4px !important;
   }
   #dojo-screen .hero-card {
-    min-height: 195px !important;
+    min-height: 265px !important;
+    height: auto !important;
     padding: 8px 10px !important;
     gap: 4px !important;
     display: flex !important;
     flex-direction: column !important;
     justify-content: space-between !important;
-  }
-  #dojo-screen .hero-portrait-wrap {
-    height: 72px !important;
-    margin-bottom: 2px !important;
     flex-shrink: 0 !important;
   }
+  #dojo-screen .hero-portrait-wrap {
+    width: 100% !important;
+    height: 76px !important;
+    min-height: 76px !important;
+    max-height: 76px !important;
+    flex: 0 0 76px !important;
+    flex-shrink: 0 !important;
+    margin-bottom: 2px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    overflow: hidden !important;
+    border-radius: 8px !important;
+  }
   #dojo-screen .hero-portrait-wrap img {
-    width: 62px !important;
-    height: 62px !important;
+    width: 64px !important;
+    height: 64px !important;
+    object-fit: contain !important;
+    image-rendering: pixelated !important;
   }
   #dojo-screen .hero-card .btn-card {
     flex: 0 0 auto !important;
@@ -2324,20 +2337,44 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 #dojo-screen #dojo-hero-grid {
   flex: 1 1 auto !important;
-  min-height: 380px !important;
+  min-height: 0 !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
   gap: 14px !important;
-  padding: 6px 8px 12px 2px !important;
+  padding: 6px 8px 14px 2px !important;
 }
 
 #dojo-screen .hero-card {
-  min-height: 240px;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  min-height: 320px !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: space-between !important;
+  flex-shrink: 0 !important;
+}
+
+#dojo-screen .hero-portrait-wrap {
+  width: 100% !important;
+  height: 96px !important;
+  min-height: 96px !important;
+  max-height: 96px !important;
+  flex: 0 0 96px !important;
+  flex-shrink: 0 !important;
+  margin-bottom: 4px !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  overflow: hidden !important;
+  border-radius: 8px !important;
+}
+
+#dojo-screen .hero-portrait-wrap img {
+  width: 76px !important;
+  height: 76px !important;
+  object-fit: contain !important;
+  image-rendering: pixelated !important;
 }
 
 #dojo-screen #close-dojo-btn {
@@ -2368,7 +2405,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 #upgrades-modal #menu-ascension-upgrade-grid {
   flex: 1 1 auto !important;
-  min-height: 380px !important;
+  min-height: 0 !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
   display: grid !important;

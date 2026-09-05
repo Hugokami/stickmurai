@@ -1571,8 +1571,7 @@ export function triggerZanFinisher(onComplete: () => void) {
   }
 
   // Sumi-e Ink Wash Wipe & Sunrise Flash
-  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#111827'));
-  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fef08a'));
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700', 240));
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 140, globals.currentLang === 'ja' ? '黎明一閃 🌸' : 'SLASH THROUGH SUNRISE 🌸', 'neon-#ffd700', 36));
 
   // 4. Speedlines activation
@@ -1626,8 +1625,7 @@ function distToSegment(px: number, py: number, x1: number, y1: number, x2: numbe
 }
 
 function triggerVortexShatter(x: number, y: number) {
-  globals.shockwaves.push(new Shockwave(x, y, '#a855f7'));
-  globals.shockwaves.push(new Shockwave(x, y, '#00ffff'));
+  globals.shockwaves.push(new Shockwave(x, y, '#a855f7', 200));
   globals.screenShake += 15;
   playSound(sfx.slash);
   playSynthesizedGravity();
@@ -2039,8 +2037,7 @@ function executeMirrorStrike(angle: number, baseDmg: number) {
   playSynthesizedPerfectParry();
   
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "👤 MIRROR STRIKE! 👤", "#aa66ff", 28));
-  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#aa66ff'));
-  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#aa66ff'));
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#aa66ff', 200));
   
   const perpX = -Math.sin(angle) * 50;
   const perpY = Math.cos(angle) * 50;
@@ -2402,21 +2399,21 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
     }
 
-    globals.screenShake = Math.max(globals.screenShake, 30);
+    globals.screenShake = Math.max(globals.screenShake, isBoss ? 28 : 12);
     globals.hitStop = 0;
-    globals.shockwaves.push(new Shockwave(e.x, e.y, isBoss ? '#ffd700' : '#ff003c'));
+    if (isBoss) {
+      globals.shockwaves.push(new Shockwave(e.x, e.y, '#ffd700', 220));
+    }
     const bloodFx = (vfxAnims as any).combat?.bloodSplatter;
     if (bloodFx && bloodFx.length > 0) {
       const bAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
       globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, bloodFx, 0.45, isBoss ? 2.5 : 1.8, bAngle));
     }
-    const execBurst = (vfxAnims as any).combat?.executionBurst;
-    if (execBurst && execBurst.length > 0) {
-      globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, execBurst, 0.45, isBoss ? 2.8 : 2.0));
-    }
-    const lightBurst = (vfxAnims as any).shockwaves?.lightBurst;
-    if (lightBurst && lightBurst.length > 0) {
-      globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, lightBurst, 0.32, isBoss ? 2.6 : 1.8));
+    if (isBoss) {
+      const execBurst = (vfxAnims as any).combat?.executionBurst;
+      if (execBurst && execBurst.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, execBurst, 0.45, 2.6));
+      }
     }
     addFlow(20);
 
@@ -2442,7 +2439,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     if (globals.selectedHero === 'satyr' && (globals.satyrEarthshakerCD || 0) <= 0) {
       globals.satyrEarthshakerCD = 4.5;
       globals.screenShake = Math.max(globals.screenShake, 18);
-      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#10b981'));
+      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#10b981', 200));
       playPrimalZap(0.9);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "EARTHSHAKER TREMOR! 🌿", "#10b981", 28));
       
@@ -2458,8 +2455,10 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
           other.addPostureDamage(28);
           other.knockbackTimer = 0.4;
           const kAng = Math.atan2(ody, odx);
-          other.knockbackVx = Math.cos(kAng) * 450;
-          other.knockbackVy = Math.sin(kAng) * 450;
+          other.knockbackVx = Math.cos(kAng) * 600;
+          other.knockbackVy = Math.sin(kAng) * 600;
+          other.hp -= 15;
+          if (other.hp <= 0) killEnemy(other);
         }
       }
     }
@@ -2470,7 +2469,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       if (infBlast && infBlast.length > 0) {
         globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, infBlast, 0.55, 2.2));
       }
-      globals.shockwaves.push(new Shockwave(e.x, e.y, '#ea580c'));
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "INFERNAL DETONATION! 💥🔥", "#ea580c", 26));
       playSynthesizedFirewheel();
       
@@ -2496,7 +2494,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       if (iceSpike && iceSpike.length > 0) {
         globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, iceSpike, 0.5, 2.0));
       }
-      globals.shockwaves.push(new Shockwave(e.x, e.y, '#38bdf8'));
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "FROST SHATTER! ❄️", "#38bdf8", 26));
       playSynthesizedAwaken();
 
@@ -2523,7 +2520,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       if (warpFx && warpFx.length > 0) {
         globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, warpFx, 0.5, 2.2));
       }
-      globals.shockwaves.push(new Shockwave(e.x, e.y, '#c084fc'));
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "VOID COLLAPSE! 🌌", "#c084fc", 26));
       playSynthesizedGravity();
 
@@ -3414,16 +3410,12 @@ function update(realDt: number) {
         globals.decoys.push(new Decoy(globals.player.x, globals.player.y - 80));
         const smokeFrames = (vfxAnims as any).skills?.decoySmoke;
         if (smokeFrames && smokeFrames.length > 0) {
-          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, smokeFrames, 0.45, 1.8));
-          globals.animatedEffects.push(new AnimatedEffect(globals.player.x - 100, globals.player.y, smokeFrames, 0.45, 1.8));
-          globals.animatedEffects.push(new AnimatedEffect(globals.player.x + 100, globals.player.y, smokeFrames, 0.45, 1.8));
-          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y - 80, smokeFrames, 0.45, 1.8));
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, smokeFrames, 0.45, 2.0));
         }
         globals.decoyInvisibilityTimer = 5.0;
         globals.decoyCritPrimed = true;
 
-        globals.screenShake = 15;
-        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
+        globals.screenShake = 12;
         for (let i = 0; i < 15; i++) {
           globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#c084fc', 250, 0.45, 3, Math.random() * Math.PI * 2));
         }
@@ -5144,7 +5136,7 @@ function update(realDt: number) {
   }
   globals.afterimages.length = afterimageWriteIndex;
 
-  const maxShockwaves = globals.graphicsSettings === 'low' ? 2 : (isMobile ? 3 : 6);
+  const maxShockwaves = globals.graphicsSettings === 'low' ? 1 : (isMobile ? 2 : 3);
   if (globals.shockwaves.length > maxShockwaves) {
     globals.shockwaves.splice(0, globals.shockwaves.length - maxShockwaves);
   }
