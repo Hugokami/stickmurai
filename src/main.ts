@@ -627,10 +627,10 @@ function startApp() {
     console.error("Critical error in startApp:", err);
   }
 
-  // Hard safety timeout: if assets hang on mobile WebKit/cellular, finish loading after 1.5s
+  // Hard safety timeout: if assets hang on mobile WebKit/cellular, finish loading after 5s
   loaderTimeoutId = setTimeout(() => {
     finishLoading();
-  }, 1500);
+  }, 5000);
 }
 
 if (document.readyState === 'loading') {
@@ -887,6 +887,8 @@ function initGame() {
   globals.raijinHitEnemies.clear();
   globals.stageBossSpawned = false;
   globals.satyrEarthshakerCD = 0;
+  globals.executionUnlocked = false;
+  if (globals.playerStats) globals.playerStats.executionLevel = 0;
 
   globals.comboFinisherReady = false;
   globals.riposteTimer = 0;
@@ -983,7 +985,8 @@ function initGame() {
     reapersMarkLevel: 0,
     fortuneMult: 1.0,
     postureDmgBonus: 0,
-    critChanceBonus: 0
+    critChanceBonus: 0,
+    executionLevel: 0
   };
 
   // Apply Hero Archetype Perks & update sprite type
@@ -2294,10 +2297,12 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 80, "PUNISH! 💥", "#ef4444", 24));
   }
 
-  const isExecution = (e as any).postureBrokenTimer > 0;
+  const hasExecutionPerk = Boolean(globals.executionUnlocked || (globals.playerStats.executionLevel && globals.playerStats.executionLevel > 0));
+  const isPostureBroken = (e as any).postureBrokenTimer > 0;
+  const isExecution = isPostureBroken && hasExecutionPerk;
   const isUpwardInput = globals.keys['KeyW'] || globals.keys['ArrowUp'] || (globals.joystickActive && globals.joystickVector && globals.joystickVector.y < -0.35);
 
-  if (isExecution && isUpwardInput && !(e as any).airborneZ) {
+  if (isPostureBroken && isUpwardInput && !(e as any).airborneZ) {
     // Option 3: Rising Aerial Launcher
     (e as any).airborneZ = 15;
     (e as any).airborneVz = 820;
@@ -2407,6 +2412,17 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       const spd = 300 + Math.random() * 400;
       const ang = Math.random() * Math.PI * 2;
       globals.particles.push(Particle.acquire(e.x, e.y, '#ff003c', spd, 0.45, 3.5, ang));
+    }
+  } else if (isPostureBroken) {
+    (e as any).postureBrokenTimer = 0;
+    (e as any).posture = 0;
+    finalDmg = Math.round(finalDmg * 1.4);
+    e.stunTimer = Math.max(e.stunTimer || 0, 0.45);
+    globals.screenShake = Math.max(globals.screenShake, 12);
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 50, `STAGGER HIT! 💥 -${finalDmg}`, '#f59e0b', 26));
+    const staggerSparks = globals.graphicsSettings === 'low' ? 3 : 8;
+    for (let i = 0; i < staggerSparks; i++) {
+      globals.particles.push(Particle.acquire(e.x, e.y, '#f59e0b', 240, 0.35, 2));
     }
   } else if (isCrit) {
     finalDmg = dmg * 2;

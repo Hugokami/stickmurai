@@ -50,13 +50,14 @@
           }
         }
 
-        // Automatic 2.5s watchdog timeout
-        window.__loaderFailSafeTimer = setTimeout(forceDismissLoader, 2500);
+        // Automatic 6.0s watchdog timeout
+        window.__loaderFailSafeTimer = setTimeout(forceDismissLoader, 6000);
 
-        // Emergency tap anywhere on window clears stuck loading screen
+        // Emergency tap after 3.5s clears genuinely stuck loading screen
+        var loadStartTime = Date.now();
         window.addEventListener('pointerdown', function() {
           var loader = document.getElementById('loader-screen');
-          if (loader && !loader.classList.contains('hidden')) {
+          if (loader && !loader.classList.contains('hidden') && (Date.now() - loadStartTime > 3500)) {
             forceDismissLoader();
           }
         }, { passive: true });

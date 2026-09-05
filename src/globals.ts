@@ -103,8 +103,11 @@ export const globals = {
     reapersMarkLevel: 0,
     fortuneMult: 1.0,
     postureDmgBonus: 0,
-    critChanceBonus: 0
+    critChanceBonus: 0,
+    executionLevel: 0
   },
+
+  executionUnlocked: false,
 
   exp: 0,
   maxExp: 15,

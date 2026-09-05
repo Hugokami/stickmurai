@@ -70,6 +70,14 @@ export const powerUps: PowerUp[] = [
   { skill: "dash", nameKey: "puFlowingCounterName", descKey: "puFlowingCounterDesc", apply: () => { globals.flowingCounterActive = true; } },
   { skill: "shield", nameKey: "puGaleVortexName", descKey: "puGaleVortexDesc", apply: () => { globals.galeVortexActive = true; globals.playerStats.enhanceDuration = Math.max(1.0, globals.playerStats.enhanceDuration - 1.0); } },
   { nameKey: "puBladeEchoesName", descKey: "puBladeEchoesDesc", apply: () => { globals.bladeEchoesActive = true; } },
+  {
+    nameKey: "puExecutionName",
+    descKey: "puExecutionDesc",
+    apply: () => {
+      globals.executionUnlocked = true;
+      globals.playerStats.executionLevel = (globals.playerStats.executionLevel || 0) + 1;
+    }
+  },
 
   // Option 6: Corrupted Blessings / Cursed Relics (High-Risk, High-Reward)
   {

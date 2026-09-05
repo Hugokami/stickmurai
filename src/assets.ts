@@ -98,6 +98,7 @@ export const i18n: Record<string, Record<string, string>> = {
     puUnstableOverloadName: "Unstable Overload", puUnstableOverloadDesc: "Dashing through a chilled or burning enemy triggers a 5 DMG elemental explosion.",
     puMagneticDrawName: "Magnetic Draw", puMagneticDrawDesc: "Automatically pulls EXP gems and Hearts toward you from a wide radius.",
     puReapersMarkName: "Reaper's Mark", puReapersMarkDesc: "Slashes deal +2 DMG, but you lose 1 Heart every 25s. Defeating 10 enemies resets this timer.",
+    puExecutionName: "Executioner's Art", puExecutionDesc: "Unlock lethal cinematic Manga Executions on posture-broken foes, dealing massive lethal damage, blood splatters, and bonus Magatama.",
     skillDecoyName: "Shadow Step / Decoy", skillDecoyDesc: "Spawns 2 decoys that slash for 3 DMG and detonate for 8 DMG + 1.5s stun on death. Grants invisibility & +50% speed for 5s. Cooldown 14s.",
     btnDecoy: "SHADOW",
     puCursedGlassName: "Glass Edge", puCursedGlassDesc: "☠ CURSE: Max HP locked to 1. Attacks deal +3 DMG, +50% size, & Dash gains +40% speed and i-frames.",
@@ -353,6 +354,7 @@ export const i18n: Record<string, Record<string, string>> = {
     puUnstableOverloadName: "不確実な過負荷", puUnstableOverloadDesc: "Chill（氷結）またはBurn（炎上）状態の敵をすり抜けるようにダッシュすると、5ダメージの範囲属性爆発が発生する。",
     puMagneticDrawName: "磁気引き寄せ", puMagneticDrawDesc: "広範囲からEXPジェムとハートを自動的にプレイヤーの元へ引き寄せる。",
     puReapersMarkName: "死神の刻印", puReapersMarkDesc: "通常斬撃の威力が+2されるが、25秒ごとにハートが1減少する。敵を10体倒すとこのタイマーがリセットされる。",
+    puExecutionName: "処刑の極意", puExecutionDesc: "体勢崩壊した敵に対する漫画風の一刀両断・処刑を発動可能にする。致命的なダメージ、血飛沫、ボーナス勾玉を獲得。",
     skillDecoyName: "影遁・幻影の術", skillDecoyDesc: "5秒間姿を消し速度+50%。3ダメの通常攻撃を行い死亡時に8ダメ＆1.5秒気絶の爆発を起こす分身を2体召喚。クールダウン14秒。",
     btnDecoy: "影遁",
     puCursedGlassName: "玻璃の刃", puCursedGlassDesc: "☠ 呪い: 体力が1に固定。攻撃力+3、斬撃範囲+50%、ダッシュ速度+40%＆無敵時間延長。",
@@ -554,7 +556,7 @@ function onAssetLoaded() {
 
 function pad(n: number) { return n.toString().padStart(4, '0'); }
 
-function loadAnim(folder: string, prefix: string, start: number, end: number, isPriority = false) {
+function loadAnim(folder: string, prefix: string, start: number, end: number, isPriority = true) {
   const images: HTMLImageElement[] = [];
   for (let i = start; i <= end; i++) {
     const img = new Image();
@@ -639,10 +641,10 @@ export function startBackgroundAssetLoading() {
 export const anims = {
   sword: {
     idle: loadAnim('Sword sprites', 'sword_Idle', 1, 8, true),
-    walk: loadAnim('Sword sprites', 'sword_run', 17, 24, false),
-    attack: loadAnim('Sword sprites', 'sword_combo', 65, 75, false),
-    dash: loadAnim('Sword sprites', 'sword_dash', 33, 38, false),
-    dead: loadAnim('Sword sprites', 'sword_death', 52, 61, false),
+    walk: loadAnim('Sword sprites', 'sword_run', 17, 24, true),
+    attack: loadAnim('Sword sprites', 'sword_combo', 65, 75, true),
+    dash: loadAnim('Sword sprites', 'sword_dash', 33, 38, true),
+    dead: loadAnim('Sword sprites', 'sword_death', 52, 61, true),
   },
   fighter: {
     idle: loadAnim('Fighter sprites', 'fighter_Idle', 1, 8),
@@ -666,18 +668,18 @@ export const anims = {
     dead: loadSkeletonAnim('dead', 25),
   },
   enemy01: {
-    idle: loadCustomEnemyAnim('Enemy01', 'idle', 6, false),
-    walk: loadCustomEnemyAnim('Enemy01', 'walk', 8, false),
-    attack: loadCustomEnemyAnim('Enemy01', 'attack', 7, false),
-    dash: loadCustomEnemyAnim('Enemy01', 'walk', 8, false),
-    dead: loadCustomEnemyAnim('Enemy01', 'hit', 4, false),
+    idle: loadCustomEnemyAnim('Enemy01', 'idle', 6, true),
+    walk: loadCustomEnemyAnim('Enemy01', 'walk', 8, true),
+    attack: loadCustomEnemyAnim('Enemy01', 'attack', 7, true),
+    dash: loadCustomEnemyAnim('Enemy01', 'walk', 8, true),
+    dead: loadCustomEnemyAnim('Enemy01', 'hit', 4, true),
   },
   enemy02: {
-    idle: loadCustomEnemyAnim('Enemy02', 'idle', 6, false),
-    walk: loadCustomEnemyAnim('Enemy02', 'walk', 8, false),
-    attack: loadCustomEnemyAnim('Enemy02', 'attack', 8, false),
-    dash: loadCustomEnemyAnim('Enemy02', 'walk', 8, false),
-    dead: loadCustomEnemyAnim('Enemy02', 'hit', 4, false),
+    idle: loadCustomEnemyAnim('Enemy02', 'idle', 6, true),
+    walk: loadCustomEnemyAnim('Enemy02', 'walk', 8, true),
+    attack: loadCustomEnemyAnim('Enemy02', 'attack', 8, true),
+    dash: loadCustomEnemyAnim('Enemy02', 'walk', 8, true),
+    dead: loadCustomEnemyAnim('Enemy02', 'hit', 4, true),
   },
   enemy03: {
     idle: loadCustomEnemyAnim('Enemy03', 'idle', 6),
@@ -781,7 +783,7 @@ export const anims = {
 
 export const propImages: HTMLImageElement[] = [];
 
-function loadSkeletonAnim(prefix: string, count: number, isPriority = false) {
+function loadSkeletonAnim(prefix: string, count: number, isPriority = true) {
   const images: HTMLImageElement[] = [];
   for (let i = 1; i <= count; i++) {
     const img = new Image();
@@ -797,7 +799,7 @@ function loadSkeletonAnim(prefix: string, count: number, isPriority = false) {
   return images;
 }
 
-function loadCustomEnemyAnim(folder: string, prefix: string, count: number, isPriority = false) {
+function loadCustomEnemyAnim(folder: string, prefix: string, count: number, isPriority = true) {
   const images: HTMLImageElement[] = [];
   for (let i = 1; i <= count; i++) {
     const img = new Image();
@@ -850,7 +852,7 @@ export const skillsData = [
   { id: 'gravity', nameKey: 'skillGravityName', descKey: 'skillGravityDesc', cost: 50000, icon: '🌀' }
 ];
 
-function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, isPriority = false) {
+function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, isPriority = true) {
   const frames: HTMLImageElement[] = [];
   for (let i = 0; i < count; i++) {
     const frameNum = startIdx + i;
@@ -870,8 +872,8 @@ function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize
 
 export const vfxAnims = {
   custom: {
-    slash: loadVfxFrames('vfx/Frames/Slash_color5_frame{N}.png', 9, 1, 0, false),
-    dragonFury: loadVfxFrames('vfx/Dragon_fury/Slash_color4_frame{N}.png', 9, 1, 0, false),
+    slash: loadVfxFrames('vfx/Frames/Slash_color5_frame{N}.png', 9, 1, 0, true),
+    dragonFury: loadVfxFrames('vfx/Dragon_fury/Slash_color4_frame{N}.png', 9, 1, 0, true),
     invincible: loadVfxFrames('vfx/invincible/Starcaller_spell_3_frame_{N}.png', 15, 1),
     starfall: loadVfxFrames('vfx/starfall/Starcaller_spell_2_frame_{N}.png', 8, 1),
     vortex: loadVfxFrames('vfx/vortex/FireMage_skill3_frame{N}.png', 12, 1)
@@ -879,11 +881,11 @@ export const vfxAnims = {
   gigapack: {
     explosion: loadVfxFrames('vfx/explosion/frame_{N}.png', 13, 0, 2),
     lightning: loadVfxFrames('vfx/lightning/frame_{N}.png', 7, 0, 2),
-    impact: loadVfxFrames('vfx/impact/frame_{N}.png', 7, 0, 2, false),
+    impact: loadVfxFrames('vfx/impact/frame_{N}.png', 7, 0, 2, true),
   },
   explosions: {
     fire: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/fire/128/frames/frame_{N}.png', 16, 0, 3),
-    barrel: loadVfxFrames('vfx/explosions/barrel_explosion/frame_{N}.png', 9, 1, 2, false)
+    barrel: loadVfxFrames('vfx/explosions/barrel_explosion/frame_{N}.png', 9, 1, 2, true)
   },
   fireMage: {
     vfx1: loadVfxFrames('vfx/Pixel Art VFX - Fire Mage - FREE Version/VFX1/frames/FireMage_skill1_frame{N}.png', 7, 1),
@@ -906,36 +908,36 @@ export const vfxAnims = {
     vfx3: loadVfxFrames('vfx/Pixel Art VFX - Warlock - FREE Version/VFX3/Frames/Warlock_skill3_frame{N}.png', 8, 1)
   },
   heroSlashes: {
-    ronin: loadVfxFrames('vfx/slashes/slash_ronin/frame_{N}.png', 9, 1, 2, false),
-    ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 9, 1, 2, false),
-    luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2, false),
-    samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, false),
-    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, false),
-    satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, false),
-    dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, false),
+    ronin: loadVfxFrames('vfx/slashes/slash_ronin/frame_{N}.png', 9, 1, 2, true),
+    ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 9, 1, 2, true),
+    luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2, true),
+    samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, true),
+    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, true),
+    satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, true),
+    dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, true),
   },
   impacts: {
-    parryYellow: loadVfxFrames('vfx/impacts/impact_parry_yellow/frame_{N}.png', 7, 1, 2, false),
-    directionalBlue: loadVfxFrames('vfx/impacts/directional_blue/frame_{N}.png', 7, 1, 2, false)
+    parryYellow: loadVfxFrames('vfx/impacts/impact_parry_yellow/frame_{N}.png', 7, 1, 2, true),
+    directionalBlue: loadVfxFrames('vfx/impacts/directional_blue/frame_{N}.png', 7, 1, 2, true)
   },
   boss: {
-    slamImpact: loadVfxFrames('vfx/boss/slam_impact/frame_{N}.png', 8, 1, 2, false),
-    slamDust: loadVfxFrames('vfx/boss/slam_dust/frame_{N}.png', 10, 1, 2, false)
+    slamImpact: loadVfxFrames('vfx/boss/slam_impact/frame_{N}.png', 8, 1, 2, true),
+    slamDust: loadVfxFrames('vfx/boss/slam_dust/frame_{N}.png', 10, 1, 2, true)
   },
   player: {
-    dashDust: loadVfxFrames('vfx/player/dash_dust/frame_{N}.png', 6, 1, 2, false)
+    dashDust: loadVfxFrames('vfx/player/dash_dust/frame_{N}.png', 6, 1, 2, true)
   },
   skills: {
-    firewheel: loadVfxFrames('vfx/skills/firewheel/frame_{N}.png', 7, 1, 2, false),
-    windAegis: loadVfxFrames('vfx/skills/wind_aegis/frame_{N}.png', 18, 1, 2, false),
-    voidWarp: loadVfxFrames('vfx/skills/void_warp/frame_{N}.png', 12, 1, 2, false),
-    decoySmoke: loadVfxFrames('vfx/skills/decoy_smoke/frame_{N}.png', 12, 1, 2, false),
-    lightningBurst: loadVfxFrames('vfx/skills/lightning_burst/frame_{N}.png', 8, 1, 2, false),
-    lightningStrike: loadVfxFrames('vfx/skills/lightning_strike/frame_{N}.png', 7, 1, 2, false)
+    firewheel: loadVfxFrames('vfx/skills/firewheel/frame_{N}.png', 7, 1, 2, true),
+    windAegis: loadVfxFrames('vfx/skills/wind_aegis/frame_{N}.png', 18, 1, 2, true),
+    voidWarp: loadVfxFrames('vfx/skills/void_warp/frame_{N}.png', 12, 1, 2, true),
+    decoySmoke: loadVfxFrames('vfx/skills/decoy_smoke/frame_{N}.png', 12, 1, 2, true),
+    lightningBurst: loadVfxFrames('vfx/skills/lightning_burst/frame_{N}.png', 8, 1, 2, true),
+    lightningStrike: loadVfxFrames('vfx/skills/lightning_strike/frame_{N}.png', 7, 1, 2, true)
   },
   combat: {
-    bloodSplatter: loadVfxFrames('vfx/combat/blood_splatter/frame_{N}.png', 8, 1, 2, false),
-    perilAlert: loadVfxFrames('vfx/combat/peril_alert/frame_{N}.png', 14, 1, 2, false)
+    bloodSplatter: loadVfxFrames('vfx/combat/blood_splatter/frame_{N}.png', 8, 1, 2, true),
+    perilAlert: loadVfxFrames('vfx/combat/peril_alert/frame_{N}.png', 14, 1, 2, true)
   }
 };
 
