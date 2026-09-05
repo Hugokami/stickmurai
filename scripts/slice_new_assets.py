@@ -93,20 +93,23 @@ with zipfile.ZipFile(nb_zip_path) as z:
                 d2 = os.path.join("dist", "sprites", "HeroNightborne", fname_dash)
                 save_frame(frame_flipped, [d1, d2])
 
-    # Generate Portrait for Dojo
+    # Generate Clean Transparent Portrait for Dojo (matching Shadow Shinobi)
     portrait_f0 = nb_sheet.crop((0, 0, 80, 80)).transpose(Image.FLIP_LEFT_RIGHT)
-    port_bg = Image.new("RGBA", (100, 100), (15, 23, 42, 255))
-    draw = ImageDraw.Draw(port_bg)
-    # radial glow purple
-    for r in range(45, 0, -2):
-        alpha = int(80 * (1 - r / 45))
-        draw.ellipse([50 - r, 50 - r, 50 + r, 50 + r], fill=(168, 85, 247, alpha))
-    # paste Nightborne scaled
-    port_f0_scaled = portrait_f0.resize((90, 90), Image.NEAREST)
-    port_bg.paste(port_f0_scaled, (5, 5), port_f0_scaled)
+    nb_bbox = portrait_f0.getbbox()
+    nb_cropped = portrait_f0.crop(nb_bbox)
+    # Scale to ~94px height with nearest neighbor
+    scale_factor = 94.0 / nb_cropped.height
+    new_w = int(nb_cropped.width * scale_factor)
+    new_h = int(nb_cropped.height * scale_factor)
+    nb_scaled = nb_cropped.resize((new_w, new_h), Image.NEAREST)
+    port_bg = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    paste_x = (128 - new_w) // 2
+    paste_y = (128 - new_h) // 2
+    port_bg.paste(nb_scaled, (paste_x, paste_y), nb_scaled)
     save_frame(port_bg, [
         os.path.join("public", "sprites", "portraits", "portrait_nightborne.png"),
-        os.path.join("dist", "sprites", "portraits", "portrait_nightborne.png")
+        os.path.join("dist", "sprites", "portraits", "portrait_nightborne.png"),
+        os.path.join("android", "app", "src", "main", "assets", "sprites", "portraits", "portrait_nightborne.png")
     ])
 
 print("Nightborne Sovereign sliced successfully.")
@@ -156,20 +159,23 @@ with zipfile.ZipFile(sam_zip_path) as z:
         out2 = os.path.join("dist", "sprites", "HeroSamurai", fname_dead)
         save_frame(frame, [out1, out2])
 
-    # Generate Portrait for Dojo
+    # Generate Clean Transparent Portrait for Dojo (matching Shadow Shinobi)
     idle_sheet = Image.open(io.BytesIO(z.read("FREE_Samurai 2D Pixel Art v1.2/Sprites/IDLE.png"))).convert("RGBA")
     sam_f0 = idle_sheet.crop((0, 0, 96, 96))
-    port_sam = Image.new("RGBA", (100, 100), (15, 23, 42, 255))
-    draw_sam = ImageDraw.Draw(port_sam)
-    # radial glow gold
-    for r in range(45, 0, -2):
-        alpha = int(80 * (1 - r / 45))
-        draw_sam.ellipse([50 - r, 50 - r, 50 + r, 50 + r], fill=(234, 179, 8, alpha))
-    sam_scaled = sam_f0.resize((90, 90), Image.NEAREST)
-    port_sam.paste(sam_scaled, (5, 5), sam_scaled)
+    sam_bbox = sam_f0.getbbox()
+    sam_cropped = sam_f0.crop(sam_bbox)
+    scale_factor = 94.0 / sam_cropped.height
+    new_w = int(sam_cropped.width * scale_factor)
+    new_h = int(sam_cropped.height * scale_factor)
+    sam_scaled = sam_cropped.resize((new_w, new_h), Image.NEAREST)
+    port_sam = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+    paste_x = (128 - new_w) // 2
+    paste_y = (128 - new_h) // 2
+    port_sam.paste(sam_scaled, (paste_x, paste_y), sam_scaled)
     save_frame(port_sam, [
         os.path.join("public", "sprites", "portraits", "portrait_samurai.png"),
-        os.path.join("dist", "sprites", "portraits", "portrait_samurai.png")
+        os.path.join("dist", "sprites", "portraits", "portrait_samurai.png"),
+        os.path.join("android", "app", "src", "main", "assets", "sprites", "portraits", "portrait_samurai.png")
     ])
 
 print("Grandmaster Samurai sliced successfully.")

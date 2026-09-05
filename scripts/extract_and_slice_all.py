@@ -1,4 +1,4 @@
-﻿import os
+import os
 import shutil
 import zipfile
 import io
@@ -95,21 +95,22 @@ for row_idx, frame_count, anim_name in anim_rows:
 
 print("Satyr animations sliced into public/sprites/HeroSatyr/ and dist/sprites/HeroSatyr/")
 
-# Generate Satyr Portrait for Dojo Card
-port_bg = Image.new("RGBA", (100, 100), (15, 23, 42, 255))
-draw_port = ImageDraw.Draw(port_bg)
-# Emerald radial glow (theme color #10B981)
-for r in range(45, 0, -2):
-    alpha = int(85 * (1 - r / 45))
-    draw_port.ellipse([50 - r, 50 - r, 50 + r, 50 + r], fill=(16, 185, 129, alpha))
-
-satyr_port_scaled = portrait_img.resize((84, 76), Image.NEAREST)
-port_bg.paste(satyr_port_scaled, (8, 12), satyr_port_scaled)
-save_frame(port_bg, [
+# Generate Clean Transparent Satyr Portrait for Dojo (matching Shadow Shinobi)
+f0_satyr = sheet.crop((0, 0, 32, 32))
+satyr_bbox = f0_satyr.getbbox()
+satyr_cropped = f0_satyr.crop(satyr_bbox)
+# Scale with nearest neighbor by 5x
+satyr_scaled = satyr_cropped.resize((satyr_cropped.width * 5, satyr_cropped.height * 5), Image.NEAREST)
+port_satyr = Image.new("RGBA", (128, 128), (0, 0, 0, 0))
+paste_x = (128 - satyr_scaled.width) // 2
+paste_y = (128 - satyr_scaled.height) // 2 + 5
+port_satyr.paste(satyr_scaled, (paste_x, paste_y), satyr_scaled)
+save_frame(port_satyr, [
     os.path.join("public", "sprites", "portraits", "portrait_satyr.png"),
-    os.path.join("dist", "sprites", "portraits", "portrait_satyr.png")
+    os.path.join("dist", "sprites", "portraits", "portrait_satyr.png"),
+    os.path.join("android", "app", "src", "main", "assets", "sprites", "portraits", "portrait_satyr.png")
 ])
-print("Satyr portrait generated at public/sprites/portraits/portrait_satyr.png")
+print("Satyr portrait generated cleanly at public/sprites/portraits/portrait_satyr.png")
 
 # Generate Emerald Nature Slash VFX (slash_satyr) from slash_ronin
 print("=== STEP 3: GENERATING SATYR EMERALD SLASH VFX ===")

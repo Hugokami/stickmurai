@@ -42,14 +42,14 @@
           }
         }
 
-        // Automatic 5.0s watchdog timeout
-        window.__loaderFailSafeTimer = setTimeout(forceDismissLoader, 5000);
+        // Automatic 15.0s watchdog timeout for all assets to fully load
+        window.__loaderFailSafeTimer = setTimeout(forceDismissLoader, 15000);
 
-        // Emergency tap after 2.5s clears genuinely stuck loading screen
+        // Emergency tap after 15.0s clears genuinely stuck loading screen
         var loadStartTime = Date.now();
         window.addEventListener('pointerdown', function() {
           var loader = document.getElementById('loader-screen');
-          if (loader && !loader.classList.contains('hidden') && (Date.now() - loadStartTime > 2500)) {
+          if (loader && !loader.classList.contains('hidden') && (Date.now() - loadStartTime > 15000)) {
             forceDismissLoader();
           }
         }, { passive: true });
@@ -65,7 +65,7 @@
         });
       })();
     </script>
-    <script type="module" src="/assets/index-DInT7O3H.js"></script>
+    <script type="module" src="/assets/index-7O7nNhHJ.js"></script>
     <link rel="stylesheet" href="/assets/index-CjBoUhwG.css">
   </head>
   <body style="background:#090a0f;margin:0;padding:0;">

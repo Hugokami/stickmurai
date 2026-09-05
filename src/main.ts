@@ -623,10 +623,10 @@ function startApp() {
     } catch(e) {}
   }
 
-  // Hard safety timeout: if assets hang on mobile WebKit/cellular, finish loading after 3.5s
+  // Hard safety timeout: allow 15 seconds for all assets to fully load
   loaderTimeoutId = setTimeout(() => {
     finishLoading();
-  }, 3500);
+  }, 15000);
 }
 
 if (document.readyState === 'loading') {
