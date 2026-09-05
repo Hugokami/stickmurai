@@ -462,6 +462,17 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     }
   });
 
+  const guideModal = document.getElementById('guide-modal');
+  bindDualListener(document.getElementById('open-guide-btn'), () => {
+    if (guideModal) guideModal.style.display = 'flex';
+  });
+
+  const closeGuideModal = () => {
+    if (guideModal) guideModal.style.display = 'none';
+  };
+  bindDualListener(document.getElementById('close-guide-btn'), closeGuideModal);
+  bindDualListener(document.getElementById('close-guide-btn-bottom'), closeGuideModal);
+
   bindDualListener(document.getElementById('pause-settings-btn'), () => {
     if (pauseScreen) pauseScreen.style.display = 'none';
     if (settingsScreen) settingsScreen.style.display = 'flex';
@@ -797,6 +808,13 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   });
 
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const guideModal = document.getElementById('guide-modal');
+      if (guideModal && guideModal.style.display === 'flex') {
+        guideModal.style.display = 'none';
+        return;
+      }
+    }
     if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
       if (globals.gameMode === 'pvp') return; // Disable pausing in PvP
       if (globals.gameState === 'playing') {
@@ -2150,10 +2168,10 @@ export function populateDojoHeroGrid() {
     card.style.gap = '8px';
     card.style.boxShadow = isEquipped ? '0 0 20px rgba(192, 132, 252, 0.4)' : 'none';
 
-    // Hero portrait container with luminous backlight & SVG silhouette fallback
+    // Hero portrait container with elegant dark dojo alcove podium & SVG fallback
     const portraitHtml = `
-      <div class="hero-portrait-wrap" style="width: 100%; height: 110px; background: radial-gradient(circle, rgba(255,255,255,0.25) 0%, rgba(15,23,42,0.9) 100%); border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(192,132,252,0.3); margin-bottom: 4px; box-shadow: inset 0 0 12px rgba(0,0,0,0.6);">
-        <img src="${hero.image}" alt="${hero.nameEn}" style="width: 90px; height: 90px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 0 8px rgba(255,255,255,0.45));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23c084fc\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
+      <div class="hero-portrait-wrap" style="width: 100%; height: 110px; background: radial-gradient(circle at 50% 65%, rgba(192,132,252,0.18) 0%, rgba(15,23,42,0.92) 80%); border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(192,132,252,0.25); margin-bottom: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.4);">
+        <img src="${hero.image}" alt="${hero.nameEn}" style="width: 96px; height: 96px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23c084fc\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
       </div>
     `;
 

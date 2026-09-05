@@ -1181,7 +1181,7 @@ export class Decoy extends Entity {
   performAttack() {
     globals.slashes.push(Slash.acquire(this.x, this.y, Math.random() * Math.PI * 2, 1.2, false, 'rgba(192, 132, 252, ALPHA)', true));
     
-    // Deal 3 damage + knockback to nearby enemies in 180px radius
+    // Deal 8 damage + knockback to nearby enemies in 180px radius
     const enemies = globals.enemies;
     const len = enemies.length;
     for (let i = 0; i < len; i++) {
@@ -1192,9 +1192,9 @@ export class Decoy extends Entity {
       const distSq = dx * dx + dy * dy;
       if (distSq < 32400) {
         if (callbacks.hitEnemy) {
-          callbacks.hitEnemy(e, 3);
+          callbacks.hitEnemy(e, 8);
         } else {
-          e.hp -= 3;
+          e.hp -= 8;
           e.hitFlash = 0.15;
           if (e.hp <= 0) e.setState('dead');
         }
@@ -1203,7 +1203,7 @@ export class Decoy extends Entity {
         const dist = Math.sqrt(distSq) || 0.001;
         e.vx = (dx / dist) * 800;
         e.vy = (dy / dist) * 800;
-        e.stunTimer = Math.max(e.stunTimer || 0, 0.6);
+        e.stunTimer = Math.max(e.stunTimer || 0, 0.8);
         
         for (let j = 0; j < 5; j++) {
           globals.particles.push(Particle.acquire(e.x, e.y, '#c084fc', 150, 0.3, 1.5));
@@ -1214,6 +1214,10 @@ export class Decoy extends Entity {
 
   explode() {
     globals.shockwaves.push(new Shockwave(this.x, this.y, '#c084fc'));
+    const warpFrames = (vfxAnims as any).skills?.phantomWarp;
+    if (warpFrames && warpFrames.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, warpFrames, 0.45, 1.8));
+    }
     for (let i = 0; i < 20; i++) {
       globals.particles.push(Particle.acquire(this.x, this.y, '#c084fc', 300, 0.5, 2.5 + Math.random() * 2, Math.random() * Math.PI * 2));
     }
@@ -1226,15 +1230,15 @@ export class Decoy extends Entity {
       const dx = e.x - this.x;
       const dy = e.y - this.y;
       const distSq = dx * dx + dy * dy;
-      if (distSq < 40000) {
+      if (distSq < 48400) { // 220 * 220
         if (callbacks.hitEnemy) {
-          callbacks.hitEnemy(e, 8);
+          callbacks.hitEnemy(e, 35);
         } else {
-          e.hp -= 8;
+          e.hp -= 35;
           e.hitFlash = 0.15;
           if (e.hp <= 0) e.setState('dead');
         }
-        e.stunTimer = Math.max(e.stunTimer || 0, 1.5);
+        e.stunTimer = Math.max(e.stunTimer || 0, 2.5);
         // extra knockback
         const dist = Math.sqrt(distSq) || 0.001;
         e.vx = (dx / dist) * 1200;

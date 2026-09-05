@@ -349,6 +349,16 @@ export function triggerHapticFeedback(pattern: number | number[] = 15) {
   }
 }
 
+let consecutiveParries = 0;
+let lastConsecutiveParryTime = 0;
+
+export function getConsecutiveParries(): number {
+  if (performance.now() - lastConsecutiveParryTime > 1600) {
+    consecutiveParries = 0;
+  }
+  return consecutiveParries;
+}
+
 export function playSynthesizedParry() {
   try {
     triggerHapticFeedback(15);
@@ -356,28 +366,38 @@ export function playSynthesizedParry() {
     if (nowTime - lastParryTime < 50) return;
     lastParryTime = nowTime;
 
+    if (nowTime - lastConsecutiveParryTime < 1600) {
+      consecutiveParries = Math.min(6, consecutiveParries + 1);
+    } else {
+      consecutiveParries = 1;
+    }
+    lastConsecutiveParryTime = nowTime;
+
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.5;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.55);
     
+    // Ascending pitch scale: +1 semitone per consecutive parry streak (+1/12 octave)
+    const pitchMult = Math.pow(2, (consecutiveParries - 1) / 12);
+
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(1200, now);
-    osc1.frequency.exponentialRampToValueAtTime(600, now + 0.25);
+    osc1.frequency.setValueAtTime(1200 * pitchMult, now);
+    osc1.frequency.exponentialRampToValueAtTime(Math.max(20, 600 * pitchMult), now + 0.25);
     gain1.gain.setValueAtTime(volume, now);
-    gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+    gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
     osc1.connect(gain1);
     gain1.connect(getSoundDestination(ctx));
     
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(880, now);
-    osc2.frequency.exponentialRampToValueAtTime(300, now + 0.15);
-    gain2.gain.setValueAtTime(volume * 0.4, now);
-    gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+    osc2.frequency.setValueAtTime(880 * pitchMult, now);
+    osc2.frequency.exponentialRampToValueAtTime(Math.max(20, 300 * pitchMult), now + 0.15);
+    gain2.gain.setValueAtTime(volume * 0.45, now);
+    gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
     osc2.connect(gain2);
     gain2.connect(getSoundDestination(ctx));
     
@@ -385,6 +405,44 @@ export function playSynthesizedParry() {
     osc2.start(now);
     osc1.stop(now + 0.26);
     osc2.stop(now + 0.16);
+  } catch (e) {}
+}
+
+export function playSynthesizedSheathe() {
+  try {
+    triggerHapticFeedback(20);
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const volume = Math.max(0.001, bgmAudio.volume * 0.6);
+
+    // 1. Blade slide metallic friction
+    const oscSlide = ctx.createOscillator();
+    const gainSlide = ctx.createGain();
+    oscSlide.type = 'sawtooth';
+    oscSlide.frequency.setValueAtTime(1800, now);
+    oscSlide.frequency.exponentialRampToValueAtTime(3200, now + 0.12);
+    gainSlide.gain.setValueAtTime(volume * 0.25, now);
+    gainSlide.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+    oscSlide.connect(gainSlide);
+    gainSlide.connect(getSoundDestination(ctx));
+
+    // 2. Tsuba latch "Click / Clack"
+    const oscClick = ctx.createOscillator();
+    const gainClick = ctx.createGain();
+    oscClick.type = 'sine';
+    oscClick.frequency.setValueAtTime(2400, now + 0.12);
+    oscClick.frequency.exponentialRampToValueAtTime(400, now + 0.22);
+    gainClick.gain.setValueAtTime(0.001, now);
+    gainClick.gain.setValueAtTime(volume * 0.8, now + 0.12);
+    gainClick.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+    oscClick.connect(gainClick);
+    gainClick.connect(getSoundDestination(ctx));
+
+    oscSlide.start(now);
+    oscClick.start(now);
+    oscSlide.stop(now + 0.15);
+    oscClick.stop(now + 0.25);
   } catch (e) {}
 }
 

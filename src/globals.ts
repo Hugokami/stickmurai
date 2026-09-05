@@ -108,6 +108,9 @@ export const globals = {
   },
 
   executionUnlocked: false,
+  chiburuiKills: 0,
+  chiburuiTimer: 0,
+  guaranteedCrit: false,
 
   exp: 0,
   maxExp: 15,

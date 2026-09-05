@@ -26,7 +26,9 @@ import {
   playTeleportSfx,
   playAffixAlert,
   playMagatamaPickup,
-  playPrimalZap
+  playPrimalZap,
+  getConsecutiveParries,
+  playSynthesizedSheathe
 } from './audio';
 import {
   Afterimage,
@@ -888,6 +890,9 @@ function initGame() {
   globals.stageBossSpawned = false;
   globals.satyrEarthshakerCD = 0;
   globals.executionUnlocked = false;
+  globals.chiburuiKills = 0;
+  globals.chiburuiTimer = 0;
+  globals.guaranteedCrit = false;
   if (globals.playerStats) globals.playerStats.executionLevel = 0;
 
   globals.comboFinisherReady = false;
@@ -946,8 +951,8 @@ function initGame() {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
   }
   
-  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 12.0 : (globals.selectedSkill === 'dash' ? 2.8 : (globals.selectedSkill === 'firewheel' ? 12.0 : (globals.selectedSkill === 'gravity' ? 10.0 : (globals.selectedSkill === 'parry_master' ? 10.0 : (globals.selectedSkill === 'decoy_illusion' ? 14.0 : 16.0))))));
-  const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 3.5 : (globals.selectedSkill === 'dash' ? 0.3 : (globals.selectedSkill === 'firewheel' ? 5.0 : (globals.selectedSkill === 'gravity' ? 4.0 : (globals.selectedSkill === 'parry_master' ? 3.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
+  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 10.0 : (globals.selectedSkill === 'dash' ? 0.9 : (globals.selectedSkill === 'firewheel' ? 11.0 : (globals.selectedSkill === 'gravity' ? 9.0 : (globals.selectedSkill === 'parry_master' ? 9.0 : (globals.selectedSkill === 'decoy_illusion' ? 12.0 : 14.0))))));
+  const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 4.5 : (globals.selectedSkill === 'dash' ? 0.45 : (globals.selectedSkill === 'firewheel' ? 6.0 : (globals.selectedSkill === 'gravity' ? 4.5 : (globals.selectedSkill === 'parry_master' ? 4.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
   globals.playerStats = { 
     slashBonusDmg: 0,
     iaijutsuBonusDmg: 0,
@@ -1346,12 +1351,44 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     globals.runStats.parries++;
     addCombo();
     globals.hitStop = 0; 
-    globals.screenShake = 12; 
-    addFlow(3.0);
-    globals.invulnTimer = 0.5;
+    globals.screenShake = 14; 
+    addFlow(4.0);
+    globals.invulnTimer = 0.55;
+    
+    // Mechanic 1: Kinetic Parry Sparks & Ascending Palette Streak
+    const streak = getConsecutiveParries();
+    let sparkColor = '#f59e0b'; // 1: Amber
+    let shockColor = '#f59e0b';
+    let sparkCount = 14;
+    let parryLabel = '🛡️ PARRY!';
+    if (streak === 2) {
+      sparkColor = '#fde047'; // 2: Blazing Gold
+      shockColor = '#fde047';
+      sparkCount = 18;
+      parryLabel = '⚡ PARRY STREAK x2!';
+    } else if (streak === 3) {
+      sparkColor = '#38bdf8'; // 3: Electric Cyan
+      shockColor = '#38bdf8';
+      sparkCount = 24;
+      parryLabel = '⚡ PARRY STREAK x3!';
+    } else if (streak >= 4) {
+      sparkColor = '#ffffff'; // 4+: Blinding Starlight White-Blue
+      shockColor = '#e0f2fe';
+      sparkCount = 32;
+      parryLabel = `🌟 PERFECT CADENCE x${streak}!`;
+      const goldImpact = (vfxAnims as any).shockwaves?.impactGold;
+      if (goldImpact && goldImpact.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, goldImpact, 0.35, 2.2));
+      }
+    }
     
     // Parry blast pushing nearby enemies back!
-    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, 'rgba(0, 255, 255, 0.65)'));
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, shockColor));
+    for (let i = 0; i < sparkCount; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const spd = 300 + Math.random() * 250;
+      globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, sparkColor, spd, 0.45, 2.5 + Math.random() * 2, a));
+    }
     const pYParry = (vfxAnims as any).impacts?.parryYellow;
     if (pYParry?.length > 0 && enemy) {
       globals.animatedEffects.push(new AnimatedEffect((globals.player.x + enemy.x) / 2, (globals.player.y + enemy.y) / 2, pYParry, 0.28, 1.8));
@@ -1369,8 +1406,8 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       }
     });
 
-    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "🛡️ PARRY!", "#00ffff", 22));
-    hitEnemy(enemy, 2); // deal 2 damage on parry instead of 1!
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, parryLabel, sparkColor, 22));
+    hitEnemy(enemy, 3); // deal 3 damage on parry riposte!
     triggerFlowingCounterReset();
     return;
   }
@@ -1509,6 +1546,26 @@ export function triggerZanFinisher(onComplete: () => void) {
       c.y = globals.player.y + (Math.random() - 0.5) * 20;
     }
   }
+
+  // Mechanic 5: "Slash Through Sunrise" — Transmute remaining enemy bullets into floating sakura petals
+  if (globals.projectiles && globals.projectiles.length > 0) {
+    for (let i = 0; i < globals.projectiles.length; i++) {
+      const proj = globals.projectiles[i];
+      if (proj && proj.isEnemy) {
+        for (let p = 0; p < 4; p++) {
+          const petalSpeed = 40 + Math.random() * 60;
+          const petalAngle = -Math.PI / 2 + (Math.random() - 0.5) * 1.2;
+          globals.particles.push(Particle.acquire(proj.x, proj.y, '#ffb7c5', petalSpeed, 1.8, 3.5, petalAngle));
+        }
+      }
+    }
+    globals.projectiles = globals.projectiles.filter(p => !p.isEnemy);
+  }
+
+  // Sumi-e Ink Wash Wipe & Sunrise Flash
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#111827'));
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fef08a'));
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 140, globals.currentLang === 'ja' ? '黎明一閃 🌸' : 'SLASH THROUGH SUNRISE 🌸', 'neon-#ffd700', 36));
 
   // 4. Speedlines activation
   const speedlines = document.getElementById('speedlines-overlay');
@@ -2347,6 +2404,10 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       const bAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
       globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, bloodFx, 0.45, isBoss ? 2.5 : 1.8, bAngle));
     }
+    const execBurst = (vfxAnims as any).combat?.executionBurst;
+    if (execBurst && execBurst.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, execBurst, 0.45, isBoss ? 2.8 : 2.0));
+    }
     addFlow(20);
 
     // Execution Magatama Bounty (boosted by Fortune & Blood Surge / Blood Tithe)
@@ -2393,6 +2454,87 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       }
     }
 
+    // Execution Stance Synergy 1: Fire Stance — Inferno Corpse Detonation + Burn
+    if (globals.playerStats?.fireStanceLevel && globals.playerStats.fireStanceLevel > 0) {
+      const infBlast = (vfxAnims as any).explosions?.infernoBlast || vfxAnims.explosions?.fire;
+      if (infBlast && infBlast.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, infBlast, 0.55, 2.2));
+      }
+      globals.shockwaves.push(new Shockwave(e.x, e.y, '#ea580c'));
+      globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "INFERNAL DETONATION! 💥🔥", "#ea580c", 26));
+      playSynthesizedFirewheel();
+      
+      let fireHits = 0;
+      for (let i = 0; i < globals.enemies.length && fireHits < 5; i++) {
+        const other = globals.enemies[i];
+        if (!other || other === e || other.state === 'dead') continue;
+        const fdx = other.x - e.x;
+        const fdy = other.y - e.y;
+        if (fdx * fdx + fdy * fdy < 180 * 180) {
+          fireHits++;
+          other.burnTimer = Math.max(other.burnTimer || 0, 4.0);
+          other.burnDmg = Math.max(other.burnDmg || 0, 2);
+          other.hp -= (18 + 4 * (globals.playerStats.fireStanceLevel || 1));
+          if (other.hp <= 0) killEnemy(other);
+        }
+      }
+    }
+
+    // Execution Stance Synergy 2: Frost Stance — Ice Shrapnel Shatter & Deep Freeze
+    if (globals.frostStanceActive) {
+      const iceSpike = (vfxAnims as any).frostKnight?.vfx3;
+      if (iceSpike && iceSpike.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, iceSpike, 0.5, 2.0));
+      }
+      globals.shockwaves.push(new Shockwave(e.x, e.y, '#38bdf8'));
+      globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "FROST SHATTER! ❄️", "#38bdf8", 26));
+      playSynthesizedAwaken();
+
+      let frostHits = 0;
+      for (let i = 0; i < globals.enemies.length && frostHits < 5; i++) {
+        const other = globals.enemies[i];
+        if (!other || other === e || other.state === 'dead') continue;
+        const idx = other.x - e.x;
+        const idy = other.y - e.y;
+        if (idx * idx + idy * idy < 180 * 180) {
+          frostHits++;
+          other.stunTimer = Math.max(other.stunTimer || 0, 1.8);
+          other.isChilled = true;
+          other.chillTimer = Math.max(other.chillTimer || 0, 4.0);
+          other.hp -= 16;
+          if (other.hp <= 0) killEnemy(other);
+        }
+      }
+    }
+
+    // Execution Stance Synergy 3: Void Stance — Event Horizon Mini-Vacuum Collapse
+    if (globals.voidStanceActive) {
+      const warpFx = (vfxAnims as any).skills?.phantomWarp || (vfxAnims as any).skills?.voidWarp;
+      if (warpFx && warpFx.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, warpFx, 0.5, 2.2));
+      }
+      globals.shockwaves.push(new Shockwave(e.x, e.y, '#c084fc'));
+      globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "VOID COLLAPSE! 🌌", "#c084fc", 26));
+      playSynthesizedGravity();
+
+      let voidHits = 0;
+      for (let i = 0; i < globals.enemies.length && voidHits < 5; i++) {
+        const other = globals.enemies[i];
+        if (!other || other === e || other.state === 'dead') continue;
+        const vdx = e.x - other.x;
+        const vdy = e.y - other.y;
+        const vDistSq = vdx * vdx + vdy * vdy;
+        if (vDistSq < 260 * 260 && vDistSq > 1) {
+          voidHits++;
+          const vDist = Math.sqrt(vDistSq);
+          other.vx += (vdx / vDist) * 750;
+          other.vy += (vdy / vDist) * 750;
+          other.hp -= 15;
+          if (other.hp <= 0) killEnemy(other);
+        }
+      }
+    }
+
     const mangaCutin = document.getElementById('manga-cutin');
     if (mangaCutin) {
       mangaCutin.style.display = 'block';
@@ -2423,6 +2565,24 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     const staggerSparks = globals.graphicsSettings === 'low' ? 3 : 8;
     for (let i = 0; i < staggerSparks; i++) {
       globals.particles.push(Particle.acquire(e.x, e.y, '#f59e0b', 240, 0.35, 2));
+    }
+  } else if (globals.guaranteedCrit) {
+    globals.guaranteedCrit = false;
+    finalDmg = Math.round(dmg * 2.5);
+    globals.screenShake = Math.max(globals.screenShake, 18);
+    globals.hitStop = 0;
+    globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 45, `CRITICAL SHING! 💥 -${finalDmg}`, '#fde047', 30));
+    globals.shockwaves.push(new Shockwave(e.x, e.y, '#fde047'));
+    playSynthesizedClash();
+
+    if (typeof (e as any).addPostureDamage === 'function') {
+      (e as any).addPostureDamage(35);
+    }
+    const critSparkCount = globals.graphicsSettings === 'low' ? 6 : 18;
+    for (let i = 0; i < critSparkCount; i++) {
+      const spd = 250 + Math.random() * 350;
+      const ang = Math.random() * Math.PI * 2;
+      globals.particles.push(Particle.acquire(e.x, e.y, '#fde047', spd, 0.45, 3.5, ang));
     }
   } else if (isCrit) {
     finalDmg = dmg * 2;
@@ -2516,6 +2676,7 @@ function killEnemy(e: Enemy) {
   e.setState('dead'); 
   addCombo();
   globals.runStats.kills++;
+  globals.chiburuiKills = (globals.chiburuiKills || 0) + 1;
   checkVampireHeal(e);
 
   if (e.subType === 'barrel_bomber') {
@@ -3226,15 +3387,17 @@ function update(realDt: number) {
         globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '影遁の術！' : 'SHADOW STEP!', '#c084fc', 24));
         
-        globals.decoys.push(new Decoy(globals.player.x - 90, globals.player.y));
-        globals.decoys.push(new Decoy(globals.player.x + 90, globals.player.y));
+        globals.decoys.push(new Decoy(globals.player.x - 100, globals.player.y));
+        globals.decoys.push(new Decoy(globals.player.x + 100, globals.player.y));
+        globals.decoys.push(new Decoy(globals.player.x, globals.player.y - 80));
         const smokeFrames = (vfxAnims as any).skills?.decoySmoke;
         if (smokeFrames && smokeFrames.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, smokeFrames, 0.45, 1.8));
-          globals.animatedEffects.push(new AnimatedEffect(globals.player.x - 90, globals.player.y, smokeFrames, 0.45, 1.8));
-          globals.animatedEffects.push(new AnimatedEffect(globals.player.x + 90, globals.player.y, smokeFrames, 0.45, 1.8));
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x - 100, globals.player.y, smokeFrames, 0.45, 1.8));
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x + 100, globals.player.y, smokeFrames, 0.45, 1.8));
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y - 80, smokeFrames, 0.45, 1.8));
         }
-        globals.decoyInvisibilityTimer = 4.0;
+        globals.decoyInvisibilityTimer = 5.0;
         globals.decoyCritPrimed = true;
 
         globals.screenShake = 15;
@@ -3268,23 +3431,27 @@ function update(realDt: number) {
       }
     }
     
-    // Aegis pulse
+    // Aegis pulse (Tier III - 15,000 🔮)
     if (globals.selectedSkill === 'shield') {
       globals.shieldPulseTimer += realDt;
       if (globals.shieldPulseTimer >= 0.6) {
         globals.shieldPulseTimer = 0;
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, 'rgba(0, 255, 200, 0.45)'));
+        const cyanFx = (vfxAnims as any).shockwaves?.impactCyan;
+        if (cyanFx && cyanFx.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, cyanFx, 0.4, 1.8));
+        }
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
           const dx = e.x - globals.player.x;
           const dy = e.y - globals.player.y;
           const distSq = dx * dx + dy * dy;
-          if (distSq < 220 * 220) {
-            hitEnemy(e, 6 + 2 * (globals.playerStats.shieldPulseLevel || 0));
+          if (distSq < 250 * 250) {
+            hitEnemy(e, 14 + 4 * (globals.playerStats.shieldPulseLevel || 0));
             // pull enemies slightly toward player center
             if (distSq > 100) {
               const dist = Math.sqrt(distSq);
-              const pullAmt = 50;
+              const pullAmt = 70;
               const ratio = Math.min(1, pullAmt / dist);
               e.x -= dx * ratio;
               e.y -= dy * ratio;
@@ -3294,9 +3461,9 @@ function update(realDt: number) {
       }
     }
 
-    // Firewheel update
+    // Firewheel update (Tier V - 25,000 🔮)
     if (globals.selectedSkill === 'firewheel') {
-      const radius = 200 * (1 + 0.25 * (globals.playerStats.firewheelRangeLevel || 0));
+      const radius = 260 * (1 + 0.25 * (globals.playerStats.firewheelRangeLevel || 0));
       const angle = (performance.now() / 150) + Math.random() * Math.PI * 2;
       const px = globals.player.x + Math.cos(angle) * radius;
       const py = globals.player.y + Math.sin(angle) * radius;
@@ -3311,12 +3478,12 @@ function update(realDt: number) {
         -30
       ));
 
-      // Launch a rotating cross of 4 fire projectiles outward every 0.5s
+      // Launch a rotating cross of 4 fire projectiles outward every 0.45s
       firewheelProjectileTimer += realDt;
-      if (firewheelProjectileTimer >= 0.5) {
+      if (firewheelProjectileTimer >= 0.45) {
         firewheelProjectileTimer = 0;
         const baseAngle = (performance.now() / 250);
-        const projDmg = 4 + 2 * (globals.playerStats.firewheelBlazeLevel || 0);
+        const projDmg = 12 + 4 * (globals.playerStats.firewheelBlazeLevel || 0);
         for (let i = 0; i < 4; i++) {
           const a = baseAngle + (i * Math.PI / 2);
           globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, a, false, projDmg, false, true));
@@ -3325,18 +3492,18 @@ function update(realDt: number) {
       }
 
       firewheelTickTimer += realDt;
-      if (firewheelTickTimer >= 0.3) {
+      if (firewheelTickTimer >= 0.25) {
         firewheelTickTimer = 0;
-        const rangeSq = (200 * (1 + 0.25 * (globals.playerStats.firewheelRangeLevel || 0))) ** 2;
+        const rangeSq = (260 * (1 + 0.25 * (globals.playerStats.firewheelRangeLevel || 0))) ** 2;
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
           const dx = e.x - globals.player.x;
           const dy = e.y - globals.player.y;
           
           if (dx * dx + dy * dy < rangeSq) {
-            hitEnemy(e, 5);
-            e.burnTimer = 4.0;
-            e.burnBonusDmg = globals.playerStats.firewheelBlazeLevel || 0;
+            hitEnemy(e, 10 + 3 * (globals.playerStats.firewheelBlazeLevel || 0));
+            e.burnTimer = 6.0;
+            e.burnBonusDmg = (globals.playerStats.firewheelBlazeLevel || 0) + 2;
             
             for (let k = 0; k < 6; k++) {
               globals.particles.push(Particle.acquire(
@@ -3349,18 +3516,18 @@ function update(realDt: number) {
             }
             
             if (globals.playerStats.firewheelEchoLevel && globals.playerStats.firewheelEchoLevel > 0) {
-              const echoDmg = globals.playerStats.firewheelEchoLevel;
+              const echoDmg = globals.playerStats.firewheelEchoLevel * 3;
               let echoTargetsCount = 0;
               for (let idx = 0; idx < globals.enemies.length; idx++) {
                 const other = globals.enemies[idx];
                 if (other === e || other.state === 'dead') continue;
                 const odx = other.x - e.x;
                 const ody = other.y - e.y;
-                if (odx * odx + ody * ody < 14400) { // 120 * 120
+                if (odx * odx + ody * ody < 25600) { // 160 * 160
                   hitEnemy(other, echoDmg);
                   globals.particles.push(Particle.acquire(other.x, other.y, '#ffd700', 100, 0.3, 1.5));
                   echoTargetsCount++;
-                  if (echoTargetsCount >= 4) break; 
+                  if (echoTargetsCount >= 5) break; 
                 }
               }
             }
@@ -3372,50 +3539,54 @@ function update(realDt: number) {
     if (globals.enhanceActiveTimer <= 0) {
       globals.enhanceActiveTimer = 0;
       if (globals.selectedSkill === 'firewheel') {
-        // Inferno Sweep expiration: expanding Flame Shockwave!
+        // Inferno Sweep expiration: expanding Flame Shockwave + Inferno Blast VFX!
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ff4400'));
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffaa00'));
+        const infBlast = (vfxAnims as any).explosions?.infernoBlast;
+        if (infBlast && infBlast.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, infBlast, 0.55, 2.5));
+        }
         playSynthesizedThunder();
-        globals.screenShake = Math.max(globals.screenShake, 20);
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '業火爆裂！ 🔥' : 'INFERNO BURST! 🔥', 'neon-#ff4400', 30));
-        const burstRadiusSq = 240 * 240;
+        globals.screenShake = Math.max(globals.screenShake, 25);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '業火大爆裂！ 🔥' : 'INFERNO SUPERNOVA! 🔥', 'neon-#ff4400', 32));
+        const burstRadiusSq = 300 * 300;
         globals.enemies.forEach(other => {
           if (other.state === 'dead') return;
           const dx = other.x - globals.player.x;
           const dy = other.y - globals.player.y;
           if (dx * dx + dy * dy < burstRadiusSq) {
-            hitEnemy(other, 8);
-            other.burnTimer = 4.0;
-            other.burnBonusDmg = (globals.playerStats.firewheelBlazeLevel || 0) + 1;
+            hitEnemy(other, 25 + 5 * (globals.playerStats.firewheelBlazeLevel || 0));
+            other.burnTimer = 6.0;
+            other.burnBonusDmg = (globals.playerStats.firewheelBlazeLevel || 0) + 3;
             const pushAngle = Math.atan2(dy, dx);
-            other.vx = Math.cos(pushAngle) * 800;
-            other.vy = Math.sin(pushAngle) * 800;
+            other.vx = Math.cos(pushAngle) * 950;
+            other.vy = Math.sin(pushAngle) * 950;
           }
         });
       }
     }
   }
 
-  // Gravity Well active and collapse logic
+  // Gravity Well active and collapse logic (APEX Tier - 50,000 🔮)
   if (globals.gravityWellTimer > 0) {
     globals.gravityWellTimer -= realDt;
-    const pullRadius = 300 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
+    const pullRadius = 420 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
     const pullRadiusSq = pullRadius * pullRadius;
-    const pullSpeed = 1200;
-    const tickDmg = 1 + 1 * (globals.playerStats.gravityDamageLevel || 0);
+    const pullSpeed = 1800;
+    const tickDmg = 6 + 3 * (globals.playerStats.gravityDamageLevel || 0);
     
-    if (Math.random() < 0.5) {
+    if (Math.random() < 0.6) {
       const angle = Math.random() * Math.PI * 2;
       const dist = pullRadius * (0.3 + Math.random() * 0.7);
       const px = globals.gravityWellX + Math.cos(angle) * dist;
       const py = globals.gravityWellY + Math.sin(angle) * dist;
-      const pSpeed = dist / 0.4;
+      const pSpeed = dist / 0.35;
       globals.particles.push(Particle.acquire(
         px, py,
-        Math.random() < 0.5 ? '#8a2be2' : '#ff007f',
+        Math.random() < 0.5 ? '#c084fc' : '#f472b6',
         pSpeed,
-        0.4,
-        1.5 + Math.random() * 1.5,
+        0.35,
+        2.0 + Math.random() * 2.0,
         angle + Math.PI,
         0
       ));
@@ -3428,14 +3599,14 @@ function update(realDt: number) {
         const dy = globals.gravityWellY - proj.y;
         if (dx * dx + dy * dy < pullRadiusSq) {
           proj.life = 0; // devour
-          for (let i = 0; i < 4; i++) {
-            globals.particles.push(Particle.acquire(proj.x, proj.y, '#8a2be2', 100, 0.25, 1.5));
+          for (let i = 0; i < 5; i++) {
+            globals.particles.push(Particle.acquire(proj.x, proj.y, '#c084fc', 120, 0.25, 2.0));
           }
         }
       }
     });
     
-    // Pull enemies
+    // Aggressively vacuum all enemies
     globals.enemies.forEach(e => {
       if (e.state === 'dead') return;
       const dx = globals.gravityWellX - e.x;
@@ -3443,8 +3614,8 @@ function update(realDt: number) {
       const distSq = dx * dx + dy * dy;
       if (distSq < pullRadiusSq) {
         // Damp velocity inside gravity well and interrupt lunges/attacks
-        e.vx *= 0.15;
-        e.vy *= 0.15;
+        e.vx *= 0.1;
+        e.vy *= 0.1;
         if (e.state === 'attack') {
           e.setState('idle');
         }
@@ -3459,7 +3630,7 @@ function update(realDt: number) {
     });
     
     gravityTickTimer += realDt;
-    if (gravityTickTimer >= 0.3) {
+    if (gravityTickTimer >= 0.25) {
       gravityTickTimer = 0;
       globals.enemies.forEach(e => {
         if (e.state === 'dead') return;
@@ -3467,8 +3638,8 @@ function update(realDt: number) {
         const dy = globals.gravityWellY - e.y;
         if (dx * dx + dy * dy < pullRadiusSq) {
           hitEnemy(e, tickDmg);
-          for(let i=0; i<4; i++) {
-            globals.particles.push(Particle.acquire(e.x, e.y, '#9400d3', 100, 0.3, 1.5));
+          for(let i=0; i<5; i++) {
+            globals.particles.push(Particle.acquire(e.x, e.y, '#a855f7', 120, 0.3, 2.0));
           }
         }
       });
@@ -3476,21 +3647,28 @@ function update(realDt: number) {
     
     if (globals.gravityWellTimer <= 0) {
       globals.gravityWellTimer = 0;
-      const explosionDmg = 6 + 5 * (globals.playerStats.gravityExplosionLevel || 0);
+      const explosionDmg = 50 + 15 * (globals.playerStats.gravityExplosionLevel || 0);
       
-      globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#8b008b'));
-      globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#ff00ff'));
+      globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#c084fc'));
+      globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#ec4899'));
       
-      for (let i = 0; i < 24; i++) {
+      const goldImpact = (vfxAnims as any).shockwaves?.impactGold;
+      if (goldImpact && goldImpact.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(globals.gravityWellX, globals.gravityWellY, goldImpact, 0.5, 3.2));
+      }
+      
+      globals.screenShake = Math.max(globals.screenShake, 35);
+      
+      for (let i = 0; i < 35; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 250 + Math.random() * 250;
+        const speed = 350 + Math.random() * 350;
         globals.particles.push(Particle.acquire(
           globals.gravityWellX, 
           globals.gravityWellY, 
-          Math.random() < 0.5 ? '#ff00ff' : '#8a2be2', 
+          Math.random() < 0.5 ? '#f472b6' : '#c084fc', 
           speed, 
-          0.5, 
-          2.5 + Math.random() * 1.5, 
+          0.6, 
+          3.0 + Math.random() * 2.0, 
           angle
         ));
       }
@@ -3502,7 +3680,7 @@ function update(realDt: number) {
           const dy = globals.gravityWellY - e.y;
           if (dx * dx + dy * dy < pullRadiusSq) {
             hitEnemy(e, explosionDmg);
-            globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 60, `COLLAPSE -${explosionDmg}`, '#ff00ff', 24));
+            globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 70, `SUPERNOVA -${explosionDmg}`, '#f472b6', 28));
           }
         });
       }
@@ -3866,6 +4044,37 @@ function update(realDt: number) {
   }
 
   globals.player.update(realDt);
+
+  // Mechanic 2: Interactive Blade Sheathing / Blood-Flick (Chiburui & Noto)
+  // Standing still for 1.2s after 3+ kills performs blood-flick particle burst & blade sheathe sound for +15 Flow and guaranteed next-hit 2.5x critical strike.
+  if (globals.player && globals.gameState === 'playing' && globals.player.state === 'idle' && Math.abs(globals.player.vx || 0) < 5 && Math.abs(globals.player.vy || 0) < 5) {
+    globals.chiburuiTimer = (globals.chiburuiTimer || 0) + realDt;
+    if ((globals.chiburuiKills || 0) >= 3 && globals.chiburuiTimer >= 1.2 && !globals.guaranteedCrit) {
+      globals.chiburuiKills = 0;
+      globals.chiburuiTimer = 0;
+      globals.guaranteedCrit = true;
+      addFlow(15);
+      playSynthesizedSheathe();
+      
+      const bloodDir = globals.player.dir || 1;
+      // Visceral blood-flick particles (red arc flicking off katana)
+      for (let p = 0; p < 14; p++) {
+        const spd = 120 + Math.random() * 180;
+        const angle = (bloodDir === 1 ? -0.3 : Math.PI + 0.3) + (Math.random() - 0.5) * 0.6;
+        globals.particles.push(Particle.acquire(globals.player.x + bloodDir * 15, globals.player.y + 10, '#dc2626', spd, 0.45, 3.0, angle));
+      }
+      // Glint spark on blade sheathe
+      for (let p = 0; p < 8; p++) {
+        const spd = 60 + Math.random() * 100;
+        const angle = Math.random() * Math.PI * 2;
+        globals.particles.push(Particle.acquire(globals.player.x - bloodDir * 10, globals.player.y + 5, '#fde047', spd, 0.3, 2.5, angle));
+      }
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 75, globals.currentLang === 'ja' ? '血振るい・納刀 ⚔️ 会心の一撃！' : 'CHIBURUI! ⚔️ +CRIT STRIKE!', '#fde047', 26));
+      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fde047'));
+    }
+  } else {
+    globals.chiburuiTimer = 0;
+  }
 
   // Option 3: Mid-Air Pursuit & Aerial Helm-Splitter Cleave
   const isDashJustPressed = (globals.keys[globals.keyMaps.dash] || globals.mobileDashJustPressed);

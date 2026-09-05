@@ -707,6 +707,28 @@ canvas.inverted {
   box-shadow: inset 0 0 0 1px #bc2c2c;
 }
 
+.kbd-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: bold;
+  color: #f8fafc;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  border-bottom: 2px solid rgba(148, 163, 184, 0.6);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  margin: 0 2px;
+}
+
+.guide-card {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.guide-card:hover {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+}
+
 @keyframes screen-fade-in {
   from {
     opacity: 0;

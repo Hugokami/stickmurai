@@ -449,56 +449,98 @@ export function draw() {
   // Draw Gravity Well & Singularity Cleave Accretion Disk
   if (globals.gravityWellTimer > 0) {
     ctx.save();
-    const gx = globals.gravityWellX - globals.camera.x + globals.vw/2;
-    const gy = globals.gravityWellY - globals.camera.y + globals.vh/2;
-    const baseRadius = 250 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
+    const gx = (globals.gravityWellX - globals.camera.x + globals.vw / 2) | 0;
+    const gy = (globals.gravityWellY - globals.camera.y + globals.vh / 2) | 0;
+    const baseRadius = (420 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0))) | 0;
     const timer = performance.now() / 1000;
     const isSingularity = globals.activeFusions.has('singularity_cleave');
 
-    // Gravity zone background glow
-    const pulse = 0.95 + Math.sin(timer * 12) * 0.06;
-    const glowGrad = ctx.createRadialGradient(gx, gy, 10, gx, gy, baseRadius * pulse);
-    glowGrad.addColorStop(0, isSingularity ? 'rgba(88, 28, 135, 0.45)' : 'rgba(138, 43, 226, 0.25)');
-    glowGrad.addColorStop(0.7, isSingularity ? 'rgba(147, 51, 234, 0.18)' : 'rgba(138, 43, 226, 0.1)');
-    glowGrad.addColorStop(1, 'rgba(138, 43, 226, 0)');
+    // 1. High-Visibility Event Horizon Area Glow
+    const pulse = 1.0 + Math.sin(timer * 10) * 0.04;
+    const currentRadius = (baseRadius * pulse) | 0;
+    const glowGrad = ctx.createRadialGradient(gx, gy, 20, gx, gy, currentRadius);
+    glowGrad.addColorStop(0, 'rgba(15, 2, 28, 0.92)');
+    glowGrad.addColorStop(0.35, isSingularity ? 'rgba(88, 28, 135, 0.45)' : 'rgba(107, 33, 168, 0.35)');
+    glowGrad.addColorStop(0.75, isSingularity ? 'rgba(147, 51, 234, 0.25)' : 'rgba(126, 34, 206, 0.2)');
+    glowGrad.addColorStop(1, 'rgba(192, 132, 252, 0)');
     ctx.fillStyle = glowGrad;
     ctx.beginPath();
-    ctx.arc(gx, gy, baseRadius * pulse, 0, Math.PI * 2);
+    ctx.arc(gx, gy, currentRadius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Singularity Cleave Accretion Disk & Gravitational Lensing Arms
-    if (isSingularity) {
-      const armCount = 4;
-      ctx.lineWidth = 2.5;
-      for (let i = 0; i < armCount; i++) {
-        const armAngle = timer * 4 + (i * Math.PI * 2 / armCount);
-        ctx.strokeStyle = i % 2 === 0 ? 'rgba(192, 132, 252, 0.85)' : 'rgba(236, 72, 153, 0.75)';
-        ctx.beginPath();
-        ctx.arc(gx, gy, 45 + Math.sin(timer * 10 + i) * 6, armAngle, armAngle + 1.2);
-        ctx.stroke();
-      }
-      
-      // Event Horizon Black Hole Center
-      ctx.fillStyle = '#05020a';
+    // 2. High-Contrast Event Horizon Perimeter Ring with Orbiting Runic Notches
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(192, 132, 252, 0.85)';
+    ctx.beginPath();
+    ctx.arc(gx, gy, currentRadius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Secondary pulsing inner barrier ring
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = 'rgba(236, 72, 153, 0.6)';
+    ctx.beginPath();
+    ctx.arc(gx, gy, (currentRadius * 0.75) | 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Orbiting perimeter notches showing active gravitational pull
+    const notchCount = 12;
+    for (let n = 0; n < notchCount; n++) {
+      const nAngle = timer * 1.5 + (n * Math.PI * 2 / notchCount);
+      const nx1 = gx + Math.cos(nAngle) * (currentRadius - 10);
+      const ny1 = gy + Math.sin(nAngle) * (currentRadius - 10);
+      const nx2 = gx + Math.cos(nAngle) * (currentRadius + 6);
+      const ny2 = gy + Math.sin(nAngle) * (currentRadius + 6);
       ctx.beginPath();
-      ctx.arc(gx, gy, 18, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#c084fc';
-      ctx.lineWidth = 2.0;
+      ctx.moveTo(nx1 | 0, ny1 | 0);
+      ctx.lineTo(nx2 | 0, ny2 | 0);
+      ctx.strokeStyle = n % 2 === 0 ? '#c084fc' : '#f472b6';
+      ctx.lineWidth = 2.5;
       ctx.stroke();
     }
-    
-    // Custom sci-fi warp vortex sprite sheet animation loop
-    const vortexFrames = (vfxAnims as any).skills?.voidWarp?.length > 0 ? (vfxAnims as any).skills.voidWarp : vfxAnims.custom.vortex;
-    const vfFrameIdx = Math.floor((performance.now() / 65) % vortexFrames.length);
-    const img = vortexFrames[vfFrameIdx];
-    if (img && img.complete && img.naturalWidth > 0) {
-      const vfScale = 1.6 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
-      const drawW = (img.width * vfScale) | 0;
-      const drawH = (img.height * vfScale) | 0;
-      ctx.drawImage(img, (gx - drawW / 2) | 0, (gy - drawH / 2) | 0, drawW, drawH);
+
+    // 3. Inward-Spiraling Gravitational Suction Vectors
+    const streamCount = 8;
+    ctx.lineWidth = 2.0;
+    for (let s = 0; s < streamCount; s++) {
+      const startAngle = (timer * 3.5) + (s * Math.PI * 2 / streamCount);
+      ctx.strokeStyle = s % 2 === 0 ? 'rgba(192, 132, 252, 0.75)' : 'rgba(244, 114, 182, 0.65)';
+      ctx.beginPath();
+      for (let step = 0; step <= 10; step++) {
+        const ratio = step / 10;
+        const r = currentRadius * (1 - ratio * 0.85);
+        const theta = startAngle + ratio * 2.2;
+        const px = gx + Math.cos(theta) * r;
+        const py = gy + Math.sin(theta) * r;
+        if (step === 0) ctx.moveTo(px | 0, py | 0);
+        else ctx.lineTo(px | 0, py | 0);
+      }
+      ctx.stroke();
     }
-    
+
+    // 4. Animated 32-Frame Cosmic Singularity Core Sprite
+    const singularityFrames = (vfxAnims as any).skills?.gravitySingularity?.length > 0
+      ? (vfxAnims as any).skills.gravitySingularity
+      : ((vfxAnims as any).skills?.voidWarp || vfxAnims.custom.vortex);
+    if (singularityFrames && singularityFrames.length > 0) {
+      const sfFrameIdx = Math.floor((performance.now() / 45) % singularityFrames.length);
+      const sImg = singularityFrames[sfFrameIdx];
+      if (sImg && sImg.complete && sImg.naturalWidth > 0) {
+        const sfScale = 2.4 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
+        const drawW = (sImg.width * sfScale) | 0;
+        const drawH = (sImg.height * sfScale) | 0;
+        ctx.drawImage(sImg, (gx - drawW / 2) | 0, (gy - drawH / 2) | 0, drawW, drawH);
+      }
+    }
+
+    // 5. Central Opaque Void Sphere & Relativistic Glow
+    ctx.fillStyle = '#020005';
+    ctx.beginPath();
+    ctx.arc(gx, gy, 26, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#e879f9';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
     ctx.restore();
   }
 
@@ -1016,4 +1058,110 @@ export function draw() {
       ctx.restore();
     }
   });
+
+  // Mechanic 3: Screen-Top Boss Health & Sekiro Posture / Stagger Bar HUD
+  if (globals.gameState === 'playing') {
+    const activeBoss = globals.enemies.find(e => e.state !== 'dead' && (
+      e.subType === 'oni_boss' || 
+      e.subType === 'agis_colossus' || 
+      e.subType === 'skeleton_warlord' || 
+      e.subType === 'shogun_boss' || 
+      (e as any).isBoss
+    ));
+
+    if (activeBoss) {
+      ctx.save();
+      const barW = Math.min(420, (globals.width * 0.72) | 0);
+      const barX = ((globals.width - barW) / 2) | 0;
+      const barY = 52;
+      const hpH = 12;
+      const postureH = 6;
+      const isJa = globals.currentLang === 'ja';
+
+      let bossName = isJa ? '強敵 (BOSS)' : 'BOSS ENCOUNTER';
+      if (activeBoss.subType === 'oni_boss') {
+        bossName = isJa ? '👹 鬼の頭領 (ONI OVERLORD)' : '👹 ONI OVERLORD';
+      } else if (activeBoss.subType === 'agis_colossus') {
+        bossName = isJa ? '🗿 巨神アギス (AGIS COLOSSUS)' : '🗿 AGIS COLOSSUS';
+      } else if (activeBoss.subType === 'skeleton_warlord') {
+        bossName = isJa ? '💀 骸骨軍団長 (SKELETON WARLORD)' : '💀 SKELETON WARLORD';
+      } else if (activeBoss.subType === 'shogun_boss') {
+        bossName = isJa ? '⚔️ 征夷大将軍 (SUPREME SHOGUN)' : '⚔️ SUPREME SHOGUN';
+      }
+
+      // Boss Name & Title Banner
+      ctx.textAlign = 'center';
+      ctx.font = "bold 13px 'Shojumaru', cursive, sans-serif";
+      ctx.fillStyle = '#ffd700';
+      ctx.shadowColor = 'rgba(255, 215, 0, 0.4)';
+      ctx.shadowBlur = 8;
+      ctx.fillText(bossName, (globals.width / 2) | 0, barY - 8);
+      ctx.shadowBlur = 0;
+
+      // Outer Container Box
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      ctx.strokeStyle = 'rgba(255, 215, 0, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(barX - 4, barY - 4, barW + 8, hpH + postureH + 12, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      // 1. Boss HP Bar Background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillRect(barX, barY, barW, hpH);
+
+      // Delayed catch-up orange bar
+      const delayRatio = Math.max(0, Math.min(1, (activeBoss.hpDelayed || activeBoss.hp) / activeBoss.maxHp));
+      ctx.fillStyle = '#f97316';
+      ctx.fillRect(barX, barY, (barW * delayRatio) | 0, hpH);
+
+      // Main Crimson HP Fill
+      const hpRatio = Math.max(0, Math.min(1, activeBoss.hp / activeBoss.maxHp));
+      ctx.fillStyle = '#dc2626';
+      ctx.fillRect(barX, barY, (barW * hpRatio) | 0, hpH);
+
+      // HP numerical text
+      ctx.font = "bold 9px 'Orbitron', monospace";
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(`${activeBoss.hp} / ${activeBoss.maxHp}`, (globals.width / 2) | 0, barY + 9);
+
+      // 2. Sekiro-Style Orange Posture / Stagger Bar (directly under HP)
+      const postY = barY + hpH + 3;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+      ctx.fillRect(barX, postY, barW, postureH);
+
+      if (activeBoss.postureBrokenTimer > 0) {
+        // Flashing Stagger Break!
+        const isFlash = (Math.floor(Date.now() / 120) % 2 === 0);
+        ctx.fillStyle = isFlash ? '#ff003c' : '#fbbf24';
+        ctx.fillRect(barX, postY, barW, postureH);
+
+        ctx.font = "900 11px 'Outfit', sans-serif";
+        ctx.fillStyle = isFlash ? '#ffffff' : '#fbbf24';
+        ctx.fillText(isJa ? '💥 体幹崩壊！ 処刑可能 [EXECUTE]!' : '💥 STAGGER BREAK! EXECUTE READY!', (globals.width / 2) | 0, postY + 18);
+      } else {
+        const postMax = activeBoss.maxPosture || 100;
+        const postRatio = Math.max(0, Math.min(1, (activeBoss.posture || 0) / postMax));
+        
+        // Symmetrical center-outward fill (classic Sekiro stagger gauge)
+        const fillW = ((barW / 2) * postRatio) | 0;
+        const midX = (barX + barW / 2) | 0;
+        
+        ctx.fillStyle = '#f59e0b';
+        ctx.fillRect(midX - fillW, postY, fillW * 2, postureH);
+        
+        // Posture bar subtle border
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, postY, barW, postureH);
+
+        // Center line
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.fillRect(midX - 1, postY - 1, 2, postureH + 2);
+      }
+
+      ctx.restore();
+    }
+  }
 }
