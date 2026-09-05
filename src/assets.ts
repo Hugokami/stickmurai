@@ -952,12 +952,12 @@ export const heroPortraits: HTMLImageElement[] = [];
 
 export const skillsData = [
   { id: 'enhance', nameKey: 'skillEnhanceName', descKey: 'skillEnhanceDesc', cost: 0, icon: '⚔️' },
-  { id: 'dash', nameKey: 'skillDashName', descKey: 'skillDashDesc', cost: 10000, icon: '⚡' },
-  { id: 'shield', nameKey: 'skillShieldName', descKey: 'skillShieldDesc', cost: 15000, icon: '🛡️' },
-  { id: 'parry_master', nameKey: 'skillParryMasterName', descKey: 'skillParryMasterDesc', cost: 20000, icon: '🤺' },
-  { id: 'firewheel', nameKey: 'skillFirewheelName', descKey: 'skillFirewheelDesc', cost: 25000, icon: '🔥' },
-  { id: 'decoy_illusion', nameKey: 'skillDecoyName', descKey: 'skillDecoyDesc', cost: 35000, icon: '👤' },
-  { id: 'gravity', nameKey: 'skillGravityName', descKey: 'skillGravityDesc', cost: 50000, icon: '🌀' }
+  { id: 'dash', nameKey: 'skillDashName', descKey: 'skillDashDesc', cost: 5000, icon: '⚡' },
+  { id: 'shield', nameKey: 'skillShieldName', descKey: 'skillShieldDesc', cost: 7500, icon: '🛡️' },
+  { id: 'parry_master', nameKey: 'skillParryMasterName', descKey: 'skillParryMasterDesc', cost: 10000, icon: '🤺' },
+  { id: 'firewheel', nameKey: 'skillFirewheelName', descKey: 'skillFirewheelDesc', cost: 12500, icon: '🔥' },
+  { id: 'decoy_illusion', nameKey: 'skillDecoyName', descKey: 'skillDecoyDesc', cost: 17500, icon: '👤' },
+  { id: 'gravity', nameKey: 'skillGravityName', descKey: 'skillGravityDesc', cost: 25000, icon: '🌀' }
 ];
 
 export const vfxAnims = {
