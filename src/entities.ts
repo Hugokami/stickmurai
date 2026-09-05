@@ -100,7 +100,17 @@ export class Entity {
     const currentAnim = (typeAnims as any)[animState] || typeAnims.idle || anims.sword.idle;
     if (!currentAnim || currentAnim.length === 0) return;
     const frameIdx = (this.animFrame >= 0 ? this.animFrame : 0) % currentAnim.length;
-    const img = currentAnim[frameIdx];
+    let img = currentAnim[frameIdx];
+    if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) {
+      // Defensive fallback chain to prevent invisible entity sprites
+      img = currentAnim[0];
+      if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) {
+        img = typeAnims.idle?.[0];
+      }
+      if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) {
+        img = anims.sword?.idle?.[0];
+      }
+    }
     if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) return;
     
     const rx = (this.x - cx + globals.vw/2) | 0;
@@ -997,7 +1007,15 @@ export class Slash {
     }
     const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
     const frameIdx = Math.floor(progress * frames.length);
-    const img = frames[frameIdx];
+    let img = frames[frameIdx];
+
+    if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) {
+      const fallback = vfxAnims.heroSlashes?.ronin || vfxAnims.custom.slash;
+      if (fallback && fallback.length > 0) {
+        const fbIdx = Math.floor(progress * fallback.length);
+        img = fallback[fbIdx] || fallback[0];
+      }
+    }
 
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.save();

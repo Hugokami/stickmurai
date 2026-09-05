@@ -2510,6 +2510,7 @@ export function populateAscensionUpgrades() {
       }
 
       const card = document.createElement('div');
+      card.className = 'ascension-card';
       card.style.cssText = `
         background: rgba(15, 23, 42, 0.75);
         border: 1px solid ${isMax ? 'rgba(34, 197, 94, 0.4)' : (isEndless ? 'rgba(251, 191, 36, 0.45)' : (canAfford ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.1)'))};
