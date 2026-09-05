@@ -349,11 +349,11 @@ export class Enemy extends Entity {
       this.maxPosture = 120;
     } else if (this.subType === 'oni_boss') {
       this.type = 'skeleton';
-      this.lungeSpeed = 1000; this.chargeTimeMax = 2.0; this.lungeDuration = 0.8;
-      this.scaleMult = 2.2; this.hp = this.maxHp = 140; this.expValue = 15;
+      this.lungeSpeed = 1000; this.chargeTimeMax = 1.9; this.lungeDuration = 0.8;
+      this.scaleMult = 2.2; this.hp = this.maxHp = 200; this.expValue = 15;
       this.colorTint = 'none';
-      this.speed = 260;
-      this.maxPosture = 250;
+      this.speed = 270;
+      this.maxPosture = 280;
     } else if (this.subType === 'barrel_bomber') {
       this.type = 'enemy_barrel';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
@@ -370,18 +370,18 @@ export class Enemy extends Entity {
       this.maxPosture = 130;
     } else if (this.subType === 'agis_colossus') {
       this.type = 'boss_agis';
-      this.lungeSpeed = 650; this.chargeTimeMax = 2.4; this.lungeDuration = 0.8;
-      this.scaleMult = 1.6; this.hp = this.maxHp = 240; this.expValue = 30;
+      this.lungeSpeed = 700; this.chargeTimeMax = 2.2; this.lungeDuration = 0.8;
+      this.scaleMult = 1.6; this.hp = this.maxHp = 340; this.expValue = 30;
       this.colorTint = 'none';
-      this.speed = 180;
-      this.maxPosture = 360;
+      this.speed = 190;
+      this.maxPosture = 380;
     } else if (this.subType === 'skeleton_warlord') {
       this.type = 'boss_skeleton';
-      this.lungeSpeed = 850; this.chargeTimeMax = 2.2; this.lungeDuration = 0.75;
-      this.scaleMult = 1.0; this.hp = this.maxHp = 220; this.expValue = 35;
+      this.lungeSpeed = 900; this.chargeTimeMax = 2.0; this.lungeDuration = 0.75;
+      this.scaleMult = 1.0; this.hp = this.maxHp = 300; this.expValue = 35;
       this.colorTint = 'none';
-      this.speed = 210;
-      this.maxPosture = 320;
+      this.speed = 220;
+      this.maxPosture = 340;
     } else if (this.subType === 'toaster_bot') {
       this.type = 'toaster_bot';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.0; this.lungeDuration = 0.6;
@@ -391,11 +391,11 @@ export class Enemy extends Entity {
       this.maxPosture = 45;
     } else { // shogun_boss
       this.type = 'evil_wizard';
-      this.lungeSpeed = 1300; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
-      this.scaleMult = 2.0; this.hp = this.maxHp = 180; this.expValue = 20;
+      this.lungeSpeed = 1350; this.chargeTimeMax = 1.7; this.lungeDuration = 0.6;
+      this.scaleMult = 2.0; this.hp = this.maxHp = 260; this.expValue = 20;
       this.colorTint = 'none';
-      this.speed = 260;
-      this.maxPosture = 280;
+      this.speed = 280;
+      this.maxPosture = 320;
     }
 
     // Apply scaling modifiers
@@ -411,16 +411,16 @@ export class Enemy extends Entity {
       }
       
       // Progressive endless scaling: keeps grunts killable in 1-3 clean strikes while steadily raising challenge
-      const stageHpMult = isBoss ? (1.0 + (stage - 1) * 0.15) : (1.0 + (stage - 1) * 0.12);
-      const stageSpeedMult = Math.min(1.40, 1.0 + (stage - 1) * 0.025);
-      const stageChargeMult = Math.max(0.65, 1.0 - (stage - 1) * 0.02);
+      const stageHpMult = isBoss ? (1.0 + (stage - 1) * 0.22) : (1.0 + (stage - 1) * 0.16);
+      const stageSpeedMult = Math.min(1.55, 1.0 + (stage - 1) * 0.035);
+      const stageChargeMult = Math.max(0.55, 1.0 - (stage - 1) * 0.03);
 
       hpMult = stageHpMult;
       speedMult = stageSpeedMult;
       chargeMult = stageChargeMult;
 
       if (isBoss) {
-        this.maxPosture = Math.round(this.maxPosture * (1.0 + (stage - 1) * 0.06));
+        this.maxPosture = Math.round(this.maxPosture * (1.0 + (stage - 1) * 0.09));
       }
     } else {
       if (globals.difficulty === 'easy') {

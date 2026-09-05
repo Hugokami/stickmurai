@@ -967,7 +967,12 @@ export const vfxAnims = {
   },
   shockwaves: {
     impactGold: loadVfxFrames('vfx/shockwaves/impact_gold/frame_{N}.png', 8, 0, 2, true),
-    impactCyan: loadVfxFrames('vfx/shockwaves/impact_cyan/frame_{N}.png', 11, 0, 2, true)
+    impactCyan: loadVfxFrames('vfx/shockwaves/impact_cyan/frame_{N}.png', 11, 0, 2, true),
+    lightBurst: loadVfxFrames('vfx/shockwaves/light_burst/frame_{N}.png', 9, 0, 2, true)
+  },
+  spells: {
+    attackUp: loadVfxFrames('vfx/spells/attack_up/frame_{N}.png', 18, 0, 2, true),
+    defenseUp: loadVfxFrames('vfx/spells/defense_up/frame_{N}.png', 18, 0, 2, true)
   },
   boss: {
     slamImpact: loadVfxFrames('vfx/boss/slam_impact/frame_{N}.png', 8, 1, 2, true),

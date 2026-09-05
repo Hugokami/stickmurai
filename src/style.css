@@ -524,19 +524,20 @@ canvas.inverted {
   border-radius: 6px !important;
 }
 
-.menu-grid-2x2 {
+.menu-grid-2x2, .menu-grid-2x3 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 7px;
   width: 100%;
   max-width: 280px;
 }
 
-.menu-grid-2x2 .menu-btn {
+.menu-grid-2x2 .menu-btn, .menu-grid-2x3 .menu-btn {
   max-width: 100%;
-  padding: 8px 6px;
-  font-size: 11px;
-  min-height: 38px;
+  padding: 6px 6px !important;
+  font-size: 11px !important;
+  min-height: 34px !important;
+  height: 34px !important;
 }
 
 /* Shine Reflection Sweep Effect */
@@ -1855,12 +1856,27 @@ input[type="range"]::-webkit-slider-thumb:hover {
     -webkit-overflow-scrolling: touch;
   }
 
+  /* Non-scrollable containers */
+  #main-menu .main-menu-box {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: 96vh !important;
+    overflow: hidden !important;
+  }
+
+  .redeem-box, .shrine-menu-box, #fullscreen-prompt .menu-box, #hermit-modal .menu-box {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: 92vh !important;
+    overflow: hidden !important;
+  }
+
   .main-menu-box, .pause-menu-box {
     flex-direction: row !important;
     max-width: 94% !important;
     width: 94% !important;
     gap: 20px !important;
-    padding: clamp(10px, 2.5vh, 16px) clamp(16px, 4vw, 30px) !important;
+    padding: clamp(8px, 2vh, 14px) clamp(14px, 3.5vw, 26px) !important;
     align-items: stretch !important;
     justify-content: space-between !important;
   }

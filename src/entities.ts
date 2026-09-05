@@ -131,11 +131,11 @@ export class Entity {
     } else if (this.type === 'boss_skeleton') {
       scale *= 4.2;
     } else if (this.type === 'heronightborne') {
-      scale *= 3.4;
+      scale *= 5.2;
     } else if (this.type === 'herosamurai') {
-      scale *= 2.9;
+      scale *= 5.0;
     } else if (this.type === 'herosatyr') {
-      scale *= 5.5;
+      scale *= 8.0;
     } else if (this.type === 'toaster_bot') {
       scale *= 3.2;
     }
@@ -827,82 +827,60 @@ export class Projectile {
 
 export class Shockwave {
   x: number; y: number; color: string;
-  radius = 0; maxRadius = 500; life = 0.5; maxLife = 0.5;
-  constructor(x: number, y: number, color: string) {
+  radius = 0; maxRadius = 180; life = 0.28; maxLife = 0.28;
+  constructor(x: number, y: number, color: string, maxRadius = 180) {
     this.x = x; this.y = y; this.color = color;
+    this.maxRadius = maxRadius;
     
-    // Automatically register a radial wind force blowing outward from the center
+    // Subtle radial wind force
     globals.windForces.push({
       x: x,
       y: y,
-      radius: 450,
-      strength: 2.2,
-      life: 0.3,
-      maxLife: 0.3
+      radius: Math.min(240, maxRadius * 1.2),
+      strength: 1.2,
+      life: 0.2,
+      maxLife: 0.2
     });
   }
   update(dt: number) {
-    this.life -= dt; this.radius += (this.maxRadius - this.radius) * 20 * dt;
+    this.life -= dt;
+    this.radius += (this.maxRadius - this.radius) * 24 * dt;
   }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
     const rx = (this.x - cx + globals.vw/2) | 0;
     const ry = (this.y - cy + globals.vh/2) | 0;
-    const buffer = (this.radius + 50) | 0;
+    const buffer = (this.radius + 30) | 0;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
     }
     
-    ctx.save(); ctx.translate(rx, ry);
+    ctx.save();
+    ctx.translate(rx, ry);
     const p = Math.max(0, this.life / this.maxLife);
-    
-    // draw enso circle
-    const startAngle = -Math.PI / 4;
-    const totalAngle = Math.PI * 1.85; // leaves an open gap
+    const easeAlpha = p * p;
+
+    // 1. Sleek razor-thin primary kinetic ripple
+    ctx.save();
+    ctx.globalAlpha = 0.45 * easeAlpha;
     ctx.strokeStyle = this.color;
-    ctx.lineCap = 'round';
-    
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    const steps = 14;
-    for (let i = 0; i <= steps; i++) {
-      const angle = startAngle + (i / steps) * totalAngle;
-      // add noise jitter
-      const radiusJitter = (Math.sin(angle * 6) * 6 + Math.cos(angle * 14) * 3) * (this.radius / 180);
-      const r = this.radius + radiusJitter;
-      const x = Math.cos(angle) * r;
-      const y = Math.sin(angle) * r;
-      
-      const brushFactor = Math.sin((i / steps) * Math.PI); // thick center, tapered ends
-      ctx.lineWidth = Math.max(2, (26 * brushFactor + 4) * p);
-      
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
+    ctx.arc(0, 0, this.radius | 0, 0, Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
 
-    // inner zen overlay
-    ctx.strokeStyle = `rgba(30, 30, 35, ${p * 0.4})`;
-    ctx.lineWidth = 4 * p;
-    ctx.beginPath();
-    ctx.arc(0, 0, this.radius * 0.9, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    // expansion glow
-    ctx.beginPath();
-    ctx.arc(0, 0, this.radius * 0.92, 0, Math.PI*2);
-    ctx.fillStyle = `rgba(255, 255, 255, ${p * 0.06})`; ctx.fill();
-
-    // sumi-e burst lines
-    ctx.strokeStyle = `rgba(20, 20, 25, ${p * 0.5})`; ctx.lineWidth = 3;
-    ctx.beginPath();
-    for(let i=0; i<6; i++) {
-      const a = (i / 6) * Math.PI * 2 + Math.sin(p * 2);
-      ctx.moveTo(Math.cos(a) * this.radius * 0.25, Math.sin(a) * this.radius * 0.25);
-      ctx.lineTo(Math.cos(a) * this.radius * 1.5, Math.sin(a) * this.radius * 1.5);
+    // 2. Faint trailing harmonic refraction ring
+    if (this.radius > 20) {
+      ctx.save();
+      ctx.globalAlpha = 0.22 * easeAlpha;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.arc(0, 0, (this.radius * 0.82) | 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
-    ctx.stroke();
+    
     ctx.restore();
   }
 }

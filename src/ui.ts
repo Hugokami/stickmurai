@@ -578,6 +578,29 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const closeDojoXBtn = document.getElementById('close-dojo-x-btn');
   bindDualListener(closeDojoXBtn, closeDojo);
 
+  // Upgrades Modal Listeners (Main Menu & Title Screen)
+  const upgradesModal = document.getElementById('upgrades-modal');
+  const openUpgradesBtn = document.getElementById('open-upgrades-btn');
+  const closeUpgradesBtn = document.getElementById('close-upgrades-btn');
+  const closeUpgradesXBtn = document.getElementById('close-upgrades-x-btn');
+
+  const openUpgrades = () => {
+    if (upgradesModal) {
+      upgradesModal.style.display = 'flex';
+      const treasuryEl = document.getElementById('menu-upgrades-magatama-count');
+      if (treasuryEl) treasuryEl.textContent = (globals.magatama || 0).toLocaleString();
+      populateAscensionUpgrades();
+    }
+  };
+
+  const closeUpgrades = () => {
+    if (upgradesModal) upgradesModal.style.display = 'none';
+  };
+
+  bindDualListener(openUpgradesBtn, openUpgrades);
+  bindDualListener(closeUpgradesBtn, closeUpgrades);
+  bindDualListener(closeUpgradesXBtn, closeUpgrades);
+
   // Secret Redeem Code Modal Listeners
   const redeemModal = document.getElementById('redeem-modal');
   const openRedeemSettingsBtn = document.getElementById('open-redeem-settings-btn');
@@ -646,9 +669,11 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const shrineClaimBtn = document.getElementById('shrine-claim-btn');
   const shrineCommuneBtn = document.getElementById('shrine-commune-btn');
   const shrineLeaveBtn = document.getElementById('shrine-leave-btn');
+  const closeShrineXBtn = document.getElementById('close-shrine-x-btn');
   bindDualListener(shrineClaimBtn, onShatterSeal);
   bindDualListener(shrineCommuneBtn, onShatterSeal);
   bindDualListener(shrineLeaveBtn, closeShrineModal);
+  bindDualListener(closeShrineXBtn, closeShrineModal);
 
   const hermitChoice1Btn = document.getElementById('hermit-pact-choice-1');
   const hermitChoice2Btn = document.getElementById('hermit-pact-choice-2');
@@ -2445,10 +2470,20 @@ export function triggerDawnVictory(_stats?: any) {
 }
 
 export function populateAscensionUpgrades() {
-  const container = document.getElementById('ascension-upgrade-grid');
-  if (!container) return;
+  const containerIds = ['ascension-upgrade-grid', 'menu-ascension-upgrade-grid'];
+  const containers = containerIds.map(id => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+  if (containers.length === 0) return;
   const isJa = globals.currentLang === 'ja';
-  container.innerHTML = '';
+
+  // Sync all treasury count elements
+  const stageClearTreasury = document.getElementById('stage-clear-magatama');
+  if (stageClearTreasury) stageClearTreasury.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
+  const menuTreasury = document.getElementById('menu-upgrades-magatama-count');
+  if (menuTreasury) menuTreasury.textContent = (globals.magatama || 0).toLocaleString();
+  const dojoTreasury = document.getElementById('dojo-magatama-count');
+  if (dojoTreasury) dojoTreasury.textContent = (globals.magatama || 0).toLocaleString();
+  const hudTreasury = document.getElementById('hud-magatama-count');
+  if (hudTreasury) hudTreasury.textContent = (globals.magatama || 0).toLocaleString();
 
   const upgrades = globals.campaignUpgrades || {
     slashDamage: 0,
@@ -2462,81 +2497,83 @@ export function populateAscensionUpgrades() {
     infiniteRiposte: 0
   };
 
-  ASCENSION_UPGRADES.forEach(u => {
-    const curLevel = (upgrades as any)[u.id] || 0;
-    const isEndless = (u as any).isEndless || u.max >= 999;
-    const isMax = !isEndless && curLevel >= u.max;
-    const cost = isMax ? 0 : u.baseCost + curLevel * u.costMult;
-    const canAfford = !isMax && (globals.magatama || 0) >= cost;
+  containers.forEach(container => {
+    container.innerHTML = '';
 
-    let pips = '';
-    if (isEndless) {
-      pips = `<span style="color: #fbbf24; font-weight: bold; font-size: 10px;">★ PRESTIGE UNBOUND ★</span>`;
-    } else {
-      for (let i = 0; i < u.max; i++) {
-        pips += i < curLevel ? '● ' : '○ ';
-      }
-    }
+    ASCENSION_UPGRADES.forEach(u => {
+      const curLevel = (upgrades as any)[u.id] || 0;
+      const isEndless = (u as any).isEndless || u.max >= 999;
+      const isMax = !isEndless && curLevel >= u.max;
+      const cost = isMax ? 0 : u.baseCost + curLevel * u.costMult;
+      const canAfford = !isMax && (globals.magatama || 0) >= cost;
 
-    const card = document.createElement('div');
-    card.style.cssText = `
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid ${isMax ? 'rgba(34, 197, 94, 0.4)' : (isEndless ? 'rgba(251, 191, 36, 0.45)' : (canAfford ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.1)'))};
-      border-radius: 8px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      transition: all 0.2s ease;
-      box-shadow: ${isEndless ? '0 0 12px rgba(251, 191, 36, 0.1)' : 'none'};
-    `;
-
-    card.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-family: 'Shojumaru', cursive; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
-          <span>${u.icon}</span> ${isJa ? u.nameJa : u.name}
-        </span>
-        <span style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold;">
-          ${isEndless ? `Rank ${curLevel} (∞)` : (isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`)}
-        </span>
-      </div>
-      <div style="font-family: monospace; font-size: 10px; color: #a855f7; letter-spacing: 1px;">
-        ${pips}
-      </div>
-      <div style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.3;">
-        ${isJa ? u.descJa : u.desc}
-      </div>
-      <div style="margin-top: 4px;">
-        ${isMax ? `
-          <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;">✓ MASTERED</button>
-        ` : `
-          <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">
-            ${isJa ? `強化: ${cost.toLocaleString()} 🔮` : `UPGRADE: ${cost.toLocaleString()} 🔮`}
-          </button>
-        `}
-      </div>
-    `;
-
-    const buyBtn = card.querySelector('.buy-ascension-btn');
-    if (buyBtn && canAfford) {
-      bindDualListener(buyBtn as HTMLElement, () => {
-        if ((globals.magatama || 0) >= cost && (isEndless || curLevel < u.max)) {
-          globals.magatama -= cost;
-          (globals.campaignUpgrades as any)[u.id] = curLevel + 1;
-          try {
-            localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-            localStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));
-          } catch(e) {}
-          playSynthesizedFusionUnlock();
-          playShrineBlessing(0.8);
-          const treasuryEl = document.getElementById('stage-clear-magatama');
-          if (treasuryEl) treasuryEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
-          populateAscensionUpgrades();
+      let pips = '';
+      if (isEndless) {
+        pips = `<span style="color: #fbbf24; font-weight: bold; font-size: 10px;">★ PRESTIGE UNBOUND ★</span>`;
+      } else {
+        for (let i = 0; i < u.max; i++) {
+          pips += i < curLevel ? '● ' : '○ ';
         }
-      });
-    }
+      }
 
-    container.appendChild(card);
+      const card = document.createElement('div');
+      card.style.cssText = `
+        background: rgba(15, 23, 42, 0.75);
+        border: 1px solid ${isMax ? 'rgba(34, 197, 94, 0.4)' : (isEndless ? 'rgba(251, 191, 36, 0.45)' : (canAfford ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.1)'))};
+        border-radius: 8px;
+        padding: 10px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        transition: all 0.2s ease;
+        box-shadow: ${isEndless ? '0 0 12px rgba(251, 191, 36, 0.1)' : 'none'};
+      `;
+
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-family: 'Shojumaru', cursive; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+            <span>${u.icon}</span> ${isJa ? u.nameJa : u.name}
+          </span>
+          <span style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold;">
+            ${isEndless ? `Rank ${curLevel} (∞)` : (isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`)}
+          </span>
+        </div>
+        <div style="font-family: monospace; font-size: 10px; color: #a855f7; letter-spacing: 1px;">
+          ${pips}
+        </div>
+        <div style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.3;">
+          ${isJa ? u.descJa : u.desc}
+        </div>
+        <div style="margin-top: 4px;">
+          ${isMax ? `
+            <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;">✓ MASTERED</button>
+          ` : `
+            <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">
+              ${isJa ? `強化: ${cost.toLocaleString()} 🔮` : `UPGRADE: ${cost.toLocaleString()} 🔮`}
+            </button>
+          `}
+        </div>
+      `;
+
+      const buyBtn = card.querySelector('.buy-ascension-btn');
+      if (buyBtn && canAfford) {
+        bindDualListener(buyBtn as HTMLElement, () => {
+          if ((globals.magatama || 0) >= cost && (isEndless || curLevel < u.max)) {
+            globals.magatama -= cost;
+            (globals.campaignUpgrades as any)[u.id] = curLevel + 1;
+            try {
+              localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+              localStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));
+            } catch(e) {}
+            playSynthesizedFusionUnlock();
+            playShrineBlessing(0.8);
+            populateAscensionUpgrades();
+          }
+        });
+      }
+
+      container.appendChild(card);
+    });
   });
 }
 

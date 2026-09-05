@@ -1049,49 +1049,109 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.restore();
     }
 
-    ctx.save();
-    ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
-    ctx.scale(this.dir, 1);
-    ctx.beginPath();
-    
-    // Adjusted starting point to be closer to the neck/head of the sprite
-    const neckX = -4;
-    const neckY = -22;
-    ctx.moveTo(neckX, neckY);
-    
-    let trailX = 0;
-    let trailY = 0;
-    const time = performance.now() / 150;
+    if (this.type === 'sword') {
+      ctx.save();
+      ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
+      ctx.scale(this.dir, 1);
+      ctx.beginPath();
+      
+      const neckX = -4;
+      const neckY = -22;
+      ctx.moveTo(neckX, neckY);
+      
+      let trailX = 0;
+      let trailY = 0;
+      const time = performance.now() / 150;
 
-    if (this.state === 'walk' || this.state === 'dash' || this.state === 'attack') {
-      // Stretched out when moving
-      trailX = -40 - (Math.abs(this.vx) / 20);
-      trailY = -22 + Math.sin(time) * 8;
-      ctx.quadraticCurveTo(trailX / 2, -35, trailX, trailY);
-    } else {
-      // Gentle wave when idle, hanging down slightly
-      trailX = -20 + Math.cos(time) * 4;
-      trailY = -10 + Math.sin(time) * 4;
-      ctx.quadraticCurveTo(-15, neckY, trailX, trailY);
-    }
-    
-    ctx.strokeStyle = '#b31b1b'; // Darker red base for depth
-    ctx.lineWidth = 8;
-    ctx.lineCap = 'round';
-    ctx.stroke();
+      if (this.state === 'walk' || this.state === 'dash' || this.state === 'attack') {
+        trailX = -40 - (Math.abs(this.vx) / 20);
+        trailY = -22 + Math.sin(time) * 8;
+        ctx.quadraticCurveTo(trailX / 2, -35, trailX, trailY);
+      } else {
+        trailX = -20 + Math.cos(time) * 4;
+        trailY = -10 + Math.sin(time) * 4;
+        ctx.quadraticCurveTo(-15, neckY, trailX, trailY);
+      }
+      
+      ctx.strokeStyle = '#b31b1b'; // Darker red base for depth
+      ctx.lineWidth = 8;
+      ctx.lineCap = 'round';
+      ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(neckX, neckY);
-    if (this.state === 'walk' || this.state === 'dash' || this.state === 'attack') {
-      ctx.quadraticCurveTo(trailX / 2, -35, trailX, trailY);
-    } else {
-      ctx.quadraticCurveTo(-15, neckY, trailX, trailY);
+      ctx.beginPath();
+      ctx.moveTo(neckX, neckY);
+      if (this.state === 'walk' || this.state === 'dash' || this.state === 'attack') {
+        ctx.quadraticCurveTo(trailX / 2, -35, trailX, trailY);
+      } else {
+        ctx.quadraticCurveTo(-15, neckY, trailX, trailY);
+      }
+      ctx.strokeStyle = '#ff3333'; // Brighter red core
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.restore();
+    } else if (this.state !== 'dead') {
+      // Signature battlefield aura & particle motes for custom heroes
+      ctx.save();
+      const px = (this.x - cx + globals.vw/2) | 0;
+      const py = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
+      const t = performance.now() / 400;
+
+      if (this.type === 'heronightborne') {
+        // Ethereal purple abyssal flame motes drifting from horns
+        for (let i = 0; i < 3; i++) {
+          const ox = Math.sin(t * 3 + i * 2.1) * 14 - (this.dir * 10);
+          const oy = -36 - ((t * 20 + i * 12) % 24);
+          const r = Math.max(1.5, 3.2 - ((t * 20 + i * 12) % 24) * 0.1);
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(124, 58, 237, 0.7)' : 'rgba(192, 132, 252, 0.8)';
+          ctx.beginPath();
+          ctx.arc(px + ox, py + oy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (this.type === 'herosamurai') {
+        // Golden kensei battle embers
+        for (let i = 0; i < 3; i++) {
+          const ox = -this.dir * (12 + i * 6) + Math.cos(t * 2 + i) * 8;
+          const oy = -16 - ((t * 18 + i * 10) % 20);
+          const r = Math.max(1, 2.6 - ((t * 18 + i * 10) % 20) * 0.08);
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(251, 191, 36, 0.75)' : 'rgba(254, 240, 138, 0.85)';
+          ctx.beginPath();
+          ctx.arc(px + ox, py + oy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (this.type === 'herosatyr') {
+        // Primal emerald nature spirit leaves drifting
+        for (let i = 0; i < 3; i++) {
+          const ox = -this.dir * (12 + i * 7) + Math.sin(t * 2.5 + i * 1.8) * 10;
+          const oy = -16 - ((t * 16 + i * 11) % 22);
+          const r = Math.max(1.5, 3.0 - ((t * 16 + i * 11) % 22) * 0.09);
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(16, 185, 129, 0.75)' : 'rgba(52, 211, 153, 0.85)';
+          ctx.beginPath();
+          ctx.arc(px + ox, py + oy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (this.type === 'heroninja') {
+        // Shadow mist puffs
+        for (let i = 0; i < 2; i++) {
+          const ox = -this.dir * (8 + i * 10) + Math.sin(t * 3 + i) * 6;
+          const oy = -14 - ((t * 22 + i * 14) % 20);
+          ctx.fillStyle = 'rgba(147, 51, 234, 0.45)';
+          ctx.beginPath();
+          ctx.arc(px + ox, py + oy, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (this.type === 'heroluneblade') {
+        // Celestial azure starlight trail
+        for (let i = 0; i < 3; i++) {
+          const ox = -this.dir * (12 + i * 8) + Math.sin(t * 2 + i) * 7;
+          const oy = -18 - ((t * 15 + i * 9) % 25);
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(56, 189, 248, 0.7)' : 'rgba(224, 242, 254, 0.85)';
+          ctx.beginPath();
+          ctx.arc(px + ox, py + oy, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
     }
-    ctx.strokeStyle = '#ff3333'; // Brighter red core
-    ctx.lineWidth = 4;
-    ctx.stroke();
-    
-    ctx.restore();
 
     // Render a permanent, semi-transparent neon ellipse ring and radial gradient glowing aura
     if (colorTint === 'none' && this.state !== 'dead') {
@@ -1121,7 +1181,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.fill();
 
       // 2. Permanent Neon Ellipse Ring (calibrated to dynamic hero feet baseline)
-      const playerFootOffsetY = this.type === 'heroluneblade' ? 30 : (this.type === 'heroninja' ? 48 : (this.type === 'heronightborne' ? 52 : (this.type === 'herosamurai' ? 56 : (this.type === 'herosatyr' ? 46 : 62))));
+      const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : 62))));
       const ringX = px | 0;
       const ringY = (py + playerFootOffsetY) | 0;
 
@@ -1129,14 +1189,14 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.strokeStyle = rgbaColor + '0.35)';
       ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.ellipse(ringX, ringY, 22, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(ringX, ringY, 24, 8, 0, 0, Math.PI * 2);
       ctx.stroke();
 
       // Layer 2: Core
       ctx.strokeStyle = playerColor;
       ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.ellipse(ringX, ringY, 22, 7, 0, 0, Math.PI * 2);
+      ctx.ellipse(ringX, ringY, 24, 8, 0, 0, Math.PI * 2);
       ctx.stroke();
 
       ctx.restore();
@@ -1150,7 +1210,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // Physical ground contact shadow (anchored at world ground baseline)
-    const playerFootOffsetY = this.type === 'heroluneblade' ? 30 : (this.type === 'heroninja' ? 48 : (this.type === 'heronightborne' ? 52 : (this.type === 'herosamurai' ? 56 : (this.type === 'herosatyr' ? 46 : 62))));
+    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : 62))));
     const groundShadowRx = (this.x - cx + globals.vw / 2) | 0;
     const groundShadowRy = ((this.y - cy + globals.vh / 2) + playerFootOffsetY) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));

@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { i18n } from './assets';
+import { i18n, vfxAnims } from './assets';
 import {
   playSynthesizedLevelUp,
   playSynthesizedAwaken,
@@ -9,7 +9,7 @@ import {
   playSound,
   sfx
 } from './audio';
-import { Slash, FloatingText, Shockwave, Particle } from './entities';
+import { Slash, FloatingText, Shockwave, Particle, AnimatedEffect } from './entities';
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
 
@@ -382,6 +382,10 @@ export function triggerLevelUp() {
       levelUpScreen.style.display = 'none';
       
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, t('levelUpText'), "#00ff00", 30));
+      const atkUp = (vfxAnims as any).spells?.attackUp;
+      if (atkUp && atkUp.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, atkUp, 0.55, 1.9));
+      }
       callbacks.updateUI();
       globals.gameState = 'playing';
     });
@@ -509,6 +513,10 @@ const ultOptions = [
 
             // golden shockwave
             globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+            const lightBurstFinisher = (vfxAnims as any).shockwaves?.lightBurst;
+            if (lightBurstFinisher && lightBurstFinisher.length > 0) {
+              globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, lightBurstFinisher, 0.35, 2.8));
+            }
             
             // Deal 20 DMG to all remaining active enemies
             globals.enemies.forEach(enemy => {
@@ -547,6 +555,14 @@ const ultOptions = [
 
        // Storm awakening blast
        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fbbf24'));
+       const lightBurst = (vfxAnims as any).shockwaves?.lightBurst;
+       if (lightBurst && lightBurst.length > 0) {
+         globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, lightBurst, 0.35, 2.6));
+       }
+       const atkUp = (vfxAnims as any).spells?.attackUp;
+       if (atkUp && atkUp.length > 0) {
+         globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, atkUp, 0.5, 2.0));
+       }
        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, globals.currentLang === 'ja' ? '雷神の稲妻！' : 'WRATH OF THE STORM GOD!', 'neon-#fbbf24', 56));
        for (let i = 0; i < 25; i++) {
          const angle = Math.random() * Math.PI * 2;

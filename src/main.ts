@@ -1153,14 +1153,16 @@ function spawnEnemy() {
   
   if (globals.gameMode === 'classic') {
     const stage = globals.currentStage || 1;
+    maxEnemies = (isMobile ? 16 : 24) + Math.min(10, Math.floor(stage * 1.5));
     if (stage >= 8) {
-      count = Math.min(4, 2 + Math.floor((stage - 8) / 4));
-      nextSpawnMult = Math.max(0.45, 0.85 - (stage - 8) * 0.025);
+      count = Math.min(4, 2 + Math.floor((stage - 8) / 3));
+      nextSpawnMult = Math.max(0.40, 0.70 - (stage - 8) * 0.03);
     } else if (stage >= 4) {
       count = 2;
-      nextSpawnMult = 0.75;
+      nextSpawnMult = 0.65;
     } else if (stage >= 2) {
-      nextSpawnMult = 0.90;
+      count = Math.random() < 0.4 ? 2 : 1;
+      nextSpawnMult = 0.80;
     }
   } else if (globals.difficulty === 'easy') {
     maxEnemies = Math.round(maxEnemies * 0.6);
@@ -1279,6 +1281,10 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     globals.invulnTimer = 0.5;
     playSynthesizedParry(); 
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, globals.currentLang === 'ja' ? '桜花の鎧 防御！' : 'BARRIER BLOCKED!', '#ffb7c5', 24));
+    const defUp = (vfxAnims as any).spells?.defenseUp;
+    if (defUp && defUp.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, defUp, 0.45, 1.8));
+    }
     for (let i = 0; i < 15; i++) {
       globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#ffb7c5', 250, 0.5, 3 + Math.random()*2));
     }
@@ -1380,6 +1386,10 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       if (goldImpact && goldImpact.length > 0) {
         globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, goldImpact, 0.35, 2.2));
       }
+      const lightBurst = (vfxAnims as any).shockwaves?.lightBurst;
+      if (lightBurst && lightBurst.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, lightBurst, 0.32, 2.0));
+      }
     }
     
     // Parry blast pushing nearby enemies back!
@@ -1431,6 +1441,10 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       const pYResolve = (vfxAnims as any).impacts?.parryYellow;
       if (pYResolve?.length > 0) {
         globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, pYResolve, 0.35, 2.2));
+      }
+      const lightBurstResolve = (vfxAnims as any).shockwaves?.lightBurst;
+      if (lightBurstResolve && lightBurstResolve.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, lightBurstResolve, 0.35, 2.4));
       }
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '武士の気迫！ 🛡️' : "RONIN'S RESOLVE! 🛡️", "neon-#ffd700", 36));
       for (let i = 0; i < 20; i++) {
@@ -2408,6 +2422,10 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     if (execBurst && execBurst.length > 0) {
       globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, execBurst, 0.45, isBoss ? 2.8 : 2.0));
     }
+    const lightBurst = (vfxAnims as any).shockwaves?.lightBurst;
+    if (lightBurst && lightBurst.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, lightBurst, 0.32, isBoss ? 2.6 : 1.8));
+    }
     addFlow(20);
 
     // Execution Magatama Bounty (boosted by Fortune & Blood Surge / Blood Tithe)
@@ -3200,6 +3218,10 @@ function update(realDt: number) {
       globals.petalArmorActive = true;
       playSynthesizedLevelUp();
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, globals.currentLang === 'ja' ? '桜花の鎧 展開！' : 'BARRIER READY!', '#ffb7c5', 20));
+      const defUp = (vfxAnims as any).spells?.defenseUp;
+      if (defUp && defUp.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, defUp, 0.45, 1.8));
+      }
       for (let i = 0; i < 8; i++) {
         globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#ffb7c5', 100, 0.4, 3));
       }
@@ -3221,11 +3243,19 @@ function update(realDt: number) {
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration; 
         globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, t('swordEnhancedText'), "#ff6600", 24));
+        const atkUp = (vfxAnims as any).spells?.attackUp;
+        if (atkUp && atkUp.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, atkUp, 0.5, 2.0));
+        }
       } else if (globals.selectedSkill === 'shield') {
         playSynthesizedParry();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration;
         globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '烈風 of 加護！' : 'WIND AEGIS!', '#00ffff', 24));
+        const defUp = (vfxAnims as any).spells?.defenseUp;
+        if (defUp && defUp.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, defUp, 0.5, 2.0));
+        }
         for (let i = 0; i < 12; i++) {
           globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#00ffc8', 150, 0.4, 2));
         }
@@ -4518,7 +4548,6 @@ function update(realDt: number) {
 
       // Primal Satyr Sovereign passive: emerald nature thorns along slash trajectory
       if (globals.selectedHero === 'satyr') {
-        playPrimalZap(0.35);
         for (let i = 0; i < 4; i++) {
           const px = globals.player.x + Math.cos(angle) * (32 + i * 25) + (Math.random() - 0.5) * 16;
           const py = globals.player.y + Math.sin(angle) * (32 + i * 25) + (Math.random() - 0.5) * 16;
