@@ -159,8 +159,9 @@ export class Enemy extends Entity {
       } else if (stage === 5) {
         // Stage 5: Yomi Gateway - Oni Boss Encounter
         const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'oni_boss');
-        if (!bossAlive && (globals.stageKills || 0) === 0) {
+        if (!bossAlive && !globals.stageBossSpawned) {
           this.subType = 'oni_boss';
+          globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
           this.subType = r < 0.5 ? 'brawler' : 'samurai';
@@ -193,8 +194,9 @@ export class Enemy extends Entity {
       } else if (stage === 10) {
         // Stage 10: Sanctum of Oblivion - Agis Colossus Boss
         const agisAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'agis_colossus');
-        if (!agisAlive && (globals.stageKills || 0) === 0) {
+        if (!agisAlive && !globals.stageBossSpawned) {
           this.subType = 'agis_colossus';
+          globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
           if (r < 0.4) this.subType = 'barrel_bomber';
@@ -204,8 +206,9 @@ export class Enemy extends Entity {
       } else if (stage === 15) {
         // Stage 15: Tomb of the Ancient King - Skeleton Warlord Boss
         const warlordAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'skeleton_warlord');
-        if (!warlordAlive && (globals.stageKills || 0) === 0) {
+        if (!warlordAlive && !globals.stageBossSpawned) {
           this.subType = 'skeleton_warlord';
+          globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
           if (r < 0.4) this.subType = 'toaster_bot';
@@ -221,8 +224,9 @@ export class Enemy extends Entity {
           const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'skeleton_warlord', 'shogun_boss'];
           const targetBoss = bossTypes[(realm - 1) % bossTypes.length];
           const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && (e.subType === targetBoss || (e as any).isBoss));
-          if (!bossAlive && (globals.stageKills || 0) === 0) {
+          if (!bossAlive && !globals.stageBossSpawned) {
             this.subType = targetBoss;
+            globals.stageBossSpawned = true;
           } else {
             const minionPool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'berserker', 'toaster_bot', 'glacial_sentinel'];
             this.subType = minionPool[Math.floor(Math.random() * minionPool.length)];
@@ -402,6 +406,9 @@ export class Enemy extends Entity {
     if (globals.gameMode === 'classic') {
       const stage = Math.max(1, globals.currentStage || 1);
       const isBoss = this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord';
+      if (isBoss) {
+        (this as any).isBoss = true;
+      }
       
       // Progressive endless scaling: keeps grunts killable in 1-3 clean strikes while steadily raising challenge
       const stageHpMult = isBoss ? (1.0 + (stage - 1) * 0.15) : (1.0 + (stage - 1) * 0.12);

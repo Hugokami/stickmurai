@@ -543,9 +543,10 @@ export class Player extends Entity {
         }
       });
 
-      // distance-based afterimage spawning for extremely smooth trails
-      const distTraveled = Math.hypot(this.x - this.lastAfterimageX, this.y - this.lastAfterimageY);
-      if (distTraveled >= 28) {
+      // distance-based afterimage spawning for extremely smooth trails (squared distance invariant)
+      const dx = this.x - this.lastAfterimageX;
+      const dy = this.y - this.lastAfterimageY;
+      if (dx * dx + dy * dy >= 225) { // 15 * 15 = 225 for dense, buttery-smooth afterimages
         this.lastAfterimageX = this.x;
         this.lastAfterimageY = this.y;
         
@@ -558,6 +559,8 @@ export class Player extends Entity {
           trailColor = '#fbbf24';
         } else if (this.type === 'herosatyr') {
           trailColor = '#10b981';
+        } else if (this.type === 'heroluneblade') {
+          trailColor = '#38bdf8';
         } else if ((globals.flowState as string) === 'storm_god') {
           trailColor = '#fbbf24';
         } else if ((globals.flowState as string) === 'awakened') {

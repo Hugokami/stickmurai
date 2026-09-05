@@ -907,10 +907,10 @@ export const vfxAnims = {
   },
   heroSlashes: {
     ronin: loadVfxFrames('vfx/slashes/slash_ronin/frame_{N}.png', 9, 1, 2, false),
-    ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 7, 1, 2, false),
+    ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 9, 1, 2, false),
     luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2, false),
     samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, false),
-    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 7, 1, 2, false),
+    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, false),
     satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, false),
     dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, false),
   },

@@ -885,6 +885,8 @@ function initGame() {
   globals.shieldPulseTimer = 0;
   globals.raijinDashActive = false;
   globals.raijinHitEnemies.clear();
+  globals.stageBossSpawned = false;
+  globals.satyrEarthshakerCD = 0;
 
   globals.comboFinisherReady = false;
   globals.riposteTimer = 0;
@@ -1004,12 +1006,12 @@ function initGame() {
     globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 6;
     globals.playerStats.slashSizeMult *= 1.40;
   } else if (globals.selectedHero === 'satyr') {
-    globals.playerStats.moveSpeedMult *= 1.25;
-    globals.playerStats.attackCooldownBase *= 0.60; // -40% attack cooldown (Primal Dominance)
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 4;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 8;
-    globals.playerStats.slashSizeMult *= 1.50; // +50% slash AoE
-    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + 15;
+    globals.playerStats.moveSpeedMult *= 1.12;
+    globals.playerStats.attackCooldownBase *= 0.82; // -18% attack cooldown (Primal Ferocity)
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 2;
+    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 4;
+    globals.playerStats.slashSizeMult *= 1.25; // +25% slash AoE
+    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + 8;
   } else {
     // Default Classic Ronin (Parry Prodigy)
     globals.playerStats.moveSpeedMult *= 1.05;
@@ -1373,7 +1375,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   if (globals.player.state !== 'dead') {
     playSynthesizedHurt();
     globals.consecutiveParries = 0;
-    const isAnyBossAlive = globals.enemies.some(en => en.state !== 'dead' && (en.subType === 'oni_boss' || en.subType === 'shogun_boss' || en.subType === 'agis_colossus' || (en as any).isBoss));
+    const isAnyBossAlive = globals.enemies.some(en => en.state !== 'dead' && (en.subType === 'oni_boss' || en.subType === 'shogun_boss' || en.subType === 'agis_colossus' || en.subType === 'skeleton_warlord' || (en as any).isBoss));
     if (isAnyBossAlive) {
       bossEncounterDamaged = true;
     }
@@ -2360,26 +2362,28 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
     }
 
-    // Primal Satyr Sovereign execution passive: Earthshaker Tremor
-    if (globals.selectedHero === 'satyr') {
-      globals.screenShake = Math.max(globals.screenShake, 25);
+    // Primal Satyr Sovereign execution passive: Earthshaker Tremor (balanced with 4.5s ICD & target cap)
+    if (globals.selectedHero === 'satyr' && (globals.satyrEarthshakerCD || 0) <= 0) {
+      globals.satyrEarthshakerCD = 4.5;
+      globals.screenShake = Math.max(globals.screenShake, 18);
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#10b981'));
-      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#34d399'));
       playPrimalZap(0.9);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "EARTHSHAKER TREMOR! 🌿", "#10b981", 28));
       
-      // Stagger and damage nearby enemies
-      for (let i = 0; i < globals.enemies.length; i++) {
+      // Stagger and damage nearby enemies (capped to max 4 targets to preserve 60 FPS)
+      let staggeredCount = 0;
+      for (let i = 0; i < globals.enemies.length && staggeredCount < 4; i++) {
         const other = globals.enemies[i];
         if (!other || other === e || other.state === 'dead') continue;
         const odx = other.x - globals.player.x;
         const ody = other.y - globals.player.y;
         if (odx * odx + ody * ody < 350 * 350) {
-          other.addPostureDamage(60);
-          other.knockbackTimer = 0.5;
+          staggeredCount++;
+          other.addPostureDamage(28);
+          other.knockbackTimer = 0.4;
           const kAng = Math.atan2(ody, odx);
-          other.knockbackVx = Math.cos(kAng) * 600;
-          other.knockbackVy = Math.sin(kAng) * 600;
+          other.knockbackVx = Math.cos(kAng) * 450;
+          other.knockbackVy = Math.sin(kAng) * 450;
         }
       }
     }
@@ -2546,8 +2550,8 @@ function killEnemy(e: Enemy) {
   if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
     const stage = globals.currentStage || 1;
     const isBossStage = stage % 5 === 0;
-    const isBossDefeated = e.subType === 'oni_boss' || e.subType === 'agis_colossus' || e.subType === 'shogun_boss' || (e as any).isBoss;
-    if ((isBossStage && isBossDefeated) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
+    const isBossDefeated = e.subType === 'oni_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || e.subType === 'shogun_boss' || (e as any).isBoss;
+    if ((isBossStage && (isBossDefeated || globals.stageKills >= 45)) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
       globals.gameState = 'stageclear';
       const lvlScreen = document.getElementById('level-up-screen');
       if (lvlScreen) lvlScreen.style.display = 'none';
@@ -2562,7 +2566,7 @@ function killEnemy(e: Enemy) {
     }
   }
 
-  if (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss) {
+  if (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss) {
     globals.runStats.bossesKilled++;
     if ((e as any).isSupremeShogun || (globals.runTime >= 540 && e.subType === 'shogun_boss')) {
       globals.shogunDefeatedAtDawn = true;
@@ -2577,7 +2581,7 @@ function killEnemy(e: Enemy) {
   }
 
   // Award Yomi Magatama based on enemy tier (boosted by Fortune & Blood Surge / Blood Tithe)
-  const isBossEnemy = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss;
+  const isBossEnemy = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
   const isEliteOrRanged = e.subType === 'musketeer' || e.subType === 'pyromancer' || e.subType === 'necromancer' || e.subType === 'orc_brute';
   const fortuneMult = globals.playerStats?.fortuneMult || 1.0;
   const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : (globals.activeStageAffix?.id === 'blood_tithe' ? 3 : 1);
@@ -3538,6 +3542,7 @@ function update(realDt: number) {
   globals.timeSlowDuration = 0;
   globals.timeSlowFactor = 1.0;
   globals.targetTimeSlowFactor = 1.0;
+  if (globals.satyrEarthshakerCD > 0) globals.satyrEarthshakerCD -= realDt;
 
   // Zen Field Ultimate Ticking
   if (globals.zenFieldActiveTimer > 0) {
@@ -3570,7 +3575,7 @@ function update(realDt: number) {
 
   if (globals.comboTimer > 0 && globals.gameState === 'playing') {
     // Step 5: Freeze combo timer during Blade Clash, boss windups, and execution cut-in
-    const isBossCharging = globals.enemies.some(e => e.state !== 'dead' && (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || (e as any).isBoss) && (e.state === 'charge' || e.state === 'attack'));
+    const isBossCharging = globals.enemies.some(e => e.state !== 'dead' && (e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss) && (e.state === 'charge' || e.state === 'attack'));
     const isExecutionCutinActive = globals.flowState === 'omnislash' || (document.getElementById('manga-cutin')?.style.display === 'block');
     const isClashActive = globals.activeBladeClash !== null;
 
@@ -3748,8 +3753,12 @@ function update(realDt: number) {
     globals.judgementDomes.length = writeIdx;
   }
 
-  // Update AnimatedEffects (in-place compaction without heap allocation)
+  // Update AnimatedEffects (in-place compaction without heap allocation + effect capping)
   if (globals.animatedEffects) {
+    const maxAnimatedEffects = globals.graphicsSettings === 'low' ? 6 : (isMobile ? 8 : 14);
+    if (globals.animatedEffects.length > maxAnimatedEffects) {
+      globals.animatedEffects.splice(0, globals.animatedEffects.length - maxAnimatedEffects);
+    }
     let writeIdx = 0;
     for (let i = 0; i < globals.animatedEffects.length; i++) {
       const fx = globals.animatedEffects[i];
@@ -4416,7 +4425,7 @@ function update(realDt: number) {
         if (e.state === 'dead') continue;
         const dx = e.x - globals.player.x; const dy = e.y - globals.player.y;
         const enemyHitRadius = (e.scaleMult - 1) * 60; 
-        const hitRange = 280 * size + enemyHitRadius;
+        const hitRange = 325 * size + enemyHitRadius;
         const distSq = dx * dx + dy * dy;
         if (distSq < hitRange * hitRange) {
           let isHit = isRiposteStrike;
@@ -4816,7 +4825,7 @@ function update(realDt: number) {
   }
   inplaceFilter(globals.enemies, e => {
     if (e.isPvpRemote || e.state !== 'dead') return true;
-    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus';
+    const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
     const maxDeadTime = isBoss ? 3.0 : 0.8;
     return e.deadTimer !== undefined && e.deadTimer < maxDeadTime;
   });
@@ -4868,7 +4877,7 @@ function update(realDt: number) {
       Afterimage.release(a);
     }
   }
-  const maxAfterimages = globals.graphicsSettings === 'low' ? 4 : (isMobile ? 8 : 15);
+  const maxAfterimages = globals.graphicsSettings === 'low' ? 6 : (isMobile ? 14 : 24);
   if (afterimageWriteIndex > maxAfterimages) {
     const toReleaseCount = afterimageWriteIndex - maxAfterimages;
     for (let i = 0; i < toReleaseCount; i++) {
@@ -4881,6 +4890,10 @@ function update(realDt: number) {
   }
   globals.afterimages.length = afterimageWriteIndex;
 
+  const maxShockwaves = globals.graphicsSettings === 'low' ? 2 : (isMobile ? 3 : 6);
+  if (globals.shockwaves.length > maxShockwaves) {
+    globals.shockwaves.splice(0, globals.shockwaves.length - maxShockwaves);
+  }
   for (let i = 0; i < globals.shockwaves.length; i++) {
     globals.shockwaves[i].update(realDt);
   }

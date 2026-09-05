@@ -135,7 +135,7 @@ export class Entity {
     } else if (this.type === 'herosamurai') {
       scale *= 2.9;
     } else if (this.type === 'herosatyr') {
-      scale *= 3.8;
+      scale *= 5.5;
     } else if (this.type === 'toaster_bot') {
       scale *= 3.2;
     }
@@ -160,23 +160,36 @@ export class Entity {
       let trailColor = '#00ffff';
       if (globals.flowState === 'storm_god') trailColor = '#fbbf24';
       else if (globals.flowState === 'awakened') trailColor = '#c084fc';
+      else if (this.type === 'heroninja') trailColor = '#c084fc';
+      else if (this.type === 'heronightborne') trailColor = '#7c3aed';
+      else if (this.type === 'herosamurai') trailColor = '#fbbf24';
+      else if (this.type === 'herosatyr') trailColor = '#10b981';
+      else if (this.type === 'heroluneblade') trailColor = '#38bdf8';
       
       const ghostImg = getTintedImage(img, trailColor);
       
       // Far ghost
       ctx.save();
-      ctx.globalAlpha = alpha * 0.22;
-      ctx.translate(-cos * 22, -sin * 22);
+      ctx.globalAlpha = alpha * 0.16;
+      ctx.translate((-cos * 30) | 0, (-sin * 30) | 0);
       ctx.scale(finalDir, 1);
-      ctx.drawImage(ghostImg, -img.width/2 * scale, -img.height/2 * scale, img.width * scale, img.height * scale);
+      ctx.drawImage(ghostImg, (-img.width/2 * scale) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
+      ctx.restore();
+
+      // Mid ghost
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.30;
+      ctx.translate((-cos * 18) | 0, (-sin * 18) | 0);
+      ctx.scale(finalDir, 1);
+      ctx.drawImage(ghostImg, (-img.width/2 * scale) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
       ctx.restore();
 
       // Near ghost
       ctx.save();
-      ctx.globalAlpha = alpha * 0.42;
-      ctx.translate(-cos * 11, -sin * 11);
+      ctx.globalAlpha = alpha * 0.48;
+      ctx.translate((-cos * 8) | 0, (-sin * 8) | 0);
       ctx.scale(finalDir, 1);
-      ctx.drawImage(ghostImg, -img.width/2 * scale, -img.height/2 * scale, img.width * scale, img.height * scale);
+      ctx.drawImage(ghostImg, (-img.width/2 * scale) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
       ctx.restore();
     }
 
@@ -832,9 +845,9 @@ export class Shockwave {
     this.life -= dt; this.radius += (this.maxRadius - this.radius) * 20 * dt;
   }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    const rx = this.x - cx + globals.vw/2;
-    const ry = this.y - cy + globals.vh/2;
-    const buffer = this.radius + 50;
+    const rx = (this.x - cx + globals.vw/2) | 0;
+    const ry = (this.y - cy + globals.vh/2) | 0;
+    const buffer = (this.radius + 50) | 0;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
     }
@@ -849,7 +862,7 @@ export class Shockwave {
     ctx.lineCap = 'round';
     
     ctx.beginPath();
-    const steps = 45;
+    const steps = 14;
     for (let i = 0; i <= steps; i++) {
       const angle = startAngle + (i / steps) * totalAngle;
       // add noise jitter
@@ -884,8 +897,8 @@ export class Shockwave {
     // sumi-e burst lines
     ctx.strokeStyle = `rgba(20, 20, 25, ${p * 0.5})`; ctx.lineWidth = 3;
     ctx.beginPath();
-    for(let i=0; i<12; i++) {
-      const a = (i / 12) * Math.PI * 2 + Math.sin(p * 2);
+    for(let i=0; i<6; i++) {
+      const a = (i / 6) * Math.PI * 2 + Math.sin(p * 2);
       ctx.moveTo(Math.cos(a) * this.radius * 0.25, Math.sin(a) * this.radius * 0.25);
       ctx.lineTo(Math.cos(a) * this.radius * 1.5, Math.sin(a) * this.radius * 1.5);
     }
@@ -969,43 +982,40 @@ export class Slash {
     }
   }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    let offsetX = 0;
-    let offsetY = 0;
     let dir = 1;
     if (this.owner && this.owner.subType === 'player') {
       dir = this.owner.dir || 1;
-      const state = this.owner.state;
-      if (state === 'idle' || state === 'charge') {
-        offsetX = -15 * dir;
-        offsetY = 22;
-      } else if (state === 'attack') {
-        offsetX = -5 * dir;
-        offsetY = 20;
-      } else { // walk/run/dash
-        offsetX = -0.5 * dir;
-        offsetY = 17;
-      }
     }
 
-    const rx = this.x - cx + globals.vw/2 + offsetX;
+    const rx = (this.x - cx + globals.vw/2) | 0;
     const yOff = (this.owner && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
-    const ry = this.y - cy + globals.vh/2 + yOff + offsetY - 17;
-    const buffer = 260 * this.sizeMult;
+    const ry = (this.y - cy + globals.vh/2 + yOff) | 0;
+    const buffer = 320 * this.sizeMult;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
     }
 
-    let frames = vfxAnims.custom.slash;
     const slashes = (vfxAnims as any).heroSlashes;
-    if (this.isEnhanced && slashes?.dragon) {
-      frames = slashes.dragon;
-    } else if (this.owner && slashes) {
-      if (this.owner.type === 'heronightborne') frames = slashes.nightborne;
-      else if (this.owner.type === 'herosamurai') frames = slashes.samurai;
-      else if (this.owner.type === 'herosatyr') frames = slashes.satyr;
-      else if (this.owner.type === 'heroluneblade') frames = slashes.luneblade;
-      else if (this.owner.type === 'heroninja') frames = slashes.ninja;
-      else if (this.owner.type === 'sword' || this.owner.subType === 'player') frames = slashes.ronin;
+    let frames: HTMLImageElement[] = slashes?.ronin || vfxAnims.custom.slash;
+    if (slashes) {
+      let heroType = this.owner?.type;
+      if (!heroType && this.owner?.subType === 'player') heroType = globals.player?.type;
+      if (!heroType) {
+        if (globals.selectedHero === 'nightborne') heroType = 'heronightborne';
+        else if (globals.selectedHero === 'samurai') heroType = 'herosamurai';
+        else if (globals.selectedHero === 'satyr') heroType = 'herosatyr';
+        else if (globals.selectedHero === 'luneblade') heroType = 'heroluneblade';
+        else if (globals.selectedHero === 'ninja') heroType = 'heroninja';
+        else if (globals.selectedHero === 'dragon') heroType = 'herodragon';
+      }
+
+      if (heroType === 'heronightborne') frames = slashes.nightborne;
+      else if (heroType === 'herosamurai') frames = slashes.samurai;
+      else if (heroType === 'herosatyr') frames = slashes.satyr;
+      else if (heroType === 'heroluneblade') frames = slashes.luneblade;
+      else if (heroType === 'heroninja') frames = slashes.ninja;
+      else if (heroType === 'herodragon' || (this.isEnhanced && globals.selectedSkill === 'enhance')) frames = slashes.dragon;
+      else frames = slashes.ronin;
     }
     const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
     const frameIdx = Math.floor(progress * frames.length);
@@ -1017,8 +1027,8 @@ export class Slash {
       ctx.scale(dir, 1);
       ctx.rotate(dir === -1 ? Math.PI - this.angle : this.angle);
       
-      // Center the slash arc on the player
-      const scale = 4.8 * this.sizeMult;
+      // Center the slash arc accurately along the aim vector
+      const scale = 4.6 * this.sizeMult;
       ctx.scale(scale, scale);
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();

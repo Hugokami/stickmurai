@@ -327,6 +327,8 @@ export const globals = {
     return {} as Record<number, number>;
   })(),
   activeStageAffix: null as StageAffix | null,
+  stageBossSpawned: false,
+  satyrEarthshakerCD: 0,
   campaignUpgrades: (() => {
     const defaults = {
       slashDamage: 0,     // Level 0..10 (+1 DMG per level)
