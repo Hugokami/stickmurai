@@ -1,3 +1,5 @@
+import { safeStorage } from './storage';
+
 export const globals = {
   // Game State
   gameState: 'mainmenu',
@@ -29,14 +31,14 @@ export const globals = {
   // Active Skills and Powerups State
   selectedSkill: (() => {
     try {
-      const stored = localStorage.getItem('stickmurai_selected_skill');
+      const stored = safeStorage.getItem('stickmurai_selected_skill');
       if (stored) return stored as any;
     } catch(e) {}
     return 'enhance';
   })() as 'enhance' | 'shield' | 'dash' | 'firewheel' | 'gravity' | 'parry_master' | 'decoy_illusion',
   unlockedSkills: (() => {
     try {
-      const stored = localStorage.getItem('stickmurai_unlocked_skills');
+      const stored = safeStorage.getItem('stickmurai_unlocked_skills');
       return stored ? JSON.parse(stored) : ['enhance'];
     } catch(e) {
       return ['enhance'];
@@ -146,19 +148,19 @@ export const globals = {
   vw: window.innerWidth,
   vh: window.innerHeight,
   camera: { x: 0, y: 0 },
-  graphicsSettings: (() => { try { return localStorage.getItem('graphics') || 'high'; } catch(e) { return 'high'; } })(),
-  currentLang: (() => { try { return localStorage.getItem('lang') || 'en'; } catch(e) { return 'en'; } })(),
-  difficulty: (() => { try { return localStorage.getItem('difficulty') || 'normal'; } catch(e) { return 'normal'; } })() as 'easy' | 'normal' | 'hard' | 'insane',
-  screenShakeEnabled: (() => { try { return localStorage.getItem('screenShake') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'reduced' | 'off',
-  autoUltEnabled: (() => { try { return localStorage.getItem('autoUlt') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  screenFlashEnabled: (() => { try { return localStorage.getItem('screenFlash') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  weatherEffectsEnabled: (() => { try { return localStorage.getItem('weatherEffects') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  speedLinesEnabled: (() => { try { return localStorage.getItem('speedLines') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  floatingTextEnabled: (() => { try { return localStorage.getItem('floatingText') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  groundScarsEnabled: (() => { try { return localStorage.getItem('groundScars') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+  graphicsSettings: (() => { try { return safeStorage.getItem('graphics') || 'high'; } catch(e) { return 'high'; } })(),
+  currentLang: (() => { try { return safeStorage.getItem('lang') || 'en'; } catch(e) { return 'en'; } })(),
+  difficulty: (() => { try { return safeStorage.getItem('difficulty') || 'normal'; } catch(e) { return 'normal'; } })() as 'easy' | 'normal' | 'hard' | 'insane',
+  screenShakeEnabled: (() => { try { return safeStorage.getItem('screenShake') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'reduced' | 'off',
+  autoUltEnabled: (() => { try { return safeStorage.getItem('autoUlt') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+  screenFlashEnabled: (() => { try { return safeStorage.getItem('screenFlash') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+  weatherEffectsEnabled: (() => { try { return safeStorage.getItem('weatherEffects') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+  speedLinesEnabled: (() => { try { return safeStorage.getItem('speedLines') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+  floatingTextEnabled: (() => { try { return safeStorage.getItem('floatingText') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+  groundScarsEnabled: (() => { try { return safeStorage.getItem('groundScars') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
   keyMaps: (() => {
     try {
-      const stored = localStorage.getItem('keyMaps');
+      const stored = safeStorage.getItem('keyMaps');
       if (stored) return JSON.parse(stored);
     } catch(e) {}
     return {
@@ -173,7 +175,7 @@ export const globals = {
   })() as Record<string, string>,
   highScores: (() => {
     try {
-      const stored = localStorage.getItem('highScores');
+      const stored = safeStorage.getItem('highScores');
       if (stored) return JSON.parse(stored);
     } catch(e) {}
     return {
@@ -267,14 +269,14 @@ export const globals = {
   // Curiosity, Fusions, Shrines & 10-Minute Dawn Progression
   discoveredFusions: (() => {
     try {
-      const stored = localStorage.getItem('stickmurai_fusions');
+      const stored = safeStorage.getItem('stickmurai_fusions');
       if (stored) return JSON.parse(stored);
     } catch(e) {}
     return [] as string[];
   })() as string[],
   unlockedSeals: (() => {
     try {
-      const stored = localStorage.getItem('stickmurai_seals');
+      const stored = safeStorage.getItem('stickmurai_seals');
       if (stored) return JSON.parse(stored);
     } catch(e) {}
     return [] as number[];
@@ -296,38 +298,38 @@ export const globals = {
 
   // In-Game Economy, Hero Armory & Props
   magatama: (() => {
-    try { return parseInt(localStorage.getItem('stickmurai_magatama') || '0', 10) || 0; } catch(e) { return 0; }
+    try { return parseInt(safeStorage.getItem('stickmurai_magatama') || '0', 10) || 0; } catch(e) { return 0; }
   })(),
   unlockedHeroes: (() => {
     try {
-      const stored = localStorage.getItem('stickmurai_unlocked_heroes');
+      const stored = safeStorage.getItem('stickmurai_unlocked_heroes');
       return stored ? JSON.parse(stored) : ['default'];
     } catch(e) {
       return ['default'];
     }
   })() as string[],
   selectedHero: (() => {
-    try { return localStorage.getItem('stickmurai_selected_hero') || 'default'; } catch(e) { return 'default'; }
+    try { return safeStorage.getItem('stickmurai_selected_hero') || 'default'; } catch(e) { return 'default'; }
   })(),
   // Campaign & Stage Progression
   currentStage: (() => {
-    try { return parseInt(localStorage.getItem('stickmurai_current_stage') || '1', 10) || 1; } catch(e) { return 1; }
+    try { return parseInt(safeStorage.getItem('stickmurai_current_stage') || '1', 10) || 1; } catch(e) { return 1; }
   })(),
   maxStageUnlocked: (() => {
-    try { return parseInt(localStorage.getItem('stickmurai_max_stage') || '1', 10) || 1; } catch(e) { return 1; }
+    try { return parseInt(safeStorage.getItem('stickmurai_max_stage') || '1', 10) || 1; } catch(e) { return 1; }
   })(),
   stageKills: 0,
   stageTargetKills: 12,
   clearedStages: (() => {
     try {
-      const stored = localStorage.getItem('stickmurai_cleared_stages');
+      const stored = safeStorage.getItem('stickmurai_cleared_stages');
       if (stored) return JSON.parse(stored) as number[];
     } catch(e) {}
     return [] as number[];
   })(),
   stageStars: (() => {
     try {
-      const stored = localStorage.getItem('stickmurai_stage_stars');
+      const stored = safeStorage.getItem('stickmurai_stage_stars');
       if (stored) return JSON.parse(stored) as Record<number, number>;
     } catch(e) {}
     return {} as Record<number, number>;
@@ -348,7 +350,7 @@ export const globals = {
       infiniteRiposte: 0    // Uncapped (+1.5 posture break DMG per rank)
     };
     try {
-      const stored = localStorage.getItem('stickmurai_campaign_upgrades');
+      const stored = safeStorage.getItem('stickmurai_campaign_upgrades');
       if (stored) return { ...defaults, ...JSON.parse(stored) };
     } catch(e) {}
     return defaults;

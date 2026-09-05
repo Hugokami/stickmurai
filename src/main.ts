@@ -1,4 +1,5 @@
 import './style.css';
+import { safeStorage } from './storage';
 import { globals, getStageAffix } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
 import { i18n, loaderTips, startBackgroundAssetLoading, loadCoreCombatAssetsNow } from './assets';
@@ -349,7 +350,7 @@ export function showFullscreenPrompt(onComplete: () => void) {
 }
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-let rotatePromptDismissed = typeof window !== 'undefined' && localStorage.getItem('stickmurai_rotate_dismissed') === 'true';
+let rotatePromptDismissed = safeStorage.getItem('stickmurai_rotate_dismissed') === 'true';
 let rotateAutoDismissTimer: any = null;
 
 function checkOrientationAndFullscreen() {
@@ -367,9 +368,7 @@ function checkOrientationAndFullscreen() {
   const dismissRotate = (e?: Event) => {
     if (e) e.stopPropagation();
     rotatePromptDismissed = true;
-    try {
-      localStorage.setItem('stickmurai_rotate_dismissed', 'true');
-    } catch(err) {}
+    safeStorage.setItem('stickmurai_rotate_dismissed', 'true');
     if (rotateAutoDismissTimer) {
       clearTimeout(rotateAutoDismissTimer);
       rotateAutoDismissTimer = null;
@@ -395,7 +394,7 @@ function checkOrientationAndFullscreen() {
   }
 
   const isPortrait = window.innerHeight > window.innerWidth;
-  const fsApproved = localStorage.getItem('stickmurai_fs_approved') === 'true';
+  const fsApproved = safeStorage.getItem('stickmurai_fs_approved') === 'true';
   const isCurrentlyFS = !!(document.fullscreenElement || 
                            (document as any).webkitFullscreenElement || 
                            (document as any).mozFullScreenElement || 
@@ -431,8 +430,8 @@ function checkOrientationAndFullscreen() {
             fsEnterBtn.dataset.bound = 'true';
             const enterFS = (e?: Event) => {
               if (e) e.stopPropagation();
-              localStorage.setItem('stickmurai_fs_approved', 'true');
-              localStorage.setItem('stickmurai_rotate_dismissed', 'true');
+              safeStorage.setItem('stickmurai_fs_approved', 'true');
+              safeStorage.setItem('stickmurai_rotate_dismissed', 'true');
               rotatePromptDismissed = true;
               if (rotateAutoDismissTimer) {
                 clearTimeout(rotateAutoDismissTimer);
@@ -449,14 +448,7 @@ function checkOrientationAndFullscreen() {
                   });
                 } catch(e) {}
               }
-              if (screen.orientation && (screen.orientation as any).lock) {
-                try {
-                  (screen.orientation as any).lock('landscape').catch((err: any) => {
-                    console.warn("Orientation lock rejected:", err);
-                  });
-                } catch(e) {}
-              }
-              checkOrientationAndFullscreen();
+              dismissRotate();
             };
             fsEnterBtn.addEventListener('click', enterFS);
             fsEnterBtn.addEventListener('pointerdown', enterFS);
@@ -467,13 +459,11 @@ function checkOrientationAndFullscreen() {
         if (fsEnterBtn) fsEnterBtn.style.display = 'none';
       }
     }
-    if (iosPwaTip && isIOS && !isPWA) {
-      iosPwaTip.style.display = 'block';
-    } else if (iosPwaTip) {
-      iosPwaTip.style.display = 'none';
+    if (iosPwaTip) {
+      iosPwaTip.style.display = isIOS && !isPWA ? 'block' : 'none';
     }
   } else {
-    if (canGoFullscreen && !fsApproved && !isCurrentlyFS) {
+    if (!fsApproved && canGoFullscreen) {
       rotatePrompt.style.display = 'flex';
       if (!rotateAutoDismissTimer) {
         rotateAutoDismissTimer = setTimeout(() => {
@@ -490,8 +480,8 @@ function checkOrientationAndFullscreen() {
           fsEnterBtn.dataset.bound = 'true';
           const enterFS = (e?: Event) => {
             if (e) e.stopPropagation();
-            localStorage.setItem('stickmurai_fs_approved', 'true');
-            localStorage.setItem('stickmurai_rotate_dismissed', 'true');
+            safeStorage.setItem('stickmurai_fs_approved', 'true');
+            safeStorage.setItem('stickmurai_rotate_dismissed', 'true');
             rotatePromptDismissed = true;
             if (rotateAutoDismissTimer) {
               clearTimeout(rotateAutoDismissTimer);
@@ -627,12 +617,15 @@ function startApp() {
     setTimeout(updateLoaderProgress, 0);
   } catch (err) {
     console.error("Critical error in startApp:", err);
+    try {
+      finishLoading();
+    } catch(e) {}
   }
 
-  // Hard safety timeout: if assets hang on mobile WebKit/cellular, finish loading after 5s
+  // Hard safety timeout: if assets hang on mobile WebKit/cellular, finish loading after 3.5s
   loaderTimeoutId = setTimeout(() => {
     finishLoading();
-  }, 5000);
+  }, 3500);
 }
 
 if (document.readyState === 'loading') {
@@ -2176,9 +2169,7 @@ function checkAndSaveHighScores() {
   if (rs.perfectDodges > hs.perfectDodges) { hs.perfectDodges = rs.perfectDodges; newRecord = true; }
   
   if (newRecord) {
-    try {
-      localStorage.setItem('highScores', JSON.stringify(hs));
-    } catch(e) {}
+    safeStorage.setItem('highScores', JSON.stringify(hs));
     if ((callbacks as any).updateHighScoresDisplay) {
       (callbacks as any).updateHighScoresDisplay();
     }
@@ -2432,7 +2423,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : (globals.activeStageAffix?.id === 'blood_tithe' ? 3 : 1);
     const execMag = Math.round((isBoss ? 15 : 3) * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
     globals.magatama = (globals.magatama || 0) + execMag;
-    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+    safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
     playMagatamaPickup(0.65);
     globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🔮`, '#c084fc', 22));
 
@@ -2440,7 +2431,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     if (globals.selectedHero === 'nightborne') {
       globals.lives = Math.min(globals.maxLives, globals.lives + 1);
       globals.magatama = (globals.magatama || 0) + 25;
-      try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+      safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
       playMagatamaPickup(1.0);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "+1 ❤️ SOUL SIPHON! (+25 🔮)", "#c084fc", 26));
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
@@ -2782,7 +2773,7 @@ function killEnemy(e: Enemy) {
   const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : (globals.activeStageAffix?.id === 'blood_tithe' ? 3 : 1);
   const earnedMagatama = Math.round((isBossEnemy ? 50 : (isEliteOrRanged ? 3 : 1)) * fortuneMult * bloodSurgeMult);
   globals.magatama = (globals.magatama || 0) + earnedMagatama;
-  try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+  safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
   if (isBossEnemy || Math.random() < 0.35) {
     playMagatamaPickup(0.45);
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `+${earnedMagatama} 🔮`, '#c084fc', isBossEnemy ? 26 : 18));
@@ -2868,7 +2859,7 @@ function addCombo() {
     const bountyBase = Math.min(150, globals.combo);
     const comboBounty = Math.round(bountyBase * (globals.playerStats?.fortuneMult || 1.0));
     globals.magatama = (globals.magatama || 0) + comboBounty;
-    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+    safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
     globals.floatingTexts.push(FloatingText.acquire(
       globals.player.x,
       globals.player.y - 140,
@@ -4194,7 +4185,7 @@ function update(realDt: number) {
             const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : 1;
             const parryMag = Math.round(2 * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
             globals.magatama = (globals.magatama || 0) + parryMag;
-            try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(err) {}
+            safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x + 35, globals.player.y - 85, `+${parryMag} 🔮`, '#c084fc', 20));
 
             if (globals.consecutiveParries >= 10 && !globals.unlockedSeals.includes(6)) {

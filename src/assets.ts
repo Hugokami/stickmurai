@@ -589,18 +589,23 @@ const lazyImageQueue: Array<{ img: HTMLImageElement, src: string }> = [];
 
 export function registerAssetToLoad(img: HTMLImageElement) {
   globals.totalAssetsToLoad++;
-  img.onload = onAssetLoaded;
-  img.onerror = onAssetLoaded;
-}
-
-function onAssetLoaded() {
-  globals.assetsLoadedCount++;
-  assetCallbacks.onProgress();
+  let resolved = false;
+  const markDone = () => {
+    if (resolved) return;
+    resolved = true;
+    globals.assetsLoadedCount++;
+    assetCallbacks.onProgress();
+  };
+  img.onload = markDone;
+  img.onerror = markDone;
+  if (img.complete && img.naturalWidth > 0) {
+    Promise.resolve().then(markDone);
+  }
 }
 
 function pad(n: number) { return n.toString().padStart(4, '0'); }
 
-function loadAnim(folder: string, prefix: string, start: number, end: number, isPriority = true) {
+function loadAnim(folder: string, prefix: string, start: number, end: number, isPriority = false) {
   const images: HTMLImageElement[] = [];
   for (let i = start; i <= end; i++) {
     const img = new Image();
@@ -827,7 +832,7 @@ export const anims = {
 
 export const propImages: HTMLImageElement[] = [];
 
-function loadSkeletonAnim(prefix: string, count: number, isPriority = true) {
+function loadSkeletonAnim(prefix: string, count: number, isPriority = false) {
   const images: HTMLImageElement[] = [];
   for (let i = 1; i <= count; i++) {
     const img = new Image();
@@ -843,7 +848,7 @@ function loadSkeletonAnim(prefix: string, count: number, isPriority = true) {
   return images;
 }
 
-function loadCustomEnemyAnim(folder: string, prefix: string, count: number, isPriority = true) {
+function loadCustomEnemyAnim(folder: string, prefix: string, count: number, isPriority = false) {
   const images: HTMLImageElement[] = [];
   for (let i = 1; i <= count; i++) {
     const img = new Image();
@@ -896,7 +901,7 @@ export const skillsData = [
   { id: 'gravity', nameKey: 'skillGravityName', descKey: 'skillGravityDesc', cost: 50000, icon: '🌀' }
 ];
 
-function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, isPriority = true) {
+function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, isPriority = false) {
   const frames: HTMLImageElement[] = [];
   for (let i = 0; i < count; i++) {
     const frameNum = startIdx + i;
@@ -930,7 +935,7 @@ export const vfxAnims = {
   explosions: {
     fire: loadVfxFrames('vfx/vfx/fx_pack_01/explosion_fire_0000/fire/128/frames/frame_{N}.png', 16, 0, 3),
     barrel: loadVfxFrames('vfx/explosions/barrel_explosion/frame_{N}.png', 9, 1, 2, true),
-    infernoBlast: loadVfxFrames('vfx/explosions/inferno_blast/frame_{N}.png', 14, 0, 2, true)
+    infernoBlast: loadVfxFrames('vfx/explosions/inferno_blast/frame_{N}.png', 14, 0, 2)
   },
   fireMage: {
     vfx1: loadVfxFrames('vfx/Pixel Art VFX - Fire Mage - FREE Version/VFX1/frames/FireMage_skill1_frame{N}.png', 7, 1),
@@ -954,11 +959,11 @@ export const vfxAnims = {
   },
   heroSlashes: {
     ronin: loadVfxFrames('vfx/slashes/slash_ronin/frame_{N}.png', 9, 1, 2, true),
-    ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 9, 1, 2, true),
-    luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2, true),
+    ninja: loadVfxFrames('vfx/slashes/slash_ninja/frame_{N}.png', 9, 1, 2),
+    luneblade: loadVfxFrames('vfx/slashes/slash_luneblade/frame_{N}.png', 9, 1, 2),
     samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, true),
-    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, true),
-    satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, true),
+    nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2),
+    satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2),
     dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, true),
   },
   impacts: {
@@ -966,35 +971,35 @@ export const vfxAnims = {
     directionalBlue: loadVfxFrames('vfx/impacts/directional_blue/frame_{N}.png', 7, 1, 2, true)
   },
   shockwaves: {
-    impactGold: loadVfxFrames('vfx/shockwaves/impact_gold/frame_{N}.png', 8, 0, 2, true),
-    impactCyan: loadVfxFrames('vfx/shockwaves/impact_cyan/frame_{N}.png', 11, 0, 2, true),
-    lightBurst: loadVfxFrames('vfx/shockwaves/light_burst/frame_{N}.png', 9, 0, 2, true)
+    impactGold: loadVfxFrames('vfx/shockwaves/impact_gold/frame_{N}.png', 8, 0, 2),
+    impactCyan: loadVfxFrames('vfx/shockwaves/impact_cyan/frame_{N}.png', 11, 0, 2),
+    lightBurst: loadVfxFrames('vfx/shockwaves/light_burst/frame_{N}.png', 9, 0, 2)
   },
   spells: {
-    attackUp: loadVfxFrames('vfx/spells/attack_up/frame_{N}.png', 18, 0, 2, true),
-    defenseUp: loadVfxFrames('vfx/spells/defense_up/frame_{N}.png', 18, 0, 2, true)
+    attackUp: loadVfxFrames('vfx/spells/attack_up/frame_{N}.png', 18, 0, 2),
+    defenseUp: loadVfxFrames('vfx/spells/defense_up/frame_{N}.png', 18, 0, 2)
   },
   boss: {
-    slamImpact: loadVfxFrames('vfx/boss/slam_impact/frame_{N}.png', 8, 1, 2, true),
-    slamDust: loadVfxFrames('vfx/boss/slam_dust/frame_{N}.png', 10, 1, 2, true)
+    slamImpact: loadVfxFrames('vfx/boss/slam_impact/frame_{N}.png', 8, 1, 2),
+    slamDust: loadVfxFrames('vfx/boss/slam_dust/frame_{N}.png', 10, 1, 2)
   },
   player: {
     dashDust: loadVfxFrames('vfx/player/dash_dust/frame_{N}.png', 6, 1, 2, true)
   },
   skills: {
-    firewheel: loadVfxFrames('vfx/skills/firewheel/frame_{N}.png', 7, 1, 2, true),
-    windAegis: loadVfxFrames('vfx/skills/wind_aegis/frame_{N}.png', 18, 1, 2, true),
-    voidWarp: loadVfxFrames('vfx/skills/void_warp/frame_{N}.png', 12, 1, 2, true),
-    gravitySingularity: loadVfxFrames('vfx/skills/gravity_singularity/frame_{N}.png', 32, 0, 2, true),
-    phantomWarp: loadVfxFrames('vfx/skills/phantom_warp/frame_{N}.png', 13, 0, 2, true),
-    decoySmoke: loadVfxFrames('vfx/skills/decoy_smoke/frame_{N}.png', 12, 1, 2, true),
-    lightningBurst: loadVfxFrames('vfx/skills/lightning_burst/frame_{N}.png', 8, 1, 2, true),
-    lightningBurstViolet: loadVfxFrames('vfx/lightning/burst_violet/frame_{N}.png', 9, 0, 2, true),
-    lightningStrike: loadVfxFrames('vfx/skills/lightning_strike/frame_{N}.png', 7, 1, 2, true)
+    firewheel: loadVfxFrames('vfx/skills/firewheel/frame_{N}.png', 7, 1, 2),
+    windAegis: loadVfxFrames('vfx/skills/wind_aegis/frame_{N}.png', 18, 1, 2),
+    voidWarp: loadVfxFrames('vfx/skills/void_warp/frame_{N}.png', 12, 1, 2),
+    gravitySingularity: loadVfxFrames('vfx/skills/gravity_singularity/frame_{N}.png', 32, 0, 2),
+    phantomWarp: loadVfxFrames('vfx/skills/phantom_warp/frame_{N}.png', 13, 0, 2),
+    decoySmoke: loadVfxFrames('vfx/skills/decoy_smoke/frame_{N}.png', 12, 1, 2),
+    lightningBurst: loadVfxFrames('vfx/skills/lightning_burst/frame_{N}.png', 8, 1, 2),
+    lightningBurstViolet: loadVfxFrames('vfx/lightning/burst_violet/frame_{N}.png', 9, 0, 2),
+    lightningStrike: loadVfxFrames('vfx/skills/lightning_strike/frame_{N}.png', 7, 1, 2)
   },
   combat: {
-    bloodSplatter: loadVfxFrames('vfx/combat/blood_splatter/frame_{N}.png', 8, 1, 2, true),
-    executionBurst: loadVfxFrames('vfx/combat/execution_burst/frame_{N}.png', 11, 0, 2, true),
+    bloodSplatter: loadVfxFrames('vfx/combat/blood_splatter/frame_{N}.png', 8, 1, 2),
+    executionBurst: loadVfxFrames('vfx/combat/execution_burst/frame_{N}.png', 11, 0, 2),
     perilAlert: loadVfxFrames('vfx/combat/peril_alert/frame_{N}.png', 14, 1, 2, true)
   }
 };

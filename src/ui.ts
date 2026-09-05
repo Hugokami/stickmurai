@@ -1,4 +1,5 @@
 import { globals, getStageAffix, getAscendantRank } from './globals';
+import { safeStorage } from './storage';
 import { i18n, skillsData } from './assets';
 import { bgmAudio, pauseBgm } from './audio';
 import { callbacks } from './callbacks';
@@ -345,7 +346,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     bindDualListener(prevStageBtn, () => {
       if ((globals.currentStage || 1) > 1) {
         globals.currentStage--;
-        try { localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString()); } catch(e) {}
+        safeStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
         updateStageSelectionUI();
       }
     });
@@ -356,7 +357,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     bindDualListener(nextStageBtn, () => {
       if ((globals.currentStage || 1) < (globals.maxStageUnlocked || 1)) {
         globals.currentStage++;
-        try { localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString()); } catch(e) {}
+        safeStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
         updateStageSelectionUI();
       }
     });
@@ -373,10 +374,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       if (stageClearModal) stageClearModal.style.display = 'none';
       globals.currentStage = (globals.currentStage || 1) + 1;
       globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, globals.currentStage);
-      try {
-        localStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
-        localStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString());
-      } catch(e) {}
+      safeStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
+      safeStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString());
       if (cachedOnPlayCallback) cachedOnPlayCallback();
     });
   }
@@ -649,11 +648,11 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       const sealId = globals.activeShrine.sealId;
       if (!globals.unlockedSeals.includes(sealId)) {
         globals.unlockedSeals.push(sealId);
-        try { localStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals)); } catch(e) {}
+        safeStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals));
         // Award Magatama for breaking seal
         const sealReward = 200;
         globals.magatama = (globals.magatama || 0) + sealReward;
-        try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
+        safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
         YOMI_SEALS[sealId]?.applyPermanentReward();
         playSynthesizedSealShatter();
         globals.screenShake = Math.max(globals.screenShake, 42);
@@ -859,7 +858,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     langSelect.value = globals.currentLang;
     langSelect.addEventListener('change', (e) => {
       globals.currentLang = (e.target as HTMLSelectElement).value;
-      try { localStorage.setItem('lang', globals.currentLang); } catch(e) {}
+      safeStorage.setItem('lang', globals.currentLang);
       updateStaticText();
     });
   }
@@ -869,7 +868,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     graphicsSelect.value = globals.graphicsSettings;
     graphicsSelect.addEventListener('change', (e) => {
       globals.graphicsSettings = (e.target as HTMLSelectElement).value;
-      try { localStorage.setItem('graphics', globals.graphicsSettings); } catch(e) {}
+      safeStorage.setItem('graphics', globals.graphicsSettings);
       
       // Reset overlay cached sizes
       lastEnhanceOverlayHeight = -1;
@@ -891,7 +890,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     shakeSelect.value = globals.screenShakeEnabled;
     shakeSelect.addEventListener('change', (e) => {
       globals.screenShakeEnabled = (e.target as HTMLSelectElement).value as 'on' | 'reduced' | 'off';
-      try { localStorage.setItem('screenShake', globals.screenShakeEnabled); } catch(e) {}
+      safeStorage.setItem('screenShake', globals.screenShakeEnabled);
     });
   }
 
@@ -900,7 +899,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     autoUltSelect.value = globals.autoUltEnabled;
     autoUltSelect.addEventListener('change', (e) => {
       globals.autoUltEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
-      try { localStorage.setItem('autoUlt', globals.autoUltEnabled); } catch(e) {}
+      safeStorage.setItem('autoUlt', globals.autoUltEnabled);
     });
   }
 
@@ -920,7 +919,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     screenFlashSelect.value = globals.screenFlashEnabled;
     screenFlashSelect.addEventListener('change', (e) => {
       globals.screenFlashEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
-      try { localStorage.setItem('screenFlash', globals.screenFlashEnabled); } catch(e) {}
+      safeStorage.setItem('screenFlash', globals.screenFlashEnabled);
       updateOverlayDisplays();
     });
   }
@@ -930,7 +929,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     weatherEffectsSelect.value = globals.weatherEffectsEnabled;
     weatherEffectsSelect.addEventListener('change', (e) => {
       globals.weatherEffectsEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
-      try { localStorage.setItem('weatherEffects', globals.weatherEffectsEnabled); } catch(e) {}
+      safeStorage.setItem('weatherEffects', globals.weatherEffectsEnabled);
     });
   }
 
@@ -939,7 +938,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     speedLinesSelect.value = globals.speedLinesEnabled;
     speedLinesSelect.addEventListener('change', (e) => {
       globals.speedLinesEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
-      try { localStorage.setItem('speedLines', globals.speedLinesEnabled); } catch(e) {}
+      safeStorage.setItem('speedLines', globals.speedLinesEnabled);
       updateOverlayDisplays();
     });
   }
@@ -949,7 +948,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     floatingTextSelect.value = globals.floatingTextEnabled;
     floatingTextSelect.addEventListener('change', (e) => {
       globals.floatingTextEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
-      try { localStorage.setItem('floatingText', globals.floatingTextEnabled); } catch(e) {}
+      safeStorage.setItem('floatingText', globals.floatingTextEnabled);
     });
   }
 
@@ -958,7 +957,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     groundScarsSelect.value = globals.groundScarsEnabled;
     groundScarsSelect.addEventListener('change', (e) => {
       globals.groundScarsEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
-      try { localStorage.setItem('groundScars', globals.groundScarsEnabled); } catch(e) {}
+      safeStorage.setItem('groundScars', globals.groundScarsEnabled);
     });
   }
 
@@ -985,22 +984,22 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   if (diffEasyBtn && diffNormalBtn && diffHardBtn && diffInsaneBtn) {
     diffEasyBtn.addEventListener('click', () => {
       globals.difficulty = 'easy';
-      try { localStorage.setItem('difficulty', 'easy'); } catch(e) {}
+      safeStorage.setItem('difficulty', 'easy');
       updatePregameDifficultyUI();
     });
     diffNormalBtn.addEventListener('click', () => {
       globals.difficulty = 'normal';
-      try { localStorage.setItem('difficulty', 'normal'); } catch(e) {}
+      safeStorage.setItem('difficulty', 'normal');
       updatePregameDifficultyUI();
     });
     diffHardBtn.addEventListener('click', () => {
       globals.difficulty = 'hard';
-      try { localStorage.setItem('difficulty', 'hard'); } catch(e) {}
+      safeStorage.setItem('difficulty', 'hard');
       updatePregameDifficultyUI();
     });
     diffInsaneBtn.addEventListener('click', () => {
       globals.difficulty = 'insane';
-      try { localStorage.setItem('difficulty', 'insane'); } catch(e) {}
+      safeStorage.setItem('difficulty', 'insane');
       updatePregameDifficultyUI();
     });
   }
@@ -1168,7 +1167,7 @@ export function renderSkillChoicesPregame() {
   // Ensure selected skill is unlocked, otherwise fallback to enhance
   if (!globals.unlockedSkills.includes(globals.selectedSkill)) {
     globals.selectedSkill = 'enhance';
-    try { localStorage.setItem('stickmurai_selected_skill', 'enhance'); } catch(e) {}
+    safeStorage.setItem('stickmurai_selected_skill', 'enhance');
   }
 
   skillsData.forEach((skill: any) => {
@@ -1215,7 +1214,7 @@ export function renderSkillChoicesPregame() {
     if (isUnlocked) {
       bindDualListener(card, () => {
         globals.selectedSkill = skill.id as any;
-        try { localStorage.setItem('stickmurai_selected_skill', skill.id); } catch(e) {}
+        safeStorage.setItem('stickmurai_selected_skill', skill.id);
         renderSkillChoicesPregame();
       });
     } else {
@@ -1229,11 +1228,9 @@ export function renderSkillChoicesPregame() {
             globals.unlockedSkills.push(skill.id);
           }
           globals.selectedSkill = skill.id as any;
-          try {
-            localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-            localStorage.setItem('stickmurai_unlocked_skills', JSON.stringify(globals.unlockedSkills));
-            localStorage.setItem('stickmurai_selected_skill', skill.id);
-          } catch(err) {}
+          safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+          safeStorage.setItem('stickmurai_unlocked_skills', JSON.stringify(globals.unlockedSkills));
+          safeStorage.setItem('stickmurai_selected_skill', skill.id);
           playSynthesizedFusionUnlock();
           renderSkillChoicesPregame();
         });
@@ -2085,7 +2082,7 @@ function processRedeemCode() {
 
   let redeemed: string[] = [];
   try {
-    redeemed = JSON.parse(localStorage.getItem('stickmurai_redeemed_codes') || '[]');
+    redeemed = JSON.parse(safeStorage.getItem('stickmurai_redeemed_codes') || '[]');
   } catch(e) {
     redeemed = [];
   }
@@ -2094,7 +2091,7 @@ function processRedeemCode() {
     // Master developer testing code: adds 50,000,000 Magatama!
     const amount = 50000000;
     globals.magatama = (globals.magatama || 0) + amount;
-    try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
+    safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
     refreshAllMagatamaDisplays();
     populateDojoHeroGrid();
 
@@ -2152,11 +2149,9 @@ function processRedeemCode() {
   }
 
   globals.magatama = (globals.magatama || 0) + rewardMagatama;
-  try {
-    localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-    redeemed.push(rawCode);
-    localStorage.setItem('stickmurai_redeemed_codes', JSON.stringify(redeemed));
-  } catch(e) {}
+  safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+  redeemed.push(rawCode);
+  safeStorage.setItem('stickmurai_redeemed_codes', JSON.stringify(redeemed));
 
   refreshAllMagatamaDisplays();
   populateDojoHeroGrid();
@@ -2243,7 +2238,7 @@ export function populateDojoHeroGrid() {
       const heroId = (btn as HTMLElement).dataset.hero;
       if (!heroId) return;
       globals.selectedHero = heroId;
-      try { localStorage.setItem('stickmurai_selected_hero', heroId); } catch(err) {}
+      safeStorage.setItem('stickmurai_selected_hero', heroId);
       globals.player?.updateHeroType();
       playSynthesizedTempleBell();
       populateDojoHeroGrid();
@@ -2263,11 +2258,9 @@ export function populateDojoHeroGrid() {
         globals.unlockedHeroes.push(heroId);
       }
       globals.selectedHero = heroId;
-      try {
-        localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-        localStorage.setItem('stickmurai_unlocked_heroes', JSON.stringify(globals.unlockedHeroes));
-        localStorage.setItem('stickmurai_selected_hero', heroId);
-      } catch(err) {}
+      safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+      safeStorage.setItem('stickmurai_unlocked_heroes', JSON.stringify(globals.unlockedHeroes));
+      safeStorage.setItem('stickmurai_selected_hero', heroId);
       globals.player?.updateHeroType();
       playSynthesizedFusionUnlock();
       playShrineBlessing(0.85);
@@ -2418,14 +2411,14 @@ export function triggerDawnVictory(_stats?: any) {
 
   if (!globals.unlockedSeals.includes(7)) {
     globals.unlockedSeals.push(7);
-    try { localStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals)); } catch(e) {}
+    safeStorage.setItem('stickmurai_seals', JSON.stringify(globals.unlockedSeals));
     YOMI_SEALS[7]?.applyPermanentReward();
   }
 
   // Award Dawn Victory Magatama
   const dawnReward = 500;
   globals.magatama = (globals.magatama || 0) + dawnReward;
-  try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
+  safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
 
   const contentEl = document.getElementById('dawn-victory-stats') || document.getElementById('dawn-stats-content');
   if (contentEl) {
@@ -2561,10 +2554,8 @@ export function populateAscensionUpgrades() {
           if ((globals.magatama || 0) >= cost && (isEndless || curLevel < u.max)) {
             globals.magatama -= cost;
             (globals.campaignUpgrades as any)[u.id] = curLevel + 1;
-            try {
-              localStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-              localStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));
-            } catch(e) {}
+            safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+            safeStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));
             playSynthesizedFusionUnlock();
             playShrineBlessing(0.8);
             populateAscensionUpgrades();
@@ -2603,7 +2594,7 @@ export function triggerStageClear() {
     stageReward = baseReward * 3;
     clearedStages.push(currentStage);
     globals.clearedStages = clearedStages;
-    try { localStorage.setItem('stickmurai_cleared_stages', JSON.stringify(clearedStages)); } catch(e) {}
+    safeStorage.setItem('stickmurai_cleared_stages', JSON.stringify(clearedStages));
   }
 
   // 3-Star Mastery Evaluation
@@ -2619,7 +2610,7 @@ export function triggerStageClear() {
 
   if (earnedStars > prevStars) {
     globals.stageStars[currentStage] = earnedStars;
-    try { localStorage.setItem('stickmurai_stage_stars', JSON.stringify(globals.stageStars)); } catch(e) {}
+    safeStorage.setItem('stickmurai_stage_stars', JSON.stringify(globals.stageStars));
   }
 
   // Mastery Bounty: +300 Magatama when achieving 3 stars for the first time
@@ -2629,12 +2620,12 @@ export function triggerStageClear() {
   }
 
   globals.magatama = (globals.magatama || 0) + stageReward + masteryBounty;
-  try { localStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
+  safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
 
   // Unlock next stage (Endless progression)
   const nextStage = currentStage + 1;
   globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, nextStage);
-  try { localStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString()); } catch(e) {}
+  safeStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString());
 
   const titleEl = document.getElementById('stage-clear-title');
   if (titleEl) {

@@ -1,6 +1,7 @@
 import { globals } from './globals';
 import { resumeAudioContext } from './audio';
 import { callbacks } from './callbacks';
+import { safeStorage } from './storage';
 
 /* FIXME: Gamepad events occasionally fail to register on reload in Safari, fallback to empty array */
 export function initInput() {
@@ -9,9 +10,7 @@ export function initInput() {
     if ((window as any).activeRebindAction) {
       const action = (window as any).activeRebindAction;
       globals.keyMaps[action] = e.code;
-      try {
-        localStorage.setItem('keyMaps', JSON.stringify(globals.keyMaps));
-      } catch(ex) {}
+      safeStorage.setItem('keyMaps', JSON.stringify(globals.keyMaps));
       
       const btn = (window as any).activeRebindButton;
       if (btn) {

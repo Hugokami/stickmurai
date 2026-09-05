@@ -1,6 +1,7 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
 import { i18n, vfxAnims } from './assets';
+import { safeStorage } from './storage';
 import {
   playSynthesizedLevelUp,
   playSynthesizedAwaken,
@@ -309,9 +310,7 @@ export function triggerLevelUp() {
         playSynthesizedFusionUnlock();
         if (!globals.discoveredFusions.includes(readyFusion.key)) {
           globals.discoveredFusions.push(readyFusion.key);
-          try {
-            localStorage.setItem('stickmurai_fusions', JSON.stringify(globals.discoveredFusions));
-          } catch(e) {}
+          safeStorage.setItem('stickmurai_fusions', JSON.stringify(globals.discoveredFusions));
         }
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '【神聖合一奥義習得！】' : 'FORBIDDEN FUSION SYNTHESIZED!', '#ffd700', 36));
