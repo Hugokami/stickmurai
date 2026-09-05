@@ -2179,30 +2179,73 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   /* Stage clear modal landscape adjustments */
   #stage-clear-modal .menu-box {
-    padding: 8px 14px 10px 14px !important;
-    gap: 4px !important;
-    height: 94% !important;
-    max-height: 94% !important;
+    padding: 6px 12px 8px 12px !important;
+    padding-left: max(14px, env(safe-area-inset-left)) !important;
+    padding-right: max(14px, env(safe-area-inset-right)) !important;
+    padding-bottom: max(6px, env(safe-area-inset-bottom)) !important;
+    gap: 3px !important;
+    height: 96% !important;
+    max-height: 96vh !important;
+    justify-content: space-between !important;
   }
   #stage-clear-modal .stage-clear-subtitle {
     display: none !important;
   }
-  #stage-clear-modal .stage-clear-header div {
-    font-size: 18px !important;
+  #stage-clear-modal .stage-clear-header {
+    margin-bottom: 2px !important;
   }
   #stage-clear-modal #stage-clear-title {
-    font-size: 16px !important;
+    font-size: clamp(14px, 3.8vh, 18px) !important;
   }
-  #stage-clear-modal .stage-clear-actions .menu-btn {
-    height: 30px !important;
-    min-height: 28px !important;
-    font-size: 11px !important;
-    padding: 2px 8px !important;
+  #stage-clear-modal .stage-clear-bento-stats {
+    gap: 4px !important;
+    margin-bottom: 3px !important;
+  }
+  #stage-clear-modal .bento-stat-pill {
+    padding: 2px 4px !important;
+  }
+  #stage-clear-modal #stage-clear-stars-card {
+    padding: 3px 8px !important;
+    margin-bottom: 3px !important;
+  }
+  #stage-clear-modal #ascension-upgrade-grid {
+    max-height: 120px !important;
+    min-height: 60px !important;
+  }
+  #stage-clear-modal .stage-clear-actions {
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 6px !important;
+    margin-top: 2px !important;
+  }
+  #stage-clear-modal .modal-square-btn {
+    width: 48px !important;
+    height: 42px !important;
+    min-width: 48px !important;
+    max-width: 48px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    flex: 0 0 48px !important;
+    padding: 2px !important;
+  }
+  #stage-clear-modal .modal-square-btn .sq-icon {
+    font-size: 15px !important;
+    margin-bottom: 1px !important;
+  }
+  #stage-clear-modal .modal-square-btn .sq-label {
+    font-size: 7.5px !important;
+  }
+  #stage-clear-modal .modal-hero-cta {
+    height: 42px !important;
+    min-height: 42px !important;
+    max-height: 42px !important;
+    font-size: clamp(11px, 2.8vh, 13px) !important;
+    padding: 4px 14px !important;
   }
   #stage-clear-modal .buy-ascension-btn {
-    min-height: 28px !important;
+    min-height: 26px !important;
     padding: 2px 6px !important;
-    font-size: 10px !important;
+    font-size: 9.5px !important;
   }
 
   /* Grimoire and Chronicle landscape modal containment */
@@ -2356,33 +2399,154 @@ input[type="range"]::-webkit-slider-thumb:hover {
 /* Stage Clear Modal Containment & Anti-Spill */
 #stage-clear-modal .menu-box {
   position: relative !important;
-  max-height: 90vh !important;
+  width: min(840px, 94vw) !important;
+  max-width: 840px !important;
+  max-height: 94vh !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
-  padding: 14px 20px !important;
-  gap: 6px !important;
+  padding: clamp(10px, 2.2vh, 16px) clamp(12px, 2.8vw, 20px) !important;
+  padding-left: max(16px, env(safe-area-inset-left)) !important;
+  padding-right: max(16px, env(safe-area-inset-right)) !important;
+  padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+  gap: 4px !important;
+  box-sizing: border-box !important;
 }
 
 #stage-clear-modal #ascension-upgrade-grid {
   flex: 1 1 auto !important;
-  min-height: 0 !important;
+  min-height: 70px !important;
+  max-height: 180px !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
 }
 
 #stage-clear-modal .stage-clear-actions {
-  flex-shrink: 0 !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  width: 100% !important;
   margin-top: auto !important;
-  padding-top: 4px !important;
+  flex-shrink: 0 !important;
+  flex-wrap: nowrap !important;
 }
 
-#stage-clear-modal .menu-btn {
-  flex-shrink: 0 !important;
-  height: 36px !important;
-  min-height: 34px !important;
-  font-size: 12px !important;
-  padding: 4px 12px !important;
+/* Universal Square Action Tiles for Modals */
+.modal-square-btn {
+  width: 52px !important;
+  height: 50px !important;
+  min-width: 52px !important;
+  max-width: 52px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  flex: 0 0 52px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 3px 2px !important;
+  margin: 0 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.22) !important;
+  color: #e2e8f0 !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  position: relative !important;
+  user-select: none !important;
+}
+
+.modal-square-btn:hover {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border-color: #ffd700 !important;
+  color: #ffd700 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 215, 0, 0.3) !important;
+}
+
+.modal-square-btn:active {
+  transform: scale(0.92) !important;
+}
+
+.modal-square-btn .sq-icon {
+  font-size: 18px !important;
+  line-height: 1 !important;
+  margin-bottom: 2px !important;
+  display: block !important;
+}
+
+.modal-square-btn .sq-label {
+  font-family: 'Space Mono', monospace !important;
+  font-size: 8px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  line-height: 1 !important;
+  opacity: 0.85 !important;
+  text-transform: uppercase !important;
+  display: block !important;
+  color: inherit !important;
+}
+
+/* Universal Hero CTA Button for Modals */
+.modal-hero-cta {
+  flex: 1 1 auto !important;
+  max-width: 380px !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 6px 18px !important;
+  margin: 0 !important;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.28) 0%, rgba(202, 138, 4, 0.14) 100%) !important;
+  border: 1.5px solid #ffd700 !important;
+  color: #ffd700 !important;
+  font-family: 'Shojumaru', 'Noto Sans JP', sans-serif !important;
+  font-size: clamp(12px, 2.4vh, 15px) !important;
+  font-weight: bold !important;
+  letter-spacing: 1px !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 215, 0, 0.3) !important;
+  transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  white-space: nowrap !important;
+  text-transform: uppercase !important;
+  position: relative !important;
+  user-select: none !important;
+}
+
+.modal-hero-cta:hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.45) 0%, rgba(202, 138, 4, 0.25) 100%) !important;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.6), 0 0 28px rgba(255, 215, 0, 0.55) !important;
+  transform: translateY(-2px) !important;
+}
+
+.modal-hero-cta:active {
+  transform: scale(0.95) !important;
+}
+
+.modal-hero-cta .cta-sword {
+  font-size: 16px !important;
+}
+
+.modal-hero-cta .cta-arrow {
+  font-size: 14px !important;
+  transition: transform 0.2s ease !important;
+}
+
+.modal-hero-cta:hover .cta-arrow {
+  transform: translateX(4px) !important;
 }
 
 /* Grimoire & Chronicle Containment */

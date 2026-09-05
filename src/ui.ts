@@ -2650,7 +2650,7 @@ export function triggerStageClear() {
   if (starReq1 && starIcon1 && starText1) {
     starReq1.style.color = '#ffd700';
     starIcon1.textContent = '⭐';
-    starText1.textContent = isJa ? '討伐達成 (ステージクリア)' : 'Stage Conquered';
+    starText1.textContent = isJa ? '討伐達成' : 'Conquered';
   }
 
   const starReq2 = document.getElementById('star-req-2');
@@ -2660,8 +2660,8 @@ export function triggerStageClear() {
     starReq2.style.color = star2 ? '#ffd700' : '#64748b';
     starIcon2.textContent = star2 ? '⭐' : '☆';
     starText2.textContent = isJa
-      ? `神速の剣士 (≤${parTime}秒)`
-      : `Speed Demon (≤${parTime}s)`;
+      ? `神速 (≤${parTime}s)`
+      : `Speed (≤${parTime}s)`;
   }
 
   const starReq3 = document.getElementById('star-req-3');
@@ -2671,15 +2671,15 @@ export function triggerStageClear() {
     starReq3.style.color = star3 ? '#ffd700' : '#64748b';
     starIcon3.textContent = star3 ? '⭐' : '☆';
     starText3.textContent = isJa
-      ? `連撃の達人 (20+ 連撃)`
-      : `Combo Master (20+ Combo)`;
+      ? `連撃 (20+)`
+      : `Combo (20+)`;
   }
 
   const bountyBadge = document.getElementById('star-bounty-badge');
   if (bountyBadge) {
     bountyBadge.style.display = masteryBounty > 0 ? 'inline-block' : 'none';
     if (masteryBounty > 0) {
-      bountyBadge.textContent = isJa ? '✨ +300 🔮 完全制覇ボーナス！' : '✨ +300 🔮 MASTERY BOUNTY!';
+      bountyBadge.textContent = isJa ? '✨ +300 🔮 完全制覇' : '✨ +300 🔮';
     }
   }
 
@@ -2687,7 +2687,7 @@ export function triggerStageClear() {
   if (rewardEl) {
     let rewardText = `+${stageReward.toLocaleString()} 🔮`;
     if (isFirstClear) {
-      rewardText = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[FIRST CLEAR 3×]</span> ` + rewardText;
+      rewardText = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[FIRST 3×]</span> ` + rewardText;
     }
     if (masteryBounty > 0) {
       rewardText += ` <span style="color: #fbbf24; font-size: 11px; margin-left: 4px;">(+300 ⭐⭐⭐)</span>`;
@@ -2700,7 +2700,13 @@ export function triggerStageClear() {
 
   const nextBtn = document.getElementById('stage-clear-next-btn');
   if (nextBtn) {
-    nextBtn.textContent = isJa ? `⚔️ ステージ ${currentStage + 1} へ進む` : `⚔️ ADVANCE TO STAGE ${currentStage + 1}`;
+    const ctaText = nextBtn.querySelector('.cta-text');
+    const label = isJa ? `ステージ ${currentStage + 1} へ` : `NEXT STAGE ${currentStage + 1}`;
+    if (ctaText) {
+      ctaText.textContent = label;
+    } else {
+      nextBtn.innerHTML = `<span class="cta-sword">⚔️</span><span class="cta-text">${label}</span><span class="cta-arrow">➔</span>`;
+    }
   }
 
   populateAscensionUpgrades();
