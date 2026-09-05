@@ -5,7 +5,7 @@
 
     <style>
       /* Critical inline CSS - guarantees dark background even if external CSS fails */
-      html, body { margin: 0; padding: 0; background: #090a0f !important; overflow: hidden; width: 100%; height: 100%; color: #f3f4f6; font-family: sans-serif; }
+      html, body { margin: 0; padding: 0; background: #090a0f !important; overflow: hidden; width: 100%; height: 100%; color: #f3f4f6; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
       #app { position: fixed; top: 0; bottom: 0; left: 0; right: 0; background: #090a0f; }
       #loader-screen { position: fixed !important; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; background: #090a0f !important; display: flex !important; flex-direction: column; justify-content: center; align-items: center; z-index: 9999 !important; opacity: 1 !important; animation: none !important; -webkit-animation: none !important; cursor: pointer !important; }
       #gameCanvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; display: block; }
@@ -22,18 +22,63 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="screen-orientation" content="landscape" />
     <title>Super Samurai Sticky</title>
-    <script type="module" src="/assets/index-B51rUV26.js"></script>
-    <link rel="stylesheet" href="/assets/index-Ai5NdJ1X.css">
+    <script>
+      /* Fail-Safe Mobile Startup Watchdog: Guarantees user is NEVER stuck on loading screen */
+      (function() {
+        var failsafeTriggered = false;
+        function forceDismissLoader() {
+          if (failsafeTriggered) return;
+          var loader = document.getElementById('loader-screen');
+          var menu = document.getElementById('main-menu');
+          if (loader && (!loader.classList.contains('hidden') || loader.style.display !== 'none')) {
+            failsafeTriggered = true;
+            loader.classList.add('fade-out');
+            setTimeout(function() {
+              loader.classList.add('hidden');
+              loader.style.display = 'none';
+              if (menu && menu.style.display !== 'flex') menu.style.display = 'flex';
+            }, 300);
+          }
+        }
+
+        // Automatic 5.0s watchdog timeout
+        window.__loaderFailSafeTimer = setTimeout(forceDismissLoader, 5000);
+
+        // Emergency tap after 2.5s clears genuinely stuck loading screen
+        var loadStartTime = Date.now();
+        window.addEventListener('pointerdown', function() {
+          var loader = document.getElementById('loader-screen');
+          if (loader && !loader.classList.contains('hidden') && (Date.now() - loadStartTime > 2500)) {
+            forceDismissLoader();
+          }
+        }, { passive: true });
+
+        // Uncaught error and promise rejection recovery
+        window.addEventListener('error', function(e) {
+          console.warn('Stickmurai watchdog captured startup error:', e);
+          setTimeout(forceDismissLoader, 300);
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+          console.warn('Stickmurai watchdog captured unhandled rejection:', e);
+          setTimeout(forceDismissLoader, 300);
+        });
+      })();
+    </script>
+    <script type="module" src="/assets/index-SVZBxjal.js"></script>
+    <link rel="stylesheet" href="/assets/index-BTcGhpcZ.css">
   </head>
   <body style="background:#090a0f;margin:0;padding:0;">
     <!-- Rotate & Fullscreen Device Prompt -->
     <div id="rotate-prompt">
+      <button id="rotate-close-btn" class="modal-close-btn" style="position: absolute; top: 16px; right: 16px; width: 38px; height: 38px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 50%; color: #ffd700; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;">✕</button>
       <div class="rotate-icon">📱</div>
-      <h2 style="font-family: 'Shojumaru', cursive; color: #ffd700; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: clamp(20px, 4vw, 32px);">LANDSCAPE & FULLSCREEN</h2>
+      <h2 style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; margin-bottom: 10px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-size: clamp(20px, 4vw, 32px);">LANDSCAPE & FULLSCREEN</h2>
       <p id="rotate-message" style="margin-bottom: 15px;"><strong data-i18n="rotatePrompt">Rotate and enter full screen?</strong></p>
-      <button id="fs-enter-btn" class="menu-btn" style="display: none; border-color: #ffd700; color: #ffd700; margin-top: 10px; font-size: 14px; padding: 10px 20px; width: auto; max-width: none;">CONFIRM</button>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 10px;">
+        <button id="fs-enter-btn" class="menu-btn btn-compact" style="display: none; border-color: #ffd700; color: #ffd700; font-size: 13px; padding: 8px 18px; width: auto; max-width: none;">CONFIRM</button>
+        <button id="rotate-dismiss-btn" class="menu-btn btn-compact exit-btn" style="font-size: 13px; padding: 8px 18px; width: auto; max-width: none;" data-i18n="rotateDismiss">PLAY ANYWAY ✕</button>
+      </div>
       <p id="ios-pwa-tip" style="display: none; font-size: 11px; color: #8a8d9a; margin-top: 15px; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.4; max-width: 320px;">Tip: For actual fullscreen with no browser bars on iOS, tap <span style="font-size: 15px;">⎋</span> (Share) -> Add to Home Screen.</p>
     </div>
 
@@ -43,7 +88,7 @@
       <div id="manga-cutin">
         <div class="manga-slice"></div>
         <div class="manga-character-wrap">
-          <video class="manga-character" src="stickmurai_animation.mp4" autoplay loop muted playsinline></video>
+          <video class="manga-character" preload="none" loop muted playsinline data-src="stickmurai_animation.mp4"></video>
         </div>
       </div>
       <canvas id="gameCanvas"></canvas>
@@ -69,9 +114,21 @@
           </div>
         </div>
         <div id="score-display">Kills: 0</div>
+        <div id="magatama-display" style="position: absolute; top: max(16px, env(safe-area-inset-top)); right: max(75px, calc(env(safe-area-inset-right) + 65px)); font-family: 'Orbitron', monospace; font-size: 13px; color: #c084fc; font-weight: bold; background: rgba(0,0,0,0.55); padding: 5px 12px; border-radius: 14px; border: 1px solid rgba(192, 132, 252, 0.4); display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(192, 132, 252, 0.2); pointer-events: auto;">
+          <span style="font-size: 14px;">🔮</span><span id="hud-magatama-count">0</span>
+        </div>
         <div id="objective-display" style="display: none;"></div>
         <div id="combo-display">x1 Combo</div>
         <button id="pause-btn">⏸</button>
+        <!-- Boss Encounter Warning Banner -->
+        <div id="boss-warning-banner" style="display: none; opacity: 0; position: absolute; top: 22%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; z-index: 100; transition: opacity 0.5s ease; width: 90%; max-width: 600px;">
+          <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: clamp(20px, 4vw, 38px); color: #ef4444; text-shadow: 0 0 20px rgba(239, 68, 68, 0.9), 0 0 40px rgba(0,0,0,0.9); letter-spacing: 2px;">
+            ⚠️ BOSS ENCOUNTER ⚠️
+          </div>
+          <div id="boss-banner-name" style="font-family: 'Orbitron', monospace; font-size: clamp(13px, 2.2vw, 20px); color: #fbbf24; text-shadow: 0 0 12px rgba(251, 191, 36, 0.7); margin-top: 6px; letter-spacing: 1.5px; font-weight: bold;">
+            ONI OVERLORD
+          </div>
+        </div>
       </div>
       
       <!-- Mobile Controls -->
@@ -136,6 +193,7 @@
             <span class="btn-text" data-i18n="btnUlt">ULT</span>
             <span class="hotkey">F</span>
             <div class="cooldown-overlay" id="ult-cooldown-overlay"></div>
+            <div class="cooldown-text" id="ult-cooldown-text"></div>
           </button>
         </div>
       </div>
@@ -224,7 +282,7 @@
       <!-- Fullscreen Prompt Overlay -->
       <div id="fullscreen-prompt" class="overlay" style="display:none; z-index: 10000; background: rgba(9, 10, 15, 0.95); flex-direction: column; justify-content: center; align-items: center; gap: 20px;">
         <div class="menu-box" style="text-align: center; max-width: 400px; width: 90vw; border-color: #ffd700; box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);">
-          <h2 style="font-family: 'Shojumaru', cursive; color: #ffd700; margin-bottom: 15px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);">FULLSCREEN MODE</h2>
+          <h2 style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; margin-bottom: 15px; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);">FULLSCREEN MODE</h2>
           <p style="color: #cbd5e1; font-family: 'Orbitron', sans-serif; font-size: 13px; margin-bottom: 25px; line-height: 1.6; text-transform: uppercase; letter-spacing: 1px;" data-i18n="fsPromptText">Enter full screen mode for the best samurai experience?</p>
           <div style="display: flex; gap: 15px; width: 100%;">
             <button id="fs-btn-no" class="menu-btn exit-btn" style="flex: 1; margin: 0; padding: 10px 0;">NO</button>
@@ -238,36 +296,41 @@
           <div class="menu-left">
             <h1 class="game-title" data-i18n="title">SUPER<br>SAMURAI<br>STICKY</h1>
             <div class="menu-buttons">
-              <button id="start-btn" class="menu-btn" data-i18n="play">Play</button>
-              <button id="level-mode-btn" class="menu-btn" style="border-color: #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.2);" data-i18n="playLevel">Level Mode</button>
-              <button id="zen-btn" class="menu-btn" style="border-color: #00ffff; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);" data-i18n="playZen">Zen Mode</button>
-              <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">Iaijutsu PvP</button>
-              <button id="open-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
+              <button id="start-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); font-weight: bold; letter-spacing: 1px;">⚔️ STAGE MODE (CAMPAIGN)</button>
+              <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">⚔️ Iaijutsu PvP (1v1)</button>
+              <div class="menu-grid-2x3">
+                <button id="open-dojo-btn" class="menu-btn" style="border-color: #c084fc; color: #c084fc; box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);">🏯 Dojo</button>
+                <button id="open-upgrades-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">⚡ Upgrades</button>
+                <button id="open-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">📜 Grimoire</button>
+                <button id="open-chronicle-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛩️ Chronicle</button>
+                <button id="open-guide-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);"><span data-i18n="openGuideBtn">📖 Codex</span></button>
+                <button id="open-settings-btn" class="menu-btn" data-i18n="settings">⚙️ Settings</button>
+              </div>
+              <button id="level-mode-btn" style="display:none;"></button>
+              <button id="zen-btn" style="display:none;"></button>
             </div>
           </div>
           <div class="menu-right">
             <div class="guide-box">
               <h3 data-i18n="guideTitle">Combat Guide & Techniques</h3>
               <ul>
-                <li data-i18n="guideMove"><strong>Movement:</strong> Use WASD / Arrow Keys on Desktop, or the Virtual Joystick on Mobile devices.</li>
-                <li data-i18n="guideSlash"><strong>Slash (Basic Attack):</strong> Left-click / LMB on Desktop or tap SLASH on Mobile. Auto-aims toward targets.</li>
-                <li data-i18n="guideDodge"><strong>Dodge / Dash:</strong> Press SPACEBAR on Desktop or tap DASH on Mobile. Full invulnerability frames.</li>
-                <li data-i18n="guidePerfect"><strong>Perfect Dodge:</strong> Dash right as an enemy lunges to trigger a screen flash, a combo boost, and 2s of invulnerability.</li>
-                <li data-i18n="guideParry"><strong>Parrying:</strong> Hold SLASH to charge, and release it at the exact moment of an incoming attack to Parry.</li>
-                <li data-i18n="guideIaijutsu"><strong>Iaijutsu Shockwave:</strong> Hold SLASH and release at full charge to unleash a piercing crescent projectile.</li>
-                <li data-i18n="guideFlow"><strong>Flow Awakening (Ultimate):</strong> Defeat enemies to fill the FLOW meter. Press F Key or ULT to enter time-slowed state.</li>
-                <li data-i18n="guideProg"><strong>Progression & Leveling:</strong> Gain EXP to level up and choose powerful character upgrades.</li>
-                <li data-i18n="guideDifficulty"><strong>Difficulty Modes:</strong> Select your challenge before starting.</li>
-                <li data-i18n="guideAutoAim"><strong>Auto-Aim:</strong> Basic attacks automatically target the closest enemy within 600px range.</li>
-                <li data-i18n="guidePvP"><strong>Iaijutsu PvP:</strong> Enter the PvP Lobby, copy your unique Ronin UID, add friends by their UID, and invite them directly to a 1v1 duel. No code sharing required!</li>
-                <li data-i18n="comboSwift"><strong>Combo - Swift Counter:</strong> Dash + Slash immediately. Teleports behind the target for a quick slash.</li>
-                <li data-i18n="comboThunder"><strong>Combo - Thunderclap & Flash:</strong> Dash + Slash during Storm God or with Raijin Step. Slashes through targets with lightning.</li>
-                <li data-i18n="comboDragon"><strong>Combo - Rising Dragon:</strong> Slash + Slash + release charge early. Launches enemies into the air.</li>
-                <li data-i18n="comboMirror"><strong>Combo - Mirror Strike:</strong> Fully charged Iaijutsu Slash while invisible (from Decoy active passive). Teleports clones to strike.</li>
+                <li data-i18n="guideMove"><strong>Movement:</strong> Use <kbd class="kbd-badge">WASD</kbd> / Arrow Keys on Desktop, or the Virtual Joystick on Mobile devices to move around the battlefield.</li>
+                <li data-i18n="guideSlash"><strong>Slash (Basic Attack):</strong> Left-click / <kbd class="kbd-badge">LMB</kbd> on Desktop or tap <kbd class="kbd-badge">SLASH</kbd> on Mobile. Auto-aims toward nearest targets within 600px. Chain hits to build Combo!</li>
+                <li data-i18n="guideDodge"><strong>Dodge / Dash:</strong> Press <kbd class="kbd-badge">SPACE</kbd> on Desktop or tap <kbd class="kbd-badge">DASH</kbd> on Mobile. Full invulnerability frames (i-frames).</li>
+                <li data-i18n="guidePerfect"><strong>Perfect Dodge:</strong> Dash right as an enemy lunges with a red alert to trigger a screen flash, a massive Combo boost, and 2s of total invulnerability.</li>
+                <li data-i18n="guideParry"><strong>Parrying & Deflection:</strong> Hold <kbd class="kbd-badge">LMB</kbd> to charge, and release it at the exact moment of impact. Parrying consecutively raises musical pitch and upgrades deflection sparks from Amber ➔ Gold ➔ Cyan ➔ White-Blue!</li>
+                <li data-i18n="guidePosture"><strong>Posture Break & Execution:</strong> Heavy hits and deflections fill the enemy's Posture meter. When full, strike to trigger a cinematic Execution dealing lethal damage and stance synergy detonations!</li>
+                <li data-i18n="guideChiburui"><strong>Chiburui & Noto (血振るい):</strong> Stand completely still for 1.2s after 3+ kills. Cleanses blade, grants +15 Flow, and your next strike deals guaranteed 2.5x CRIT damage!</li>
+                <li data-i18n="guideIaijutsu"><strong>Iaijutsu Shockwave:</strong> Hold <kbd class="kbd-badge">LMB</kbd> and release at full charge to unleash a piercing crescent shockwave.</li>
+                <li data-i18n="guideFlow"><strong>Flow Awakening (Ultimate):</strong> Defeat enemies to fill the FLOW meter. Press <kbd class="kbd-badge">F</kbd> Key or tap <kbd class="kbd-badge">ULT</kbd> on Mobile to unleash an awakened ultimate.</li>
+                <li data-i18n="comboSwift"><strong>Combo - Swift Counter:</strong> <kbd class="kbd-badge">DASH</kbd> + <kbd class="kbd-badge">SLASH</kbd> immediately. Teleports behind the target for a quick slash.</li>
+                <li data-i18n="comboThunder"><strong>Combo - Thunderclap & Flash:</strong> <kbd class="kbd-badge">DASH</kbd> + <kbd class="kbd-badge">SLASH</kbd> during Storm God or Raijin Step. Teleport-cleaves through targets with lightning.</li>
+                <li data-i18n="comboDragon"><strong>Combo - Rising Dragon:</strong> <kbd class="kbd-badge">SLASH</kbd> × 2 + release charge early. Launches enemies into an airborne whirlwind.</li>
+                <li data-i18n="comboMirror"><strong>Combo - Mirror Strike:</strong> Fully charged Iaijutsu Slash while invisible from Decoy. Teleports 3 clones to strike simultaneously!</li>
               </ul>
             </div>
             <div id="high-scores-box" style="background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 12px; padding: 15px; width: 100%; text-align: left; box-sizing: border-box; margin-top: 10px; font-family: 'Space Mono', monospace;">
-              <h3 style="margin-top: 0; color: #ffd700; font-size: 16px; border-bottom: 1px dashed rgba(255, 215, 0, 0.3); padding-bottom: 5px; font-family: 'Shojumaru', cursive;" data-i18n="highScoresTitle">HIGH RECORDS</h3>
+              <h3 style="margin-top: 0; color: #ffd700; font-size: 16px; border-bottom: 1px dashed rgba(255, 215, 0, 0.3); padding-bottom: 5px; font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;" data-i18n="highScoresTitle">HIGH RECORDS</h3>
               <div id="high-scores-content" style="color: #cbd8d6; font-size: 12px; line-height: 1.6;">
                 <!-- Filled by JS -->
               </div>
@@ -350,33 +413,176 @@
               <input type="range" id="bgm-volume" min="0" max="1" step="0.1" value="0.5">
             </div>
           </div>
-          <h3 style="color: #ff3355; margin-top: 20px; font-size: 18px; font-family: 'Shojumaru', cursive; border-bottom: 1px solid rgba(255, 51, 85, 0.2); width: 100%; padding-bottom: 5px; text-transform: uppercase;" data-i18n="controlsTitle">KEYBOARD BINDINGS</h3>
+          <h3 style="color: #ff3355; margin-top: 20px; font-size: 18px; font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; border-bottom: 1px solid rgba(255, 51, 85, 0.2); width: 100%; padding-bottom: 5px; text-transform: uppercase;" data-i18n="controlsTitle">KEYBOARD BINDINGS</h3>
           <div id="keybinds-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; width: 100%; max-width: 320px; margin-top: 10px; font-family: 'Space Mono', monospace; font-size: 13px; text-align: left; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 12px; padding: 14px 18px; box-sizing: border-box;">
             <!-- Key rebinding buttons populated dynamically by JS -->
           </div>
-          <button id="close-settings-btn" class="menu-btn" data-i18n="back">Back</button>
+          <div style="display: flex; gap: 10px; width: 100%; max-width: 320px; margin-top: 12px;">
+            <button id="open-redeem-settings-btn" class="menu-btn btn-compact" style="flex: 1; border-color: #ffd700; color: #ffd700; margin: 0; padding: 8px 12px; font-size: 12px; box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);">🎁 REDEEM CODE</button>
+            <button id="close-settings-btn" class="menu-btn btn-compact" style="flex: 1; margin: 0; padding: 8px 12px; font-size: 12px;" data-i18n="back">Back</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Comprehensive Visual Combat Codex Modal -->
+      <div id="guide-modal" class="overlay" style="display:none;">
+        <div class="menu-box guide-modal-box" style="max-width: 780px; width: 94vw; max-height: 88vh; overflow-y: auto; text-align: left; padding: 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid rgba(56, 189, 248, 0.3); padding-bottom: 10px;">
+            <h2 style="margin: 0; font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 22px; color: #38bdf8; text-shadow: 0 0 12px rgba(56, 189, 248, 0.4);" data-i18n="guideModalTitle">📖 COMBAT CODEX • 秘伝戦術指南</h2>
+            <button id="close-guide-btn" class="menu-btn btn-compact" style="margin: 0; min-height: 32px; height: 34px; padding: 0 14px; border-color: #ef4444; color: #fca5a5;">✕</button>
+          </div>
+
+          <div class="guide-tabs-container" style="display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+            <!-- Category 1: Fundamentals -->
+            <div class="guide-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px;">
+              <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>⚔️</span> <span data-i18n="guideCatFundamentals">Fundamentals & Maneuvers</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #38bdf8;">
+                  <strong style="color: #7dd3fc;"><kbd class="kbd-badge">WASD</kbd> / Joystick</strong>: <span data-i18n="guideMoveText">360° fluid omnidirectional sprint.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #f43f5e;">
+                  <strong style="color: #fda4af;"><kbd class="kbd-badge">LMB</kbd> / [SLASH]</strong>: <span data-i18n="guideSlashText">Basic attack auto-snaps to nearest foe within 600px. Chain hits to build Combo.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ffd700;">
+                  <strong style="color: #fef08a;"><kbd class="kbd-badge">SPACE</kbd> / [DASH]</strong>: <span data-i18n="guideDodgeText">Instant dodge with full invulnerability frames (i-frames).</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #a855f7;">
+                  <strong style="color: #d8b4fe;">⚡ Perfect Dodge</strong>: <span data-i18n="guidePerfectText">Dash right as enemy lunges (red flash) for 2s invulnerability & combo surge!</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category 2: Sekiro Deflection & Posture -->
+            <div class="guide-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; padding: 14px;">
+              <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #f59e0b; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🛡️</span> <span data-i18n="guideCatParry">Sekiro Deflection & Posture System</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                  <strong style="color: #fde68a;"><kbd class="kbd-badge">HOLD LMB</kbd> ➔ Release on Impact</strong>: <span data-i18n="guideParryText">Deflect attacks, dealing massive posture damage to enemies. Consecutive parries raise musical pitch and upgrade sparks from Amber ➔ Gold ➔ Cyan ➔ White-Blue radial burst!</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ef4444;">
+                  <strong style="color: #fca5a5;">💥 Posture Break & Execution</strong>: <span data-i18n="guidePostureText">Filling an enemy or boss's orange Posture gauge triggers [STAGGER BREAK!]. Strike immediately to execute for devastating lethal damage, Magatama bounty, and stance synergy detonations!</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category 3: Samurai Secret Arts -->
+            <div class="guide-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 14px;">
+              <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #ef4444; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🥋</span> <span data-i18n="guideCatArts">Samurai Secret Arts</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #dc2626;">
+                  <strong style="color: #fca5a5;">🩸 Chiburui & Noto (血振るい)</strong>: <span data-i18n="guideChiburuiText">Stand completely still for 1.2s after 3+ kills. Cleanses blade, grants +15 Flow, and your next strike deals guaranteed 2.5x CRITICAL damage!</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #0284c7;">
+                  <strong style="color: #7dd3fc;">🌪️ Rising Launcher & Cleave</strong>: <span data-i18n="guideLauncherText">Press <kbd class="kbd-badge">W / Up</kbd> on a posture-broken enemy to launch them skyward, then tap Dash/Attack to dive airborne and cleave them back down!</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #eab308;">
+                  <strong style="color: #fef08a;">⚔️ Tsubazeriai (Blade Clash)</strong>: <span data-i18n="guideClashText">When locked in a blade clash with elite bosses, mash <kbd class="kbd-badge">LMB</kbd> / [SLASH] rapidly to overpower their guard and blow them back!</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ec4899;">
+                  <strong style="color: #fbcfe8;">🌸 Slash Through Sunrise</strong>: <span data-i18n="guideSunriseText">Clearing the final boss of a stage transfigures all incoming bullets into floating sakura petals accompanied by a traditional Sumi-e ink wash wipe!</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category 4: Secret Combos -->
+            <div class="guide-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 14px;">
+              <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #c084fc; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🌪️</span> <span data-i18n="guideCatCombos">Secret Weapon Combos</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #a855f7;">
+                  <strong style="color: #e9d5ff;"><kbd class="kbd-badge">DASH</kbd> + <kbd class="kbd-badge">SLASH</kbd> (Immediate)</strong>: <span data-i18n="comboSwiftText">Swift Counter — Instantly teleports behind target for a back-slash.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #38bdf8;">
+                  <strong style="color: #bae6fd;"><kbd class="kbd-badge">DASH</kbd> + <kbd class="kbd-badge">SLASH</kbd> (Raijin/Storm)</strong>: <span data-i18n="comboThunderText">Thunderclap & Flash — Teleporting lightning cleave shocking up to 5 targets.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #22c55e;">
+                  <strong style="color: #bbf7d0;"><kbd class="kbd-badge">SLASH</kbd> × 2 + Early Release</strong>: <span data-i18n="comboDragonText">Rising Dragon — Launches enemies into an airborne whirlwind.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #f97316;">
+                  <strong style="color: #fed7aa;">Full Iaijutsu + Decoy Stealth</strong>: <span data-i18n="comboMirrorText">Mirror Strike — 3 shadow clones blink to targets and strike in unison.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Category 5: Skill Tiers & Shop Hierarchy -->
+            <div class="guide-card" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(234, 179, 8, 0.25); border-radius: 8px; padding: 14px;">
+              <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #ffd700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                <span>🔮</span> <span data-i18n="guideCatSkills">Active Skill Tiers & Magatama Power</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
+                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 4px;">
+                  <span><strong style="color: #fde047;">Dragon's Fury</strong> (Tier 1 • 0 🔮)</span>
+                  <span style="color: #94a3b8;">+80% blade size, +3 DMG, crescent shockwaves</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 4px;">
+                  <span><strong style="color: #38bdf8;">Raijin Step</strong> (Tier 2 • 10,000 🔮)</span>
+                  <span style="color: #94a3b8;">0.9s CD hyper-dash, 12 DMG + 2.2s stun, twin lightning</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 4px;">
+                  <span><strong style="color: #4ade80;">Wind Aegis</strong> (Tier 3 • 15,000 🔮)</span>
+                  <span style="color: #94a3b8;">4.5s deflection gale, 3x bullet reflection, 14 AoE pulses</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 4px;">
+                  <span><strong style="color: #fbbf24;">Parry Master</strong> (Tier 4 • 20,000 🔮)</span>
+                  <span style="color: #94a3b8;">4.0s parry duration, 2.5x counter-crit, +15 Flow</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 4px;">
+                  <span><strong style="color: #fb923c;">Firewheel</strong> (Tier 5 • 25,000 🔮)</span>
+                  <span style="color: #94a3b8;">260px ring, 10 tick DMG + 12 homing fireballs, 25 AoE blast</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 4px;">
+                  <span><strong style="color: #c084fc;">Shadow Decoy</strong> (Tier 6 • 35,000 🔮)</span>
+                  <span style="color: #94a3b8;">3 armed clones, 5s stealth, 3.0x crit, 35 DMG + 2.5s stun on death</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; background: rgba(0,0,0,0.25); padding: 6px 10px; border-radius: 4px;">
+                  <span><strong style="color: #e879f9;">Gravity Singularity</strong> (Apex Tier • 50,000 🔮)</span>
+                  <span style="color: #94a3b8;">420px event horizon, devours bullets, 24 DPS crush, 50 AoE supernova</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+            <button id="close-guide-btn-bottom" class="menu-btn btn-compact" style="margin: 0; min-height: 34px; height: 34px; max-width: 140px; border-color: #64748b; color: #cbd5e1;">✕ CLOSE</button>
+          </div>
         </div>
       </div>
 
       <div id="skill-select-screen" class="overlay" style="display:none;">
-        <div class="menu-box skill-select-box" style="max-width: 800px; width: 90vw; padding: 25px;">
-          <h2 id="skill-select-title" style="color: #ffffff; font-family: 'Orbitron', sans-serif; letter-spacing: 1.5px; font-size: 24px; margin: 0 0 20px 0; text-align: center;" data-i18n="selectSkillTitle">SELECT ACTIVE SKILL</h2>
-          <div class="skill-choices" id="pregame-skill-choices" style="display: flex; gap: 15px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
+        <div class="menu-box skill-select-box" style="max-width: 780px; width: 92vw; padding: 24px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+            <h2 id="skill-select-title" class="skill-select-heading" style="margin: 0 !important; text-align: left !important;" data-i18n="selectSkillTitle">SELECT ACTIVE SKILL</h2>
+            <div style="background: rgba(0,0,0,0.6); border: 1px solid rgba(192,132,252,0.4); border-radius: 16px; padding: 4px 14px; font-family: 'Orbitron', monospace; font-size: 13px; color: #e9d5ff; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(192, 132, 252, 0.2);">
+              <span style="font-size: 15px;">🔮</span> <span id="pregame-magatama-count">0</span>
+            </div>
+          </div>
+          <div class="skill-choices" id="pregame-skill-choices" style="display: flex; gap: 14px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
             <!-- Populated by JS -->
           </div>
           
           <!-- Stance Blessing Options -->
-          <div id="pregame-blessing-options" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
-            <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 13px; letter-spacing: 1.5px;">Stance Blessing (Optional)</label>
-            <div style="display: flex; gap: 12px; justify-content: center; width: 100%; max-width: 500px; flex-wrap: wrap;">
+          <div id="pregame-blessing-options" style="margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-direction: column; width: 100%;">
+            <label class="pregame-section-label">Stance Blessing (Optional)</label>
+            <div style="display: flex; gap: 12px; justify-content: center; width: 100%; max-width: 480px; flex-wrap: wrap;">
               <div class="blessing-card" id="blessing-swift-btn">
-                <div class="blessing-badge">⚡</div>
+                <div class="blessing-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                </div>
                 <h4>Swift Strike</h4>
                 <p>+10% Attack Speed</p>
                 <span class="blessing-cost-text">(Watch Ad to Unlock)</span>
               </div>
               <div class="blessing-card" id="blessing-fortune-btn">
-                <div class="blessing-badge">🎁</div>
+                <div class="blessing-badge">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg>
+                </div>
                 <h4>Fortune</h4>
                 <p>Random Start Upgrade</p>
                 <span class="blessing-cost-text">(Watch Ad to Unlock)</span>
@@ -384,37 +590,28 @@
             </div>
           </div>
 
-          <div class="pregame-difficulty-container" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
-            <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 14px;" data-i18n="difficulty">Difficulty</label>
-            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
-              <button class="menu-btn diff-btn" id="diff-easy-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="difficultyEasy">Easy</button>
-              <button class="menu-btn diff-btn" id="diff-normal-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="difficultyNormal">Normal</button>
-              <button class="menu-btn diff-btn" id="diff-hard-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="difficultyHard">Hard</button>
-              <button class="menu-btn diff-btn" id="diff-insane-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="difficultyInsane">Insane</button>
+          <!-- Campaign Stage Selector -->
+          <div id="pregame-stage-selector" style="margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-direction: column; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;">
+              <label class="pregame-section-label" style="margin: 0;">Campaign Stage</label>
+              <div id="ronin-rank-badge" style="display: inline-flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.55); border: 1px solid rgba(255,215,0,0.35); border-radius: 12px; padding: 2px 10px; font-family: 'Orbitron', monospace; font-size: 11px; color: #ffd700; font-weight: bold;">
+                <span id="ronin-rank-icon">🎋</span> <span id="ronin-rank-text">RONIN ASPIRANT</span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
+              <button id="stage-prev-btn" class="menu-btn btn-compact" style="width: 44px; min-width: 44px; padding: 6px 0 !important; font-size: 16px; margin: 0;">◀</button>
+              <div id="stage-select-card" style="background: rgba(0,0,0,0.45); border: 1px solid rgba(255,215,0,0.4); border-radius: 8px; padding: 8px 16px; text-align: center; flex: 1; box-shadow: 0 0 15px rgba(255,215,0,0.1);">
+                <div id="stage-select-name" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; font-size: 15px; letter-spacing: 1px;">STAGE 1: BAMBOO GROVE</div>
+                <div id="stage-select-stars" style="font-size: 14px; letter-spacing: 4px; margin: 2px 0; color: #ffd700;">⭐⭐⭐</div>
+                <div id="stage-select-desc" style="font-family: 'Space Mono', monospace; font-size: 11px; color: #94a3b8; margin-top: 2px;">Target: 12 Kills // Grunts & Rogues</div>
+                <div id="stage-select-affix" style="display: none; margin-top: 5px; font-family: 'Outfit', sans-serif; font-size: 11px; background: rgba(239,68,68,0.18); border: 1px solid rgba(239,68,68,0.4); border-radius: 6px; padding: 3px 8px; color: #fca5a5;"></div>
+              </div>
+              <button id="stage-next-btn" class="menu-btn btn-compact" style="width: 44px; min-width: 44px; padding: 6px 0 !important; font-size: 16px; margin: 0;">▶</button>
             </div>
           </div>
-          <!-- Time Mode Options -->
-          <div id="pregame-time-options" style="margin-bottom: 20px; display: none; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
-            <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 14px;" data-i18n="timeLimit">Time Limit</label>
-            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
-              <button class="menu-btn time-opt-btn" id="time-infinite-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;" data-i18n="timeInfinite">Infinite</button>
-              <button class="menu-btn time-opt-btn" id="time-3m-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">3 Min</button>
-              <button class="menu-btn time-opt-btn" id="time-5m-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">5 Min</button>
-              <button class="menu-btn time-opt-btn" id="time-10m-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">10 Min</button>
-            </div>
-          </div>
-          <!-- Level Mode Options -->
-          <div id="pregame-level-options" style="margin-bottom: 20px; display: none; align-items: center; justify-content: center; gap: 10px; flex-direction: column; width: 100%;">
-            <label style="color: #9ca3af; font-family: 'Shojumaru', cursive; font-size: 14px;" data-i18n="targetLevel">Target Level</label>
-            <div style="display: flex; gap: 10px; justify-content: center; width: 100%; max-width: 480px;">
-              <button class="menu-btn lvl-opt-btn" id="lvl-5-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">Lvl 5</button>
-              <button class="menu-btn lvl-opt-btn" id="lvl-10-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">Lvl 10</button>
-              <button class="menu-btn lvl-opt-btn" id="lvl-15-btn" style="flex: 1; padding: 10px; font-size: 12px; margin: 0;">Lvl 15</button>
-            </div>
-          </div>
-          <div style="display: flex; gap: 15px; justify-content: center; width: 100%;">
-            <button id="skill-back-btn" class="menu-btn" style="border-color: #666; max-width: 150px; margin: 0;" data-i18n="back">Back</button>
-            <button id="start-run-btn" class="menu-btn" style="max-width: 200px; margin: 0; box-shadow: 0 0 15px rgba(255, 51, 85, 0.3);" data-i18n="play">Play</button>
+          <div style="display: flex; gap: 14px; justify-content: center; width: 100%; margin-top: 6px;">
+            <button id="skill-back-btn" class="menu-btn" style="max-width: 140px; margin: 0;" data-i18n="back">Back</button>
+            <button id="start-run-btn" class="menu-btn" style="max-width: 200px; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.25);">⚔️ ENTER STAGE</button>
           </div>
         </div>
       </div>
@@ -426,6 +623,7 @@
             <div style="font-size: 11px; color: rgba(255, 255, 255, 0.4); margin-bottom: 20px; font-family: 'Outfit', sans-serif; letter-spacing: 1px; font-weight: 500;">[ ESC / P TO RESUME ]</div>
             <div class="menu-buttons">
               <button id="resume-btn" class="menu-btn" data-i18n="resume">Resume Game</button>
+              <button id="pause-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);">📜 Grimoire (秘伝書)</button>
               <button id="pause-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
               <button id="quit-btn" class="menu-btn exit-btn" data-i18n="quit">Quit to Menu</button>
             </div>
@@ -575,7 +773,7 @@
         <div class="pvp-hud-top" style="position: absolute; top: 20px; left: 5%; right: 5%; display: flex; justify-content: space-between; align-items: center;">
           <!-- P1 Left Health -->
           <div class="pvp-player-hud pvp-left-hud">
-            <span class="pvp-player-name" style="color: #00ffff; font-family: 'Shojumaru', cursive; font-size: 16px; display: block; margin-bottom: 5px;">P1 (Left)</span>
+            <span class="pvp-player-name" style="color: #00ffff; font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 16px; display: block; margin-bottom: 5px;">P1 (Left)</span>
             <div id="pvp-p1-hearts" class="pvp-hearts" style="font-size: 24px; letter-spacing: 2px;">❤️❤️❤️</div>
           </div>
           
@@ -587,14 +785,14 @@
           
           <!-- P2 Right Health -->
           <div class="pvp-player-hud pvp-right-hud" style="text-align: right;">
-            <span class="pvp-player-name" style="color: #ffaa00; font-family: 'Shojumaru', cursive; font-size: 16px; display: block; margin-bottom: 5px;">P2 (Right)</span>
+            <span class="pvp-player-name" style="color: #ffaa00; font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 16px; display: block; margin-bottom: 5px;">P2 (Right)</span>
             <div id="pvp-p2-hearts" class="pvp-hearts" style="font-size: 24px; letter-spacing: 2px;">❤️❤️❤️</div>
           </div>
         </div>
         
         <!-- Big Round Start/End Banner -->
         <div id="pvp-banner" style="display: none; position: absolute; top: 30%; left: 0; width: 100%; text-align: center; pointer-events: none;">
-          <h1 id="pvp-banner-title" style="font-family: 'Shojumaru', cursive; font-size: 48px; color: #ff3355; text-shadow: 0 0 20px rgba(255,51,85,0.6); margin: 0; letter-spacing: 4px;">ROUND 1</h1>
+          <h1 id="pvp-banner-title" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 48px; color: #ff3355; text-shadow: 0 0 20px rgba(255,51,85,0.6); margin: 0; letter-spacing: 4px;">ROUND 1</h1>
           <p id="pvp-banner-subtitle" style="font-family: 'Orbitron', sans-serif; font-size: 16px; color: #cbd8d6; margin-top: 10px; text-transform: uppercase; letter-spacing: 2px; font-weight: 700;">READY...</p>
         </div>
 
@@ -620,7 +818,7 @@
       <!-- PvP Game Over Screen -->
       <div id="pvp-game-over-screen" class="overlay" style="display:none; z-index: 110;">
         <div class="menu-box pvp-menu-box" style="max-width: 450px; width: 90vw; text-align: center;">
-          <h2 id="pvp-winner-title" style="color: #ff3355; text-shadow: 0 0 15px rgba(255,51,85,0.4); font-family: 'Shojumaru', cursive; font-size: 28px; margin-bottom: 20px;">PLAYER 1 WINS!</h2>
+          <h2 id="pvp-winner-title" style="color: #ff3355; text-shadow: 0 0 15px rgba(255,51,85,0.4); font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 28px; margin-bottom: 20px;">PLAYER 1 WINS!</h2>
           <p style="color: #9ca3af; font-family: 'Orbitron', sans-serif; font-size: 14px; margin-bottom: 30px;" id="pvp-rematch-status" data-i18n="pvpRematchStatus">Rematch? (0/2 Ready)</p>
           <div style="display: flex; flex-direction: column; gap: 15px; width: 100%;">
             <button id="pvp-rematch-btn" class="menu-btn" style="border-color: #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);" data-i18n="pvpRematch">Rematch</button>
@@ -629,5 +827,221 @@
         </div>
       </div>
     </div>
+
+      <!-- Forbidden Grimoire Modal (Secret Weapon Fusions) -->
+      <div id="grimoire-screen" class="overlay" style="display:none; z-index: 9200;">
+        <div class="menu-box grimoire-menu-box" style="max-width: 1000px; width: min(1000px, 94vw); height: min(740px, 86vh); min-height: min(480px, 82vh); max-height: 86vh; position: relative; display: flex; flex-direction: column; border-color: #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.25);">
+          <button id="close-grimoire-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #ffd700; color: #ffd700;">✕</button>
+          <div style="flex-shrink: 0; padding-right: 32px;">
+            <h2 style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; margin: 0 0 4px 0; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4);">FORBIDDEN GRIMOIRE (秘伝書)</h2>
+            <p style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0 0 10px 0; letter-spacing: 0.5px;">Master elemental disciplines to synthesize screen-clearing god-tier hybrid arts.</p>
+          </div>
+          <div id="grimoire-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; overflow-y: auto; padding: 4px 6px 4px 0; flex: 1 1 auto; min-height: 320px; margin-bottom: 8px;">
+            <!-- Populated dynamically by UI.ts -->
+          </div>
+          <button id="close-grimoire-btn" class="menu-btn btn-compact" style="flex: 0 0 auto; height: 36px; min-height: 36px; max-height: 36px; width: auto; max-width: 200px; padding: 6px 20px !important; font-size: 12px; align-self: center; border-color: #ffd700; color: #ffd700; margin: 4px auto 0 auto;">Close Grimoire</button>
+        </div>
+      </div>
+
+      <!-- Chronicle of Yomi (The 7 Memory Seals) -->
+      <div id="chronicle-screen" class="overlay" style="display:none; z-index: 9200;">
+        <div class="menu-box chronicle-menu-box" style="max-width: 1000px; width: min(1000px, 94vw); height: min(740px, 86vh); min-height: min(480px, 82vh); max-height: 86vh; position: relative; display: flex; flex-direction: column; border-color: #38bdf8; box-shadow: 0 0 30px rgba(56, 189, 248, 0.25);">
+          <button id="close-chronicle-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #38bdf8; color: #38bdf8;">✕</button>
+          <div style="flex-shrink: 0; padding-right: 32px;">
+            <h2 style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #38bdf8; margin: 0 0 4px 0; text-shadow: 0 0 15px rgba(56, 189, 248, 0.4);">CHRONICLE OF YOMI (黄泉の記憶の書)</h2>
+            <p style="color: #94a3b8; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0 0 10px 0; letter-spacing: 0.5px;">Break the 7 seals of purgatory through samurai mastery to uncover the truth of your murder.</p>
+          </div>
+          <div id="chronicle-list" style="display: flex; flex-direction: column; gap: 10px; overflow-y: auto; padding: 4px 6px 4px 0; flex: 1 1 auto; min-height: 320px; margin-bottom: 8px;">
+            <!-- Populated dynamically by UI.ts -->
+          </div>
+          <button id="close-chronicle-btn" class="menu-btn btn-compact" style="flex: 0 0 auto; height: 36px; min-height: 36px; max-height: 36px; width: auto; max-width: 200px; padding: 6px 20px !important; font-size: 12px; align-self: center; border-color: #38bdf8; color: #38bdf8; margin: 4px auto 0 auto;">Close Chronicle</button>
+        </div>
+      </div>
+
+      <!-- Dojo & Armory Modal (Hero Roster & Magatama Treasury) -->
+      <div id="dojo-screen" class="overlay" style="display:none; z-index: 9200;">
+        <div class="menu-box dojo-menu-box" style="max-width: 1180px; width: min(1180px, 94vw); height: min(800px, 88vh); min-height: min(560px, 86vh); max-height: 88vh; position: relative; display: flex; flex-direction: column; border-color: #c084fc; box-shadow: 0 0 30px rgba(192, 132, 252, 0.25);">
+          <button id="close-dojo-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #c084fc; color: #c084fc;">✕</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(192, 132, 252, 0.2); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; padding-right: 36px;">
+            <div class="dojo-header-titles">
+              <h2 class="dojo-title" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #c084fc; margin: 0 0 4px 0; text-shadow: 0 0 15px rgba(192, 132, 252, 0.4);">DOJO & HEROES (武芸所)</h2>
+              <p class="dojo-subtitle" style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 12px; margin: 0; letter-spacing: 0.5px;">Unlock and equip master ronin using Yomi Magatama essence.</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button id="open-redeem-dojo-btn" class="menu-btn btn-compact" style="border-color: #ffd700; color: #ffd700; font-size: 11px; padding: 5px 12px; margin: 0; min-height: 32px; height: 32px; display: flex; align-items: center; gap: 4px; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">🎁 CODE</button>
+              <div style="background: rgba(0,0,0,0.55); border: 1px solid rgba(192,132,252,0.4); border-radius: 20px; padding: 6px 16px; font-family: 'Orbitron', monospace; font-size: 15px; color: #e9d5ff; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 12px rgba(192, 132, 252, 0.2);">
+                <span style="font-size: 18px;">🔮</span> <span id="dojo-magatama-count">0</span>
+              </div>
+            </div>
+          </div>
+          
+          <div id="dojo-hero-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; overflow-y: auto; padding: 6px 8px 10px 0; flex: 1 1 auto; min-height: 380px; margin-bottom: 10px;">
+            <!-- Populated dynamically by UI.ts with Hero cards -->
+          </div>
+
+          <div style="display: flex; justify-content: center; width: 100%; flex-shrink: 0; padding-top: 4px;">
+            <button id="close-dojo-btn" class="menu-btn btn-compact" style="border-color: #c084fc; color: #c084fc; max-width: 180px; min-height: 36px; height: 36px; padding: 6px 20px !important;">Leave Dojo</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Shrine of Ascension & Upgrades Modal (Main Menu & Title Screen) -->
+      <div id="upgrades-modal" class="overlay" style="display:none; z-index: 9200;">
+        <div class="menu-box upgrades-menu-box" style="max-width: 1180px; width: min(1180px, 94vw); height: min(800px, 88vh); min-height: min(560px, 86vh); max-height: 88vh; position: relative; display: flex; flex-direction: column; border-color: #ffd700; box-shadow: 0 0 35px rgba(255, 215, 0, 0.3); padding: 18px 22px;">
+          <button id="close-upgrades-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #ffd700; color: #ffd700;">✕</button>
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 215, 0, 0.25); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; padding-right: 36px;">
+            <div class="upgrades-header-titles">
+              <h2 class="upgrades-title" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; margin: 0 0 4px 0; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); font-size: 20px;">⚡ ASCENSION & UPGRADES (神格昇華)</h2>
+              <p class="upgrades-subtitle" style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0; letter-spacing: 0.5px;">Enhance your katana, constitution, and phantom arts permanently with Yomi Magatama.</p>
+            </div>
+            <div style="background: rgba(0,0,0,0.55); border: 1px solid rgba(255,215,0,0.4); border-radius: 20px; padding: 6px 16px; font-family: 'Orbitron', monospace; font-size: 15px; color: #fef08a; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 12px rgba(255, 215, 0, 0.2);">
+              <span style="font-size: 18px;">🔮</span> <span id="menu-upgrades-magatama-count">0</span>
+            </div>
+          </div>
+          
+          <div id="menu-ascension-upgrade-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; overflow-y: auto; padding: 4px 8px 10px 0; flex: 1 1 auto; min-height: 380px; margin-bottom: 10px;">
+            <!-- Populated dynamically by UI.ts -->
+          </div>
+
+          <div style="display: flex; justify-content: center; width: 100%; flex-shrink: 0; padding-top: 4px;">
+            <button id="close-upgrades-btn" class="menu-btn btn-compact" style="border-color: #ffd700; color: #ffd700; max-width: 180px; min-height: 36px; height: 36px; padding: 6px 20px !important;">Close Upgrades</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Secret Redeem Code Modal -->
+      <div id="redeem-modal" class="overlay" style="display:none; z-index: 10001; background: rgba(5, 5, 10, 0.94); backdrop-filter: blur(8px);">
+        <div class="menu-box redeem-box" style="max-width: 440px; width: 92vw; text-align: center; border-color: #ffd700; box-shadow: 0 0 35px rgba(255, 215, 0, 0.25); position: relative; padding: 20px 24px; box-sizing: border-box;">
+          <button id="close-redeem-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #ffd700; color: #ffd700;">✕</button>
+          <div style="font-size: 36px; margin-bottom: 6px;">🎁</div>
+          <h2 style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; margin: 0 0 6px 0; text-shadow: 0 0 12px rgba(255, 215, 0, 0.4); font-size: 22px;">SECRETS & CODES</h2>
+          <p style="color: #94a3b8; font-size: 12px; font-family: 'Space Mono', monospace; margin: 0 0 16px 0; letter-spacing: 0.5px;">Enter a sacred cipher to unlock Yomi treasures.</p>
+          
+          <div style="width: 100%; display: flex; flex-direction: column; gap: 10px; align-items: center; box-sizing: border-box;">
+            <input type="text" id="redeem-input" placeholder="ENTER CIPHER..." maxlength="24" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" style="width: 100%; max-width: 280px; box-sizing: border-box; padding: 12px 16px; background: #0b0d14; border: 1.5px solid #ffd700; border-radius: 8px; color: #fbbf24; font-family: 'Orbitron', monospace; font-size: 16px; text-align: center; letter-spacing: 2px; text-transform: uppercase; outline: none; box-shadow: inset 0 0 10px rgba(0,0,0,0.7), 0 0 10px rgba(255, 215, 0, 0.2);" />
+            <div id="redeem-status-msg" style="min-height: 24px; font-size: 13px; font-family: 'Outfit', sans-serif; font-weight: bold; transition: all 0.2s;"></div>
+            
+            <div style="display: flex; gap: 10px; width: 100%; max-width: 280px; justify-content: center; margin-top: 4px; box-sizing: border-box;">
+              <button id="redeem-submit-btn" class="menu-btn btn-compact" style="flex: 1 1 0; min-width: 0; border-color: #ffd700; color: #ffd700; font-size: 13px; padding: 8px 14px; font-weight: bold; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);">REDEEM</button>
+              <button id="redeem-cancel-btn" class="menu-btn btn-compact exit-btn" style="flex: 1 1 0; min-width: 0; font-size: 13px; padding: 8px 14px;">BACK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- In-Game Memory Shrine Communion Modal -->
+      <div id="shrine-modal" class="overlay" style="display:none; z-index: 9500; background: rgba(5, 10, 20, 0.92); backdrop-filter: blur(8px);">
+        <div class="menu-box shrine-menu-box" style="max-width: 580px; width: 90vw; text-align: center; border-color: #38bdf8; box-shadow: 0 0 35px rgba(56, 189, 248, 0.35); padding: 22px 24px; position: relative; box-sizing: border-box;">
+          <button id="close-shrine-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #38bdf8; color: #38bdf8;">✕</button>
+          <div style="font-size: 32px; margin-bottom: 6px;">⛩️</div>
+          <h2 id="shrine-modal-title" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #38bdf8; margin-bottom: 8px; text-shadow: 0 0 15px rgba(56, 189, 248, 0.5);">SEAL AWAKENED</h2>
+          <div id="shrine-modal-feat" style="color: #94a3b8; font-family: 'Space Mono', monospace; font-size: 11px; margin-bottom: 14px; letter-spacing: 1px; text-transform: uppercase;">FEAT FULFILLED</div>
+          <div id="shrine-modal-lore" style="background: rgba(15, 23, 42, 0.7); border-left: 3px solid #38bdf8; padding: 14px 16px; margin-bottom: 16px; font-family: 'Georgia', serif; font-size: 13px; line-height: 1.6; color: #e2e8f0; font-style: italic; text-align: left; box-sizing: border-box;">
+            <!-- Lore fragment text -->
+          </div>
+          <div id="shrine-modal-reward" style="color: #fef08a; background: rgba(254, 240, 138, 0.1); border: 1px solid rgba(254, 240, 138, 0.3); border-radius: 8px; padding: 10px; font-family: 'Space Mono', monospace; font-size: 12px; margin-bottom: 18px; font-weight: bold; box-sizing: border-box;">
+            <!-- Permanent reward description -->
+          </div>
+          <div style="display: flex; gap: 10px; width: 100%; box-sizing: border-box; justify-content: center; flex-wrap: wrap;">
+            <button id="shrine-leave-btn" class="menu-btn exit-btn btn-compact" style="flex: 1 1 0; min-width: 0; max-width: 140px; margin: 0; min-height: 36px; height: 36px;">Leave</button>
+            <button id="shrine-claim-btn" class="menu-btn btn-compact" style="flex: 1.5 1 0; min-width: 0; max-width: 220px; margin: 0; border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.3); min-height: 36px; height: 36px;">SHATTER THE SEAL</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- In-Game Wandering Hermit Campfire Pact Modal -->
+      <div id="hermit-modal" class="overlay" style="display:none; z-index: 9500; background: rgba(15, 8, 5, 0.92); backdrop-filter: blur(8px);">
+        <div class="menu-box" style="max-width: 520px; width: 90vw; text-align: center; border-color: #f97316; box-shadow: 0 0 35px rgba(249, 115, 22, 0.35); padding: 26px;">
+          <div style="font-size: 32px; margin-bottom: 10px;">🔥</div>
+          <h2 id="hermit-modal-title" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #f97316; margin-bottom: 8px; text-shadow: 0 0 15px rgba(249, 115, 22, 0.5);">WANDERING HERMIT</h2>
+          <p id="hermit-modal-desc" style="color: #cbd5e1; font-family: 'Georgia', serif; font-size: 14px; line-height: 1.6; margin-bottom: 20px; font-style: italic;">
+            "A wandering ghost seeking vengeance in Yomi? The fire is warm, but steel demands sacrifice. What say you to a bargain?"
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <button id="hermit-pact-choice-1" class="menu-btn btn-card" style="border-color: #f97316; color: #fed7aa; text-align: left; padding: 12px; line-height: 1.4;"></button>
+            <button id="hermit-pact-choice-2" class="menu-btn btn-card" style="border-color: #f97316; color: #fed7aa; text-align: left; padding: 12px; line-height: 1.4;"></button>
+          </div>
+          <button id="hermit-leave-btn" class="menu-btn exit-btn btn-compact" style="width: 100%; margin: 0; min-height: 38px;">Leave Campfire</button>
+        </div>
+      </div>
+
+      <!-- 10-Minute Dawn Victory Celebration Screen -->
+      <div id="dawn-victory-screen" class="overlay" style="display:none; z-index: 9800; background: linear-gradient(to bottom, rgba(20, 10, 5, 0.95), rgba(40, 20, 10, 0.98)); backdrop-filter: blur(10px);">
+        <div class="menu-box" style="max-width: 620px; width: 92vw; text-align: center; border-color: #ffd700; box-shadow: 0 0 50px rgba(255, 215, 0, 0.4); padding: 32px;">
+          <div style="font-size: 48px; margin-bottom: 12px; animation: pulse 2s infinite;">🌅</div>
+          <h1 style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; font-size: 36px; margin: 0 0 8px 0; text-shadow: 0 0 25px rgba(255, 215, 0, 0.6); letter-spacing: 2px;">DAWN HAS BROKEN</h1>
+          <div style="color: #fef08a; font-family: 'Orbitron', sans-serif; font-size: 14px; margin-bottom: 20px; letter-spacing: 1.5px; text-transform: uppercase;">VICTORY // THE SHOGUN HAS FALLEN</div>
+          <div id="dawn-victory-stats" style="background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 12px; padding: 18px; margin-bottom: 25px; font-family: 'Space Mono', monospace; font-size: 13px; line-height: 1.9; color: #cbd5e1; text-align: left;">
+            <!-- Stats populated dynamically -->
+          </div>
+          <div style="display: flex; gap: 14px; width: 100%;">
+            <button id="dawn-endless-btn" class="menu-btn btn-compact" style="flex: 1; margin: 0; border-color: #ef4444; color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);">Enter Endless Torment</button>
+            <button id="dawn-menu-btn" class="menu-btn btn-compact" style="flex: 1; margin: 0; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);">Return to Title</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stage Clear & Ascension Upgrade Shrine Modal -->
+      <div id="stage-clear-modal" class="overlay" style="display:none; z-index: 9700; background: rgba(8, 10, 18, 0.95); backdrop-filter: blur(10px);">
+        <div class="menu-box stage-clear-menu-box" style="max-width: 780px; width: 94vw; max-height: 90vh; position: relative; display: flex; flex-direction: column; border-color: #ffd700; box-shadow: 0 0 40px rgba(255, 215, 0, 0.35); padding: 16px 20px; overflow: hidden;">
+          <button id="close-stage-clear-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #ffd700; color: #ffd700;">✕</button>
+
+          <div class="stage-clear-header" style="text-align: center; margin-bottom: 8px; flex-shrink: 0;">
+            <div style="font-size: 26px; margin-bottom: 2px;">⛩️</div>
+            <h2 id="stage-clear-title" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; font-size: 22px; margin: 0 0 2px 0; text-shadow: 0 0 20px rgba(255, 215, 0, 0.5); letter-spacing: 2px;">STAGE 1 CONQUERED!</h2>
+            <p class="stage-clear-subtitle" style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0; letter-spacing: 1px;">PURGATORY RECLAIMED // ASCEND IN THE SHRINE OF BUSHIDO</p>
+          </div>
+
+          <!-- Stage Performance Bar -->
+          <div style="display: flex; justify-content: space-around; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,215,0,0.25); border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; font-family: 'Orbitron', monospace; font-size: 12px; color: #e2e8f0; flex-wrap: wrap; gap: 6px; flex-shrink: 0;">
+            <div>🗡️ KILLS: <span id="stage-clear-kills" style="color: #ffd700; font-weight: bold;">0</span></div>
+            <div>⏱️ TIME: <span id="stage-clear-time" style="color: #38bdf8; font-weight: bold;">0:00</span></div>
+            <div>🔮 REWARD: <span id="stage-clear-reward" style="color: #c084fc; font-weight: bold;">+100</span></div>
+            <div>💰 TREASURY: <span id="stage-clear-magatama" style="color: #4ade80; font-weight: bold;">0 🔮</span></div>
+          </div>
+
+          <!-- 3-Star Mastery Breakdown -->
+          <div id="stage-clear-stars-card" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,215,0,0.3); border-radius: 8px; padding: 6px 12px; margin-bottom: 6px; display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 8px; font-family: 'Space Mono', monospace; font-size: 11px; flex-shrink: 0;">
+            <div id="star-req-1" style="display: flex; align-items: center; gap: 5px; color: #ffd700;">
+              <span id="star-icon-1" style="font-size: 15px;">⭐</span>
+              <span id="star-text-1">Stage Conquered</span>
+            </div>
+            <div id="star-req-2" style="display: flex; align-items: center; gap: 5px; color: #94a3b8;">
+              <span id="star-icon-2" style="font-size: 15px;">⭐</span>
+              <span id="star-text-2">Speed Demon (&le;60s)</span>
+            </div>
+            <div id="star-req-3" style="display: flex; align-items: center; gap: 5px; color: #94a3b8;">
+              <span id="star-icon-3" style="font-size: 15px;">⭐</span>
+              <span id="star-text-3">Combo Master (20+ Combo)</span>
+            </div>
+            <div id="star-bounty-badge" style="display: none; background: rgba(255,215,0,0.15); border: 1px solid #ffd700; border-radius: 12px; padding: 2px 8px; color: #ffd700; font-weight: bold; font-family: 'Orbitron', monospace; font-size: 10px; box-shadow: 0 0 10px rgba(255,215,0,0.3);">
+              ✨ +300 🔮 MASTERY BOUNTY!
+            </div>
+          </div>
+
+          <!-- Ascension Upgrade Section -->
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 6px; margin-bottom: 6px; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden;">
+            <h3 style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #38bdf8; font-size: 13px; margin: 0 0 6px 0; text-shadow: 0 0 10px rgba(56, 189, 248, 0.3); flex-shrink: 0;">SHRINE OF ASCENSION (PERMANENT UPGRADES)</h3>
+            <div id="ascension-upgrade-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px; flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-right: 6px;">
+              <!-- Populated dynamically by UI.ts -->
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="stage-clear-actions" style="display: flex; gap: 8px; width: 100%; margin-top: auto; flex-shrink: 0; flex-wrap: wrap;">
+            <button id="stage-clear-menu-btn" class="menu-btn exit-btn btn-compact" style="flex: 1; min-width: 110px; margin: 0; height: 36px; min-height: 36px; font-size: 12px; padding: 4px 10px !important;">Title Menu</button>
+            <button id="stage-clear-replay-btn" class="menu-btn btn-compact" style="flex: 1; min-width: 120px; margin: 0; height: 36px; min-height: 36px; font-size: 12px; padding: 4px 10px !important; border-color: #94a3b8; color: #cbd5e1;">🔄 Replay Stage</button>
+            <button id="stage-clear-next-btn" class="menu-btn btn-compact" style="flex: 2; min-width: 160px; margin: 0; height: 36px; min-height: 36px; font-size: 12px; padding: 4px 12px !important; border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255,215,0,0.3); font-weight: bold;">⚔️ NEXT STAGE</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visceral "斬" (ZAN) Stage-Clear Finisher Calligraphy Cut-In -->
+      <div id="zan-overlay" style="display: none; position: fixed; inset: 0; pointer-events: none; z-index: 9600; justify-content: center; align-items: center; background: radial-gradient(circle, rgba(239, 68, 68, 0.45) 0%, rgba(0, 0, 0, 0.88) 80%);">
+        <div id="zan-kanji" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: clamp(100px, 26vw, 240px); color: #ef4444; text-shadow: 0 0 40px #ff0055, 0 0 80px #ff0055, 0 0 120px #000; transform: scale(0.5); opacity: 0; transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;">
+          斬
+        </div>
+        <div id="zan-slashline" style="position: absolute; width: 150vw; height: 6px; background: linear-gradient(90deg, transparent, #fff, #ffd700, #ff0055, transparent); transform: rotate(-35deg) scaleX(0); opacity: 0; box-shadow: 0 0 25px #ffd700, 0 0 50px #ff0055; transition: transform 0.18s ease-out, opacity 0.18s ease-out;"></div>
+      </div>
   </body>
 </html>

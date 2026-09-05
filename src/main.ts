@@ -42,7 +42,8 @@ import {
   Collectible,
   LightningBeam,
   PvPShockwave,
-  AnimatedEffect
+  AnimatedEffect,
+  GroundScar
 } from './entities';
 import { pvpManager } from './pvpIaijutsuManager';
 import { initPvPLobby, updatePvpHud, showRoundBanner, updateTurnBadge, recordMatchResult } from './pvpLobby';
@@ -2794,10 +2795,10 @@ function killEnemy(e: Enemy) {
   if (e.subType === 'pyromancer') {
     const fireExp = new AnimatedEffect(e.x, e.y, vfxAnims.explosions.fire, 0.7, 2.0);
     globals.animatedEffects.push(fireExp);
-    // Deal splash damage to player if close
+    // Deal splash damage to player if close (squared distance comparison for 60 FPS invariant)
     const dx = globals.player.x - e.x;
     const dy = globals.player.y - e.y;
-    if (Math.hypot(dx, dy) < 140 && globals.player.state !== 'dead') {
+    if ((dx * dx + dy * dy) < 140 * 140 && globals.player.state !== 'dead') {
       callbacks.checkPlayerHit(e, 1);
     }
   } else if (e.subType === 'necromancer') {
@@ -4202,25 +4203,30 @@ function update(realDt: number) {
               // Hexagonal Asura ground scars & radiating crimson slashes
               for (let a = 0; a < 6; a++) {
                 const scAngle = (a * Math.PI) / 3;
-                globals.groundScars.push({
-                  x: globals.player.x + Math.cos(scAngle) * 55,
-                  y: globals.player.y + Math.sin(scAngle) * 55,
-                  angle: scAngle,
-                  length: 90,
-                  life: 3.5,
-                  maxLife: 3.5
-                });
+                globals.groundScars.push(new GroundScar(
+                  globals.player.x + Math.cos(scAngle) * 55,
+                  globals.player.y + Math.sin(scAngle) * 55,
+                  scAngle,
+                  90,
+                  '#ef4444'
+                ));
                 globals.slashes.push(Slash.acquire(
                   globals.player.x + Math.cos(scAngle) * 65,
                   globals.player.y + Math.sin(scAngle) * 65,
                   scAngle,
-                  2.4,
+                  1.5,
                   true,
                   '#ef4444'
                 ));
               }
 
-              const nearby = globals.enemies.filter(other => other.state !== 'dead' && Math.hypot(other.x - globals.player.x, other.y - globals.player.y) < 360);
+              const asuraRadiusSq = 360 * 360;
+              const nearby = globals.enemies.filter(other => {
+                if (other.state === 'dead') return false;
+                const dX = other.x - globals.player.x;
+                const dY = other.y - globals.player.y;
+                return (dX * dX + dY * dY) < asuraRadiusSq;
+              });
               nearby.forEach((other, idx) => {
                 if (idx < 6) {
                   asuraHits++;
@@ -5084,9 +5090,12 @@ function update(realDt: number) {
     if (globals.groundScars.length > 0) globals.groundScars.length = 0;
   } else {
     for (let i = 0; i < globals.groundScars.length; i++) {
-      globals.groundScars[i].update(realDt);
+      const gs = globals.groundScars[i];
+      if (gs && typeof gs.update === 'function') {
+        gs.update(realDt);
+      }
     }
-    inplaceFilter(globals.groundScars, s => s.life > 0);
+    inplaceFilter(globals.groundScars, s => s && s.life > 0);
   }
 
   let particleWriteIndex = 0;

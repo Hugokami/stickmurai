@@ -2268,17 +2268,33 @@ input[type="range"]::-webkit-slider-thumb:hover {
 /* Dojo screen layout & containment */
 #dojo-screen .menu-box {
   position: relative !important;
+  width: min(1180px, 94vw) !important;
+  max-width: 1180px !important;
+  height: min(800px, 88vh) !important;
+  min-height: min(560px, 86vh) !important;
   max-height: 88vh !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+  padding: 18px 24px !important;
 }
 
 #dojo-screen #dojo-hero-grid {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  min-height: 380px !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+  gap: 14px !important;
+  padding: 6px 8px 12px 2px !important;
+}
+
+#dojo-screen .hero-card {
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 #dojo-screen #close-dojo-btn {
@@ -2296,17 +2312,33 @@ input[type="range"]::-webkit-slider-thumb:hover {
 /* Ascension Upgrades modal layout & containment */
 #upgrades-modal .menu-box {
   position: relative !important;
+  width: min(1180px, 94vw) !important;
+  max-width: 1180px !important;
+  height: min(800px, 88vh) !important;
+  min-height: min(560px, 86vh) !important;
   max-height: 88vh !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+  padding: 18px 24px !important;
 }
 
 #upgrades-modal #menu-ascension-upgrade-grid {
-  flex: 1 1 0 !important;
-  min-height: 0 !important;
+  flex: 1 1 auto !important;
+  min-height: 380px !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
+  gap: 12px !important;
+  padding: 6px 8px 12px 2px !important;
+}
+
+#upgrades-modal .ascension-card {
+  min-height: 110px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 #upgrades-modal #close-upgrades-btn {
@@ -2357,10 +2389,23 @@ input[type="range"]::-webkit-slider-thumb:hover {
 #grimoire-screen .menu-box,
 #chronicle-screen .menu-box {
   position: relative !important;
-  max-height: 88vh !important;
+  width: min(1000px, 94vw) !important;
+  max-width: 1000px !important;
+  height: min(740px, 86vh) !important;
+  min-height: min(480px, 82vh) !important;
+  max-height: 86vh !important;
   display: flex !important;
   flex-direction: column !important;
   overflow: hidden !important;
+  padding: 16px 22px !important;
+}
+
+#grimoire-screen #grimoire-grid,
+#chronicle-screen #chronicle-list {
+  flex: 1 1 auto !important;
+  min-height: 340px !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 #close-grimoire-btn,

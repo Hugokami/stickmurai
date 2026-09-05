@@ -329,7 +329,11 @@ export function draw() {
 
   globals.afterimages.forEach(a => a.draw(ctx, globals.camera.x, globals.camera.y));
   if (globals.graphicsSettings !== 'low' && globals.groundScarsEnabled === 'on') {
-    globals.groundScars.forEach(s => s.draw(ctx, globals.camera.x, globals.camera.y));
+    globals.groundScars.forEach(s => {
+      if (s && typeof s.draw === 'function') {
+        s.draw(ctx, globals.camera.x, globals.camera.y);
+      }
+    });
   }
 
   // Draw Yomi Shrine & Wandering Hermit

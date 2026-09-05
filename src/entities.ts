@@ -1023,8 +1023,9 @@ export class Slash {
       ctx.scale(dir, 1);
       ctx.rotate(dir === -1 ? Math.PI - this.angle : this.angle);
       
-      // Center the slash arc accurately along the aim vector
-      const scale = 4.6 * this.sizeMult;
+      // Center the slash arc accurately along the aim vector with safe scale bounds
+      const safeMult = Number.isFinite(this.sizeMult) ? Math.min(2.5, Math.max(0.4, this.sizeMult)) : 1.0;
+      const scale = Math.min(5.5, Math.max(0.8, 4.6 * safeMult));
       ctx.scale(scale, scale);
       ctx.drawImage(img, -img.width / 2, -img.height / 2);
       ctx.restore();
