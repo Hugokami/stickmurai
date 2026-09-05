@@ -1,0 +1,2109 @@
+{
+  "date": "2026-09-05",
+  "sourceFiles": 493,
+  "skills": [
+    {
+      "name": "qa",
+      "description": "Systematically QA test a web application and fix bugs found. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\qa\\SKILL.md",
+      "sourceHash": "f80573f4bf3a9bf72e548589092d6ac75b083c06fb98367019f91222f13d5717",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\qa\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "cso",
+      "description": "Chief Security Officer mode. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\cso\\SKILL.md",
+      "sourceHash": "4d5da6367475aaad38bbf59f29e5c7fa2b184d48590951100b1d409b723133ea",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\cso\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "pdf",
+      "description": "Use this skill whenever the user wants to do anything with PDF files. This includes reading or extracting text/tables from PDFs, combining or merging multiple PDFs into one, splitting PDFs apart, rotating pages, adding watermarks, creating new PDFs, filling PDF forms, encrypting/decrypting PDFs, extracting images, and OCR on scanned PDFs to make them searchable. If the user mentions a .pdf file or asks to produce one, use this skill.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\pdf\\SKILL.md",
+      "sourceHash": "067401220db5745f719ff8c048d545d5edc8545e809668a3a6f9e2892fa51d48",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\pdf\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "docx",
+      "description": "\"Use this skill whenever the user wants to create, read, edit, or manipulate Word documents (.docx files). Triggers include: any mention of 'Word doc', 'word document', '.docx', or requests to produce professional documents with formatting like tables of contents, headings, page numbers, or letterheads. Also use when extracting or reorganizing content from .docx files, inserting or replacing images in documents, performing find-and-replace in Word files, working with tracked changes or comments, or converting content into a polished Word document. If the user asks for a 'report', 'memo', 'letter', 'template', or similar deliverable as a Word or .docx file, use this skill. Do NOT use for PDFs, spreadsheets, Google Docs, or general coding tasks unrelated to document generation.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\docx\\SKILL.md",
+      "sourceHash": "a77c8e2bf4de7f2cce5a2b07644831bf73bbf8657dfc1cef18ccfef3ae4ecf81",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\docx\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "draw",
+      "description": "Use when the user requests diagrams, flowcharts, architecture diagrams, ER diagrams, UML / sequence / class diagrams, SysML / MBSE diagrams (block definition, internal block, requirement, parametric), BPMN business process diagrams, swimlane / cross-functional flowcharts, network topology, cloud architecture from Terraform or Kubernetes manifests, ML/DL model figures (Transformer/CNN/LSTM), mind maps, or any visualization. Also use proactively when explaining systems with 3+ components, complex data flows, or relationships that benefit from visual representation. Best suited when the diagram needs custom styling, rich shape vocabulary, swimlanes, or exportable images (PNG/SVG/PDF/JPG). Generates .drawio XML and exports locally via the native draw.io desktop CLI.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\draw\\SKILL.md",
+      "sourceHash": "aa6eff9f07f6124aec7d509c98c967d7629946c4504dc174e7cf042c2997be1d",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\draw"
+    },
+    {
+      "name": "pptx",
+      "description": "\"Use this skill any time a .pptx file is involved in any way — as input, output, or both. This includes: creating slide decks, pitch decks, or presentations; reading, parsing, or extracting text from any .pptx file (even if the extracted content will be used elsewhere, like in an email or summary); editing, modifying, or updating existing presentations; combining or splitting slide files; working with templates, layouts, speaker notes, or comments. Trigger whenever the user mentions \\\"deck,\\\" \\\"slides,\\\" \\\"presentation,\\\" or references a .pptx filename, regardless of what they plan to do with the content afterward. If a .pptx file needs to be opened, created, or touched, use this skill.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\pptx\\SKILL.md",
+      "sourceHash": "5d91c30e63ef72cd1ff10446702401f9ebb3f32dd7b264f50959a95548a225bf",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\pptx\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "ship",
+      "description": "\"Ship workflow: detect + merge base branch, run tests, review diff, bump VERSION, update CHANGELOG, commit, push, create PR. (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ship\\SKILL.md",
+      "sourceHash": "b316ed89fa58128a4afbce92c374084e2a38dba0e58f0d18be3a330d7525fa62",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\ship\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "spec",
+      "description": "Turn vague intent into a precise, executable spec in five phases. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\spec\\SKILL.md",
+      "sourceHash": "7ad290d73bb3a2556963b80fc22d6ea7322045356be6e0fc858f6e3b271bbcc9",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\spec\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "tone",
+      "description": "Apply a natural, conversational, fluent, and culturally authentic tone to text in English and Burmese, completely eliminating robotic machine-translation patterns.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\tone\\SKILL.md",
+      "sourceHash": "b37d4946615ac8a5d5500028e543b74219810a1872ed76e804a62270f084a93d",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\tone"
+    },
+    {
+      "name": "xlsx",
+      "description": "\"Use this skill any time a spreadsheet file is the primary input or output. This means any task where the user wants to: open, read, edit, or fix an existing .xlsx, .xlsm, .csv, or .tsv file (e.g., adding columns, computing formulas, formatting, charting, cleaning messy data); create a new spreadsheet from scratch or from other data sources; or convert between tabular file formats. Trigger especially when the user references a spreadsheet file by name or path — even casually (like \\\"the xlsx in my downloads\\\") — and wants something done to it or produced from it. Also trigger for cleaning or restructuring messy tabular data files (malformed rows, misplaced headers, junk data) into proper spreadsheets. The deliverable must be a spreadsheet file. Do NOT trigger when the primary deliverable is a Word document, HTML report, standalone Python script, database pipeline, or Google Sheets API integration, even if tabular data is involved.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\xlsx\\SKILL.md",
+      "sourceHash": "7de127f835149f9c755fdf70d2ce4320e78a720dacf9f82495165de63b52732d",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\xlsx\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "codex",
+      "description": "OpenAI Codex CLI wrapper — three modes. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\codex\\SKILL.md",
+      "sourceHash": "cec7ff8dba8bc118062bcfb2483def117797cb548c2405895958a709fca98323",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\codex\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "guard",
+      "description": "\"Full safety mode: destructive command warnings + directory-scoped edits. (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\guard\\SKILL.md",
+      "sourceHash": "ab22714e84c096eed506f314aa49f44161f08eb37a4b4651fb2725bab6ca07ff",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\guard\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "learn",
+      "description": "Manage project learnings.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\learn\\SKILL.md",
+      "sourceHash": "06b83fba2cc58296d896d43150c109601026e03f081ede6a40cc7d2185abdebf",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\learn\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "retro",
+      "description": "Weekly engineering retrospective. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\retro\\SKILL.md",
+      "sourceHash": "e9daa78ffc9629e2315be84c4c21c794b2c872c362d8e25455cc2ed697c91ca1",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\retro\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "browse",
+      "description": "Fast headless browser for QA testing and site dogfooding. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\browse\\SKILL.md",
+      "sourceHash": "a33632d9948aa65e207fcdcf6bd6c39d46fee8a4028cafc56a472481609d106f",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\browse\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "canary",
+      "description": "Post-deploy canary monitoring. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\canary\\SKILL.md",
+      "sourceHash": "b83f2a2f407d40e2c440857f0e5f6e0fbca071f6dd26f35eb2efd4009f2c2b5d",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\canary\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "freeze",
+      "description": "Restrict file edits to a specific directory for the session. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\freeze\\SKILL.md",
+      "sourceHash": "f8cb02804952392dc966954e089e3f934b148eddade4327ead3d1aa1af8229cb",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\freeze\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "gstack",
+      "description": "Router for the gstack skill suite. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\gstack\\SKILL.md",
+      "sourceHash": "b77bab43d1db15b6019f34506a204bca9f5e9632d314b70075c26fd07b13b173",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "health",
+      "description": "Code quality dashboard. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\health\\SKILL.md",
+      "sourceHash": "505867059a06664334fb2ae1218b3deb814c8e7b42c837a626c3a062543611c8",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\health\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "ios-qa",
+      "description": "Live-device iOS QA for SwiftUI apps. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ios-qa\\SKILL.md",
+      "sourceHash": "cb6cdb1e794ced65f1a343e7671ecc2ff45276f30fc3fdd3af44e4429adcbf94",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\ios-qa\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "review",
+      "description": "Pre-landing PR review. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\review\\SKILL.md",
+      "sourceHash": "92ee16af71d5e0088326869b0a211c50f94b9261eeae75656bc21f9bcfae2031",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\review\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "scrape",
+      "description": "Pull data from a web page. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\scrape\\SKILL.md",
+      "sourceHash": "16a367c64fe56687ea96f3ba91d733bb0eaaa0c33b2ab23be665cf004cbd2191",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\scrape\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "careful",
+      "description": "Safety guardrails for destructive commands. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\careful\\SKILL.md",
+      "sourceHash": "64adcd299248c118b330d8d192b274ba608c1029405b0fd8bfa4d717b759a756",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\careful\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "diagram",
+      "description": "\"Turn an English description (or mermaid source) into a diagram triplet: the source, an editable .excalidraw file you can open (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\diagram\\SKILL.md",
+      "sourceHash": "f57f8722f5668393a3761f209a778a5e92fe2949425ca26d58e96285ab110412",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\diagram\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "ios-fix",
+      "description": "Autonomous iOS bug fixer. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ios-fix\\SKILL.md",
+      "sourceHash": "381c4f7e8c86d346ff48655ea4e0f814127b87515fe48fac1ee3d9ef4975e2b6",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\ios-fix\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "qa-only",
+      "description": "Report-only QA testing. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\qa-only\\SKILL.md",
+      "sourceHash": "911aec7f512a8179c78979873d599c00e497c55f2385f221d9ab033bb23ee927",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\qa-only\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "webclaw",
+      "description": "Web scraping and data extraction using the Webclaw API. Use when the user asks to scrape a website, extract structured data from URLs, crawl pages, or pull content from the web using Webclaw. Triggers on mentions of \"webclaw\", \"web scrape\", \"scrape this\", \"extract data from URL\", or \"crawl website\".",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\webclaw\\SKILL.md",
+      "sourceHash": "e6a764e7161b0796de9d7e00c451da8b50c25f6485ceecd264c902b94cbe6a88",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\webclaw"
+    },
+    {
+      "name": "autoplan",
+      "description": "Auto-review pipeline — reads the full CEO, design, eng, and DX review skills from disk and runs them sequentially with auto-decisions using 6 decision principles. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\autoplan\\SKILL.md",
+      "sourceHash": "73e2bf3e7b1868493fc162dccf9f26c182f50e4cfcad3e4f02efce0e3099e472",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\autoplan\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "brandkit",
+      "description": "Premium brand-kit image generation skill for creating high-end brand-guidelines boards, logo systems, identity decks, and visual-world presentations. Trained for minimalist, cinematic, editorial, dark-tech, luxury, cultural, security, gaming, developer-tool, and consumer-app brand systems. Optimized for intentional logo concepting, refined composition, sparse typography, strong symbolic meaning, premium mockups, art-directed imagery, and flexible grid layouts.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\brandkit\\SKILL.md",
+      "sourceHash": "a250c7b41aecacc412260de2fb429d36ada5f668388aad1770289fa3e5c4f740",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\brandkit\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "graphify-windows",
+      "description": "\"Use for any question about a codebase, its architecture, file relationships, or project content — especially when graphify-out/ exists, where the question should be treated as a graphify query first. Turns any input (code, docs, papers, images, videos) into a persistent knowledge graph with god nodes, community detection, and query/path/explain tools.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\graphify\\SKILL.md",
+      "sourceHash": "33efc4c85739d724ae7af563e333d5f403f66ff55f9bfde4ed63976af5b59762",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\graphify\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "ios-sync",
+      "description": "Regenerate the iOS debug bridge against the latest upstream gstack templates. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ios-sync\\SKILL.md",
+      "sourceHash": "abf82ff671da8aa2e61b357dc98336693b0acf910ab65439a5732dd7087cfeb3",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\ios-sync\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "make-pdf",
+      "description": "Turn any markdown file into a publication-quality PDF. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\make-pdf\\SKILL.md",
+      "sourceHash": "7c00be6908b4bd4629042218ffbff8d91247fecb606c9885494f488dda45da3b",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\make-pdf\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "skillify",
+      "description": "Codify the most recent successful /scrape flow into a permanent browser-skill on disk. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\skillify\\SKILL.md",
+      "sourceHash": "0d33de2cb0d3f7be637630b06be821bf653cf565e3d543ea63a3fbf14a73e605",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\skillify\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "ui-craft",
+      "description": "\"Use for UI design and implementation work to avoid generic AI-looking interfaces. Provides anti-slop rules, a required discovery phase before coding, and guidance for layout, typography, color, motion, accessibility, dashboards, tables, landing pages, theming, and polish. Trigger when editing UI code or reviewing and refining components, pages, screens, layouts, animations, responsive behavior, or design systems.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\SKILL.md",
+      "sourceHash": "9d6cd67c50995dce675a204503a8354b01109516e8c1fe9031ab723e5b7f8f3f",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ui-craft"
+    },
+    {
+      "name": "unfreeze",
+      "description": "Clear the freeze boundary set by /freeze, allowing edits to all directories again. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\unfreeze\\SKILL.md",
+      "sourceHash": "e0a396b1304d002e83880a780cf17e0704c3ada205f6f3f0d6e5e7cf5d15f340",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\unfreeze\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "benchmark",
+      "description": "Performance regression detection using the browse daemon. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\benchmark\\SKILL.md",
+      "sourceHash": "e1061bb7f982966170b98fc1a75c17637af27dfd2f23e8a49c1d4c7d7a8baf08",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\benchmark\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "humanizer",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\humanizer\\SKILL.md",
+      "sourceHash": "5fd504ab8c910a4e59418fae143f6f7c6928822ffedf45fb525a9b3bb8d7a83b",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\humanizer\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "ios-clean",
+      "description": "\"Remove the DebugBridge SPM package and all #if DEBUG wiring from an iOS app. (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ios-clean\\SKILL.md",
+      "sourceHash": "a77413d4c0e58dffda17626d874c87ea813f1bfdb4cb1e260ea72cd934f6ce42",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\ios-clean\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "media-use",
+      "description": "Agent Media OS — resolve any media need (BGM, SFX, image, icon) into a frozen local file + ledger record. One verb (`resolve`) handles the full cascade — project cache, global cache, HeyGen catalog search, freeze, register. Keeps search noise on disk, hands the agent a path. Use when a composition needs background music, sound effects, images, or icons.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\media-use\\SKILL.md",
+      "sourceHash": "139ac9d653450bab3652ec3b9ae43620fb60ff68237f4fd6953b1a578928e075",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\media-use\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "plan-tune",
+      "description": "\"Self-tuning question sensitivity + developer psychographic for gstack (v1: observational). (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\plan-tune\\SKILL.md",
+      "sourceHash": "2e6ed969370e9a31a017d97644658ce1e5906bbb6023e5a37ce0af08b6b5e3cb",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\plan-tune\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "slideshow",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\slideshow\\SKILL.md",
+      "sourceHash": "3479d3834ceec11d438c6ac6ebe5cb3d5719afcbb3df870d6bd4b21cb1ffba1e",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\slideshow\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "improve-ui",
+      "description": "Audit an existing product surface against its own design evidence, identify verified UI problems, and write self-contained implementation plans for another agent. Strictly read-only on product source. Use when asked to review, refine, improve, or clean up an interface without replacing its identity; investigate design-system drift; or prepare a design handoff.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-skills\\SKILL.md",
+      "sourceHash": "426e0c61b61f9aa6d831ebace493d81217b19bd1a24a9d2f9025f21390c6e88a",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ui-skills"
+    },
+    {
+      "name": "claude-api",
+      "description": "|-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\claude-api\\SKILL.md",
+      "sourceHash": "7e9d8f0f112e4a9737ad852e4e8bdba78c89709cfa49306ac9b9c8c4ef630b5d",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\claude-api"
+    },
+    {
+      "name": "last30days",
+      "description": "\"Research what people actually say about any topic in the last 30 days. Pulls posts and engagement from Reddit, X, YouTube, TikTok, Hacker News, Polymarket, GitHub, and the web.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\last30days\\SKILL.md",
+      "sourceHash": "b4cad21138c65768cf4862e9b312737cc2b1b9ade44d08267fadc1d9f7b18a74",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\last30days\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "pair-agent",
+      "description": "Pair a remote AI agent with your browser. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\pair-agent\\SKILL.md",
+      "sourceHash": "1f76495f2d135f4fdf1bea862d084b9a01dcd3c82b421d52052598865a104d5f",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\pair-agent\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "high-end-visual-design",
+      "description": "Teaches the AI to design like a high-end agency. Defines the exact fonts, spacing, shadows, card structures, and animations that make a website feel expensive. Blocks all the common defaults that make AI designs look cheap or generic.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\soft-skill\\SKILL.md",
+      "sourceHash": "2d11cdcefc8bf319429ee17d94d69a390802e2acf7163662d1eacbcf5be3ff79",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\soft-skill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "understand",
+      "description": "Analyze a codebase to produce an interactive knowledge graph for understanding architecture, components, and relationships",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\understand\\SKILL.md",
+      "sourceHash": "9e79d1b45dacc98936174dae489e98a48347d39fd5937fdc8c03f9d25c4874a8",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\understand\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "design-html",
+      "description": "\"Design finalization: generates production-quality Pretext-native HTML/CSS. (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\design-html\\SKILL.md",
+      "sourceHash": "ed44f14e570bba140860cb6431b7a678b1c50ecc7b7b1933ae9659f1ca541eb0",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\design-html\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "hyperframes",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\hyperframes\\SKILL.md",
+      "sourceHash": "cae375ffe84cb58b73eb10c93351868c2a11004c651a2224f9fea0a346d2f40e",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\hyperframes\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "investigate",
+      "description": "Systematic debugging with root cause investigation. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\investigate\\SKILL.md",
+      "sourceHash": "6296d2cedc1dda85d55044f68a52bce2f6dbf867e770e255a9d3bb2b67dec747",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\investigate\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "mcp-builder",
+      "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\mcp-builder\\SKILL.md",
+      "sourceHash": "57231330040e18e033dad8b2fdc0340a6185034c32b42b7d3448f444a6af6cf2",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\mcp-builder\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "pr-to-video",
+      "description": "\"turn a GitHub pull request (a PR URL like github.com/<owner>/<repo>/pull/<N>, an <owner>/<repo>#<N> ref, or 'this PR' in a checked-out repo) into a code-change explainer video, up to ~3 min (sweet spot 30-90s) — changelog, feature reveal, fix, or refactor walkthrough, rendered from the diff / commits / files. The input is a CODE CHANGE read via the gh CLI; there is no website capture. Use this skill for a GitHub PR. Do not use it for a product launch/promo (use /product-launch-video), a tour of a real website (use /website-to-video), a topic explainer with no PR (use /faceless-explainer), captions on existing footage (use /embedded-captions), or a short unnarrated motion graphic (use /motion-graphics). If the intent is unclear, route through /hyperframes first.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\pr-to-video\\SKILL.md",
+      "sourceHash": "e273d5cbb44662a858fb8fc419875dc42b7550d23dee64c4131eb2edfe728f4d",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\pr-to-video\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "sync-gbrain",
+      "description": "Keep gbrain current with this repo's code and refresh agent search guidance in CLAUDE.md. Wraps the gstack-gbrain-sync orchestrator with state (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\sync-gbrain\\SKILL.md",
+      "sourceHash": "a4ee9929f851152f58273d05a0b02704b40605e0017fae243fb46d076c029cd8",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\sync-gbrain\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "design-taste-frontend",
+      "description": "Anti-slop frontend skill for landing pages, portfolios, and redesigns. The agent reads the brief, infers the right design direction, and ships interfaces that do not look templated. Real design systems when applicable, audit-first on redesigns, strict pre-flight check.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\taste-skill\\SKILL.md",
+      "sourceHash": "2e064e92aca020b2e0bad69326fe7ea55d59005ed53d1a8cbce1bd135d44b8b3",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\taste-skill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "autoresearch",
+      "description": "\"Andrej Karpathy's autonomous ML optimization loop. Iteratively edits train.py, runs a 5-minute training pass, measures validation loss, commits improvements, and discards regressions.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\autoresearch\\SKILL.md",
+      "sourceHash": "5766d5e8d8f9873120e3e353f7d81e613c607fbcd3848465ccc7c6ddcbeca985",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\autoresearch\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "compete-mode",
+      "description": "Spawns three competing sub-agents to complete a task and uses a blind judge to synthesize the best version.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\compete-mode\\SKILL.md",
+      "sourceHash": "746155bd57ec5c67760339ec83d786d744161ac6df1476a359f00308e51c4098",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\compete-mode\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "context-save",
+      "description": "Save working context. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\context-save\\SKILL.md",
+      "sourceHash": "1c5635797c27c30ad48593f87844138e4ed9da2a2ca80a6839c2f4ba91bdd776",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\context-save\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "devex-review",
+      "description": "Live developer experience audit. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\devex-review\\SKILL.md",
+      "sourceHash": "aa162970e42dbca046f7f6ffb0b40167cf63b76b50d197d87fd4895937680513",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\devex-review\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "office-hours",
+      "description": "YC Office Hours — two modes. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\office-hours\\SKILL.md",
+      "sourceHash": "b5a0b9d72f4a992ba0b52cd7b27d15e7e0e29e35c4b775477ec3a031c47f5c92",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\office-hours\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "full-output-enforcement",
+      "description": "Overrides default LLM truncation behavior. Enforces complete code generation, bans placeholder patterns, and handles token-limit splits cleanly. Apply to any task requiring exhaustive, unabridged output.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\output-skill\\SKILL.md",
+      "sourceHash": "7b2275b591af7760b36a2dfb1dbcf3c99c5054c52298a1066c4979f39ed947d9",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\output-skill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "setup-deploy",
+      "description": "Configure deployment settings for /land-and-deploy.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\setup-deploy\\SKILL.md",
+      "sourceHash": "f7d23f32dd76589cc3c0333650b0250ed7b9c48f6969b5e81a59dba7d4cc2876",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\setup-deploy\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "setup-gbrain",
+      "description": "\"Set up gbrain for this coding agent: install the CLI, initialize a local PGLite or Supabase brain, register MCP, capture per-remote trust policy. (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\setup-gbrain\\SKILL.md",
+      "sourceHash": "636c18a653ae41b27f7d76d450eb7bc7c38e2202ffa909566c025565c3008972",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\setup-gbrain\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "stitch-design-taste",
+      "description": "Semantic Design System Skill for Google Stitch. Generates agent-friendly DESIGN.md files that enforce premium, anti-generic UI standards — strict typography, calibrated color, asymmetric layouts, perpetual micro-motion, and hardware-accelerated performance.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\stitch-skill\\SKILL.md",
+      "sourceHash": "56e41363d61ff565dbba8c8c05c3d8e6538ccd6f49180a504737edfcdbfff409",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\stitch-skill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "svg-pixelart",
+      "description": "Generate pixel art SVG illustrations for READMEs, docs, or slides. Use when user says \"画像素图\", \"pixel art\", \"make an SVG illustration\", \"README hero image\", \"/svg-pixelart\", or wants a cute visual.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\svg-pixelart\\SKILL.md",
+      "sourceHash": "192f068a265d9ef9dee394f615a861acd5b597be3a73e10719a29a2eb4f301c5",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\svg-pixelart"
+    },
+    {
+      "name": "canvas-design",
+      "description": "Create beautiful visual art in .png and .pdf documents using design philosophy. You should use this skill when the user asks to create a poster, piece of art, design, or other static piece. Create original visual designs, never copying existing artists' work to avoid copyright violations.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\canvas-design\\SKILL.md",
+      "sourceHash": "7bebc4a2cf108c55c1e52bb96b1050dc1ab2f9492e9c2d43f1fe57f826728f4d",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\canvas-design\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "design-review",
+      "description": "\"Designer's eye QA: finds visual inconsistency, spacing issues, hierarchy problems, AI slop patterns, and slow interactions — then fixes them. (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\design-review\\SKILL.md",
+      "sourceHash": "a7fb587db289843467c0008d1941ebd39eff57afed0eab422f08b7d6604107e5",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\design-review\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "general-video",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\general-video\\SKILL.md",
+      "sourceHash": "5a1dc157f4916e41dadcf3d8dd8c535819d4f76f6bde3a656f818b7077b401ac",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\general-video\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "help-me-study",
+      "description": "Generate high-retention, bilingual or multilingual interactive exam study web apps and multi-subject revision portals in the signature LT Studio minimalist architectural format. Trigger whenever the user mentions /help-me-study, /ltstudyengine, help me study, or asks to build study apps, exam preparation tools, revision portals, flashcard engines, active recall trainers, visual diagram simulators, code/process construction studios, or subject study guides for any subject (e.g. computer science, networks, biology, chemistry, physics, medicine, engineering, law, history, math, etc.). Enforces LT Studio standards: 100% verbatim text fidelity, clear [MUST MEMORIZE FOR EXAM] highlights, warm monochrome palette, Newsreader/Geist typography, flexible subject-adaptive 8 study modes, 3D Leitner flashcards, blind typing active recall diagnostics, optional Step-by-Step Construction Studio, and searchable beginner analogies dictionary.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\help-me-study\\SKILL.md",
+      "sourceHash": "374b340b93de58b43b486c063728a38cd742268e6a5257922d20f4b3a944b482",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\help-me-study"
+    },
+    {
+      "name": "skill-creator",
+      "description": "Create new skills, modify and improve existing skills, and measure skill performance. Use when users want to create a skill from scratch, edit, or optimize an existing skill, run evals to test a skill, benchmark skill performance with variance analysis, or optimize a skill's description for better triggering accuracy.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\skill-creator\\SKILL.md",
+      "sourceHash": "e030e7685e26283b4a76f5202aa3ae8516fb41dde799be5ae8ea6393ec009fe9",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\skill-creator\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "svg-precision",
+      "description": "Deterministic SVG generation, validation, and rendering. Use for icons, diagrams, charts, UI mockups, or technical drawings requiring structural correctness and cross-viewer compatibility.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\svg-precision\\SKILL.md",
+      "sourceHash": "4e27cf7db1a0a90452f942766b64a9e4ef7a3ff2f2be0fd92ddedf3ef29aa48d",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\svg-precision\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "theme-factory",
+      "description": "Toolkit for styling artifacts with a theme. These artifacts can be slides, docs, reportings, HTML landing pages, etc. There are 10 pre-set themes with colors/fonts that you can apply to any artifact that has been creating, or can generate a new theme on-the-fly.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\theme-factory\\SKILL.md",
+      "sourceHash": "7c765e6626bf61eca30224ceeb0da51ac003c7c2f1c1743ace9b3baa305ea632",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\theme-factory\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "beautiful-pptx",
+      "description": "Create exceptionally polished, editable, breathtaking PowerPoint presentations with strong storytelling, premium visual design, custom 3D graphics, parametric Morph animations, variable rotating diagrams, accordion card expansions, camera pan transitions, data visualization, hero product showcases, gaming HUDs, editorial collages, speaker notes, and automated quality checks. Make sure to trigger this skill whenever the user asks for a PPTX, PowerPoint deck, presentation, pitch deck, keynote, report deck, visual summary, slides, hardware teardown, product launch, animated deck, or morph transitions, even if they don't explicitly mention \"beautiful\".",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\beautiful-pptx\\SKILL.md",
+      "sourceHash": "7865846fad1eddf69dbd27ab9394695c68923c60d97580404d4f8a49f35d3ca0",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\beautiful-pptx"
+    },
+    {
+      "name": "design-shotgun",
+      "description": "\"Design shotgun: generate multiple AI design variants, open a comparison board, collect structured feedback, and iterate. (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\design-shotgun\\SKILL.md",
+      "sourceHash": "513d9e18dbe5048c8f42dde15f8053e9eee8224b1ac072c1b6cc533d908869e7",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\design-shotgun\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "file-humanizer",
+      "description": "\"Humanize documents (.docx, .pdf, .txt, .md, reports, essays, assignments) using /slopannihilator principles to defeat strict AI detectors (Copyleaks, Turnitin, Originality.ai) with 0% AI detection score. Use whenever the user asks to humanize, de-slop, update word count, bypass Copyleaks, or polish any document format while strictly preserving visual formatting, academic citations, code/data tables, and cover page declarations.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\file-humanizer\\SKILL.md",
+      "sourceHash": "7a7bf45250798fe75ad771e227eb651e6180a96a80e089a81b746f98e39275c1",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\file-humanizer"
+    },
+    {
+      "name": "gpt-taste",
+      "description": "Elite UX/UI & Advanced GSAP Motion Engineer. Enforces Python-driven true randomization for layout variance, strict AIDA page structure, wide editorial typography (bans 6-line wraps), gapless bento grids, strict GSAP ScrollTriggers (pinning, stacking, scrubbing), inline micro-images, and massive section spacing.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\gpt-tasteskill\\SKILL.md",
+      "sourceHash": "6a19b70e6b53761d5788f284c615bf93a07cd9f94d5f0a452520260d9d951523",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gpt-tasteskill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "gstack-upgrade",
+      "description": "Upgrade gstack to the latest version.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\gstack-upgrade\\SKILL.md",
+      "sourceHash": "aa78f4af40338c0dc27f2eb6049a6eb6af23781fd88ff250d46aa3144fc2f0e4",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\gstack-upgrade\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "internal-comms",
+      "description": "A set of resources to help me write all kinds of internal communications, using the formats that my company likes to use. Claude should use this skill whenever asked to write some sort of internal communications (status reports, leadership updates, 3P updates, company newsletters, FAQs, incident reports, project updates, etc.).",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\internal-comms\\SKILL.md",
+      "sourceHash": "c5c061ab25b33fab2358a9be53a5cc0d528ec7c3e8a29285a041ffc95d0d8947",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\internal-comms\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "landing-report",
+      "description": "Read-only queue dashboard for workspace-aware ship. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\landing-report\\SKILL.md",
+      "sourceHash": "bb328522f77372717e1d41c2ca1911586f0518c30c16f336f6eb8d51eaca1931",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\landing-report\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "music-to-video",
+      "description": "\"Use when the user has a music track (an audio file, or a video to pull audio from) and wants a beat-synced HyperFrames video, calm to hard-hitting. The music drives everything: one analyzer reads it once, the orchestrator lays out the frames and fills a per-frame plan, and one sub-agent builds each frame. Typography and templates are the floor — a complete video needs zero assets — but any images or videos the user supplies are cut into the frames on the same beat grid (beat-cut / ken-burns). The genre (lyric video, slideshow, kinetic promo) falls out of the per-frame choices; the pipeline never branches on it.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\music-to-video\\SKILL.md",
+      "sourceHash": "6187efb7b0f8ed52e1b3be6d3ca6d5ec7f08d8a816c083b8a81c83adf7c20b36",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\music-to-video\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "redesign-existing-projects",
+      "description": "Upgrades existing websites and apps to premium quality. Audits current design, identifies generic AI patterns, and applies high-end design standards without breaking functionality. Works with any CSS framework or vanilla CSS.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\redesign-skill\\SKILL.md",
+      "sourceHash": "d5a62efaf36fa52ea1966e06ce74452b3466a4f179af34fbce65f2c8e5461349",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\redesign-skill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "svg-specialist",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\svg-specialist\\SKILL.md",
+      "sourceHash": "68f159e4b512f110ffa65b8d8fe4ba53bb244eb2ad375c9c706441e9ee7c18b0",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\svg-specialist"
+    },
+    {
+      "name": "design-taste-frontend-v1",
+      "description": "The original v1 taste-skill, preserved for projects depending on its exact behavior. The current default is `design-taste-frontend` (v2 experimental), which is a substantial rewrite. Use this v1 install name only if you need exact backward compatibility.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\taste-skill-v1\\SKILL.md",
+      "sourceHash": "b7d3715c36c93ce1ac44c60586dd7974a2c2c094aff06c3a72b736314e60d8ac",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\taste-skill-v1\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "webapp-testing",
+      "description": "Toolkit for interacting with and testing local web applications using Playwright. Supports verifying frontend functionality, debugging UI behavior, capturing browser screenshots, and viewing browser logs.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\webapp-testing\\SKILL.md",
+      "sourceHash": "8bc27790f6e6dfc2bfa6692326d4518baacf6a31dcc646d963c729adad2f7e34",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\webapp-testing\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "algorithmic-art",
+      "description": "Creating algorithmic art using p5.js with seeded randomness and interactive parameter exploration. Use this when users request creating art using code, generative art, algorithmic art, flow fields, or particle systems. Create original algorithmic art rather than copying existing artists' work to avoid copyright violations.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\algorithmic-art\\SKILL.md",
+      "sourceHash": "6688fc81bb2051d3f234385b50ce160834eb0b0510ed8a5816cc412c1d28c352",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\algorithmic-art\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "industrial-brutalist-ui",
+      "description": "Raw mechanical interfaces fusing Swiss typographic print with military terminal aesthetics. Rigid grids, extreme type scale contrast, utilitarian color, analog degradation effects. For data-heavy dashboards, portfolios, or editorial sites that need to feel like declassified blueprints.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\brutalist-skill\\SKILL.md",
+      "sourceHash": "bd9c7fd04ae149531eb6bd0d4e8dceee57aa6877fcef3d67ced90e68e755affa",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\brutalist-skill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "context-restore",
+      "description": "Restore working context saved earlier by /context-save. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\context-restore\\SKILL.md",
+      "sourceHash": "d006b63c8568258f7f3f0201447f806e87e0386ef2a17c9d3598411c8d974d1b",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\context-restore\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "doc-coauthoring",
+      "description": "Guide users through a structured workflow for co-authoring documentation. Use when user wants to write documentation, proposals, technical specs, decision docs, or similar structured content. This workflow helps users efficiently transfer context, refine content through iteration, and verify the doc works for readers. Trigger when user mentions writing docs, creating proposals, drafting specs, or similar documentation tasks.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\doc-coauthoring\\SKILL.md",
+      "sourceHash": "acb9b89b228fb818ffe2f464e40b1cdbf6948b50ceeeb7378f0e5b9d78c996ad",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\doc-coauthoring\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "frontend-design",
+      "description": "Guidance for distinctive, intentional visual design when building new UI or reshaping an existing one. Helps with aesthetic direction, typography, and making choices that don't read as templated defaults.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\frontend-design\\SKILL.md",
+      "sourceHash": "35c43b9d10c2388dbb228047ad028c989a14033750812125f351c85aa42c7a4a",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\frontend-design\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "hyperframes-cli",
+      "description": "HyperFrames CLI dev loop. Use when running npx hyperframes init, add, catalog, capture, lint, validate, inspect, layout, snapshot, preview, play, render, publish, lambda, doctor, browser, info, upgrade, skills, compositions, docs, benchmark, telemetry, transcribe, tts, or remove-background, or when troubleshooting the HyperFrames build/render environment. Entry point for AWS Lambda cloud rendering (`hyperframes lambda deploy / render / progress / destroy / policies`).",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\hyperframes-cli\\SKILL.md",
+      "sourceHash": "53b6de9aca72b3b85b60f0be90cff35510aff83f1807d765297c072e8d9bd8b4",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\hyperframes-cli\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "land-and-deploy",
+      "description": "Land and deploy workflow. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\land-and-deploy\\SKILL.md",
+      "sourceHash": "c81e6a392765f765990484c6cb1d7b60d7354359f4561655d15e86e3feb2169f",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\land-and-deploy\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "lt-study-engine",
+      "description": "Alias for /help-me-study. Generate high-retention, bilingual or multilingual interactive exam study web apps and multi-subject revision portals in the signature LT Studio minimalist architectural format. Trigger whenever the user mentions /lt-study-engine, /help-me-study, or asks to build study apps, exam preparation tools, revision portals, flashcard engines, active recall trainers, visual diagram simulators, code/process construction studios, or subject study guides. Enforces LT Studio standards: 100% verbatim text fidelity, clear [MUST MEMORIZE FOR EXAM] highlights, warm monochrome palette, Newsreader/Geist typography, flexible subject-adaptive 8 study modes, 3D Leitner flashcards, blind typing active recall diagnostics, optional Step-by-Step Construction Studio, and searchable beginner analogies dictionary.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\lt-study-engine\\SKILL.md",
+      "sourceHash": "db38c1516bb92df57d31dde8f770a479c4898ae422ef2d0d63d8636d0a304780",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\lt-study-engine"
+    },
+    {
+      "name": "motion-graphics",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\motion-graphics\\SKILL.md",
+      "sourceHash": "e8282d9904114ab330357e93dc1cdc1ceca3b95babd8ebed1f2cda9c0262bd66",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\motion-graphics\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "plan-ceo-review",
+      "description": "CEO/founder-mode plan review. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\plan-ceo-review\\SKILL.md",
+      "sourceHash": "c18016a320c7516814d41067936b9b239899e08f27b133a306f4de4c20921284",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\plan-ceo-review\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "plan-eng-review",
+      "description": "Eng manager-mode plan review. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\plan-eng-review\\SKILL.md",
+      "sourceHash": "41c92a82319c081ef48a17733bcd5815d83637cf1e0390c45db5f9ccbbca08e9",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\plan-eng-review\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "slopannihilator",
+      "description": "\"Universal anti-AI humanizer that defeats multi-layered AI detectors (ZeroGPT, NoteGPT, Copyleaks, Turnitin 3.0, GPTZero, Originality.ai 3.0, Winston AI) with 0% AI detection scores. Eliminates poetic AI tropes, robotic metronomes, and academic fluff by enforcing true conversational phrasing, sentence fragments, asymmetrical rhythm, concrete reality anchors, and AST syntax disruption.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\slopannihilator\\SKILL.md",
+      "sourceHash": "19d43f5a286b2e70a1280e6f49fe28997a73dc296417c9d27f245dbb76aaa93f",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\slopannihilator"
+    },
+    {
+      "name": "understand-chat",
+      "description": "Use when you need to ask questions about a codebase or understand code using a knowledge graph",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\understand-chat\\SKILL.md",
+      "sourceHash": "23a7ce060e9cafee865c2c2377ec121db2600606f03547be5afdb17245ded118",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\understand-chat\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "understand-diff",
+      "description": "Use when you need to analyze git diffs or pull requests to understand what changed, affected components, and risks",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\understand-diff\\SKILL.md",
+      "sourceHash": "a4de71ac594b730f1ef72a6488b7ea90c46dbdd47f0df4635e84035bb891b09b",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\understand-diff\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "benchmark-models",
+      "description": "Cross-model benchmark for gstack skills. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\benchmark-models\\SKILL.md",
+      "sourceHash": "9b7af18a0b3886d68992e8b15e2b67eab642926c79cae8aad3d747b289eeadd9",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\benchmark-models\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "brand-guidelines",
+      "description": "Applies Anthropic's official brand colors and typography to any sort of artifact that may benefit from having Anthropic's look-and-feel. Use it when brand colors or style guidelines, visual formatting, or company design standards apply.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\brand-guidelines\\SKILL.md",
+      "sourceHash": "a0aa0a21ebf9e8511a045cc234bc839adc2b6706db727add14e9855f242e11a7",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\brand-guidelines\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "document-release",
+      "description": "Post-ship documentation update. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\document-release\\SKILL.md",
+      "sourceHash": "4e33c59de9d6c942252f5f9ec4952853d41dba22e96fd1daab6d5faa86ebaf00",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\document-release\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "hyperframes-core",
+      "description": "The HyperFrames composition contract — build one renderable project. Use for composition structure, the `data-*` timing attributes, `class=\"clip\"`, tracks, sub-compositions, variables, framework-owned media playback, deterministic-render rules, and validation. Read before writing composition HTML.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\hyperframes-core\\SKILL.md",
+      "sourceHash": "689de1f94e682ee31d1f22cf196040e8f24fdaee5fbf75a832fd890f1a27a2b7",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\hyperframes-core\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "minimalist-ui",
+      "description": "Clean editorial-style interfaces. Warm monochrome palette, typographic contrast, flat bento grids, muted pastels. No gradients, no heavy shadows.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\minimalist-skill\\SKILL.md",
+      "sourceHash": "1a292d1459292649dc5b422e029093259b6127e7df2f37ad8c22033174333a57",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\minimalist-skill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "staruml-modeling",
+      "description": "\"Use when generating StarUML-compatible .mdj JSON UML models from project source code. Parse classes, interfaces, enums, relationships, and attributes from source code and produce valid StarUML model files for documentation and architectural review. Covers class diagram creation, relationship mapping (generalization, realization, association, composition, aggregation, dependency), naming conventions, and automated diagram generation workflows.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\staruml-modeling\\SKILL.md",
+      "sourceHash": "b8ccdac684d089fcc8e64c3f6031753b8ba4cf5a6849e9c1742055440690efa3",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\staruml-modeling"
+    },
+    {
+      "name": "website-to-video",
+      "description": "\"Capture a general website/URL and turn it into a HyperFrames video (site tour, showcase, or social clip from the site's own visuals). Uses headless Chrome screenshots + brand assets. Use when intent is general — portfolio/blog/landing-page showcase or social clip from the site. NOT for: product/SaaS launch or promo (→ /product-launch-video, even from a URL); topic explainer with no site (→ /faceless-explainer); GitHub PR (→ /pr-to-video); adding captions to existing video (→ /embedded-captions); short unnarrated page-highlight motion graphic (→ /motion-graphics). Unclear launch-vs-general-site? Ask one question or start at /hyperframes.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\website-to-video\\SKILL.md",
+      "sourceHash": "034276ce1b67aa7f56652ca0304372671d568d89ba074b01b754b2ed85c6250b",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\website-to-video\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "document-generate",
+      "description": "Generate missing documentation from scratch for a feature, module, or entire project. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\document-generate\\SKILL.md",
+      "sourceHash": "3d97c417c753900f906369590d1721614a6df49530ec4c44c05ba895300f891b",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\document-generate\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "embedded-captions",
+      "description": "'Add captions to a talking-head video. ONE catalog (CATALOG.md) of 32 visual identities behind two engines: column-flow (captions composited INTO the scene — matte occlusion + mix-blend; cream/ink/editorial/keynote/documentary/loud/neon/glitch/chrome/velocity) and themed constitutions (anchor/ordnance/terminal/neonsign/stardust/stomp/scoreboard/transit/vhs/arcade/dossier/laser/thunder/hologram/biolume/aurora/spectrum/papercut/popup/chalkboard/graffiti/brush/inkwater/ransom/lastpage/nightcity — e.g. a glyph-decode climax, a neon sign WRITTEN stroke by stroke, or the quiet `anchor` rail default). Route by identity, never by mode. Trigger on \"captions/subtitles\", \"embed/cinematic captions\", \"VFX captions\", \"炸/特效/酷炫字幕\", a named identity, or top-tier motion-graphics asks. Embedding every word is wrong for most talking-head content — `anchor` is the verbatim default. Pipeline: transcription → hyperframes remove-background matting → HTML render → ffmpeg overlay. Requires hyperframes and a single-subject clip.'",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\embedded-captions\\SKILL.md",
+      "sourceHash": "f259486ad6955a115dcb24ca2ab6fe0e2663dceeb3c50d1f46a78094288c0dc7",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\embedded-captions\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "hyperframes-media",
+      "description": "Audio and media assets for HyperFrames compositions, produced by one shared audio engine (`scripts/audio.mjs`) — multi-provider TTS (HeyGen / ElevenLabs / Kokoro local), background music + sound effects (HeyGen audio-library retrieval by default, with local Lyria / MusicGen BGM generation and a bundled SFX library as the no-credential fallback), Whisper transcription, background removal, and caption authoring. Use for voiceover / TTS, BGM, SFX / sound effects, transcription, captions / subtitles / lyrics / karaoke / per-word styling, voice + provider selection, and music-mood prompting.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\hyperframes-media\\SKILL.md",
+      "sourceHash": "2427217105228e80c326fabea4e7e74a91f31536345cc35f1285ef510ba26323",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\hyperframes-media\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "ios-design-review",
+      "description": "Visual design audit for iOS apps on real hardware. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ios-design-review\\SKILL.md",
+      "sourceHash": "24245ba5b640dcfebdfa2ed0251a30d676f7a00a44b932802769c8d7b3cc2f10",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\ios-design-review\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "plan-devex-review",
+      "description": "Interactive developer experience plan review. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\plan-devex-review\\SKILL.md",
+      "sourceHash": "4d6cc577f07af1a0268e89ba0fdf45eb595583bdad306f809cbb8b6645c18951",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\plan-devex-review\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "slack-gif-creator",
+      "description": "Knowledge and utilities for creating animated GIFs optimized for Slack. Provides constraints, validation tools, and animation concepts. Use when users request animated GIFs for Slack like \"make me a GIF of X doing Y for Slack.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\slack-gif-creator\\SKILL.md",
+      "sourceHash": "561c85ffeab639a1e84bb51cfc49f66e868a2a4c4b8945bf77b7bdaeca145a7d",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\slack-gif-creator\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "understand-domain",
+      "description": "Extract business domain knowledge from a codebase and generate an interactive domain flow graph. Works standalone (lightweight scan) or derives from an existing /understand knowledge graph.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\understand-domain\\SKILL.md",
+      "sourceHash": "3e07662c426a92047ecbc75da1df9b51a54ca0459d3abdda828076f65899d422",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\understand-domain\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "apify-actorization",
+      "description": "Convert existing projects into Apify Actors - serverless cloud programs. Actorize JavaScript/TypeScript (SDK with Actor.init/exit), Python (async context manager), or any language (CLI wrapper). Use when migrating code to Apify, wrapping CLI tools as Actors, or adding Actor SDK to existing projects.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\apify-actorization\\SKILL.md",
+      "sourceHash": "eb0131f1bdafe59665cf35e1b06c85ab41ab9ce02aa331970469f9708628519e",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\apify-actorization\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "faceless-explainer",
+      "description": "\"turn arbitrary text — an article, notes, a topic, a brief — into a faceless explainer video, up to ~3 min (sweet spot 30-90s), where every visual is invented (typography, abstract graphics, diagrams, data-viz) rather than captured. There is no URL, no website capture, and no real assets. Use this skill for topic explainers, concept breakdowns, how-tos, listicles, and narrative explainers. Do not use it for a product launch/promo (use /product-launch-video), a tour of a real website (use /website-to-video), a GitHub PR (use /pr-to-video), captions on existing footage (use /embedded-captions), or a short unnarrated motion graphic (use /motion-graphics). If the intent is unclear, route through /hyperframes first.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\faceless-explainer\\SKILL.md",
+      "sourceHash": "2a75742f8b02b056d5e889f1c96534b0b08abbe3a49ee1c35fca4a92ed1d08c6",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\faceless-explainer\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "nanobanana-mockups",
+      "description": "Batch generate flatlay t-shirt mockups by automatically placing folders of graphic designs onto a base t-shirt image using the \"nanobanana 2\" style prompt.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\nanobanana-mockups\\SKILL.md",
+      "sourceHash": "f398078199945e07692a5558f58b8ea1c8673119f52992a5f7af4ef8bea3e1b6",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\nanobanana-mockups\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "plan-design-review",
+      "description": "Designer's eye plan review — interactive, like CEO and Eng review. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\plan-design-review\\SKILL.md",
+      "sourceHash": "0f756585231f5630d80e3a3163ca664312acf78ea34e2bb535275816ffb1bfd0",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\plan-design-review\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "talking-head-recut",
+      "description": "Package an existing talking-head / interview / podcast video by layering timed, designed GRAPHIC OVERLAY cards onto the playing video — titles, lower-thirds, data callouts, quotes, side panels, picture-in-picture — synced to the transcript. The source video plays in full; the agent designs and writes each card's HTML in conversation, then renders to MP4 via hyperframes. Use when the user asks for graphic overlays, on-screen graphics / lower-thirds / data callouts / kinetic titles on a video, \"package / dress up my video\", \"add overlay cards / graphic cards\", or AI-composed graphic packaging of an existing video. NOT for plain subtitles (→ embedded-captions) or building a video from scratch (→ the creation workflows); when unsure overlays-vs-captions, see /hyperframes.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\talking-head-recut\\SKILL.md",
+      "sourceHash": "6a55193bbe5b7269dae40219cab2b496fe0177a8b9d27237c8e46fcaf3ccfba3",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\talking-head-recut\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "understand-explain",
+      "description": "Use when you need a deep-dive explanation of a specific file, function, or module in the codebase",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\understand-explain\\SKILL.md",
+      "sourceHash": "1d22475ee0ca858660be1b7610f3e54b592867d6331343a9c5b70928c7059402",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\understand-explain\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "understand-onboard",
+      "description": "Use when you need to generate an onboarding guide for new team members joining a project",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\understand-onboard\\SKILL.md",
+      "sourceHash": "0eeff1af6d46298d03ff5b565072b246abe87606b4658228bdac9266bf9251e0",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\understand-onboard\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "uv",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\uv\\SKILL.md",
+      "sourceHash": "d01562f2dcc104b3291a08bfb3a9e9883044330847285824a05f04000df0665b",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\uv"
+    },
+    {
+      "name": "design-consultation",
+      "description": "\"Design consultation: understands your product, researches the landscape, proposes a complete design system (aesthetic, typography, color, layout, spacing, motion), and generates font+color preview... (gstack)\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\design-consultation\\SKILL.md",
+      "sourceHash": "44379ed9283c69638800ff35c93515065a097937196e3bf341d8db8c48405967",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\design-consultation\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "image-to-code",
+      "description": "Elite website image-to-code skill for Codex. For visually important web tasks, it must first generate the design image(s) itself, deeply analyze them, then implement the website to match them as closely as possible. In Codex, it must prefer large, readable, section-specific images instead of tiny compressed boards, generate fresh standalone images for sections or detail views instead of cropping old ones, avoid lazy under-generation, avoid cards-inside-cards-inside-cards UI, and keep the hero clean, spacious, readable, and visible on a small laptop.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\image-to-code-skill\\SKILL.md",
+      "sourceHash": "2944189b448e2a77cbbf55014030b1890a9ec5891acc9fa97fb8c215e0008407",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\image-to-code-skill\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "open-gstack-browser",
+      "description": "Launch GStack Browser — AI-controlled Chromium with the sidebar extension baked in.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\open-gstack-browser\\SKILL.md",
+      "sourceHash": "76d4dca3906e248527b269e88a2e145ac5e4d93bc0a7f50e397028d419a88663",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\open-gstack-browser\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "hackernews-frontpage",
+      "description": "Scrape the Hacker News front page (titles, points, comment counts).",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\hackernews-frontpage\\SKILL.md",
+      "sourceHash": "1a4e91d00ffdbdd38d2dc2986cf764b6d7d4d9348fdce19f2c60e92fa4a564da",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\browser-skills\\hackernews-frontpage\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "hyperframes-creative",
+      "description": "Non-animation creative direction for HyperFrames videos. Use for design spec (frame.md / design.md) handling, palettes, typography, narration, beat planning, audio-reactive visuals, composition patterns, and brand / style decisions. For atomic motion patterns and scene blueprints, use `hyperframes-animation`.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\hyperframes-creative\\SKILL.md",
+      "sourceHash": "8b104a3928473f3ea683510c377e0ea65d41d3472e80e2983629cca09ff736b3",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\hyperframes-creative\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "hyperframes-registry",
+      "description": "Install and wire registry blocks and components into HyperFrames compositions. Use when running hyperframes add, installing a block or component, wiring an installed item into index.html, or working with hyperframes.json. Covers the add command, install locations, block sub-composition wiring, component snippet merging, registry discovery, and authoring a new block or component to contribute upstream (idea → scaffold → validate → PR).",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\hyperframes-registry\\SKILL.md",
+      "sourceHash": "1abaa095aae1b680b5b6e80032e66694fc401ccbfea9526aabcf727c841c9012",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\hyperframes-registry\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "product-launch-video",
+      "description": "\"turn a product or marketing URL, pasted script, or brief into a product launch video, including SaaS promos, feature reveals, app launches, company promos, and product marketing videos. Use this skill when the user wants to market, launch, promote, or reveal a product. Do not use it for general non-launch website tours, non-product topic explainers, GitHub pull requests, captioning existing footage, or short unnarrated motion graphics. If the intent is unclear, route through /hyperframes first. This is the new shot-sequence architecture: every visual frame is authored as a time-coded shot sequence picked from a menu of golden blueprints, so frames develop over their full duration instead of freezing after entrance.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\product-launch-video\\SKILL.md",
+      "sourceHash": "60ff0696b03cf2372473cacc1a0567f26b09de156f4e405a7c3fe842b194f4a2",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\product-launch-video\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "understand-dashboard",
+      "description": "Launch the interactive web dashboard to visualize a codebase's knowledge graph",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\understand-dashboard\\SKILL.md",
+      "sourceHash": "a84b0b02a295e44217ef99ff2de5363f2efdd6ad4e6f695f671105c635399c7c",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\understand-dashboard\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "understand-knowledge",
+      "description": "Analyze a Karpathy-pattern LLM wiki knowledge base and generate an interactive knowledge graph with entity extraction, implicit relationships, and topic clustering.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\understand-knowledge\\SKILL.md",
+      "sourceHash": "4d057d5eb0e379b02e8d54bed53b8f8b10e0c35b6c8271c1d052f40aa79347bb",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\understand-knowledge\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "gstack-openclaw-retro",
+      "description": "\"Weekly engineering retrospective. Analyzes commit history, work patterns, and code quality metrics with persistent history and trend tracking. Team-aware with per-person contributions, praise, and growth areas. Use when asked for weekly retro, what shipped this week, or engineering retrospective.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\gstack-openclaw-retro\\SKILL.md",
+      "sourceHash": "be57f1de434235b066c9e271de4993e5bb9b519987c1bb6b45386a4f8a5c637d",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\openclaw\\skills\\gstack-openclaw-retro\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "hyperframes-animation",
+      "description": "\"All animation knowledge for HyperFrames — atomic motion rules, multi-phase scene blueprints, scene transitions, broader motion-design techniques, AND the seven runtime adapters (GSAP default, plus Lottie, Three.js, Anime.js, CSS keyframes, Web Animations API, TypeGPU). Use for any motion or animation task: pick 2-4 rules and compose, or load a blueprint, or look up runtime-specific API (e.g. GSAP eases / Lottie player / Three.js mixer). HyperFrames-native: single paused timeline, seek-safe, deterministic.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\hyperframes-animation\\SKILL.md",
+      "sourceHash": "785cacfa594627f4f030edda802edbfd2d08f2653811cbce7ab1da8f0e7f93b0",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\hyperframes-animation\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "imagegen-frontend-web",
+      "description": "Elite frontend image-direction skill for generating premium, conversion-aware website design references. CRITICAL OUTPUT RULE — generate ONE separate horizontal image FOR EVERY section. A landing page with 8 sections produces 8 images. Never compress multiple sections into one image. Enforces composition variety (not always left-text / right-image), background-image freedom, varied CTAs, varied hero scales (giant / mid / mini minimalist), narrative concept spine, second-read moments, and a single consistent palette across all images. Optimized for landing pages, marketing sites, and product comps that developers or coding models can accurately recreate.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\imagegen-frontend-web\\SKILL.md",
+      "sourceHash": "23e6d27ab410e97fe5e844d18db97c8e674d317abd8567f4c7726ee16f56da6e",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\imagegen-frontend-web\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "setup-browser-cookies",
+      "description": "Import cookies from your real Chromium browser into the headless browse session. (gstack)",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\setup-browser-cookies\\SKILL.md",
+      "sourceHash": "17363a8db951cb0e91bb1cc6e5d67721dfc06d6fc7823af44b981d79d4c5120b",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\setup-browser-cookies\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "web-artifacts-builder",
+      "description": "Suite of tools for creating elaborate, multi-component claude.ai HTML artifacts using modern frontend web technologies (React, Tailwind CSS, shadcn/ui). Use for complex artifacts requiring state management, routing, or shadcn/ui components - not for simple single-file HTML/JSX artifacts.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\web-artifacts-builder\\SKILL.md",
+      "sourceHash": "fed403699c30a8dfc91b43bc82e76c06a0e935e86395cab943644767878a48d4",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\web-artifacts-builder\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "pymol",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\pymol\\SKILL.md",
+      "sourceHash": "a9e65d0146454a0a18005c8f3dbf9417160d670e88dfd46069999902c34682ee",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\pymol"
+    },
+    {
+      "name": "apify-ultimate-scraper",
+      "description": "Universal AI-powered web scraper for any platform. Scrape data from Instagram, Facebook, TikTok, YouTube, Google Maps, Google Search, Google Trends, Booking.com, and TripAdvisor. Use for lead generation, brand monitoring, competitor analysis, influencer discovery, trend research, content analytics, audience analysis, or any data extraction task.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\apify-ultimate-scraper\\SKILL.md",
+      "sourceHash": "8459bdc83885ef30978d8ab166a7674da5d1d950e1fce6c33d69a60e6c8e98b4",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\apify-ultimate-scraper\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "authentic-voice-editor",
+      "description": "\"Edit AI-assisted drafts so they read like a real, specific person wrote them. Use when drafting, revising, humanizing, or reviewing text for generic AI phrasing, flat rhythm, abstract filler, or weak voice — essays, reports, blog posts, marketing copy, or any prose that sounds machine-generated. Removes boilerplate LLM language, adds specificity and concrete detail, applies distinct voice profiles, and preserves factual accuracy and citations.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\authentic-voice-editor\\SKILL.md",
+      "sourceHash": "a8bcc2853712413db0e57ea100364857f70a0f453d163c47dbc91dcdf4c17210",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\authentic-voice-editor"
+    },
+    {
+      "name": "apify-actor-development",
+      "description": "Develop, debug, and deploy Apify Actors - serverless cloud programs for web scraping, automation, and data processing. Use when creating new Actors, modifying existing ones, or troubleshooting Actor code.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\apify-actor-development\\SKILL.md",
+      "sourceHash": "7d8116795881885e0012d6005fe7749f3af3b37d5d5ffc23daa566d506d2f563",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\apify-actor-development\\SKILL.md",
+      "identical": false
+    },
+    {
+      "name": "remotion-to-hyperframes",
+      "description": "'Port an existing Remotion (React) composition to HyperFrames HTML. Use ONLY when the user explicitly asks to port/convert/migrate/translate a Remotion source. Do NOT use: (a) authoring a new HyperFrames composition; (b) Remotion mentioned in passing; (c) Remotion code shared as reference only; (d) \"same video as my Remotion one\" without explicit migrate request — treat as fresh build. Doubt → `/general-video`. One-way, Remotion-only: no reverse export (HyperFrames→Remotion or any framework), no non-Remotion source (After Effects, Framer Motion, plain React/CSS) → out of scope, re-create via `/general-video`. Flags unsupported patterns (useState, useEffect, async calculateMetadata, third-party React libs, `@remotion/lambda`) and recommends runtime interop over lossy translation. Unsure whether to port vs. build fresh, or only a passing Remotion mention? → /hyperframes.'",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\remotion-to-hyperframes\\SKILL.md",
+      "sourceHash": "6cf906c4491b9a323790f05b3bfe095b4eb81643aaf16255c271cbfe6f7b17f0",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\remotion-to-hyperframes\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "imagegen-frontend-mobile",
+      "description": "Elite mobile app image-generation skill for creating premium, app-native screen concepts and flows. Designed for iOS, Android, and cross-platform mobile products. Prioritizes clean hierarchy, comfortably readable text, strong multi-screen consistency, controlled color palettes, non-generic creative direction, textured surfaces, image-led composition, tasteful custom iconography, and clean phone mockup framing. By default, screens should be shown inside a subtle premium iPhone or similar phone mockup with a visible frame, while the main focus stays on the app content itself. This skill generates images only. It does not write code.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\imagegen-frontend-mobile\\SKILL.md",
+      "sourceHash": "3cadf1bfbe836d377832d090e5db8479f98903453a4d1342be9636178755f9dd",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\imagegen-frontend-mobile\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "yangon-mba-thesis-writer",
+      "description": "Write, rewrite, structure, and format quantitative academic business research theses, dissertations, proposals, and empirical reports in the exact structural, linguistic, and statistical reporting style of Yangon University of Economics (YUE) MBA / EMBA theses (specifically patterned after Document No. 5 - \"Consumer Attitude and Their Buying Behavior\"). Use whenever the user asks to write, rewrite, expand, format, or polish an academic MBA thesis, literature review, theoretical background, demographic analysis, 5-point Likert mean analysis (Best 1977), SPSS multiple linear regression reporting, findings & discussion, managerial suggestions/recommendations, academic questionnaires, or thesis appendices following YUE / Southeast Asian graduate business school conventions.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\yangon-mba-thesis-writer\\SKILL.md",
+      "sourceHash": "dbb63855a8c03966747a92f882e9a581b71ca5dfb5dcb32db2f74831ec411ae0",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\yangon-mba-thesis-writer"
+    },
+    {
+      "name": "direct-human-writing-guide",
+      "description": "A guide for writing essays, reflections, and reports that sound like a real student. Helps vary sentence rhythm (burstiness), use concrete words, avoid common AI templates/structures, and utilize specific examples.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\direct-human-writing-guide\\SKILL.md",
+      "sourceHash": "824dfdbf9218f7bf2ebad0de5a83b33b8ba162bd0ed72f24713e5b37075d4f20",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\direct-human-writing-guide\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "gstack-openclaw-ceo-review",
+      "description": "Use when asked to review a plan, challenge a proposal, run a CEO review, poke holes in an approach, think bigger about scope, or decide whether to expand or reduce the plan.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\gstack-openclaw-ceo-review\\SKILL.md",
+      "sourceHash": "5c4442aec4ffd0673dce28bf966a2825507cdcfaebefccc027572fe0b8b7d6b6",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\openclaw\\skills\\gstack-openclaw-ceo-review\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "generative_ui",
+      "description": "How to render rich interactive HTML widgets inline in the chat or as standalone artifacts. Use this skill when you want to show the user diagrams, data visualizations, interactive controls, educational walkthroughs, or any rich visual content beyond plain text and markdown.",
+      "source": "C:\\Users\\lyan1\\.gemini\\antigravity\\builtin\\skills\\generative_ui\\SKILL.md",
+      "sourceHash": "d5d8078bb426a8e50d852265417322ac48bb25dd35570a6521ce279a291a0a3f",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\generative_ui"
+    },
+    {
+      "name": "gstack-openclaw-investigate",
+      "description": "Use when asked to debug, fix a bug, investigate an error, or do root cause analysis, and when users report errors, stack traces, unexpected behavior, or say something stopped working.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\gstack-openclaw-investigate\\SKILL.md",
+      "sourceHash": "ab4ef9f9482a1463cdd550333fc76be38ba5e786f901ce2888bee8452d94be20",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\openclaw\\skills\\gstack-openclaw-investigate\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "credentials",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\credentials\\SKILL.md",
+      "sourceHash": "82f252acbf135c37d04a14c20856f159fce7142e45cda5d318e1504426578bcc",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\credentials"
+    },
+    {
+      "name": "apify-generate-output-schema",
+      "description": "Generate output schemas (dataset_schema.json, output_schema.json, key_value_store_schema.json) for an Apify Actor by analyzing its source code. Use when creating or updating Actor output schemas.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\apify-generate-output-schema\\SKILL.md",
+      "sourceHash": "7ccc819e2e8c4fe2d58da08e14ad54f4b70141776c5cedcf0fe562d8381c4a27",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\apify-generate-output-schema\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "gstack-openclaw-office-hours",
+      "description": "Use when asked to brainstorm, evaluate whether an idea is worth building, run office hours, or think through a new product idea or design direction before any code is written.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\gstack-openclaw-office-hours\\SKILL.md",
+      "sourceHash": "a98c457ce55cc5adca6776710d47c9ff1f0a67771d6f03e5bc56e0fcfb4ad138",
+      "status": "already available",
+      "existing": "C:\\Users\\lyan1\\.agents\\skills\\gstack\\openclaw\\skills\\gstack-openclaw-office-hours\\SKILL.md",
+      "identical": true
+    },
+    {
+      "name": "adapt",
+      "description": "\"Responsive layout pass covering breakpoints, touch targets, safe areas, and fluid type. Use when the UI has layout or touch issues on mobile/tablet, when adding a new screen that hasn't been tested across viewports, or when the user says \\\"make it responsive\\\" / \\\"fix mobile layout\\\". Invoke when the user asks for adapt on their UI, or mentions 'adapt' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\adapt\\SKILL.md",
+      "sourceHash": "f80f1b6b190be8eb5ec0f17718986a7227bbb5728049625b88efbcb5eff57001",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\adapt"
+    },
+    {
+      "name": "audit",
+      "description": "\"Technical UI audit — a11y, performance, responsive. Produces a prioritized findings table. Invoke when the user asks for audit on their UI, or mentions 'audit' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\audit\\SKILL.md",
+      "sourceHash": "f1e2e16796126cbfc45af7a7d1e0b6bf9bb6271a84f0c24abad30b73445c76d7",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\audit"
+    },
+    {
+      "name": "brief",
+      "description": "\"Write or update the project's durable design brief at .ui-craft/brief.md. Invoke when the user asks for brief on their UI, or mentions 'brief' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\brief\\SKILL.md",
+      "sourceHash": "85b0c1cd4d4c3715b8100df8b19dc1618f3b9ae00f3e7e0bcdda12306fdbd818",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\brief"
+    },
+    {
+      "name": "craft",
+      "description": "\"One-shot build pipeline for a complete surface from an outcome recipe — inputs (or defaults) → composition → theme → build order → acceptance bar. Use when the user asks for a whole surface (\\\"build me a dashboard\\\", \\\"hazme un dashboard\\\") and expects a shippable result, not component-level help. Invoke when the user asks for craft on their UI, or mentions 'craft' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\craft\\SKILL.md",
+      "sourceHash": "16c0b9962667843239c27ca43725ad4d372a6f11b3190271ee06a662b7ea9897",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\craft"
+    },
+    {
+      "name": "shape",
+      "description": "\"Wireframe-first pass — outputs an ASCII layout + state list + content inventory + question list before any code. Use when starting a new screen from scratch or when the user's brief is still ambiguous. Invoke when the user asks for shape on their UI, or mentions 'shape' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\shape\\SKILL.md",
+      "sourceHash": "da25e3fcde50a75174f95bd8907e2ab8121f27fe389abcd6b38e017a6815c86f",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\shape"
+    },
+    {
+      "name": "start",
+      "description": "\"Front door. Reads the current project (framework, tokens, brief, spec, harness) and reports what ui-craft can do right now, then routes you to the right next step. Run this first if you're new or unsure where to begin. No code changes. Invoke when the user asks for start on their UI, or mentions 'start' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\start\\SKILL.md",
+      "sourceHash": "c6de8499df81b95eac569b0b0f420cc891b3c79141b1de3ee6a4ff928ccd8cca",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\start"
+    },
+    {
+      "name": "baseline-ui",
+      "description": "Quickly deslop UI code by fixing spacing, hierarchy, typography, and small layout issues. Use when the interface needs a fast cleanup or polish pass.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-skills\\skills\\baseline-ui\\SKILL.md",
+      "sourceHash": "0986e5bdf1a004b449b710579a03ebaef909f8f67911c64f50874800ad9b5bc5",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\baseline-ui"
+    },
+    {
+      "name": "embl-ebi-ols",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\embl_ebi_ols\\SKILL.md",
+      "sourceHash": "fd6b63b2d509502069f03b7891242b30f996ac97fc530e0b0a7b4a004f8f3720",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\embl_ebi_ols"
+    },
+    {
+      "name": "pdb-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\pdb_database\\SKILL.md",
+      "sourceHash": "9d5f96f75127ad1e51e5c282178b77342492567b140deae08760bcc355f45708",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\pdb_database"
+    },
+    {
+      "name": "bolder",
+      "description": "\"Amplify personality — raises layout variance and motion, strengthens typography and one signature detail, without slop. Use when the UI works but feels safe, flat, or \\\"template-y\\\", or when the user says \\\"bolder\\\", \\\"more personality\\\", \\\"more creative\\\", or \\\"make it pop\\\" (still professional). Invoke when the user asks for bolder on their UI, or mentions 'bolder' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\bolder\\SKILL.md",
+      "sourceHash": "cf29dccd41452cb256a4df785c8d467d7de79047bf8533cc93bd74d29d3f3fae",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\bolder"
+    },
+    {
+      "name": "harden",
+      "description": "\"Production-readiness pass — audits and implements the full non-happy-path matrix: loading skeletons, empty states, error messages, partial data, i18n, offline, permissions, and first-run guidance. Use when preparing a surface for production or when the user says \\\"it crashes on empty data\\\" / \\\"there's no loading state\\\" / \\\"harden this\\\". Invoke when the user asks for harden on their UI, or mentions 'harden' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\harden\\SKILL.md",
+      "sourceHash": "1b1010c8e83baabb200e4aba8c419c6d6c30e457288e6c9acccb523f39398761",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\harden"
+    },
+    {
+      "name": "polish",
+      "description": "\"Final craft pass applying the compound details from the polish checklist — micro-typography, spacing rhythm, hover states, and a signature detail — directly to code. Use when the surface is functionally complete but feels unfinished, or when the user says \\\"polish this\\\" / \\\"it looks generic\\\" / \\\"add the final touches\\\". Invoke when the user asks for polish on their UI, or mentions 'polish' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\polish\\SKILL.md",
+      "sourceHash": "ac3db2187781df8c92c18c341ce201c72055f87125fc0ed65d6e904bcc9f9d48",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\polish"
+    },
+    {
+      "name": "tokens",
+      "description": "\"Audit or establish the project's 3-layer token spine. Invoke when the user asks for tokens on their UI, or mentions 'tokens' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\tokens\\SKILL.md",
+      "sourceHash": "8f50aaadfcf4080bd034900bd5fcc5b3bd1f16ce9b7c2b61af81cf249c67b69f",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\tokens"
+    },
+    {
+      "name": "gtex-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\gtex_database\\SKILL.md",
+      "sourceHash": "bbd4c8ac358dbcbec4ec2e6bd16642ba935afb37c662c1d48912e542c61348b0",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gtex_database"
+    },
+    {
+      "name": "animate",
+      "description": "\"Motion design pass — adds purposeful animations or removes excessive ones, respecting MOTION_INTENSITY and the project's animation stack. Use when the user asks to add animation, \\\"make it feel smoother\\\", fix janky transitions, or trim motion that's distracting. Invoke when the user asks for animate on their UI, or mentions 'animate' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\animate\\SKILL.md",
+      "sourceHash": "15845070c0790061ca6e9ad3f5936a93f8fb6af59f043348a92e19d83882ab59",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\animate"
+    },
+    {
+      "name": "clarify",
+      "description": "\"UX copy review across buttons, errors, empty states, and form hints — critiques by default, applies only on request. Use when copy feels vague, generic, or AI-sounding, or when the user says \\\"fix the labels\\\", \\\"improve error messages\\\", or \\\"review the copy\\\". Invoke when the user asks for clarify on their UI, or mentions 'clarify' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\clarify\\SKILL.md",
+      "sourceHash": "da61ea233dfd1821cb52f30499317489c28e9767e9500eae27dbadb7cc06d398",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\clarify"
+    },
+    {
+      "name": "delight",
+      "description": "\"Delight pass — adds one or two memorable micro-interactions (copy specificity, hover choreography, state transitions, one signature detail) without decoration or confetti. Use when the UI works but feels generic, or when the user says \\\"make it feel special\\\" / \\\"add some personality\\\". Invoke when the user asks for delight on their UI, or mentions 'delight' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\delight\\SKILL.md",
+      "sourceHash": "bba242617b4e01beddb1e169df6f7383043f61d96e43a17ccf8501244f021dae",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\delight"
+    },
+    {
+      "name": "distill",
+      "description": "\"Reduction pass — cuts content, structure, visuals, and dead code that doesn't answer a user question or drive an action, respecting CRAFT_LEVEL. Use when the UI feels cluttered, has too many CTAs, walls of text, or decorative noise, or when the user says \\\"simplify this\\\" / \\\"it feels too busy\\\". Invoke when the user asks for distill on their UI, or mentions 'distill' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\distill\\SKILL.md",
+      "sourceHash": "48a7a35eebdbc3a77cec8cc20e8f2f9d11f350e0dd18a5d375bda1e34950e36e",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\distill"
+    },
+    {
+      "name": "extract",
+      "description": "\"Refactoring pass — extracts repeated Tailwind class combos and markup into components, and lifts magic values into design tokens. Use when the codebase has obvious duplication, hardcoded hex values or pixel sizes, or when the user says \\\"clean this up\\\" / \\\"extract components\\\" / \\\"tokenize styles\\\". Invoke when the user asks for extract on their UI, or mentions 'extract' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\extract\\SKILL.md",
+      "sourceHash": "d192b6cace7271c59bfc425e7e4a5badfa43b3d3d1d4cc344e6b9e41b777a1bd",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\extract"
+    },
+    {
+      "name": "quieter",
+      "description": "\"Tone down visual noise — lowers variance and motion, simplifies layout and color weight, keeps hierarchy clear. Use when the UI feels loud, busy, or over-designed, or when the user says \\\"quieter\\\", \\\"more restrained\\\", \\\"simpler\\\", or \\\"tone it down\\\". Invoke when the user asks for quieter on their UI, or mentions 'quieter' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\quieter\\SKILL.md",
+      "sourceHash": "9a0694a2555331c82820fa09ff335314c8aa1f7fda1f9496550d12cc3013c641",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\quieter"
+    },
+    {
+      "name": "typeset",
+      "description": "\"Typography pass covering font choice, modular scale, tracking, leading, weight hierarchy, and micro-typography details. Use when fonts feel generic (default Inter with no reason), the scale is ad hoc, hierarchy is flat, or the user says \\\"fix the typography\\\" / \\\"the text doesn't feel right\\\". Invoke when the user asks for typeset on their UI, or mentions 'typeset' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\typeset\\SKILL.md",
+      "sourceHash": "85fb69618b36218a6387050c43101b3d28446d3e0e25f8d3464de315b9777e93",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\typeset"
+    },
+    {
+      "name": "unhappy",
+      "description": "\"State-first design pass — inventories and implements all non-happy states (loading, empty, error, partial, conflict, offline) before the happy path, and refactors impossible boolean state to proper state machines. Use when starting a new screen, reviewing an existing one for edge-case gaps, or when the user says \\\"handle the error state\\\" / \\\"add loading states\\\" / \\\"what happens when data is missing\\\". Invoke when the user asks for unhappy on their UI, or mentions 'unhappy' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\unhappy\\SKILL.md",
+      "sourceHash": "a71a6769f2235c0d87a7d9d9cfe84a25db631f0b94cde4e5312043593d5c324d",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\unhappy"
+    },
+    {
+      "name": "antigravity-guide",
+      "description": "Provides a comprehensive guide, quick reference, and sitemap for Google Antigravity (AGY), including the Antigravity CLI (agy), Antigravity 2.0, Antigravity IDE, Python SDK, slash commands, keybindings, and customizations (skills, rules, MCP, sidecars). Activate this skill when the user asks questions about how to use, configure, or customize Antigravity, AGY, the agy CLI, the Antigravity IDE, or Antigravity 2.0.",
+      "source": "C:\\Users\\lyan1\\.gemini\\antigravity\\builtin\\skills\\antigravity_guide\\SKILL.md",
+      "sourceHash": "0999fc13d3091e8c2833019cc9ac9c2cadbe0df356bdc80700cd7da49915e6e7",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\antigravity_guide"
+    },
+    {
+      "name": "migrate-workflows",
+      "description": "Automatically migrate legacy workflows to modern skills across global and workspace configurations. Scans for existing workflows, creates target SKILL.md files, and safely archives old workflow files.",
+      "source": "C:\\Users\\lyan1\\.gemini\\antigravity\\builtin\\skills\\migrate-workflows\\SKILL.md",
+      "sourceHash": "ee8b18d875bba52c024c609f8cbdaf5bbf60396e0f826944c38ce191590cb787",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\migrate-workflows"
+    },
+    {
+      "name": "dbsnp-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\dbsnp_database\\SKILL.md",
+      "sourceHash": "261817ea3ca4ff6396b49902c8004a44b6d0a7fdc7620d1212ecfe3ede21e80e",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\dbsnp_database"
+    },
+    {
+      "name": "colorize",
+      "description": "\"Color strategy pass — introduces a single accent at 3-5 intentional placements, or reduces an over-colored UI back to 90% neutral. Use when the UI has no color identity, uses blue by default, or is shouting with too many competing accents. Invoke when the user asks for colorize on their UI, or mentions 'colorize' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\colorize\\SKILL.md",
+      "sourceHash": "977616d6da45aed79a834073e77bff78bab320215cce3d940748b85b87b69401",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\colorize"
+    },
+    {
+      "name": "critique",
+      "description": "\"Design lens critique covering visual hierarchy, clarity, and anti-slop patterns — produces a findings table, no code edits unless asked. Use when the user wants a design review, says \\\"what's wrong with this UI\\\", or needs a second opinion before a handoff or presentation. Invoke when the user asks for critique on their UI, or mentions 'critique' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\critique\\SKILL.md",
+      "sourceHash": "30c3398a7923518e58256b927e719df050edcbba65f48ac345b7e61f8fe90f5b",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\critique"
+    },
+    {
+      "name": "finalize",
+      "description": "\"Pre-ship gate — runs detector, verifies brief and tokens, applies the 10-pass finish bar, ranks findings by feedback hierarchy. Use when the user wants to ship, merge, or finalize a surface and needs a verdict (READY / NOT READY / BLOCKED) before committing. Invoke when the user asks for finalize on their UI, or mentions 'finalize' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\finalize\\SKILL.md",
+      "sourceHash": "ebac225a61527c22eee12eab6d1286346e64468e1a95144260033c14169d98d8",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\finalize"
+    },
+    {
+      "name": "redesign",
+      "description": "\"Redesign an existing site or app without losing what already works — audits the current surface first, classifies what to preserve (brand, IA, SEO, content), picks a refresh/reskin/rebuild scope, then modernizes deliberately. Use when the user says \\\"redesign\\\", \\\"modernize this site\\\", \\\"refresh the UI\\\", \\\"make this look current\\\", or points at an existing page/URL they want improved rather than rebuilt from scratch. Invoke when the user asks for redesign on their UI, or mentions 'redesign' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\redesign\\SKILL.md",
+      "sourceHash": "4acae932b3fdeedad73b2c5c436527587bfb3917a4dee7a28c3e8960e056775a",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\redesign"
+    },
+    {
+      "name": "remember",
+      "description": "\"Record a learned design constraint from a correction into the project brief. Invoke when the user asks for remember on their UI, or mentions 'remember' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\remember\\SKILL.md",
+      "sourceHash": "175f9e7293f6432f74440aaea1238cc42fcd4a2cf91d04a382a2b95a3801e7e8",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\remember"
+    },
+    {
+      "name": "sddesign",
+      "description": "\"Full spec-driven pipeline — walks brief → tokens → shape (spec) → craft (build) → converge → ship in one guided run. Writes `.ui-craft/spec.md`. Run when starting a net-new surface from scratch. Invoke when the user asks for sddesign on their UI, or mentions 'sddesign' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\sddesign\\SKILL.md",
+      "sourceHash": "c48e29c716dfd54cf9fd732f303e89c35e449827f6880577d59866ba5986d37d",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\sddesign"
+    },
+    {
+      "name": "ui-skills-root",
+      "description": "Use before UI-related work to select the smallest useful UI Skills context through the ui-skills CLI.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-skills\\skills\\ui-skills-root\\SKILL.md",
+      "sourceHash": "3438b30675301cff02949a892e1d227ab3cc57a9ec88dc9ad38c3b613fab9afa",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ui-skills-root"
+    },
+    {
+      "name": "agy-customizations",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\antigravity\\builtin\\skills\\agy-customizations\\SKILL.md",
+      "sourceHash": "79c8885e76ce449e82016b37b53dfcc3ff5afefd90a23ea83b24148f41f33fa1",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\agy-customizations"
+    },
+    {
+      "name": "chembl-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\chembl_database\\SKILL.md",
+      "sourceHash": "67d375e3a869fd61312bbb6b8fd7a99a588a12254ffed2dce2f10653ed17e9db",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\chembl_database"
+    },
+    {
+      "name": "gnomad-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\gnomad_database\\SKILL.md",
+      "sourceHash": "f2082c83ddca825e0c336097c6b59a9237d99a33887577cd90fc574f1d3bc18b",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gnomad_database"
+    },
+    {
+      "name": "jaspar-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\jaspar_database\\SKILL.md",
+      "sourceHash": "5cbe866bfd4c9b399c5e978a4835cfe1247982f94d9a746281c6a1821f97af06",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\jaspar_database"
+    },
+    {
+      "name": "pubmed-database",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\pubmed_database\\SKILL.md",
+      "sourceHash": "f1f4a89fb2b7be808db1352405a09858f049d5b5c2c12aec44cffcdac844d4e8",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\pubmed_database"
+    },
+    {
+      "name": "string-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\string_database\\SKILL.md",
+      "sourceHash": "6de0f5994327052e6ab59f232698e4275fff552ec712fba435f9951f3e473ecf",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\string_database"
+    },
+    {
+      "name": "heuristic",
+      "description": "\"Produce a scored heuristic critique of the UI using Nielsen's 10 + 6 design laws + optional persona walkthroughs. Outputs a machine-parseable scorecard plus a 0-100 UsabilityScore (the judged companion to the deterministic UICraftScore). Invoke when the user asks for heuristic on their UI, or mentions 'heuristic' alongside design / UI / frontend work.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\.codex\\skills\\heuristic\\SKILL.md",
+      "sourceHash": "686b5471183bc712897e5f90482a191afe246933ca1e508e45ec42f5029ed62f",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\heuristic"
+    },
+    {
+      "name": "ui-craft-minimal",
+      "description": "\"Minimal / clean / Linear / Notion / Vercel / whitespace-heavy UIs. Locked knobs: CRAFT=8, MOTION=3, DENSITY=2. Monochrome + one accent, Inter/Geist, hairline borders over shadows. Trigger on: minimal, clean, Linear-like, Notion-like, Vercel-like, whitespace-heavy.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\skills\\ui-craft-minimal\\SKILL.md",
+      "sourceHash": "88a18eca19e466dce34d106222d37be2c617673230b0b07b426a7f3a51746271",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ui-craft-minimal"
+    },
+    {
+      "name": "fixing-metadata",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-skills\\skills\\fixing-metadata\\SKILL.md",
+      "sourceHash": "498a1ae121c010df199c2f1bcd4a0ccda92351f2b4eb33b7be73715db702dec6",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\fixing-metadata"
+    },
+    {
+      "name": "permissioned-github",
+      "description": "Guidelines for interacting with GitHub and request permissions from the user when commands fail due to restrictions in the agent environment.",
+      "source": "C:\\Users\\lyan1\\.gemini\\antigravity\\builtin\\skills\\permissioned-github\\SKILL.md",
+      "sourceHash": "5779716732c7a75681aa980c76355ae8b675f881e742b74f93e4be14b4abfc9d",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\permissioned-github"
+    },
+    {
+      "name": "clinvar-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\clinvar_database\\SKILL.md",
+      "sourceHash": "2e3e3e5c79b67b344fcfca657f180482d00949d8a63b4d6ec47035f1edb7c1aa",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\clinvar_database"
+    },
+    {
+      "name": "ensembl-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\ensembl_database\\SKILL.md",
+      "sourceHash": "aff4c6f7c86268afaacd8a56a88771f536f263602b895cb360603bb7bbf0487f",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ensembl_database"
+    },
+    {
+      "name": "openfda-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\openfda_database\\SKILL.md",
+      "sourceHash": "940638f64b64f296fa925cd78cfc699daf70f04aa5272930deff102bcbe16144",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\openfda_database"
+    },
+    {
+      "name": "pubchem-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\pubchem_database\\SKILL.md",
+      "sourceHash": "dfb7876a2da5bea3d7e426e29a3e31876f7da2152415269fbfb3ef63dd248cc3",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\pubchem_database"
+    },
+    {
+      "name": "quickgo-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\quickgo_database\\SKILL.md",
+      "sourceHash": "a835ba85533779524b19205fa14ff05d786143f6a92e6b47c5817d8436463936",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\quickgo_database"
+    },
+    {
+      "name": "unibind-database",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\unibind_database\\SKILL.md",
+      "sourceHash": "779f16722e93f49346683210ca7197b6317e091d20385d2cc55b1ac3b90acd09",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\unibind_database"
+    },
+    {
+      "name": "uniprot-database",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\uniprot_database\\SKILL.md",
+      "sourceHash": "c430156a6826cc43c24ce4974d3038d2a93c6fe54a5f640521caea92ae818f11",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\uniprot_database"
+    },
+    {
+      "name": "create-design-md",
+      "description": "Create or update a DESIGN.md from an existing product repository or public website. Use when asked to document an interface's design language, reconstruct its visual system, extract design tokens and guidance from current evidence, or give coding agents persistent UI context. Do not modify product source or promote accidental implementation patterns into design decisions.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-skills\\skills\\create-design-md\\SKILL.md",
+      "sourceHash": "95f8b44e24e2bc0be7097e8054179f649e56d44658f8ff1caeb8a2d3ce6033f9",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\create-design-md"
+    },
+    {
+      "name": "interpro-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\interpro_database\\SKILL.md",
+      "sourceHash": "ab24b22410571bf5720e02c7ac5b18cf6ad92d250a6b29606f10a5483002e133",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\interpro_database"
+    },
+    {
+      "name": "predictingthepast",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\predictingthepast\\SKILL.md",
+      "sourceHash": "07520c497a85afb1523483a5b495599abe1fe688d598b681d833bd4d916b735b",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\predictingthepast"
+    },
+    {
+      "name": "reactome-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\reactome_database\\SKILL.md",
+      "sourceHash": "bccfb05ac68a5c52bd3c9dbecdfc059d532dd927b29c6ef61c9c617a8d083e7c",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\reactome_database"
+    },
+    {
+      "name": "ui-craft-editorial",
+      "description": "\"Editorial / magazine / long-form / Medium / Substack / content-heavy UIs. Locked knobs: CRAFT=9, MOTION=4, DENSITY=3. Serif display + humanist body, wide reading column, drop caps, OpenType. Trigger on: editorial, magazine, long-form, blog, Medium-like, Substack-like.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\skills\\ui-craft-editorial\\SKILL.md",
+      "sourceHash": "bc8db2523210348e4d48e84b4b6c3058bb2b41d1be9fb7046c86887ca73e533e",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ui-craft-editorial"
+    },
+    {
+      "name": "ncbi-sequence-fetch",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\ncbi_sequence_fetch\\SKILL.md",
+      "sourceHash": "9cda15b57873e8671f9ae778ed33b543c50f45bdde0feb84bdf0f9884be3e456",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ncbi_sequence_fetch"
+    },
+    {
+      "name": "scienceskillscommon",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\scienceskillscommon\\SKILL.md",
+      "sourceHash": "8043181b37633b6ac1b126db2dbba0c669d952a967680d956175d4cbe9829afe",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\scienceskillscommon"
+    },
+    {
+      "name": "opentargets-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\opentargets_database\\SKILL.md",
+      "sourceHash": "06f42275cb2a6b6e81939a30dc42b5e897aff805432e43e2501a9deba09579fa",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\opentargets_database"
+    },
+    {
+      "name": "protein-sequence-msa",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\protein_sequence_msa\\SKILL.md",
+      "sourceHash": "899c45684b07e252d534c7ec287896436f5b0b4483c0e9dd8fb52a3773d01ba2",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\protein_sequence_msa"
+    },
+    {
+      "name": "fixing-accessibility",
+      "description": "Audit and fix HTML accessibility issues including ARIA labels, keyboard navigation, focus management, color contrast, and form errors. Use when adding interactive controls, forms, dialogs, or reviewing WCAG compliance.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-skills\\skills\\fixing-accessibility\\SKILL.md",
+      "sourceHash": "2c2a4623f333920b05e262017e92b15eeafca58f051b44d8e9e13fd4d1da37a5",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\fixing-accessibility"
+    },
+    {
+      "name": "encode-ccres-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\encode_ccres_database\\SKILL.md",
+      "sourceHash": "756f1c1520886edcb106f912512653d588de73b9c6e374da03abbcc20c81b00a",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\encode_ccres_database"
+    },
+    {
+      "name": "science-skills-common",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\science_skills_common\\SKILL.md",
+      "sourceHash": "3f3841cda98969cfb62d6969412f8eb26383284c141d980286350b3d02114410",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\science_skills_common"
+    },
+    {
+      "name": "workflow-skill-creator",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\workflow_skill_creator\\SKILL.md",
+      "sourceHash": "4833b12e3bbe5298783a7ff5132951b494e661eecb034eb6f01973a8cccfaa18",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\workflow_skill_creator"
+    },
+    {
+      "name": "gcp-spark",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcp_spark\\SKILL.md",
+      "sourceHash": "fd9cc357a764832ca64570201ee45941e6a2b6be32073db66089ca02b6f6604e",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcp_spark"
+    },
+    {
+      "name": "literature-search-arxiv",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\literature_search_arxiv\\SKILL.md",
+      "sourceHash": "b71daf2b4f847b5ca31d74c10b2e565aaeec90ed9f8c727465f89cae03fcbd49",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\literature_search_arxiv"
+    },
+    {
+      "name": "ui-craft-dense-dashboard",
+      "description": "\"Dense dashboard / admin / Bloomberg / Retool / data-heavy internal tools. Locked knobs: CRAFT=7, MOTION=3, DENSITY=9. IBM Plex + mono numbers, semantic palette, 4/8px grid, sparklines, tabular-nums. Trigger on: dashboard, admin panel, data-dense, analytics, Bloomberg-like, Retool-like.\"",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-craft\\skills\\ui-craft-dense-dashboard\\SKILL.md",
+      "sourceHash": "38e4a3bc133bb8786f5b9da5de7e18ec89e1f68966b703391cd9508ace23ba79",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ui-craft-dense-dashboard"
+    },
+    {
+      "name": "clinical-trials-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\clinical_trials_database\\SKILL.md",
+      "sourceHash": "d7c3390f01dd9c1f755ed27a89946c7fbd068f64945230e45cffa7b3321f46fa",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\clinical_trials_database"
+    },
+    {
+      "name": "literature-search-biorxiv",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\literature_search_biorxiv\\SKILL.md",
+      "sourceHash": "bb9477b5a0b8a5c34bbad8d27c54fa60d896f94bc828aaf244911a931de26978",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\literature_search_biorxiv"
+    },
+    {
+      "name": "fixing-motion-performance",
+      "description": "Audit and fix animation performance issues including layout thrashing, compositor properties, scroll-linked motion, and blur effects. Use when animations stutter, transitions jank, or reviewing CSS/JS animation performance.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\skills\\ui-skills\\skills\\fixing-motion-performance\\SKILL.md",
+      "sourceHash": "bc5af058e1f6479c35cdcf87d74b013980ffad626a7f344e0bcc71ced657b484",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\fixing-motion-performance"
+    },
+    {
+      "name": "bigquery-sql",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\bigquery_sql\\SKILL.md",
+      "sourceHash": "43f7f28e56fc30fc375a22ccbdb0c7be415b1fbf41ed42272c6d5ef5375968f7",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\bigquery_sql"
+    },
+    {
+      "name": "dbt-bigquery",
+      "description": "Expert guidance for creating, modifying, and optimizing dbt pipelines",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\dbt_bigquery\\SKILL.md",
+      "sourceHash": "ea301dab1547e603f8219ec3b42de04b3777552122829172d60ce88aa399e9be",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\dbt_bigquery"
+    },
+    {
+      "name": "gcp-dataflow",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcp_dataflow\\SKILL.md",
+      "sourceHash": "85a57595c1b0c6255c6c00b711fa46678204395685cea94f94887aa4425a6895",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcp_dataflow"
+    },
+    {
+      "name": "foldseek-structural-search",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\foldseek_structural_search\\SKILL.md",
+      "sourceHash": "3aff6e5f47256cfcb156efb8a07e60a8bd9510a9a3510cc0990c69798c031731",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\foldseek_structural_search"
+    },
+    {
+      "name": "literature-search-openalex",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\literature_search_openalex\\SKILL.md",
+      "sourceHash": "5f01889e2c75c51da9e30e623bcc18aafa9888c65d0aafdbc32eb9865c56bb28",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\literature_search_openalex"
+    },
+    {
+      "name": "ucsc-conservation-and-tfbs",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\ucsc_conservation_and_tfbs\\SKILL.md",
+      "sourceHash": "c416b214ae567b293f1eb9b643f9352f69211e317a5a735681e97559c5f0561e",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ucsc_conservation_and_tfbs"
+    },
+    {
+      "name": "literature-search-europepmc",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\literature_search_europepmc\\SKILL.md",
+      "sourceHash": "4582fcc3fa3665798615bdc1d95a8b82e22576273eda74d46ca74a5524658cc3",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\literature_search_europepmc"
+    },
+    {
+      "name": "bigquery-ai-ml",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\bigquery_ai_ml\\SKILL.md",
+      "sourceHash": "d8d93967ba922c413e1d22ba55445037318669a2e27863f335bc65b2326651e9",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\bigquery_ai_ml"
+    },
+    {
+      "name": "bigquery-graph",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\bigquery_graph\\SKILL.md",
+      "sourceHash": "92bfd5659463da61e11bcfbde816e6ea5a6408d1c421dd5a713f12581a7c0bd1",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\bigquery_graph"
+    },
+    {
+      "name": "human-protein-atlas-database",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\human_protein_atlas_database\\SKILL.md",
+      "sourceHash": "35f990cd2348bd2b3b7e798d5bf821c1caf112045cb826daae325a44535a3612",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\human_protein_atlas_database"
+    },
+    {
+      "name": "dataform-bigquery",
+      "description": "Expertise in generating clean, correct, and efficient Dataform pipeline",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\dataform_bigquery\\SKILL.md",
+      "sourceHash": "9e71d551917757cb22ed378dcd23a655bea8d90c2efa7ad10e1e186b59e5dc92",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\dataform_bigquery"
+    },
+    {
+      "name": "data-autocleaning",
+      "description": "Automated data quality and transformation capabilities for Dataform/dbt/BigQuery",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\data_autocleaning\\SKILL.md",
+      "sourceHash": "2d4339a699687f70e8ee87420fcb8a892b510aef1f5def97fa3f75dc8a33219e",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\data_autocleaning"
+    },
+    {
+      "name": "ml-best-practices",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\ml_best_practices\\SKILL.md",
+      "sourceHash": "ae010fd52e6b29f9c18302c4bdb36ce444bfc5581a52a0e036ae1f0b6ab44473",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\ml_best_practices"
+    },
+    {
+      "name": "notebook-guidance",
+      "description": "|-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\notebook_guidance\\SKILL.md",
+      "sourceHash": "bddf53b2c3ab71eee53e83ef5c357adbe2f216ff324585f719da04e315a9862e",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\notebook_guidance"
+    },
+    {
+      "name": "bigquery-bigframes",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\bigquery_bigframes\\SKILL.md",
+      "sourceHash": "1f736d9a558d3a7db043c1d7efbca3901beeb2a5ecd8093e72d09ecb12070c4c",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\bigquery_bigframes"
+    },
+    {
+      "name": "building-data-apps",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\building_data_apps\\SKILL.md",
+      "sourceHash": "a9153d270f9d50b3d265be48b778255f9b955fa0f1609c269220038d5880732f",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\building_data_apps"
+    },
+    {
+      "name": "gcp-data-pipelines",
+      "description": "'Primary entry point for building, managing, and orchestrating data pipelines",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcp_data_pipelines\\SKILL.md",
+      "sourceHash": "9320eb3940628c68265fce533c8cc57a62626595cebf894e5c0855de5248fa9b",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcp_data_pipelines"
+    },
+    {
+      "name": "protein-sequence-similarity-search",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\protein_sequence_similarity_search\\SKILL.md",
+      "sourceHash": "489005b99c42614042e2ff56db551d989a1ffd65124c3af4748f78ce032df83e",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\protein_sequence_similarity_search"
+    },
+    {
+      "name": "alphagenome-single-variant-analysis",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\alphagenome_single_variant_analysis\\SKILL.md",
+      "sourceHash": "92646a203073b1b904e627499a274f1e933a6b70aed66d49b76f46d82bcd8c84",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\alphagenome_single_variant_analysis"
+    },
+    {
+      "name": "alphafold-database-fetch-and-analyze",
+      "description": ">",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\science\\skills\\alphafold_database_fetch_and_analyze\\SKILL.md",
+      "sourceHash": "a16c4defe16ce1c2afb60a9f9d0543f8b05643ebece011738f8138d9ab9dc81c",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\alphafold_database_fetch_and_analyze"
+    },
+    {
+      "name": "gcs-security-assessment",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcs_security_assessment\\SKILL.md",
+      "sourceHash": "f8ac5e316ab7870c875cc4f5ed79dd9021704d0e823a1567ff600ccd006cd765",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcs_security_assessment"
+    },
+    {
+      "name": "gcloud-auth-verification",
+      "description": "Guidelines for identifying and resolving missing Google Cloud authentication",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcloud_auth_verification\\SKILL.md",
+      "sourceHash": "fcdd8ae4407ebc1cea71d06853decc9cebc356d4498b8b17347ecb6e9cce78b3",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcloud_auth_verification"
+    },
+    {
+      "name": "federate-lakehouse-catalog",
+      "description": ">-",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\federate_lakehouse_catalog\\SKILL.md",
+      "sourceHash": "0bf225594ee61c7c18998ba592bf1cdd6e97e89a01e0206bb7b5e5ac8ed7fbf3",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\federate_lakehouse_catalog"
+    },
+    {
+      "name": "gcp-pipeline-orchestration",
+      "description": "This skill helps the agent generate or update orchestration pipeline",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcp_pipeline_orchestration\\SKILL.md",
+      "sourceHash": "197afdeb6d5a0767c44aac04eba6e3eeae15ec3b0b80c42eb9197509a1e87498",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcp_pipeline_orchestration"
+    },
+    {
+      "name": "discovering-gcp-data-assets",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\discovering_gcp_data_assets\\SKILL.md",
+      "sourceHash": "558a0e0738a9d9448463193371400a3a82c6e17d24b6915cd35477f5329d3bd4",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\discovering_gcp_data_assets"
+    },
+    {
+      "name": "gcp-composer-troubleshooting",
+      "description": "'Provides expert guidance for troubleshooting Cloud Composer (Apache",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcp_composer_troubleshooting\\SKILL.md",
+      "sourceHash": "5d9490d56980b30f29451a0e342b4a52420532c145e67dd1fa5488adf0e7e822",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcp_composer_troubleshooting"
+    },
+    {
+      "name": "managing-python-dependencies",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\managing_python_dependencies\\SKILL.md",
+      "sourceHash": "7ad459a5a8188fa0f2b8cf3e5e479825e7d7e93e1724750cd1707d896cbd7a05",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\managing_python_dependencies"
+    },
+    {
+      "name": "bigquery-data-transfer-service",
+      "description": "Discovers and inspects BigQuery Data Transfer Service (DTS) configurations.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\bigquery_data_transfer_service\\SKILL.md",
+      "sourceHash": "8b34bf814948ecbc1bc4fa4cd3aa1da829339efbf95347cbe75985665e78bb27",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\bigquery_data_transfer_service"
+    },
+    {
+      "name": "enforcing-resource-attribution",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\enforcing_resource_attribution\\SKILL.md",
+      "sourceHash": "e1e0cfe256e790d6cf35311d1998c58b586ba9effdc0c789e809c3041c689573",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\enforcing_resource_attribution"
+    },
+    {
+      "name": "gcp-managed-airflow-migrations",
+      "description": "Provides guidance for migrating Apache Airflow DAGs in Managed Service for Apache Airflow (MSAA; formerly Cloud Composer). Covers migration to Airflow 2.11.1 (MSAA Gen 2 and 3) and Airflow 3 (MSAA Gen 3), including environment inspection, GCS download/upload and scanning patterns for breaking changes.",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcp_managed_airflow_migrations\\SKILL.md",
+      "sourceHash": "b8f3c7d63de317e24e73d6bb879d30ad18387f99e7189f6d2a4abd11cfff7eaa",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcp_managed_airflow_migrations"
+    },
+    {
+      "name": "accidental-data-loss-prevention",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\accidental_data_loss_prevention\\SKILL.md",
+      "sourceHash": "82769e3c99fbbae081420ea62d6e3318eaf80b9c97da12a62c1cf97049826878",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\accidental_data_loss_prevention"
+    },
+    {
+      "name": "gcp-pipeline-resource-provisioning",
+      "description": "|",
+      "source": "C:\\Users\\lyan1\\.gemini\\config\\plugins\\data-agent-kit-plugin\\skills\\gcp_pipeline_resource_provisioning\\SKILL.md",
+      "sourceHash": "375d3a13d9fa91ee42b55ea5af7e57569c9ea702d46158573eec8f0055955ac9",
+      "status": "installed",
+      "destination": "C:\\Users\\lyan1\\.codex\\skills\\gcp_pipeline_resource_provisioning"
+    }
+  ]
+}

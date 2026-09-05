@@ -1,0 +1,32 @@
+/* QoL options use independent, safe-area-aware surfaces. */
+.qol-panel { position:fixed; inset:0; z-index:12000; background:rgba(9,10,15,.97); display:flex; align-items:center; justify-content:center; padding:max(10px,env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left)); box-sizing:border-box; }
+.qol-panel[hidden] { display:none!important; }
+.qol-box { color:#eee7dc; width:min(640px,100%); max-height:100%; min-height:0; display:flex; flex-direction:column; border:1px solid #75603b; border-radius:12px; background:#12151e; padding:18px; box-sizing:border-box; font-family:Outfit,system-ui,sans-serif; }
+.qol-box h2 { margin:0 0 10px; color:#edcc88; font-size:22px; }
+.qol-scroll { min-height:0; overflow:auto; overscroll-behavior:contain; touch-action:pan-y; }
+.qol-box p { font-size:15px; line-height:1.5; }
+.qol-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid #ffffff14; font-size:15px; }
+.qol-row input,.qol-row select { width:45%; min-width:95px; accent-color:#edcc88; }
+.qol-row select { background:#242a38; color:#fff; padding:7px; border:1px solid #647084; border-radius:5px; }
+.qol-actions { display:flex; flex-wrap:wrap; gap:8px; padding-top:10px; flex-shrink:0; }
+button.qol-btn { flex:0 0 auto!important; min-height:34px!important; max-height:36px!important; height:34px!important; width:auto!important; max-width:200px!important; padding:4px 12px!important; border:1px solid #8f805d; border-radius:6px; background:#252a36; color:#fff1cd; font:600 13px Outfit,system-ui,sans-serif; cursor:pointer; touch-action:manipulation; }
+button.qol-btn:focus-visible { outline:3px solid #6ee7e0; outline-offset:2px; }
+.qol-note { color:#b7c1d2; font-size:13px; }
+#qol-toast { position:fixed; bottom:max(18px,env(safe-area-inset-bottom)); left:50%; transform:translateX(-50%); z-index:15000; max-width:85vw; background:#162d2b; color:#e5fff7; border:1px solid #77b9a0; border-radius:8px; padding:10px 16px; font:14px Outfit,system-ui,sans-serif; pointer-events:none; }
+#qol-network { font:12px Outfit,system-ui,sans-serif; color:#b8c6d8; padding:7px; }
+#qol-count { font:600 60px Outfit,system-ui,sans-serif; color:#edcc88; text-align:center; }
+#qol-layout { background:rgba(9,10,15,.9); }
+#qol-layout .qol-box { align-self:flex-start; max-width:540px; pointer-events:auto; z-index:1; }
+.qol-drag { position:fixed; transform:translate(-50%,-50%); border-radius:50%; border:2px solid #edcc88; background:#384258; color:white; touch-action:none; z-index:2; cursor:grab; font:600 12px Outfit,system-ui,sans-serif; }
+.qol-touch-custom #action-buttons { position:static!important; transform:none!important; }
+.qol-touch-custom #action-buttons > button { position:fixed!important; right:auto!important; bottom:auto!important; margin:0!important; transform:translate(-50%,-50%)!important; }
+.qol-left #left-touch-zone { left:50%!important; right:0!important; }
+#qol-threats { position:fixed; inset:0; pointer-events:none; z-index:20; }
+.qol-threat { position:absolute; top:42%; font:700 15px Outfit,system-ui,sans-serif; padding:7px; color:#fff2cc; background:#151b28dc; border:1px solid #e4be76; border-radius:6px; }
+.qol-threat:first-child{left:max(6px,env(safe-area-inset-left))}.qol-threat:last-child{right:max(6px,env(safe-area-inset-right))}
+#qol-practice-bar { position:fixed; left:50%; top:max(8px,env(safe-area-inset-top)); transform:translateX(-50%); z-index:9000; display:flex; align-items:center; gap:8px; background:#111c; padding:5px 8px; border-radius:6px; color:#fff1ce; font:12px Outfit,system-ui,sans-serif; }
+html[data-qol-size=large] .overlay .menu-box p,html[data-qol-size=large] .overlay .menu-box label,html[data-qol-size=large] .overlay .menu-box select { font-size:16px!important; line-height:1.4!important; }
+html[data-qol-size=large] .hero-card { font-size:15px!important; }
+html[data-qol-size=large] #score-display,html[data-qol-size=large] #combo-display,html[data-qol-size=large] #objective-display { font-size:18px!important; }
+html[data-qol-size=small] #score-display,html[data-qol-size=small] #combo-display,html[data-qol-size=small] #objective-display { font-size:13px!important; }
+@media(max-height:500px){ .qol-box{padding:10px 14px}.qol-row{padding:6px 0}.qol-box h2{font-size:18px}.qol-box p{margin:7px 0} #qol-layout .qol-box{max-width:400px} }

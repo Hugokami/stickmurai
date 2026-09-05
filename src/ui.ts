@@ -1,3 +1,5 @@
+import { heroComparison, renderStageBriefing, permanentPreview } from './progressionQol';
+import { requestResume, handleBack, clearGameInputs } from './qol';
 import { globals, getStageAffix, getAscendantRank } from './globals';
 import { safeStorage } from './storage';
 import { i18n, skillsData } from './assets';
@@ -109,8 +111,8 @@ export const ASCENSION_UPGRADES = [
     nameJa: '瞬歩・神速',
     icon: '⚡',
     max: 5,
-    desc: '-8% Dash CD & +5% Move Speed',
-    descJa: 'ダッシュCT-8% & 移動速度+5%',
+    desc: '-0.08s Dash cooldown per level (0.4s minimum)',
+    descJa: 'ダッシュCT-0.08秒（最低0.4秒）',
     baseCost: 250,
     costMult: 250,
   },
@@ -120,8 +122,8 @@ export const ASCENSION_UPGRADES = [
     nameJa: '魂の共鳴',
     icon: '🧘',
     max: 5,
-    desc: '+15% Flow Gen & +1.5s Ult Duration',
-    descJa: '気力生成+15% & 奥義持続+1.5秒',
+    desc: '+15% Flow generation per level',
+    descJa: '気力生成+15%',
     baseCost: 300,
     costMult: 300,
   },
@@ -145,7 +147,7 @@ export const ASCENSION_UPGRADES = [
     icon: '🌀',
     max: 999,
     isEndless: true,
-    desc: '+1% Flow Rate & Spirit Power (Uncapped)',
+    desc: '+1% Flow Rate (Uncapped)',
     descJa: '気力蓄積速度+1% (上限なし)',
     baseCost: 350,
     costMult: 150,
@@ -201,10 +203,10 @@ export function getStageData(stage: number) {
   }
 
   const subThemes = [
-    { title: 'PURGATORY WASTES', titleJa: '煉獄の荒野', desc: `Target: ${10 + stage * 3} Kills // Vanguard Rogues & Elites` },
-    { title: 'OBSIDIAN CITADEL', titleJa: '黒曜石の居城', desc: `Target: ${10 + stage * 3} Kills // Chaos Musketeers & Brutes` },
-    { title: 'BLOOD CHASM', titleJa: '血の裂け目', desc: `Target: ${10 + stage * 3} Kills // Barrel Bombers & Pyromancers` },
-    { title: 'THRONE OF PHANTOMS', titleJa: '幻影の玉座', desc: `Target: ${10 + stage * 3} Kills // Necromancers & High Guard` }
+    { title: 'PURGATORY WASTES', titleJa: '煉獄の荒野', desc: `Target: ${Math.min(90, 35 + stage * 4)} Kills // Vanguard Rogues & Elites` },
+    { title: 'OBSIDIAN CITADEL', titleJa: '黒曜石の居城', desc: `Target: ${Math.min(90, 35 + stage * 4)} Kills // Chaos Musketeers & Brutes` },
+    { title: 'BLOOD CHASM', titleJa: '血の裂け目', desc: `Target: ${Math.min(90, 35 + stage * 4)} Kills // Barrel Bombers & Pyromancers` },
+    { title: 'THRONE OF PHANTOMS', titleJa: '幻影の玉座', desc: `Target: ${Math.min(90, 35 + stage * 4)} Kills // Necromancers & High Guard` }
   ];
   const theme = subThemes[(stageInRealm - 1) % subThemes.length];
   return {
@@ -244,6 +246,8 @@ export function updateStageSelectionUI() {
   if (descEl && stageData) {
     descEl.textContent = stageData.desc;
   }
+
+  if (descEl) renderStageBriefing(current, descEl);
 
   // 3. Stage 3-Star Mastery Rating
   const starsEl = document.getElementById('stage-select-stars');
@@ -818,6 +822,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   bindDualListener(document.getElementById('pause-btn'), () => {
     if (globals.gameMode === 'pvp') return; // Disable pausing in PvP
     if (globals.gameState === 'playing') {
+      clearGameInputs();
       globals.gameState = 'paused';
       if (pauseScreen) pauseScreen.style.display = 'flex';
       updatePauseUpgradesList();
@@ -826,12 +831,12 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
 
   bindDualListener(document.getElementById('resume-btn'), () => {
     if (globals.gameState === 'paused') {
-      globals.gameState = 'playing';
-      if (pauseScreen) pauseScreen.style.display = 'none';
+      requestResume();
     }
   });
 
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && handleBack(e)) return;
     if (e.key === 'Escape') {
       const guideModal = document.getElementById('guide-modal');
       if (guideModal && guideModal.style.display === 'flex') {
@@ -842,12 +847,12 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
       if (globals.gameMode === 'pvp') return; // Disable pausing in PvP
       if (globals.gameState === 'playing') {
+        clearGameInputs();
         globals.gameState = 'paused';
         if (pauseScreen) pauseScreen.style.display = 'flex';
         updatePauseUpgradesList();
       } else if (globals.gameState === 'paused') {
-        globals.gameState = 'playing';
-        if (pauseScreen) pauseScreen.style.display = 'none';
+        requestResume();
       }
     }
   });
@@ -2045,8 +2050,8 @@ export const HEROES_DATA = [
     nameJa: '原始の森神（サテュロス）',
     titleEn: 'Apex Nature Titan',
     titleJa: '深林を支配せし森羅の主',
-    descEn: 'Ancient demigod of wild tempest and stone. -40% Atk CD, +4 Slash DMG, +8 Iai DMG, +50% Slash AoE. Executions trigger Earthshaker Tremor staggering all foes!',
-    descJa: '大自然の怒りと剛力を宿す太古の半神。攻撃クールダウン-40%、斬撃+4、抜刀+8、斬撃範囲+50%。処刑成功時に大地を震撼させ全周囲の敵を圧倒する！',
+    descEn: 'Ancient demigod of wild tempest and stone. -18% Atk CD, +2 Slash DMG, +4 Iai DMG, +25% Slash AoE. Executions trigger Earthshaker Tremor staggering all foes!',
+    descJa: '大自然の怒りと剛力を宿す太古の半神。攻撃クールダウン-18%、斬撃+2、抜刀+4、斬撃範囲+25%。処刑成功時に大地を震撼させ全周囲の敵を圧倒する！',
     cost: 150000,
     image: '/sprites/portraits/portrait_satyr.png?v=clean2',
     atk: '185%',
@@ -2164,6 +2169,7 @@ function processRedeemCode() {
   inputEl.value = '';
 }
 
+let dojoFilter = 'all';
 export function populateDojoHeroGrid() {
   const grid = document.getElementById('dojo-hero-grid');
   const countEl = document.getElementById('dojo-magatama-count');
@@ -2173,7 +2179,17 @@ export function populateDojoHeroGrid() {
 
   const isJa = globals.currentLang === 'ja';
 
+  let filter = document.getElementById('qol-dojo-filter');
+  if (!filter) {
+    filter = document.createElement('label'); filter.id = 'qol-dojo-filter'; filter.className = 'qol-dojo-filter';
+    grid.before(filter);
+  }
+  filter.innerHTML = `${isJa ? '英雄を絞り込む' : 'Show heroes'} <select aria-label="Hero filter"><option value="all">${isJa?'すべて':'All'}</option><option value="owned">${isJa?'所有':'Owned'}</option><option value="locked">${isJa?'未解放':'Locked'}</option><option value="affordable">${isJa?'購入可能':'Affordable'}</option></select>`;
+  const select = filter.querySelector('select')!; select.value = dojoFilter;
+  select.addEventListener('change', () => { dojoFilter = select.value; populateDojoHeroGrid(); });
   HEROES_DATA.forEach(hero => {
+    const owned = globals.unlockedHeroes.includes(hero.id);
+    if ((dojoFilter === 'owned' && !owned) || (dojoFilter === 'locked' && owned) || (dojoFilter === 'affordable' && (owned || hero.cost > globals.magatama))) return;
     const isUnlocked = globals.unlockedHeroes.includes(hero.id);
     const isEquipped = globals.selectedHero === hero.id;
 
@@ -2197,13 +2213,7 @@ export function populateDojoHeroGrid() {
       </div>
     `;
 
-    // Stats badge row
-    const statsHtml = `
-      <div style="display: flex; gap: 6px; font-family: 'Orbitron', monospace; font-size: 11px; margin-top: 2px;">
-        <span style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 2px 6px; border-radius: 4px;">⚔️ ${hero.atk}</span>
-        <span style="background: rgba(56, 189, 248, 0.2); border: 1px solid rgba(56, 189, 248, 0.4); color: #7dd3fc; padding: 2px 6px; border-radius: 4px;">⚡ ${hero.spd}</span>
-      </div>
-    `;
+    const statsHtml = heroComparison(hero.id);
 
     let actionBtnHtml = '';
     if (isEquipped) {
@@ -2227,12 +2237,19 @@ export function populateDojoHeroGrid() {
         ✨ ${isJa ? hero.specialJa : hero.specialEn}
       </div>
       <div style="margin-top: auto; padding-top: 6px;">
+        ${!isUnlocked && hero.cost > globals.magatama ? `<div class="qol-shortfall">${isJa?'あと':'Need'} ${(hero.cost-globals.magatama).toLocaleString()} 🔮</div>` : ''}
         ${actionBtnHtml}
+        <button class="menu-btn btn-card qol-hero-try" data-hero="${hero.id}">${isJa?'道場で試す':'TRY IN DOJO'}</button>
       </div>
     `;
 
     grid.appendChild(card);
   });
+
+  if (!grid.childElementCount) grid.textContent = isJa ? '該当する英雄はいません。' : 'No heroes match this filter.';
+  grid.querySelectorAll('.qol-hero-try').forEach(btn => bindDualListener(btn as HTMLElement, () => {
+    window.dispatchEvent(new CustomEvent('qol-practice', { detail: (btn as HTMLElement).dataset.hero }));
+  }));
 
   // Attach pointerdown and click listeners to Equip and Buy buttons using bindDualListener
   grid.querySelectorAll('.equip-hero-btn').forEach(btn => {
@@ -2253,9 +2270,10 @@ export function populateDojoHeroGrid() {
       if (!heroId) return;
       const hero = HEROES_DATA.find(h => h.id === heroId);
       if (!hero) return;
-      if ((globals.magatama || 0) < hero.cost) return;
+      if (globals.unlockedHeroes.includes(heroId) || (globals.magatama || 0) < hero.cost) return;
 
       globals.magatama -= hero.cost;
+      window.dispatchEvent(new CustomEvent('qol-toast', { detail: `${isJa ? hero.nameJa : hero.nameEn} · ${isJa?'残高':'Remaining'} ${globals.magatama.toLocaleString()} 🔮` }));
       if (!globals.unlockedHeroes.includes(heroId)) {
         globals.unlockedHeroes.push(heroId);
       }
@@ -2538,7 +2556,9 @@ export function populateAscensionUpgrades() {
           ${pips}
         </div>
         <div style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.3;">
-          ${isJa ? u.descJa : u.desc}
+          <strong>${isJa ? '永続強化' : 'PERMANENT'}</strong> · ${isJa ? u.descJa : u.desc}
+          ${permanentPreview(u.id, curLevel, u.max, isEndless)}
+          <div>${isJa ? 'レベル' : 'Level'} ${curLevel} → ${isMax ? curLevel : curLevel + 1} · ${isJa?'上限':'Cap'} ${isEndless?'∞':u.max}</div>
         </div>
         <div style="margin-top: 4px;">
           ${isMax ? `
@@ -2555,7 +2575,9 @@ export function populateAscensionUpgrades() {
       if (buyBtn && canAfford) {
         bindDualListener(buyBtn as HTMLElement, () => {
           if ((globals.magatama || 0) >= cost && (isEndless || curLevel < u.max)) {
+            if ((globals.campaignUpgrades as any)[u.id] !== curLevel && ((globals.campaignUpgrades as any)[u.id] || 0) !== curLevel) return;
             globals.magatama -= cost;
+            window.dispatchEvent(new CustomEvent('qol-toast', { detail: `${isJa?u.nameJa:u.name} Lv. ${curLevel+1} · ${isJa?'残高':'Remaining'} ${globals.magatama.toLocaleString()} 🔮` }));
             (globals.campaignUpgrades as any)[u.id] = curLevel + 1;
             safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
             safeStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));

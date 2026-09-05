@@ -1,3 +1,4 @@
+import { upgradePreview } from './progressionQol';
 import { globals } from './globals';
 import { callbacks } from './callbacks';
 import { i18n, vfxAnims } from './assets';
@@ -278,6 +279,7 @@ export function triggerLevelUp() {
   } else {
     // Filter powerups dynamically based on chosen skill and uniqueness
     availablePowers = availablePowers.filter(power => {
+      if (power.isCorrupted && globals.chosenPowerUps.includes(power.nameKey)) return false;
       // Filter out unique one-time upgrades that are already acquired
       if (power.nameKey === 'puFrostName' && globals.frostStanceActive) return false;
       if (power.nameKey === 'puVoidName' && globals.voidStanceActive) return false;
@@ -292,6 +294,17 @@ export function triggerLevelUp() {
     });
   }
   
+  // Do not offer capped upgrades (or clamp a faster hero to a slower cooldown).
+  availablePowers = availablePowers.filter(power => {
+    const s = globals.playerStats;
+    if (power.nameKey === 'puGiantName') return s.slashSizeMult < 2.2;
+    if (power.nameKey === 'puWindName') return s.attackCooldownBase > 0.18;
+    if (power.nameKey === 'puFeatherName') return s.dashCooldownBase > 0.72;
+    if (power.nameKey === 'puSwiftName') return s.moveSpeedMult < 1.5;
+    if (power.nameKey === 'puStoutHeartName') return globals.maxLives < 7;
+    return true;
+  });
+
   const normalPowers = availablePowers.filter(p => !p.isCorrupted);
   const cursedPowers = availablePowers.filter(p => p.isCorrupted);
   const shuffledNormal = [...normalPowers].sort(() => 0.5 - Math.random());
@@ -367,13 +380,15 @@ export function triggerLevelUp() {
       card.classList.add(`category-${category}`);
       card.innerHTML = `<h3>${t(power.nameKey)}</h3><p>${t(power.descKey)}</p>`;
     }
-    card.addEventListener('click', () => {
+    card.insertAdjacentHTML('beforeend', upgradePreview(power.nameKey));
+    card.tabIndex = 0;
+    card.setAttribute('role', 'button');
+    const choose = (e: Event) => {
+      e.stopPropagation();
+      if (globals.gameState !== 'levelup') return;
       power.apply();
       globals.chosenPowerUps.push(power.nameKey);
-      if (power.isCorrupted) {
-        const idx = powerUps.indexOf(power);
-        if (idx !== -1) powerUps.splice(idx, 1);
-      }
+
       globals.exp -= globals.maxExp;
       globals.maxExp = Math.round(globals.maxExp * 1.25);
       globals.level++;
@@ -387,7 +402,10 @@ export function triggerLevelUp() {
       }
       callbacks.updateUI();
       globals.gameState = 'playing';
-    });
+    };
+    card.addEventListener('pointerdown', choose);
+    card.addEventListener('click', choose);
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(e); } });
     powerChoicesContainer.appendChild(card);
   });
 }

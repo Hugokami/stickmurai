@@ -596,6 +596,25 @@ interface QueuedAsset {
 const priorityQueue: QueuedAsset[] = [];
 const backgroundQueue: QueuedAsset[] = [];
 const activeLoads = new Set<HTMLImageElement>();
+const failedAssets = new Map<HTMLImageElement, QueuedAsset>();
+const requiredAssets: QueuedAsset[] = [];
+export function assetReadiness() {
+  let loaded = 0; let failed = 0;
+  for (const item of requiredAssets) {
+    if (item.img.complete && item.img.naturalWidth > 0) loaded++;
+    else if (failedAssets.has(item.img)) failed++;
+  }
+  return {loaded, failed, total:requiredAssets.length, ready:requiredAssets.length > 0 && loaded === requiredAssets.length};
+}
+export function retryRequiredAssets() {
+  for (const item of requiredAssets) {
+    if (item.img.complete && item.img.naturalWidth > 0) continue;
+    if (activeLoads.has(item.img)) continue;
+    failedAssets.delete(item.img);
+    if (!priorityQueue.includes(item)) priorityQueue.push(item);
+  }
+  pumpPriorityQueue();
+}
 const MAX_CONCURRENT_PRIORITY = 16;
 const MAX_CONCURRENT_BACKGROUND = 4;
 let isBackgroundLoadingActive = false;
@@ -620,7 +639,9 @@ export function registerAssetToLoad(img: HTMLImageElement) {
 function queueAsset(img: HTMLImageElement, src: string, folder?: string, isPriority = false) {
   if (isPriority) {
     globals.totalAssetsToLoad++;
-    priorityQueue.push({ img, src, folder, isPriority: true });
+    const item = { img, src, folder, isPriority: true };
+    requiredAssets.push(item);
+    priorityQueue.push(item);
   } else {
     backgroundQueue.push({ img, src, folder, isPriority: false });
   }
@@ -640,10 +661,12 @@ function startLoadingItem(item: QueuedAsset) {
     } else {
       pumpBackgroundQueue();
     }
+    window.dispatchEvent(new Event('qol-assets'));
   };
 
-  item.img.onload = onDone;
+  item.img.onload = () => { failedAssets.delete(item.img); onDone(); };
   item.img.onerror = () => {
+    failedAssets.set(item.img, item);
     console.warn(`[Assets] Failed to load: ${item.src}`);
     onDone();
   };

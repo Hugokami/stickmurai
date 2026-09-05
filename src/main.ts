@@ -1,4 +1,7 @@
 import './style.css';
+import { initQol, clearGameInputs, actionBuffer, qolSettings } from './qol';
+import { initRuntimeQol, isPractice, practiceStep, recordHurt, resetRunFeedback, showDefeatFeedback, updateThreats } from './runtimeQol';
+import { assetReadiness, retryRequiredAssets } from './assets';
 import { safeStorage } from './storage';
 import { globals, getStageAffix } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
@@ -109,6 +112,7 @@ let loaderTimeoutId: any = null;
 
 function finishLoading() {
   if (loadingFinished) return;
+  if (!assetReadiness().ready) return;
   loadingFinished = true;
   
   if (loaderTimeoutId) {
@@ -209,7 +213,8 @@ const tipsInterval = setInterval(() => {
 }, 2800);
 
 function updateLoaderProgress() {
-  const percent = globals.totalAssetsToLoad > 0 ? Math.round((globals.assetsLoadedCount / globals.totalAssetsToLoad) * 100) : 100;
+  const readiness = assetReadiness();
+  const percent = readiness.total > 0 ? Math.round(readiness.loaded / readiness.total * 100) : 0;
   const fill = document.getElementById('loader-fill');
   const flare = document.getElementById('loader-bar-flare');
   const text = document.getElementById('loader-text');
@@ -230,13 +235,10 @@ function updateLoaderProgress() {
   }
 
   if (statusText) {
-    if (percent < 30) statusText.innerText = "LOAD_DATABASE...";
-    else if (percent < 65) statusText.innerText = "CALIBRATING_BLADE...";
-    else if (percent < 95) statusText.innerText = "READYING_ARENA...";
-    else statusText.innerText = "READY";
+    statusText.textContent = readiness.ready ? 'Heroes & combat effects ready · Audio loads separately' : `Heroes & combat effects: ${readiness.loaded}/${readiness.total}${readiness.failed ? ` · ${readiness.failed} downloads need retry` : ''}`;
   }
   
-  if (globals.assetsLoadedCount >= globals.totalAssetsToLoad && !loadingFinished) {
+  if (readiness.ready && !loadingFinished) {
     finishLoading();
   }
 }
@@ -567,6 +569,10 @@ function startApp() {
       () => { initGame(); }, // Zen start
       () => { initGame(); }  // Restart run
     );
+    initQol();
+    initRuntimeQol(initGame);
+    window.addEventListener('qol-assets', updateLoaderProgress);
+    (window as any).__showLoadingRecovery = showLoadingRecovery;
 
     initPvPLobby(() => {
       globals.gameMode = 'pvp';
@@ -580,7 +586,7 @@ function startApp() {
     if (loaderScreen) {
       const earlySkip = (e: Event) => {
         e.stopPropagation();
-        finishLoading();
+        if (assetReadiness().ready) finishLoading();
       };
       loaderScreen.addEventListener('click', earlySkip, { once: true });
       loaderScreen.addEventListener('touchstart', earlySkip, { once: true });
@@ -625,8 +631,22 @@ function startApp() {
 
   // Hard safety timeout: allow 15 seconds for all assets to fully load
   loaderTimeoutId = setTimeout(() => {
-    finishLoading();
+    if (assetReadiness().ready) finishLoading(); else showLoadingRecovery();
   }, 15000);
+}
+
+function showLoadingRecovery() {
+  if (loadingFinished) return;
+  updateLoaderProgress();
+  const loader = document.getElementById('loader-screen');
+  if (!loader || document.getElementById('qol-loader-retry')) return;
+  const actions = document.createElement('div'); actions.className='qol-actions';
+  const retry=document.createElement('button'); retry.id='qol-loader-retry'; retry.className='qol-btn'; retry.textContent='Retry loading';
+  let last=0;
+  const run=(e:Event)=>{e.preventDefault();e.stopPropagation();if(Date.now()-last<350)return;last=Date.now();retryRequiredAssets();updateLoaderProgress();};
+  retry.addEventListener('pointerdown',run);retry.addEventListener('click',run);
+  const reload=document.createElement('button');reload.className='qol-btn';reload.textContent='Reload game';reload.onclick=()=>location.reload();
+  actions.append(retry,reload);loader.append(actions);
 }
 
 if (document.readyState === 'loading') {
@@ -683,6 +703,9 @@ function showBossWarningBanner(stage: number) {
 }
 
 function initGame() {
+  if (!assetReadiness().ready) { showLoadingRecovery(); return; }
+  clearGameInputs();
+  resetRunFeedback();
   loadCoreCombatAssetsNow();
   playSound(sfx.gameStart);
   startBgm();
@@ -1134,6 +1157,7 @@ function initGame() {
 }
 
 function spawnEnemy() {
+  if (isPractice()) return;
   if (globals.gameState !== 'playing') {
     if (globals.gameState === 'paused' || globals.gameState === 'levelup' || globals.gameState === 'ultchoice') {
       setTimeout(spawnEnemy, 1000);
@@ -1417,6 +1441,8 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   }
   
   if (globals.player.state !== 'dead') {
+    recordHurt(enemy?.subType || 'attack', damageAmount);
+    if (isPractice()) return;
     playSynthesizedHurt();
     globals.consecutiveParries = 0;
     const isAnyBossAlive = globals.enemies.some(en => en.state !== 'dead' && (en.subType === 'oni_boss' || en.subType === 'shogun_boss' || en.subType === 'agis_colossus' || en.subType === 'skeleton_warlord' || (en as any).isBoss));
@@ -2156,6 +2182,7 @@ function triggerVictory() {
 }
 
 function checkAndSaveHighScores() {
+  if (isPractice()) return;
   const rs = globals.runStats;
   const hs = globals.highScores;
   
@@ -2175,6 +2202,7 @@ function checkAndSaveHighScores() {
 }
 
 function triggerGameOver(showTimeLimitExceeded = false) {
+  if (isPractice()) return;
   globals.player.setState('dead');
   globals.gameState = 'gameover';
   checkAndSaveHighScores();
@@ -2196,6 +2224,8 @@ function triggerGameOver(showTimeLimitExceeded = false) {
   }
 
   document.getElementById('game-over')!.style.display = 'block';
+  clearGameInputs();
+  showDefeatFeedback(showTimeLimitExceeded);
   
   for (let i = 0; i < 50; i++) {
     globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#ff3333', 300, 1, 4));
@@ -2908,6 +2938,8 @@ function addFlow(amount: number) {
 
 function update(realDt: number) {
   pollGamepad();
+  practiceStep();
+  updateThreats(realDt);
   if (globals.mobileDashDown && (globals.flowState === 'awakened' || globals.flowState === 'storm_god')) {
     globals.mobileDashJustPressed = true;
   }
@@ -2980,8 +3012,7 @@ function update(realDt: number) {
     }
 
     // Calamity & Shrine checks
-    triggerCalamityCheck(realDt);
-    checkShrineSpawns();
+    if (!isPractice()) { triggerCalamityCheck(realDt); checkShrineSpawns(); }
 
     // Calamity Winds Stage Affix: Thunder Gale periodic strikes
     if (globals.activeStageAffix?.id === 'thunder_gale') {
@@ -3978,7 +4009,11 @@ function update(realDt: number) {
     globals.animatedEffects.length = writeIdx;
   }
 
-  const isAttackPressed = globals.mouse.justPressed || globals.mobileAttackJustPressed;
+  const rawAttack = globals.mouse.justPressed || globals.mobileAttackJustPressed;
+  const bufferNow = performance.now();
+  if (rawAttack && globals.gameMode !== 'pvp' && qolSettings.buffer > 0) actionBuffer.queue('attack', bufferNow, qolSettings.buffer);
+  const bufferedAttack = globals.gameMode !== 'pvp' && actionBuffer.consume('attack', bufferNow, globals.player.attackCooldown <= 0 && globals.player.state !== 'dash');
+  const isAttackPressed = rawAttack || bufferedAttack;
   const isAttackReleased = globals.mouse.justReleased || globals.mobileAttackReleased;
 
   // Option 2: Active Blade Clash (Tsubazeriai) Update & Input
