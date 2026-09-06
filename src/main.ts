@@ -2820,7 +2820,7 @@ function killEnemy(e: Enemy) {
     const stage = globals.currentStage || 1;
     const isBossStage = stage % 5 === 0;
     const isBossDefeated = e.subType === 'oni_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || e.subType === 'shogun_boss' || (e as any).isBoss;
-    if ((isBossStage && (isBossDefeated || globals.stageKills >= 45)) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
+    if ((isBossStage && isBossDefeated) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
       globals.gameState = 'stageclear';
       const lvlScreen = document.getElementById('level-up-screen');
       if (lvlScreen) lvlScreen.style.display = 'none';

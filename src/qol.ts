@@ -54,9 +54,15 @@ function panel(id:string,title:string) {const p=document.createElement('section'
 function applySettings() {
   document.documentElement.dataset.qolSize=qolSettings.size;
   document.documentElement.classList.toggle('qol-left',qolSettings.handed==='left');
-  document.documentElement.classList.add('qol-touch-custom');
+  const custom = Object.keys(qolSettings.positions).length > 0;
+  document.documentElement.classList.toggle('qol-touch-custom', custom);
+  document.documentElement.style.setProperty('--combat-size', `${qolSettings.controlSize}px`);
   const ids=['btn-attack','btn-dash','btn-enhance','btn-ult'];
   ids.forEach((id,i)=>{const b=document.getElementById(id);if(!b)return;const p=controlPosition(id,i);b.style.setProperty('left',`${p.x*100}%`,'important');b.style.setProperty('top',`${p.y*100}%`,'important');b.style.setProperty('width',`${qolSettings.controlSize}px`,'important');b.style.setProperty('height',`${qolSettings.controlSize}px`,'important');b.style.setProperty('min-width',`${qolSettings.controlSize}px`,'important');b.style.setProperty('min-height',`${qolSettings.controlSize}px`,'important');b.style.opacity=String(qolSettings.opacity);});
+  if (!custom) ids.forEach(id => {
+    const b=document.getElementById(id); if(!b)return;
+    for(const property of ['left','top','width','height','min-width','min-height']) b.style.removeProperty(property);
+  });
   safeStorage.setItem('stickmurai_qol',JSON.stringify(qolSettings)); window.dispatchEvent(new Event('qol-audio'));
 }
 function controlPosition(id:string,i:number):Position {
@@ -100,8 +106,6 @@ export function initQol() {
   const focusLost=()=>{clearGameInputs();cancelResume();if(globals.gameMode!=='pvp'&&globals.gameState==='playing')document.getElementById('pause-btn')?.click();};
   window.addEventListener('blur',focusLost);document.addEventListener('visibilitychange',()=>{if(document.hidden)focusLost();});
   window.addEventListener('keydown',e=>{if(e.key==='Escape'&&handleBack(e))e.stopImmediatePropagation();},true);
-  const network=document.createElement('div');network.id='qol-network';document.querySelector('#main-menu .menu-box')?.append(network);
-  const net=()=>{network.textContent=navigator.onLine?'Solo ready · Online services checked when connecting':'Offline · Solo play is available; multiplayer needs a connection';};net();window.addEventListener('online',net);window.addEventListener('offline',net);
   const music=document.getElementById('bgm-volume') as HTMLInputElement|null;if(music){music.value=String(qolSettings.music);music.addEventListener('input',()=>{qolSettings.music=Number(music.value);safeStorage.setItem('stickmurai_qol',JSON.stringify(qolSettings));});}
   window.addEventListener('resize',applySettings);applySettings();
 }

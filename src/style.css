@@ -558,6 +558,7 @@ canvas.inverted {
   letter-spacing: 0.05em !important;
 }
 
+
 .btn-card {
   padding: 8px 12px !important;
   font-size: 12px !important;
@@ -3547,6 +3548,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   letter-spacing: 1px !important;
 }
 
+
 /* Stance Blessing UI Styles */
 .blessing-card {
   background: rgba(18, 19, 26, 0.6) !important;
@@ -3697,5 +3699,63 @@ input[type="range"]::-webkit-slider-thumb:hover {
 #redeem-input::placeholder {
   color: rgba(251, 191, 36, 0.45);
   letter-spacing: 1.5px;
+}
+
+/* Default combat layout; saved positions are managed independently by QoL. */
+html:not(.qol-touch-custom) #action-buttons {
+  --size: var(--combat-size, 72px);
+  position: absolute;
+  right: calc(12px + env(safe-area-inset-right));
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  width: calc(var(--size) * 2.55);
+  height: calc(var(--size) * 2.55);
+  display: block;
+  pointer-events: none;
+}
+html:not(.qol-touch-custom) #action-buttons > button {
+  position: absolute;
+  width: var(--size) !important;
+  height: var(--size) !important;
+  margin: 0 !important;
+  pointer-events: auto;
+}
+html:not(.qol-touch-custom) #btn-attack {
+  right: 0; bottom: 0;
+  width: calc(var(--size) * 1.25) !important;
+  height: calc(var(--size) * 1.25) !important;
+}
+html:not(.qol-touch-custom) #btn-dash { right: calc(var(--size) * 1.4); bottom: 0; }
+html:not(.qol-touch-custom) #btn-enhance { right: 0; bottom: calc(var(--size) * 1.4); }
+html:not(.qol-touch-custom) #btn-ult { right: calc(var(--size) * 1.3); bottom: calc(var(--size) * 1.3); }
+html.qol-left:not(.qol-touch-custom) #action-buttons { right: auto; left: calc(12px + env(safe-area-inset-left)); transform: scaleX(-1); }
+html.qol-left:not(.qol-touch-custom) #action-buttons > button { scale: -1 1; }
+
+#shrine-modal { padding: max(10px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(10px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); }
+#shrine-modal .shrine-menu-box {
+  width: min(580px, 100%) !important;
+  height: auto !important; min-height: 0 !important;
+  max-height: calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  display: flex; flex-direction: column; overflow: hidden !important;
+  padding: 14px 20px !important;
+}
+#shrine-modal .shrine-menu-box > :not(.shrine-modal-scroll) { flex-shrink: 0; }
+#shrine-modal-title { padding: 0 24px; font-size: clamp(16px, 4vh, 28px) !important; }
+.shrine-modal-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; margin-bottom: 8px; }
+
+/* Content-sized rows prevent one card's footer from spilling over the next. */
+#upgrades-modal #menu-ascension-upgrade-grid,
+#stage-clear-modal #ascension-upgrade-grid {
+  grid-auto-rows: max-content !important; align-items: start; align-content: start;
+  min-height: 0 !important; touch-action: pan-y; overscroll-behavior: contain;
+}
+.ascension-card { height: auto !important; min-width: 0; box-sizing: border-box; }
+.ascension-card > div { flex-shrink: 0; min-width: 0; }
+.ascension-card > div:first-child { gap: 8px; flex-wrap: wrap; }
+.ascension-card > div:last-child { flex: 0 0 auto; margin-top: auto !important; padding-top: 8px; }
+.ascension-card .menu-btn.btn-card { position: relative; inset: auto; display: flex; width: 100% !important; max-width: 100% !important; margin: 0 !important; flex: 0 0 auto !important; }
+
+@media (max-height: 520px) {
+  #shrine-modal .shrine-menu-box > div:first-of-type { display: none; }
+  #shrine-modal-feat { margin-bottom: 8px !important; }
 }
 
