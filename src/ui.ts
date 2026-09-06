@@ -394,6 +394,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   if (stageClearMenuBtn) {
     bindDualListener(stageClearMenuBtn, () => {
       if (stageClearModal) stageClearModal.style.display = 'none';
+      callbacks.onQuitToMainMenu?.();
       globals.gameState = 'mainmenu';
       if (mainMenu) mainMenu.style.display = 'flex';
       if (uiLayer) uiLayer.style.display = 'none';
@@ -406,6 +407,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   if (stageClearXBtn) {
     bindDualListener(stageClearXBtn, () => {
       if (stageClearModal) stageClearModal.style.display = 'none';
+      callbacks.onQuitToMainMenu?.();
       globals.gameState = 'mainmenu';
       if (mainMenu) mainMenu.style.display = 'flex';
       if (uiLayer) uiLayer.style.display = 'none';
@@ -486,6 +488,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     if (globals.gameMode === 'pvp') {
       pvpManager.disconnect();
     } else {
+      callbacks.onQuitToMainMenu?.();
       globals.gameState = 'mainmenu';
       if (mainMenu) mainMenu.style.display = 'flex';
       if (uiLayer) uiLayer.style.display = 'none';
@@ -502,6 +505,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       if (globals.gameMode === 'pvp') {
         pvpManager.disconnect();
       } else {
+        callbacks.onQuitToMainMenu?.();
         globals.gameState = 'mainmenu';
         if (mainMenu) mainMenu.style.display = 'flex';
         if (uiLayer) uiLayer.style.display = 'none';
@@ -750,6 +754,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   bindDualListener(dawnReturnBtn, () => {
     const dawnScreen = document.getElementById('dawn-victory-screen');
     if (dawnScreen) dawnScreen.style.display = 'none';
+    callbacks.onQuitToMainMenu?.();
     globals.gameState = 'mainmenu';
     if (mainMenu) mainMenu.style.display = 'flex';
     if (uiLayer) uiLayer.style.display = 'none';

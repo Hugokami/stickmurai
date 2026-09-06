@@ -68,7 +68,7 @@ let shogunSpawned = false;
 // Import helper modules
 import { initInput, pollGamepad } from './input';
 import { initUI, updateUI, updateEnhanceButton, updateStaticText, updateComboDisplay } from './ui';
-import { initRenderer, draw } from './renderer';
+import { initRenderer, draw, resetCanvasVisuals } from './renderer';
 import { triggerLevelUp, activateAwakening, applyRandomStartUpgrade } from './powerups';
 
 // register callbacks
@@ -98,6 +98,43 @@ callbacks.triggerFlowingCounterReset = triggerFlowingCounterReset;
 callbacks.triggerElementalExplosion = triggerElementalExplosion;
 (callbacks as any).triggerStormGodLightning = triggerStormGodLightning;
 (callbacks as any).triggerVortexShatter = triggerVortexShatter;
+
+export function clearBattlefield() {
+  globals.enemies = [];
+  globals.slashes = [];
+  globals.projectiles = [];
+  globals.particles = [];
+  globals.afterimages = [];
+  globals.shockwaves = [];
+  globals.floatingTexts = [];
+  globals.animatedEffects = [];
+  globals.lightningBeams = [];
+  globals.sakuraPetals = [];
+  globals.collectibles = [];
+  globals.judgementDomes = [];
+  globals.groundScars = [];
+  globals.bouncingSickles = [];
+  globals.plasmaTrails = [];
+  globals.destructibleProps = [];
+  globals.windForces = [];
+  globals.screenShake = 0;
+  if (globals.player) {
+    globals.player.setState('idle');
+    globals.player.vx = 0;
+    globals.player.vy = 0;
+  }
+}
+
+export function handleQuitToMainMenu() {
+  globals.gameState = 'mainmenu';
+  clearGameInputs();
+  resetRunFeedback();
+  clearBattlefield();
+  resetCanvasVisuals();
+  startOrResumeGameLoop();
+}
+
+callbacks.onQuitToMainMenu = handleQuitToMainMenu;
 
 assetCallbacks.onProgress = updateLoaderProgress;
 
@@ -704,8 +741,11 @@ function showBossWarningBanner(stage: number) {
 
 function initGame() {
   if (!assetReadiness().ready) { showLoadingRecovery(); return; }
+  startOrResumeGameLoop();
   clearGameInputs();
   resetRunFeedback();
+  clearBattlefield();
+  resetCanvasVisuals();
   loadCoreCombatAssetsNow();
   playSound(sfx.gameStart);
   startBgm();
@@ -2956,7 +2996,7 @@ function update(realDt: number) {
   }
 
   if (globals.gameState === 'levelup' || globals.gameState === 'ultchoice' || globals.gameState === 'paused') return; 
-  if (globals.gameState !== 'playing' && globals.player.state !== 'dead') return;
+  if (globals.gameState !== 'playing' && (!globals.player || globals.player.state !== 'dead')) return;
   // Slow-motion and freeze-frame hitStop removed completely to ensure seamless 60fps
   globals.hitStop = 0;
 
@@ -4012,7 +4052,8 @@ function update(realDt: number) {
   const rawAttack = globals.mouse.justPressed || globals.mobileAttackJustPressed;
   const bufferNow = performance.now();
   if (rawAttack && globals.gameMode !== 'pvp' && qolSettings.buffer > 0) actionBuffer.queue('attack', bufferNow, qolSettings.buffer);
-  const bufferedAttack = globals.gameMode !== 'pvp' && actionBuffer.consume('attack', bufferNow, globals.player.attackCooldown <= 0 && globals.player.state !== 'dash');
+  const canAttack = !!globals.player && globals.player.attackCooldown <= 0 && globals.player.state !== 'dash';
+  const bufferedAttack = globals.gameMode !== 'pvp' && actionBuffer.consume('attack', bufferNow, canAttack);
   const isAttackPressed = rawAttack || bufferedAttack;
   const isAttackReleased = globals.mouse.justReleased || globals.mobileAttackReleased;
 
@@ -5229,14 +5270,33 @@ function update(realDt: number) {
   }
 }
 
+let loopAnimId: number | null = null;
+let isLoopActive = false;
+
 function loop(time: number) {
-  const dt = Math.min((time - lastTime) / 1000, 0.1);
-  lastTime = time;
-  update(dt);
-  draw();
-  requestAnimationFrame(loop);
+  try {
+    const dt = Math.min((time - lastTime) / 1000, 0.1);
+    lastTime = time;
+    update(dt);
+    draw();
+  } catch (err) {
+    console.error("Critical error inside game loop:", err);
+  } finally {
+    loopAnimId = requestAnimationFrame(loop);
+    isLoopActive = true;
+  }
 }
-requestAnimationFrame(loop);
+
+export function startOrResumeGameLoop() {
+  if (!isLoopActive || loopAnimId === null) {
+    isLoopActive = true;
+    lastTime = performance.now();
+    loopAnimId = requestAnimationFrame(loop);
+  }
+}
+
+loopAnimId = requestAnimationFrame(loop);
+isLoopActive = true;
 
 function triggerLightningExplosion(x: number, y: number) {
   playSynthesizedThunder();

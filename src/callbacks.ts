@@ -28,6 +28,7 @@ export const callbacks = {
   openHermitPactModal: () => {},
   triggerDawnVictory: () => {},
   triggerStageClear: () => {},
+  onQuitToMainMenu: () => {},
 };
 
 export const assetCallbacks = {

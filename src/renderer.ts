@@ -240,6 +240,16 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   });
 }
 
+export function resetCanvasVisuals() {
+  if (!canvas || !ctx) return;
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#090a0f';
+  ctx.fillRect(0, 0, globals.width, globals.height);
+  drawBackground(ctx);
+  ctx.restore();
+}
+
 export function draw() {
   if (!canvas || !ctx) return;
   
@@ -276,7 +286,7 @@ export function draw() {
   
   const vignette = document.getElementById('vignette-overlay');
   if (vignette) {
-    if (globals.lives === 1 && globals.gameState === 'playing' && globals.player.state !== 'dead') {
+    if (globals.lives === 1 && globals.gameState === 'playing' && globals.player && globals.player.state !== 'dead') {
       const pulse = Math.abs(Math.sin(performance.now() / 200));
       vignette.style.opacity = (0.3 + pulse * 0.4).toString();
     } else {
@@ -304,7 +314,9 @@ export function draw() {
   }
 
   visibleEntities.length = 0;
-  visibleEntities.push(globals.player);
+  if (globals.player) {
+    visibleEntities.push(globals.player);
+  }
   const cullBuffer = 300;
   const minX = globals.camera.x - globals.vw / 2 - cullBuffer;
   const maxX = globals.camera.x + globals.vw / 2 + cullBuffer;
@@ -549,8 +561,9 @@ export function draw() {
   }
 
   visibleEntities.forEach(e => {
-    if (e === globals.player && globals.player.state !== 'dead') {
-      if (globals.playerStats.shadowClonesLevel && globals.playerStats.shadowClonesLevel > 0) {
+    if (!e) return;
+    if (e === globals.player && globals.player && globals.player.state !== 'dead') {
+      if (globals.playerStats?.shadowClonesLevel && globals.playerStats.shadowClonesLevel > 0) {
         const cloneDelays = [18];
         if (globals.playerStats.shadowClonesLevel >= 2) {
           cloneDelays.push(36);
@@ -725,7 +738,9 @@ export function draw() {
     const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
     const baseTint = (e as any).colorTint || 'none';
     const tint = (isKamisori && e.state !== 'dead') ? '#121212' : (((e as any).hitFlash > 0) ? '#ffffff' : baseTint);
-    e.draw(ctx, globals.camera.x, globals.camera.y, alpha, tint);
+    if (typeof e.draw === 'function') {
+      e.draw(ctx, globals.camera.x, globals.camera.y, alpha, tint);
+    }
   });
   
   if (globals.sakuraPetals && globals.weatherEffectsEnabled === 'on' && globals.sakuraPetals.length > 0) {

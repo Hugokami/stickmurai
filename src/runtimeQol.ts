@@ -25,7 +25,41 @@ function exitPractice() {practice=false;setPracticeStorage(false);document.getEl
 export function practiceStep() {if(!practice)return; if(globals.enemies.length>0) globals.enemies.length=0;}
 export function resetRunFeedback() {hurtCount=0;threatTimer=0;clearThreats();}
 export function recordHurt(source:string, damage:number) {if(practice)return;hurtCount+=damage;showThreat(source);}
-function showThreat(source:string) {if(!threatRoot){threatRoot=document.createElement('div');threatRoot.id='qol-threats';document.body.append(threatRoot);}const e=document.createElement('div');e.className='qol-threat';e.textContent=`⚠ ${source.replaceAll('_',' ')} attack`;threatRoot.append(e);window.setTimeout(()=>e.remove(),1100);}
-export function updateThreats(dt:number) {if(!threatRoot)return;threatTimer-=dt;if(threatTimer<=0){threatTimer=0.5;while(threatRoot.children.length>3)threatRoot.firstElementChild?.remove();}}
-function clearThreats(){threatRoot?.remove();threatRoot=null;}
+function showThreat(source:string) {
+  try {
+    if(!threatRoot){
+      threatRoot=document.createElement('div');
+      threatRoot.id='qol-threats';
+      document.body.append(threatRoot);
+    }
+    const cleanSource = String(source || 'enemy').replace(/_/g, ' ');
+    const e=document.createElement('div');
+    e.className='qol-threat';
+    e.textContent=`⚠ ${cleanSource} attack`;
+    threatRoot.append(e);
+    window.setTimeout(()=>{ try { e.remove(); } catch(err) {} }, 1100);
+  } catch(err) {
+    console.error('showThreat error:', err);
+  }
+}
+export function updateThreats(dt:number) {
+  try {
+    if(!threatRoot) return;
+    threatTimer-=dt;
+    if(threatTimer<=0){
+      threatTimer=0.5;
+      while(threatRoot.children.length>2) threatRoot.firstElementChild?.remove();
+    }
+  } catch(err) {
+    console.error('updateThreats error:', err);
+  }
+}
+export function clearThreats(){
+  try {
+    threatRoot?.remove();
+    threatRoot=null;
+  } catch(err) {
+    console.error('clearThreats error:', err);
+  }
+}
 export function showDefeatFeedback(timeLimit=false){const el=document.getElementById('stats-summary');if(!el)return;const old=el.innerHTML;el.insertAdjacentHTML('afterbegin',`<div class="qol-note">${timeLimit?'Objective timer expired.':'Run ended.'} Damage taken: ${hurtCount}. Review telegraphs and try the same loadout again.</div>`);setTimeout(()=>{if(el.isConnected)el.innerHTML=old;},9000);}
