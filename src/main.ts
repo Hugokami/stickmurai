@@ -1077,6 +1077,14 @@ function initGame() {
     globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 4;
     globals.playerStats.slashSizeMult *= 1.25; // +25% slash AoE
     globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + 8;
+  } else if (globals.selectedHero === 'akakage') {
+    // Akakage, the Crimson Revenant: expensive glass-cannon duelist.
+    globals.playerStats.moveSpeedMult *= 1.20;
+    globals.playerStats.attackCooldownBase *= 0.72;
+    globals.playerStats.dashCooldownBase *= 0.82;
+    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 5;
+    globals.playerStats.slashSizeMult *= 1.35;
+    globals.playerStats.critChanceBonus = (globals.playerStats.critChanceBonus || 0) + 0.25;
   } else {
     // Default Classic Ronin (Parry Prodigy)
     globals.playerStats.moveSpeedMult *= 1.05;
@@ -4571,6 +4579,31 @@ function update(realDt: number) {
         isRiposteStrike,
         globals.player
       ));
+
+      // Akakage passive: Crimson Aftermath leaves one delayed echo slash.
+      // The single scheduled echo keeps the effect powerful while bounded.
+      if (globals.selectedHero === 'akakage' && attackPower < 1.7) {
+        const echoAngle = angle;
+        const echoX = globals.player.x;
+        const echoY = globals.player.y;
+        globals.delayedActions.push({
+          delay: 0.14,
+          run: () => {
+            if (globals.gameState !== 'playing' || globals.player.state === 'dead') return;
+            globals.slashes.push(Slash.acquire(
+              echoX + Math.cos(echoAngle) * 50,
+              echoY + Math.sin(echoAngle) * 50,
+              echoAngle,
+              size * 0.9,
+              true,
+              'rgba(239, 68, 68, ALPHA)',
+              false,
+              globals.player
+            ));
+            globals.projectiles.push(Projectile.acquire(echoX, echoY, echoAngle, false, 1.5, false, true));
+          }
+        });
+      }
 
       // Grandmaster Samurai passive: Kensei 360-degree cross-cleave on every 3rd strike
       if (globals.selectedHero === 'samurai' && globals.comboSlashesCount >= 3 && attackPower < 1.7) {

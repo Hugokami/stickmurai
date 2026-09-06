@@ -49,7 +49,7 @@ export function getTintedImage(img: HTMLImageElement | HTMLCanvasElement, hexCol
 export class Entity {
   x = 0; y = 0; vx = 0; vy = 0;
   yOffset = 0; yVelocity = 0; // Simulated vertical juggle height physics
-  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' = 'sword';
+  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' | 'heroakakage' = 'sword';
   subType?: string;
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
@@ -77,7 +77,7 @@ export class Entity {
     if (currentAnim && currentAnim.length > 0) {
       let currentFps = this.fps;
       if (this.state === 'attack') {
-         const isPlayerHero = this.subType === 'player' || this.type === 'sword' || this.type === 'heroluneblade' || this.type === 'heroninja' || this.type === 'heronightborne' || this.type === 'herosamurai' || this.type === 'herosatyr';
+         const isPlayerHero = this.subType === 'player' || this.type === 'sword' || this.type === 'heroluneblade' || this.type === 'heroninja' || this.type === 'heronightborne' || this.type === 'herosamurai' || this.type === 'herosatyr' || this.type === 'heroakakage';
          let attackDuration = isPlayerHero ? globals.playerStats.attackCooldownBase : 0.4;
          if (isPlayerHero && globals.flowState === 'awakened') attackDuration *= 0.5;
          currentFps = currentAnim.length / attackDuration;
@@ -146,6 +146,8 @@ export class Entity {
       scale *= 5.0;
     } else if (this.type === 'herosatyr') {
       scale *= 8.0;
+    } else if (this.type === 'heroakakage') {
+      scale *= 4.8;
     } else if (this.type === 'toaster_bot') {
       scale *= 3.2;
     }
@@ -155,7 +157,7 @@ export class Entity {
     }
     
     let finalDir = this.dir;
-    if (this.type === 'skeleton') {
+    if (this.type === 'skeleton' || this.type === 'heronightborne') {
       finalDir = -this.dir;
     }
 
@@ -656,7 +658,7 @@ export class Projectile {
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
     const rx = this.x - cx + globals.vw/2;
     const ry = this.y - cy + globals.vh/2;
-    const buffer = this.isHuge ? 350 : 80;
+    const buffer = this.isHuge ? 500 : 350;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
     }
@@ -960,13 +962,14 @@ export class Slash {
     const rx = (this.x - cx + globals.vw/2) | 0;
     const yOff = (this.owner && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
     const ry = (this.y - cy + globals.vh/2 + yOff) | 0;
-    const buffer = 320 * this.sizeMult;
+    const safeMult = Number.isFinite(this.sizeMult) ? Math.min(2.5, Math.max(0.4, this.sizeMult)) : 1.0;
+    const buffer = Math.max(380, 320 * safeMult);
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
     }
 
     const slashes = (vfxAnims as any).heroSlashes;
-    let frames: HTMLImageElement[] = slashes?.ronin || vfxAnims.custom.slash;
+    let frames: HTMLImageElement[] = slashes?.ronin || vfxAnims.custom?.slash || [];
     if (slashes) {
       let heroType = this.owner?.type;
       if (!heroType && this.owner?.subType === 'player') heroType = globals.player?.type;
@@ -976,25 +979,29 @@ export class Slash {
         else if (globals.selectedHero === 'satyr') heroType = 'herosatyr';
         else if (globals.selectedHero === 'luneblade') heroType = 'heroluneblade';
         else if (globals.selectedHero === 'ninja') heroType = 'heroninja';
+        else if (globals.selectedHero === 'akakage') heroType = 'heroakakage';
         else if (globals.selectedHero === 'dragon') heroType = 'herodragon';
       }
 
-      if (heroType === 'heronightborne') frames = slashes.nightborne;
-      else if (heroType === 'herosamurai') frames = slashes.samurai;
-      else if (heroType === 'herosatyr') frames = slashes.satyr;
-      else if (heroType === 'heroluneblade') frames = slashes.luneblade;
-      else if (heroType === 'heroninja') frames = slashes.ninja;
-      else if (heroType === 'herodragon' || (this.isEnhanced && globals.selectedSkill === 'enhance')) frames = slashes.dragon;
-      else frames = slashes.ronin;
+      if (heroType === 'heronightborne' && slashes.nightborne) frames = slashes.nightborne;
+      else if (heroType === 'herosamurai' && slashes.samurai) frames = slashes.samurai;
+      else if (heroType === 'herosatyr' && slashes.satyr) frames = slashes.satyr;
+      else if (heroType === 'heroluneblade' && slashes.luneblade) frames = slashes.luneblade;
+      else if (heroType === 'heroninja' && slashes.ninja) frames = slashes.ninja;
+      else if (heroType === 'heroakakage' && slashes.akakage) frames = slashes.akakage;
+      else if ((heroType === 'herodragon' || (this.isEnhanced && globals.selectedSkill === 'enhance')) && slashes.dragon) frames = slashes.dragon;
+      else if (slashes.ronin) frames = slashes.ronin;
     }
-    const progress = Math.max(0, Math.min(0.99, 1 - (this.life / this.maxLife)));
-    const frameIdx = Math.floor(progress * frames.length);
-    let img = frames[frameIdx];
+    const maxL = this.maxLife > 0 ? this.maxLife : 0.25;
+    const progress = Math.max(0, Math.min(0.99, 1 - (this.life / maxL)));
+    const frameCount = frames && frames.length > 0 ? frames.length : 1;
+    const frameIdx = Math.min(frameCount - 1, Math.floor(progress * frameCount));
+    let img = frames ? frames[frameIdx] : null;
 
     if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) {
-      const fallback = vfxAnims.heroSlashes?.ronin || vfxAnims.custom.slash;
+      const fallback = vfxAnims.heroSlashes?.ronin || vfxAnims.custom?.slash;
       if (fallback && fallback.length > 0) {
-        const fbIdx = Math.floor(progress * fallback.length);
+        const fbIdx = Math.min(fallback.length - 1, Math.floor(progress * fallback.length));
         img = fallback[fbIdx] || fallback[0];
       }
     }
@@ -1006,10 +1013,36 @@ export class Slash {
       ctx.rotate(dir === -1 ? Math.PI - this.angle : this.angle);
       
       // Center the slash arc accurately along the aim vector with safe scale bounds
-      const safeMult = Number.isFinite(this.sizeMult) ? Math.min(2.5, Math.max(0.4, this.sizeMult)) : 1.0;
       const scale = Math.min(5.5, Math.max(0.8, 4.6 * safeMult));
       ctx.scale(scale, scale);
-      ctx.drawImage(img, -img.width / 2, -img.height / 2);
+      ctx.drawImage(img, (-img.width / 2) | 0, (-img.height / 2) | 0);
+      ctx.restore();
+    } else {
+      // Guaranteed high-visibility procedural slash arc fallback
+      ctx.save();
+      ctx.translate(rx, ry);
+      ctx.rotate(this.angle);
+      const radius = 60 * safeMult;
+      const arcLen = Math.PI * 0.75;
+      const startA = -arcLen * 0.5;
+      const endA = startA + arcLen * Math.min(1, progress * 1.5);
+      
+      let strokeColor = this.colorTint && this.colorTint !== 'none' ? this.colorTint.replace('ALPHA', '0.95') : '#38bdf8';
+      if (this.isEnhanced) strokeColor = '#fbbf24';
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius, startA, endA);
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = Math.max(3, 8 * (1 - progress) * safeMult);
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(0, 0, radius * 0.95, startA, endA);
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = Math.max(1.5, 4 * (1 - progress) * safeMult);
+      ctx.lineCap = 'round';
+      ctx.stroke();
       ctx.restore();
     }
   }

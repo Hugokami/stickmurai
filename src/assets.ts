@@ -729,6 +729,8 @@ export const enemyFolderMap: Record<string, string> = {
   heronightborne: 'HeroNightborne',
   herosamurai: 'HeroSamurai',
   herosatyr: 'HeroSatyr',
+  heroakakage: 'HeroAkakage',
+  akakage: 'HeroAkakage',
   toaster_bot: 'EnemyToasterBot'
 };
 
@@ -789,7 +791,7 @@ function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize
 }
 
 export const anims = {
-  // All 6 Playable Heroes flagged with isPriority = true (core battlefield invariant)
+  // All playable heroes flagged with isPriority = true (core battlefield invariant)
   sword: {
     idle: loadAnim('Sword sprites', 'sword_Idle', 1, 8, true),
     walk: loadAnim('Sword sprites', 'sword_run', 17, 24, true),
@@ -922,6 +924,14 @@ export const anims = {
     dash: loadCustomEnemyAnim('HeroSatyr', 'dash', 6, true),
     dead: loadCustomEnemyAnim('HeroSatyr', 'dead', 10, true),
   },
+  heroakakage: {
+    idle: loadCustomEnemyAnim('HeroAkakage', 'idle', 22, true),
+    walk: loadCustomEnemyAnim('HeroAkakage', 'walk', 24, true),
+    attack: loadCustomEnemyAnim('HeroAkakage', 'attack', 4, true),
+    hit: loadCustomEnemyAnim('HeroAkakage', 'hit', 2, true),
+    dash: loadCustomEnemyAnim('HeroAkakage', 'dash', 6, true),
+    dead: loadCustomEnemyAnim('HeroAkakage', 'dead', 2, true),
+  },
   toaster_bot: {
     idle: loadCustomEnemyAnim('EnemyToasterBot', 'idle', 10, false),
     walk: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 16, false),
@@ -935,20 +945,27 @@ export const anims = {
 export const propImages: HTMLImageElement[] = [];
 
 export const bgLayers = [
-  { name: 'sky', speed: 0.01 },
-  { name: 'hills&trees', speed: 0.1 },
+  { name: 'hills_trees', fallbackName: 'hills&trees', speed: 0.1 },
   { name: 'ruins', speed: 0.2 },
   { name: 'ruins2', speed: 0.3 },
   { name: 'statue', speed: 0.4 },
-  { name: 'stones&grass', speed: 0.6 }
+  { name: 'stones_grass', fallbackName: 'stones&grass', speed: 0.6 }
 ];
 
 export const bgImages: Record<string, HTMLImageElement> = {};
 bgLayers.forEach(layer => {
   const img = new Image();
-  const src = `fantasy_bg/${encodeURIComponent(layer.name + '.png')}?v=2`;
+  const src = `fantasy_bg/${layer.name}.png?v=3`;
+  img.onerror = () => {
+    if ((layer as any).fallbackName) {
+      img.src = `fantasy_bg/${encodeURIComponent((layer as any).fallbackName + '.png')}?v=3`;
+    }
+  };
   queueAsset(img, src, 'bg', true);
   bgImages[layer.name] = img;
+  if ((layer as any).fallbackName) {
+    bgImages[(layer as any).fallbackName] = img;
+  }
 });
 
 export const playerImages: Record<string, HTMLImageElement> = {};
@@ -965,7 +982,8 @@ export const heroPortraits: HTMLImageElement[] = [];
   'portrait_ninja.png',
   'portrait_samurai.png',
   'portrait_nightborne.png',
-  'portrait_satyr.png'
+  'portrait_satyr.png',
+  'portrait_akakage.png'
 ].forEach(p => {
   const img = new Image();
   queueAsset(img, `sprites/portraits/${p}`, 'portraits', true);
@@ -1027,6 +1045,7 @@ export const vfxAnims = {
     samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, true),
     nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, true),
     satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, true),
+    akakage: loadVfxFrames('vfx/slashes/slash_akakage/frame_{N}.png', 8, 1, 2, true),
     dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, true),
   },
   impacts: {

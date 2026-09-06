@@ -56,6 +56,8 @@ export class Player extends Entity {
       this.type = 'heronightborne';
     } else if (globals.selectedHero === 'satyr') {
       this.type = 'herosatyr';
+    } else if (globals.selectedHero === 'akakage') {
+      this.type = 'heroakakage';
     } else {
       this.type = 'sword';
     }
@@ -561,6 +563,8 @@ export class Player extends Entity {
           trailColor = '#10b981';
         } else if (this.type === 'heroluneblade') {
           trailColor = '#38bdf8';
+        } else if (this.type === 'heroakakage') {
+          trailColor = '#ef4444';
         } else if ((globals.flowState as string) === 'storm_god') {
           trailColor = '#fbbf24';
         } else if ((globals.flowState as string) === 'awakened') {
@@ -1149,6 +1153,17 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
           ctx.arc(px + ox, py + oy, 2.2, 0, Math.PI * 2);
           ctx.fill();
         }
+      } else if (this.type === 'heroakakage') {
+        // Crimson ember motes reinforce Akakage's signature afterimage dash.
+        for (let i = 0; i < 3; i++) {
+          const ox = -this.dir * (12 + i * 7) + Math.sin(t * 3 + i) * 8;
+          const oy = -18 - ((t * 22 + i * 11) % 24);
+          const r = Math.max(1, 2.8 - ((t * 22 + i * 11) % 24) * 0.08);
+          ctx.fillStyle = i % 2 === 0 ? 'rgba(239, 68, 68, 0.78)' : 'rgba(248, 113, 113, 0.9)';
+          ctx.beginPath();
+          ctx.arc(px + ox, py + oy, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
       ctx.restore();
     }
@@ -1181,7 +1196,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.fill();
 
       // 2. Permanent Neon Ellipse Ring (calibrated to dynamic hero feet baseline)
-      const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : 62))));
+      const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : 62)))));
       const ringX = px | 0;
       const ringY = (py + playerFootOffsetY) | 0;
 
@@ -1210,7 +1225,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // Physical ground contact shadow (anchored at world ground baseline)
-    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : 62))));
+    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : 62)))));
     const groundShadowRx = (this.x - cx + globals.vw / 2) | 0;
     const groundShadowRy = ((this.y - cy + globals.vh / 2) + playerFootOffsetY) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));

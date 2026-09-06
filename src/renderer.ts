@@ -13,14 +13,7 @@ let voidStanceVisualScale = 0;
 let petalArmorVisualScale = 0;
 let riposteVisualScale = 0;
 
-interface SkyEffect {
-  x: number;
-  y: number;
-  frame: number;
-  timer: number;
-  scale: number;
-}
-const skyEffects: SkyEffect[] = [];
+
 
 const visibleEntities: Entity[] = [];
 
@@ -42,6 +35,7 @@ function getEntityFootY(e: Entity): number {
     case 'heronightborne': baseFoot = 52; break;
     case 'herosamurai': baseFoot = 56; break;
     case 'herosatyr': baseFoot = 46; break;
+    case 'heroakakage': baseFoot = 52; break;
     case 'toaster_bot': baseFoot = 20; break;
     case 'sword':
     default:
@@ -110,20 +104,64 @@ export function debouncedResize() {
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
   const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
-  const skyColor = isKamisori ? '#e5e5e5' : '#4a607a';
-  ctx.fillStyle = skyColor;
-  ctx.fillRect(0, 0, globals.width, globals.height);
+  
+  if (isKamisori) {
+    ctx.fillStyle = '#e5e5e5';
+    ctx.fillRect(0, 0, globals.width, globals.height);
+  } else {
+    // 1. Permanent Radiant Daylight Sky Gradient
+    const skyGrad = ctx.createLinearGradient(0, 0, 0, globals.height * 0.72);
+    skyGrad.addColorStop(0, '#38bdf8'); // Clear brilliant azure sky
+    skyGrad.addColorStop(0.55, '#7dd3fc'); // Gentle sunlit sky blue
+    skyGrad.addColorStop(1, '#bae6fd'); // Warm horizon haze
+    ctx.fillStyle = skyGrad;
+    ctx.fillRect(0, 0, globals.width, globals.height);
+
+    // 2. Sunlit Day Sun with Soft Halo
+    const sunX = (globals.width * 0.82) | 0;
+    const sunY = (globals.height * 0.18) | 0;
+    const sunRadius = 40;
+    const sunGlow = ctx.createRadialGradient(sunX, sunY, sunRadius * 0.4, sunX, sunY, sunRadius * 2.6);
+    sunGlow.addColorStop(0, 'rgba(255, 255, 240, 0.95)');
+    sunGlow.addColorStop(0.35, 'rgba(254, 240, 138, 0.4)');
+    sunGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
+    ctx.fillStyle = sunGlow;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, sunRadius * 2.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fffbeb';
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // 3. Guaranteed Lush Green Ground Fallback (prevents black screen voids if assets take time to render)
+    const groundTop = (globals.height * 0.56) | 0;
+    const groundGrad = ctx.createLinearGradient(0, groundTop, 0, globals.height);
+    groundGrad.addColorStop(0, '#5a8f29');
+    groundGrad.addColorStop(1, '#365314');
+    ctx.fillStyle = groundGrad;
+    ctx.fillRect(0, groundTop, globals.width, globals.height - groundTop);
+  }
   ctx.imageSmoothingEnabled = false;
 
   const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   bgLayers.forEach(layer => {
-    if (globals.graphicsSettings === 'low' && layer.name !== 'sky' && layer.name !== 'stones&grass') {
+    // Skip dark night sky layer in permanent bright day mode
+    if (layer.name === 'sky') {
       return;
     }
-    if (isTouch && layer.name !== 'sky' && layer.name !== 'hills&trees' && layer.name !== 'stones&grass') {
+    const isGroundLayer = layer.name === 'stones&grass' || layer.name === 'stones_grass';
+    const isTreesLayer = layer.name === 'hills&trees' || layer.name === 'hills_trees';
+
+    if (globals.graphicsSettings === 'low' && !isGroundLayer) {
       return;
     }
-    const img = bgImages[layer.name];
+    if (isTouch && !isTreesLayer && !isGroundLayer) {
+      return;
+    }
+
+    const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.save();
       if (isKamisori) {
@@ -144,8 +182,8 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
       const maxDrawX = globals.width + 1;
       const maxDrawY = globals.height + 1;
       
-      if (layer.name === 'stones&grass') {
-        // Only the grass ground layer tiles infinitely in both directions
+      if (isGroundLayer) {
+        // Ground layer tiles infinitely across entire lower screen
         const offsetYMod = offsetY % imgH;
         let startY = offsetYMod > 0 ? offsetYMod - imgH : offsetYMod;
         for(let x = startX; x < maxDrawX; x += imgW) {
@@ -157,34 +195,6 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
         // Decorative layers: tile horizontally only, single vertical position
         for(let x = startX; x < maxDrawX; x += imgW) {
           ctx.drawImage(img, x, offsetY, imgW, imgH);
-        }
-        
-        if (layer.name === 'sky') {
-          // Update and draw sky starfall effects (atmospheric background meteors)
-          if (Math.random() < 0.006 && skyEffects.length < 5) {
-            skyEffects.push({
-              x: Math.random() * globals.width,
-              y: Math.random() * (globals.height * 0.4),
-              frame: 0,
-              timer: 0,
-              scale: 0.6 + Math.random() * 0.6
-            });
-          }
-          for (let i = skyEffects.length - 1; i >= 0; i--) {
-            const fx = skyEffects[i];
-            fx.timer += 0.016;
-            fx.frame = Math.floor(fx.timer / 0.08); // 80ms per frame
-            if (fx.frame >= 8) {
-              skyEffects.splice(i, 1);
-              continue;
-            }
-            const starImg = vfxAnims.custom.starfall[fx.frame];
-            if (starImg && starImg.complete && starImg.naturalWidth > 0) {
-              ctx.save();
-              ctx.drawImage(starImg, fx.x - starImg.width * fx.scale / 2, fx.y - starImg.height * fx.scale / 2, starImg.width * fx.scale, starImg.height * fx.scale);
-              ctx.restore();
-            }
-          }
         }
       }
       ctx.restore();

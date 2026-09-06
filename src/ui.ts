@@ -2071,6 +2071,21 @@ export const HEROES_DATA = [
     spd: '125%',
     specialEn: 'Earthshaker Tremor (Screen Emerald Tremor on Executions, Emerald Thorns)',
     specialJa: '天変地異の震撃（処刑時全周囲震撃・翡翠の棘刃・花嵐疾走）'
+  },
+  {
+    id: 'akakage',
+    nameEn: 'Akakage, the Crimson Revenant',
+    nameJa: '紅影・クリムゾン・レヴナント',
+    titleEn: 'Crimson Revenant',
+    titleJa: '紅蓮の亡影',
+    descEn: 'An overpowered crimson duelist who turns every dash into a second strike. Faster movement, rapid attacks, huge slash reach, and critical hits.',
+    descJa: '瞬歩そのものを追撃へ変える紅蓮の剣士。高速移動・連撃・広範囲斬撃・会心を極める。',
+    cost: 350000,
+    image: '/sprites/portraits/portrait_akakage.png?v=akakage1',
+    atk: '210%',
+    spd: '140%',
+    specialEn: 'Crimson Aftermath (Every basic slash echoes once after 0.14s)',
+    specialJa: '紅蓮残影（通常斬撃が0.14秒後に一度だけ追撃する）'
   }
 ];
 

@@ -487,32 +487,7 @@ export class Enemy extends Entity {
       this.vy = this.knockbackVy;
 
       const kbSpeed = Math.hypot(this.knockbackVx, this.knockbackVy);
-      if (kbSpeed > 450) {
-        // Domino collision with other enemies
-        for (let j = 0; j < globals.enemies.length; j++) {
-          const other = globals.enemies[j];
-          if (other === this || other.state === 'dead' || this.dominoHitEnemies.has(other)) continue;
-          const edx = other.x - this.x;
-          const edy = other.y - this.y;
-          const colRadius = 55 * (this.scaleMult + other.scaleMult) * 0.5;
-          if (edx * edx + edy * edy < colRadius * colRadius) {
-            this.dominoHitEnemies.add(other);
-            const colAngle = Math.atan2(this.knockbackVy, this.knockbackVx);
-            other.knockbackTimer = 0.35;
-            other.knockbackVx = Math.cos(colAngle) * (kbSpeed * 0.7);
-            other.knockbackVy = Math.sin(colAngle) * (kbSpeed * 0.7);
-            other.stunTimer = 0.6;
-            callbacks.hitEnemy(other, 2);
-            other.addPostureDamage(20);
 
-            globals.screenShake = 8;
-            globals.floatingTexts.push(FloatingText.acquire(other.x, other.y - 35, "DOMINO!", "#f97316", 20));
-            for (let k = 0; k < 6; k++) {
-              globals.particles.push(Particle.acquire(other.x, other.y, '#f97316', 220, 0.3, 2, Math.random() * Math.PI * 2));
-            }
-          }
-        }
-      }
 
       // Wall Splat: Crashing into outer arena boundary under high knockback
       const pDistX = Math.abs(this.x - globals.player.x);

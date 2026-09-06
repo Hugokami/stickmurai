@@ -60,7 +60,7 @@ export function renderStageBriefing(stage: number, anchor: HTMLElement) {
 }
 
 // Baseline archetype modifiers, verified against initGame in main.ts.
-const heroStats: Record<string,number[]>={default:[0,1.05,1,1,1],luneblade:[2,1,1,1,1.35],ninja:[0,1.3,.85,.75,1],samurai:[1,1.15,.65,1,1],nightborne:[3,1.1,1,1,1.4],satyr:[2,1.12,.82,1,1.25]};
+const heroStats: Record<string,number[]>={default:[0,1.05,1,1,1],luneblade:[2,1,1,1,1.35],ninja:[0,1.3,.85,.75,1],samurai:[1,1.15,.65,1,1],nightborne:[3,1.1,1,1,1.4],satyr:[2,1.12,.82,1,1.25],akakage:[5,1.2,.72,.82,1.35]};
 export function heroComparison(id:string):string {
  const a=heroStats[id]||heroStats.default,b=heroStats[globals.selectedHero]||heroStats.default;
  const labels=['Bonus slash DMG','Move speed ×','Attack cooldown ×','Dash cooldown ×','Slash size ×'];
