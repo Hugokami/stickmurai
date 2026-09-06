@@ -666,10 +666,6 @@ function startApp() {
     } catch(e) {}
   }
 
-  // Hard safety timeout: allow 15 seconds for all assets to fully load
-  loaderTimeoutId = setTimeout(() => {
-    if (assetReadiness().ready) finishLoading(); else showLoadingRecovery();
-  }, 15000);
 }
 
 function showLoadingRecovery() {
