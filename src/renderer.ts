@@ -103,12 +103,7 @@ export function debouncedResize() {
 }
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
-  
-  if (isKamisori) {
-    ctx.fillStyle = '#e5e5e5';
-    ctx.fillRect(0, 0, globals.width, globals.height);
-  } else {
+  {
     // 1. Permanent Radiant Daylight Sky Gradient
     const skyGrad = ctx.createLinearGradient(0, 0, 0, globals.height * 0.72);
     skyGrad.addColorStop(0, '#38bdf8'); // Clear brilliant azure sky
@@ -164,10 +159,6 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
     const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.save();
-      if (isKamisori) {
-        ctx.globalAlpha = 0.25;
-      }
-      
       const bufferFactor = 1.15;
       const scale = (globals.height * bufferFactor) / img.naturalHeight;
       const imgW = img.naturalWidth * scale;
@@ -701,9 +692,8 @@ export function draw() {
       alpha = 0.35; // Translucent invisibility
     }
     
-    const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
     const baseTint = (e as any).colorTint || 'none';
-    const tint = (isKamisori && e.state !== 'dead') ? '#121212' : (((e as any).hitFlash > 0) ? '#ffffff' : baseTint);
+    const tint = ((e as any).hitFlash > 0) ? '#ffffff' : baseTint;
     if (typeof e.draw === 'function') {
       e.draw(ctx, globals.camera.x, globals.camera.y, alpha, tint);
     }

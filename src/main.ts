@@ -1047,6 +1047,7 @@ function initGame() {
     reapersMarkLevel: 0,
     fortuneMult: 1.0,
     postureDmgBonus: 0,
+    heroCritChance: 0,
     critChanceBonus: 0,
     executionLevel: 0
   };
@@ -1060,7 +1061,7 @@ function initGame() {
     globals.playerStats.moveSpeedMult *= 1.30;
     globals.playerStats.dashCooldownBase *= 0.75;
     globals.playerStats.attackCooldownBase *= 0.85;
-    globals.playerStats.critChanceBonus = (globals.playerStats.critChanceBonus || 0) + 0.20;
+    globals.playerStats.heroCritChance = (globals.playerStats.heroCritChance || 0) + 0.20;
   } else if (globals.selectedHero === 'samurai') {
     globals.playerStats.moveSpeedMult *= 1.15;
     globals.playerStats.attackCooldownBase *= 0.65; // -35% attack cooldown (Kensei Rapid Arts)
@@ -1084,7 +1085,7 @@ function initGame() {
     globals.playerStats.dashCooldownBase *= 0.82;
     globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 5;
     globals.playerStats.slashSizeMult *= 1.35;
-    globals.playerStats.critChanceBonus = (globals.playerStats.critChanceBonus || 0) + 0.25;
+    globals.playerStats.heroCritChance = (globals.playerStats.heroCritChance || 0) + 0.25;
   } else {
     // Default Classic Ronin (Parry Prodigy)
     globals.playerStats.moveSpeedMult *= 1.05;
@@ -2428,9 +2429,11 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
 
   playSynthesizedHit();
   
-  // Critical Hit calculation (15% base + 1% per 2 combo points + hero bonuses)
-  const critChance = 0.15 + (globals.combo / 200.0) + (globals.playerStats?.critChanceBonus || 0);
-  const isCrit = Math.random() < Math.min(0.75, critChance); // cap crit chance at 75% for balance
+  // Critical Hit calculation (hero base crit + powerup crit, with powerup bonus capped at 40%)
+  const heroCritChance = globals.playerStats?.heroCritChance || 0;
+  const powerupCritChance = Math.min(0.4, globals.playerStats?.critChanceBonus || 0);
+  const critChance = Math.min(1.0, heroCritChance + powerupCritChance);
+  const isCrit = Math.random() < critChance;
   
   let finalDmg = dmg;
 

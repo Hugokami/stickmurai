@@ -31,6 +31,7 @@ export const powerUps: PowerUp[] = [
   { skill: "dash", nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.90) },
   { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult = Math.min(1.50, globals.playerStats.moveSpeedMult + 0.10) },
   { nameKey: "puBloodName", descKey: "puBloodDesc", apply: () => globals.playerStats.flowGenMult += 0.15 },
+  { nameKey: "puDeadeyeName", descKey: "puDeadeyeDesc", apply: () => globals.playerStats.critChanceBonus = Math.min(0.4, (globals.playerStats.critChanceBonus || 0) + 0.1) },
   
   // Dragon's Fury (Enhance) specific
   { skill: "enhance", nameKey: "puLethalName", descKey: "puLethalDesc", apply: () => globals.playerStats.enhanceBonusDmg += 1 },
@@ -273,6 +274,7 @@ export function triggerLevelUp() {
       { nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.90) },
       { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult = Math.min(1.50, globals.playerStats.moveSpeedMult + 0.10) },
       { nameKey: "puBloodName", descKey: "puBloodDesc", apply: () => globals.playerStats.flowGenMult += 0.15 },
+      { nameKey: "puDeadeyeName", descKey: "puDeadeyeDesc", apply: () => globals.playerStats.critChanceBonus = Math.min(0.4, (globals.playerStats.critChanceBonus || 0) + 0.1) },
       { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => globals.playerStats.deflectedDmg += 2 },
       { nameKey: "puZenRestoreName", descKey: "puZenRestoreDesc", apply: () => { globals.lives = Math.min(3, globals.lives + 1); callbacks.updateUI(); return 0; } }
     ];
@@ -296,13 +298,14 @@ export function triggerLevelUp() {
   
   // Do not offer capped upgrades (or clamp a faster hero to a slower cooldown).
   availablePowers = availablePowers.filter(power => {
-    const s = globals.playerStats;
-    if (power.nameKey === 'puGiantName') return s.slashSizeMult < 2.2;
-    if (power.nameKey === 'puWindName') return s.attackCooldownBase > 0.18;
-    if (power.nameKey === 'puFeatherName') return s.dashCooldownBase > 0.72;
-    if (power.nameKey === 'puSwiftName') return s.moveSpeedMult < 1.5;
-    if (power.nameKey === 'puStoutHeartName') return globals.maxLives < 7;
-    return true;
+  const s = globals.playerStats;
+  if (power.nameKey === 'puGiantName') return s.slashSizeMult < 2.2;
+  if (power.nameKey === 'puWindName') return s.attackCooldownBase > 0.18;
+  if (power.nameKey === 'puFeatherName') return s.dashCooldownBase > 0.72;
+  if (power.nameKey === 'puSwiftName') return s.moveSpeedMult < 1.5;
+  if (power.nameKey === 'puDeadeyeName') return (s.critChanceBonus || 0) < 0.4;
+  if (power.nameKey === 'puStoutHeartName') return globals.maxLives < 7;
+  return true;
   });
 
   const normalPowers = availablePowers.filter(p => !p.isCorrupted);

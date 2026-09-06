@@ -18,6 +18,7 @@ export function upgradePreview(key: string): string {
     puFeatherName: () => stat('Dash cooldown', 'dashCooldownBase', n => Math.max(.72,n*.90),.72,'s'),
     puSwiftName: () => stat('Move speed ×', 'moveSpeedMult', n => Math.min(1.5,n+.1),1.5),
     puBloodName: () => stat('Flow gain ×','flowGenMult',n=>n+.15),
+    puDeadeyeName: () => change('Critical chance', (s.critChanceBonus || 0) * 100, Math.min(0.4, (s.critChanceBonus || 0) + 0.1) * 100, 40, '%'),
     puLethalName: () => stat('Skill bonus damage','enhanceBonusDmg',n=>n+1),
     puColossalName: () => stat('Skill size ×','enhanceSizeMult',n=>n+.5),
     puDurationName: () => stat('Skill duration','enhanceDuration',n=>n+1.5,undefined,'s'),
@@ -60,11 +61,11 @@ export function renderStageBriefing(stage: number, anchor: HTMLElement) {
 }
 
 // Baseline archetype modifiers, verified against initGame in main.ts.
-const heroStats: Record<string,number[]>={default:[0,1.05,1,1,1],luneblade:[2,1,1,1,1.35],ninja:[0,1.3,.85,.75,1],samurai:[1,1.15,.65,1,1],nightborne:[3,1.1,1,1,1.4],satyr:[2,1.12,.82,1,1.25],akakage:[5,1.2,.72,.82,1.35]};
+const heroStats: Record<string,number[]>={default:[0,1.05,1,1,1,0],luneblade:[2,1,1,1,1.35,0],ninja:[0,1.3,.85,.75,1,0.2],samurai:[1,1.15,.65,1,1,0],nightborne:[3,1.1,1,1,1.4,0],satyr:[2,1.12,.82,1,1.25,0],akakage:[5,1.2,.72,.82,1.35,0.25]};
 export function heroComparison(id:string):string {
  const a=heroStats[id]||heroStats.default,b=heroStats[globals.selectedHero]||heroStats.default;
- const labels=['Bonus slash DMG','Move speed ×','Attack cooldown ×','Dash cooldown ×','Slash size ×'];
- return `<div class="qol-upgrade-details"><strong>${globals.currentLang==='ja'?'装備中 → この英雄':'Equipped → this hero'}</strong>${a.map((n,i)=>`<span>${labels[i]}: ${num(b[i])} → ${num(n)}</span>`).join('')}</div>`;
+ const labels=['Bonus slash DMG','Move speed ×','Attack cooldown ×','Dash cooldown ×','Slash size ×','Crit chance'];
+ return `<div class="qol-upgrade-details"><strong>${globals.currentLang==='ja'?'装備中 → この英雄':'Equipped → this hero'}</strong>${a.map((n,i)=>`<span>${labels[i]}: ${i===5 ? `${num(b[i]*100)}% → ${num(n*100)}%` : `${num(b[i])} → ${num(n)}`}</span>`).join('')}</div>`;
 }
 
 export function permanentPreview(id: string, level: number, max: number, endless: boolean): string {

@@ -411,7 +411,7 @@ export class Enemy extends Entity {
       }
       
       // Progressive endless scaling: keeps grunts killable in 1-3 clean strikes while steadily raising challenge
-      const stageHpMult = isBoss ? (1.0 + (stage - 1) * 0.22) : (1.0 + (stage - 1) * 0.16);
+      const stageHpMult = 1.5 * (isBoss ? (1.0 + (stage - 1) * 0.22) : (1.0 + (stage - 1) * 0.16));
       const stageSpeedMult = Math.min(1.55, 1.0 + (stage - 1) * 0.035);
       const stageChargeMult = Math.max(0.55, 1.0 - (stage - 1) * 0.03);
 
