@@ -1109,11 +1109,7 @@ export class AnimatedEffect {
         ctx.setLineDash([5, 5]);
         ctx.stroke();
       }
-      ctx.restore();
-      return;
-    }
-
-    if (this.frames.length > 0) {
+    } else if (this.frames.length > 0) {
       const frameIdx = Math.floor(progress * this.frames.length);
       const img = this.frames[frameIdx];
       if (img && img.complete && img.naturalWidth > 0) {

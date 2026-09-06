@@ -1132,6 +1132,11 @@ function initGame() {
 
   // Initialize Stage Mode Objectives & Affixes
   globals.stageKills = 0;
+  globals.runTime = 0;
+  globals.dayNightPhase = 'dawn';
+  globals.calamityEvent = 'none';
+  globals.calamityTimer = 0;
+  globals.stageBossSpawned = false;
   isZanFinisherActive = false;
   thunderGaleTimer = 0.0;
   gravityCollapseTimer = 0.0;
@@ -3026,18 +3031,29 @@ function update(realDt: number) {
   // Progression: Run Time, Day/Night Phase, Calamities, Shrines & Hermit
   if (globals.gameState === 'playing') {
     globals.runTime += realDt;
-    if (globals.runTime < 180) {
-      globals.dayNightPhase = 'dawn';
-    } else if (globals.runTime < 360) {
-      globals.dayNightPhase = 'sunset';
-    } else if (globals.runTime < 540) {
-      globals.dayNightPhase = 'midnight';
+    if (globals.gameMode === 'classic') {
+      if (globals.runTime < 120) {
+        globals.dayNightPhase = 'dawn';
+      } else if (globals.runTime < 240) {
+        globals.dayNightPhase = 'sunset';
+      } else {
+        // Cycle back to dawn after extended fight so the screen never stays permanently dark
+        globals.dayNightPhase = 'dawn';
+      }
     } else {
-      globals.dayNightPhase = 'final_showdown';
+      if (globals.runTime < 180) {
+        globals.dayNightPhase = 'dawn';
+      } else if (globals.runTime < 360) {
+        globals.dayNightPhase = 'sunset';
+      } else if (globals.runTime < 540) {
+        globals.dayNightPhase = 'midnight';
+      } else {
+        globals.dayNightPhase = 'final_showdown';
+      }
     }
 
-    // 10-Minute Showdown: Supreme Shogun Boss Spawn
-    if (globals.runTime >= 540 && globals.gameMode !== 'zen' && !shogunSpawned) {
+    // 10-Minute Showdown: Supreme Shogun Boss Spawn (Survival / Endless modes only)
+    if (globals.runTime >= 540 && globals.gameMode !== 'zen' && globals.gameMode !== 'classic' && !shogunSpawned) {
       shogunSpawned = true;
       playSynthesizedTempleBell();
       const shogun = new Enemy(globals.player.x + 350, globals.player.y, globals.player);

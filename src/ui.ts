@@ -380,6 +380,10 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, globals.currentStage);
       safeStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
       safeStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString());
+      globals.runTime = 0;
+      globals.dayNightPhase = 'dawn';
+      globals.calamityEvent = 'none';
+      globals.calamityTimer = 0;
       if (cachedOnPlayCallback) cachedOnPlayCallback();
     });
   }
@@ -387,6 +391,10 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   if (stageClearReplayBtn) {
     bindDualListener(stageClearReplayBtn, () => {
       if (stageClearModal) stageClearModal.style.display = 'none';
+      globals.runTime = 0;
+      globals.dayNightPhase = 'dawn';
+      globals.calamityEvent = 'none';
+      globals.calamityTimer = 0;
       if (cachedOnPlayCallback) cachedOnPlayCallback();
     });
   }
@@ -2206,8 +2214,10 @@ export function populateDojoHeroGrid() {
     card.style.padding = '12px 14px';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
+    card.style.justifyContent = 'flex-start';
     card.style.gap = '6px';
-    card.style.minHeight = '320px';
+    card.style.height = 'auto';
+    card.style.minHeight = 'fit-content';
     card.style.flexShrink = '0';
     card.style.boxShadow = isEquipped ? '0 0 20px rgba(192, 132, 252, 0.4)' : 'none';
 
@@ -2241,7 +2251,7 @@ export function populateDojoHeroGrid() {
       <div style="font-size: 11px; color: #fef08a; background: rgba(254, 240, 138, 0.08); padding: 4px 8px; border-radius: 4px; border-left: 2px solid #ffd700; margin-top: 2px;">
         ✨ ${isJa ? hero.specialJa : hero.specialEn}
       </div>
-      <div style="margin-top: auto; padding-top: 6px;">
+      <div style="margin-top: auto; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
         ${!isUnlocked && hero.cost > globals.magatama ? `<div class="qol-shortfall">${isJa?'あと':'Need'} ${(hero.cost-globals.magatama).toLocaleString()} 🔮</div>` : ''}
         ${actionBtnHtml}
         <button class="menu-btn btn-card qol-hero-try" data-hero="${hero.id}">${isJa?'道場で試す':'TRY IN DOJO'}</button>

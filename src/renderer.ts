@@ -113,13 +113,13 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   if (isKamisori) {
     skyColor = '#e5e5e5';
   } else if (globals.calamityEvent === 'blood_moon') {
-    skyColor = '#240404';
+    skyColor = '#2d0a0a';
   } else if (globals.dayNightPhase === 'sunset') {
     skyColor = '#5c241c';
   } else if (globals.dayNightPhase === 'midnight') {
-    skyColor = '#0d0f1f';
+    skyColor = '#1e293b';
   } else if (globals.dayNightPhase === 'final_showdown') {
-    skyColor = '#2e1018';
+    skyColor = '#3b1828';
   }
   ctx.fillStyle = skyColor;
   ctx.fillRect(0, 0, globals.width, globals.height);
@@ -246,7 +246,6 @@ export function resetCanvasVisuals() {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#090a0f';
   ctx.fillRect(0, 0, globals.width, globals.height);
-  drawBackground(ctx);
   ctx.restore();
 }
 
@@ -255,6 +254,13 @@ export function draw() {
   
   if (canvas.style.filter !== 'none' && canvas.style.filter !== '') {
     canvas.style.filter = 'none';
+  }
+
+  if (globals.gameState === 'mainmenu') {
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.fillStyle = '#090a0f';
+    ctx.fillRect(0, 0, globals.width, globals.height);
+    return;
   }
 
   const now = performance.now();
@@ -276,10 +282,6 @@ export function draw() {
 
   ctx.clearRect(0, 0, globals.width, globals.height);
   drawBackground(ctx);
-
-  if (globals.gameState === 'mainmenu') {
-    return;
-  }
 
   ctx.save();
   ctx.scale(globals.gameZoom, globals.gameZoom);
