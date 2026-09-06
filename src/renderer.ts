@@ -5,6 +5,7 @@ import { Entity } from './entities';
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
+let currentDpr = 1;
 
 let lastRenderTime = performance.now();
 let frostStanceVisualScale = 0;
@@ -78,11 +79,11 @@ export function resizeCanvas() {
   
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   const dprCap = (globals.graphicsSettings === 'low' || isTouchDevice) ? 1.0 : 1.25;
-  const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
+  currentDpr = Math.min(window.devicePixelRatio || 1, dprCap);
   
-  canvas.width = globals.width * dpr;
-  canvas.height = globals.height * dpr;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  canvas.width = globals.width * currentDpr;
+  canvas.height = globals.height * currentDpr;
+  ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
 
   const targetVW = 1400;
   globals.gameZoom = Math.min(1, globals.width / targetVW);
@@ -109,59 +110,10 @@ export function debouncedResize() {
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
   const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
-  let skyColor = '#4a607a';
-  if (isKamisori) {
-    skyColor = '#e5e5e5';
-  } else if (globals.calamityEvent === 'blood_moon') {
-    skyColor = '#2d0a0a';
-  } else if (globals.dayNightPhase === 'sunset') {
-    skyColor = '#5c241c';
-  } else if (globals.dayNightPhase === 'midnight') {
-    skyColor = '#1e293b';
-  } else if (globals.dayNightPhase === 'final_showdown') {
-    skyColor = '#3b1828';
-  }
+  const skyColor = isKamisori ? '#e5e5e5' : '#4a607a';
   ctx.fillStyle = skyColor;
   ctx.fillRect(0, 0, globals.width, globals.height);
   ctx.imageSmoothingEnabled = false;
-
-  // Celestial Blood Moon Eclipse Rendering
-  if (globals.calamityEvent === 'blood_moon') {
-    const moonX = globals.width * 0.78;
-    const moonY = globals.height * 0.22;
-    const moonRadius = 62;
-    const coronaPulse = 1.0 + Math.sin(performance.now() * 0.005) * 0.12;
-
-    // 1. Bleeding Crimson Corona
-    const corona = ctx.createRadialGradient(moonX, moonY, moonRadius * 0.7, moonX, moonY, moonRadius * 2.2 * coronaPulse);
-    corona.addColorStop(0, 'rgba(239, 68, 68, 0.45)');
-    corona.addColorStop(0.5, 'rgba(185, 28, 28, 0.18)');
-    corona.addColorStop(1, 'rgba(239, 68, 68, 0)');
-    ctx.fillStyle = corona;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, moonRadius * 2.2 * coronaPulse, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 2. Obsidian Eclipsed Core
-    ctx.fillStyle = '#160404';
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // 3. Blazing Crimson Corona Rim
-    ctx.strokeStyle = '#ef4444';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.arc(moonX, moonY, moonRadius, 0, Math.PI * 2);
-    ctx.stroke();
-
-    // 4. White-Hot Solar Flare Crescent
-    ctx.strokeStyle = 'rgba(254, 202, 202, 0.65)';
-    ctx.lineWidth = 2.0;
-    ctx.beginPath();
-    ctx.arc(moonX - 3, moonY - 3, moonRadius * 0.94, 0.15, Math.PI * 0.85);
-    ctx.stroke();
-  }
 
   const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   bgLayers.forEach(layer => {
@@ -243,7 +195,7 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
 export function resetCanvasVisuals() {
   if (!canvas || !ctx) return;
   ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
   ctx.fillStyle = '#090a0f';
   ctx.fillRect(0, 0, globals.width, globals.height);
   ctx.restore();
@@ -256,8 +208,10 @@ export function draw() {
     canvas.style.filter = 'none';
   }
 
+  // Always reset to current DPR transform so canvas buffer is never desynced or scaled down
+  ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+
   if (globals.gameState === 'mainmenu') {
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.fillStyle = '#090a0f';
     ctx.fillRect(0, 0, globals.width, globals.height);
     return;

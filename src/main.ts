@@ -3031,26 +3031,7 @@ function update(realDt: number) {
   // Progression: Run Time, Day/Night Phase, Calamities, Shrines & Hermit
   if (globals.gameState === 'playing') {
     globals.runTime += realDt;
-    if (globals.gameMode === 'classic') {
-      if (globals.runTime < 120) {
-        globals.dayNightPhase = 'dawn';
-      } else if (globals.runTime < 240) {
-        globals.dayNightPhase = 'sunset';
-      } else {
-        // Cycle back to dawn after extended fight so the screen never stays permanently dark
-        globals.dayNightPhase = 'dawn';
-      }
-    } else {
-      if (globals.runTime < 180) {
-        globals.dayNightPhase = 'dawn';
-      } else if (globals.runTime < 360) {
-        globals.dayNightPhase = 'sunset';
-      } else if (globals.runTime < 540) {
-        globals.dayNightPhase = 'midnight';
-      } else {
-        globals.dayNightPhase = 'final_showdown';
-      }
-    }
+    globals.dayNightPhase = 'dawn';
 
     // 10-Minute Showdown: Supreme Shogun Boss Spawn (Survival / Endless modes only)
     if (globals.runTime >= 540 && globals.gameMode !== 'zen' && globals.gameMode !== 'classic' && !shogunSpawned) {

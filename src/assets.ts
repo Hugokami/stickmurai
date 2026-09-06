@@ -936,7 +936,6 @@ export const propImages: HTMLImageElement[] = [];
 
 export const bgLayers = [
   { name: 'sky', speed: 0.01 },
-  { name: 'ruins_bg', speed: 0.05 },
   { name: 'hills&trees', speed: 0.1 },
   { name: 'ruins', speed: 0.2 },
   { name: 'ruins2', speed: 0.3 },

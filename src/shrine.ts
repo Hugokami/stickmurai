@@ -574,9 +574,6 @@ export function triggerCalamityCheck(realDt: number) {
     }
   }
 
-  if (globals.runTime >= 360 && globals.runTime < 361 && globals.calamityEvent === 'none') {
-    startBloodMoonCalamity();
-  }
 
   if (globals.runTime >= 240 && globals.runTime < 241 && !globals.activeHermit) {
     const angle = Math.random() * Math.PI * 2;
