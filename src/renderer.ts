@@ -238,6 +238,12 @@ export function draw() {
   ctx.clearRect(0, 0, globals.width, globals.height);
   drawBackground(ctx);
 
+  // Lift the atmospheric high-quality background before gameplay is drawn.
+  if (globals.graphicsSettings !== 'low') {
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
+    ctx.fillRect(0, 0, globals.width, globals.height);
+  }
+
   ctx.save();
   ctx.scale(globals.gameZoom, globals.gameZoom);
   
