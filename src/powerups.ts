@@ -88,8 +88,8 @@ export const powerUps: PowerUp[] = [
     descKey: "puCursedGlassDesc",
     isCorrupted: true,
     apply: () => {
-      globals.maxLives = 1;
-      globals.lives = 1;
+      globals.maxLives = Math.max(1, globals.maxLives - 3);
+      globals.lives = Math.min(globals.lives, globals.maxLives);
       globals.playerStats.enhanceBonusDmg += 3;
       globals.playerStats.slashSizeMult = Math.min(2.2, globals.playerStats.slashSizeMult + 0.25);
       globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.85);

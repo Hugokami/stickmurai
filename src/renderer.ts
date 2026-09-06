@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { bgLayers, bgImages, vfxAnims } from './assets';
+import { vfxAnims } from './assets';
 import { Entity } from './entities';
 
 let canvas: HTMLCanvasElement;
@@ -140,57 +140,9 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   }
   ctx.imageSmoothingEnabled = false;
 
-  const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-  bgLayers.forEach(layer => {
-    // Skip dark night sky layer in permanent bright day mode
-    if (layer.name === 'sky') {
-      return;
-    }
-    const isGroundLayer = layer.name === 'stones&grass' || layer.name === 'stones_grass';
-    const isTreesLayer = layer.name === 'hills&trees' || layer.name === 'hills_trees';
-
-    if (globals.graphicsSettings === 'low' && !isGroundLayer) {
-      return;
-    }
-    if (isTouch && !isTreesLayer && !isGroundLayer) {
-      return;
-    }
-
-    const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
-    if (img && img.complete && img.naturalWidth > 0) {
-      ctx.save();
-      const bufferFactor = 1.15;
-      const scale = (globals.height * bufferFactor) / img.naturalHeight;
-      const imgW = img.naturalWidth * scale;
-      const imgH = img.naturalHeight * scale;
-      
-      const offsetX = -(globals.camera.x * layer.speed * globals.gameZoom) % imgW;
-      let startX = offsetX > 0 ? offsetX - imgW : offsetX;
-      
-      const midY = (globals.height - imgH) / 2;
-      const offsetY = midY - (globals.camera.y * 0.3 * globals.gameZoom);
-      
-      const maxDrawX = globals.width + 1;
-      const maxDrawY = globals.height + 1;
-      
-      if (isGroundLayer) {
-        // Ground layer tiles infinitely across entire lower screen
-        const offsetYMod = offsetY % imgH;
-        let startY = offsetYMod > 0 ? offsetYMod - imgH : offsetYMod;
-        for(let x = startX; x < maxDrawX; x += imgW) {
-          for(let y = startY; y < maxDrawY; y += imgH) {
-            ctx.drawImage(img, x, y, imgW, imgH);
-          }
-        }
-      } else {
-        // Decorative layers: tile horizontally only, single vertical position
-        for(let x = startX; x < maxDrawX; x += imgW) {
-          ctx.drawImage(img, x, offsetY, imgW, imgH);
-        }
-      }
-      ctx.restore();
-    }
-  });
+  // Decorative source plates are dark night-grade artwork. Keep them loaded for
+  // compatibility, but use the procedural daylight scene above in every mode so
+  // battlefield lighting never washes out combat sprites and VFX.
 }
 
 export function resetCanvasVisuals() {
