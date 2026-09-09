@@ -1,3 +1,4 @@
+import { getSfxVolume } from './comfort';
 export const bgmAudio = new Audio();
 export const playlist = ['audio/Bushido_Storm_Intense_Battle_Mix.m4a'];
 
@@ -208,7 +209,7 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
           const source = ctx.createBufferSource();
           source.buffer = buffer;
           const gainNode = ctx.createGain();
-          gainNode.gain.setValueAtTime(bgmAudio.volume * 0.6 * volumeMult, ctx.currentTime);
+          gainNode.gain.setValueAtTime(getSfxVolume() * 0.6 * volumeMult, ctx.currentTime);
           source.connect(gainNode);
           gainNode.connect(getSoundDestination(ctx));
           source.start(0);
@@ -229,7 +230,7 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
     }
   }
   if (sound) {
-    sound.volume = bgmAudio.volume * 0.6 * volumeMult;
+    sound.volume = getSfxVolume() * 0.6 * volumeMult;
     sound.currentTime = 0;
     sound.play().catch(() => {});
   }
@@ -306,7 +307,7 @@ export function playSynthesizedHit() {
     osc.frequency.setValueAtTime(180, now);
     osc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
     
-    gain.gain.setValueAtTime(bgmAudio.volume * 0.4, now);
+    gain.gain.setValueAtTime(getSfxVolume() * 0.4, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
     
     osc.start(now);
@@ -333,7 +334,7 @@ export function playSynthesizedHurt() {
     osc.frequency.setValueAtTime(100, now);
     osc.frequency.linearRampToValueAtTime(30, now + 0.22);
     
-    gain.gain.setValueAtTime(bgmAudio.volume * 0.5, now);
+    gain.gain.setValueAtTime(getSfxVolume() * 0.5, now);
     gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
     
     osc.start(now);
@@ -376,7 +377,7 @@ export function playSynthesizedParry() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.55);
+    const volume = Math.max(0.001, getSfxVolume() * 0.55);
     
     // Ascending pitch scale: +1 semitone per consecutive parry streak (+1/12 octave)
     const pitchMult = Math.pow(2, (consecutiveParries - 1) / 12);
@@ -414,7 +415,7 @@ export function playSynthesizedSheathe() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.6);
+    const volume = Math.max(0.001, getSfxVolume() * 0.6);
 
     // 1. Blade slide metallic friction
     const oscSlide = ctx.createOscillator();
@@ -452,7 +453,7 @@ export function playSynthesizedClash() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.6);
+    const volume = Math.max(0.001, getSfxVolume() * 0.6);
     
     // High metal resonant ping
     const osc1 = ctx.createOscillator();
@@ -493,7 +494,7 @@ export function playSynthesizedPerfectParry() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.75;
+    const volume = getSfxVolume() * 0.75;
     
     // Core metallic strike
     const osc1 = ctx.createOscillator();
@@ -546,7 +547,7 @@ export function playSynthesizedDodge() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.4;
+    const volume = getSfxVolume() * 0.4;
     
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -572,7 +573,7 @@ export function playSynthesizedEnhance() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.5;
+    const volume = getSfxVolume() * 0.5;
     
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -604,7 +605,7 @@ export function playSynthesizedLevelUp() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.45;
+    const volume = getSfxVolume() * 0.45;
     
     const notes = [261.63, 329.63, 392.00, 523.25];
     notes.forEach((freq, i) => {
@@ -631,7 +632,7 @@ export function playSynthesizedAwaken() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.6;
+    const volume = getSfxVolume() * 0.6;
     
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -672,7 +673,7 @@ export function playSynthesizedThunder() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.75;
+    const volume = getSfxVolume() * 0.75;
 
     // 1. Initial sharp crack (lightning strike)
     const crackOsc = ctx.createOscillator();
@@ -762,7 +763,7 @@ export function playSynthesizedFirewheel() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.6;
+    const volume = getSfxVolume() * 0.6;
     
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -798,7 +799,7 @@ export function playSynthesizedGravity() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.9;
+    const volume = getSfxVolume() * 0.9;
 
     // Deep rumbling sine wave
     const osc1 = ctx.createOscillator();
@@ -846,7 +847,7 @@ export function playSynthesizedCharge() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = bgmAudio.volume * 0.5;
+    const volume = getSfxVolume() * 0.5;
 
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -877,7 +878,7 @@ export function playSynthesizedTempleBell() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.7);
+    const volume = Math.max(0.001, getSfxVolume() * 0.7);
 
     // Fundamental and metallic minor third overtone
     const osc1 = ctx.createOscillator();
@@ -911,7 +912,7 @@ export function playSynthesizedSingingBowl() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.6);
+    const volume = Math.max(0.001, getSfxVolume() * 0.6);
 
     const osc = ctx.createOscillator();
     const lfo = ctx.createOscillator();
@@ -946,7 +947,7 @@ export function playSynthesizedFusionUnlock() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.65);
+    const volume = Math.max(0.001, getSfxVolume() * 0.65);
 
     // Fast celestial arpeggio: C5(523), E5(659), G5(784), B5(987), E6(1318)
     const notes = [523.25, 659.25, 783.99, 987.77, 1318.51];
@@ -976,7 +977,7 @@ export function playSynthesizedShakuhachi() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.7);
+    const volume = Math.max(0.001, getSfxVolume() * 0.7);
 
     // Traditional Japanese bamboo flute (Shakuhachi) - D4 bending to F4 with breath noise
     const osc = ctx.createOscillator();
@@ -1018,7 +1019,7 @@ export function playSynthesizedCampfireCrackle() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.4);
+    const volume = Math.max(0.001, getSfxVolume() * 0.4);
 
     // Filtered noise buffer pop
     const bufferSize = Math.floor(ctx.sampleRate * 0.08);
@@ -1053,7 +1054,7 @@ export function playSynthesizedSealShatter() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.75);
+    const volume = Math.max(0.001, getSfxVolume() * 0.75);
 
     // Deep sub-bass impact
     const subOsc = ctx.createOscillator();
@@ -1091,7 +1092,7 @@ export function playSynthesizedBloodMoonRoar() {
     const ctx = getAudioContext();
     if (!ctx) return;
     const now = ctx.currentTime;
-    const volume = Math.max(0.001, bgmAudio.volume * 0.8);
+    const volume = Math.max(0.001, getSfxVolume() * 0.8);
 
     // Low-frequency demon drone with opening filter
     const osc1 = ctx.createOscillator();

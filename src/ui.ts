@@ -1,4 +1,5 @@
 import { heroComparison, renderStageBriefing, permanentPreview } from './progressionQol';
+import { completeJourneyStage, masteryBadge } from './journey';
 import { requestResume, handleBack, clearGameInputs } from './qol';
 import { globals, getStageAffix, getAscendantRank } from './globals';
 import { safeStorage } from './storage';
@@ -2257,6 +2258,7 @@ export function populateDojoHeroGrid() {
 
     card.innerHTML = `
       ${portraitHtml}
+      <span class="journey-badge">${masteryBadge(hero.id)}</span>
       <div style="display: flex; justify-content: space-between; align-items: baseline;">
         <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 14px; color: ${isEquipped ? '#c084fc' : '#f1f5f9'}; font-weight: bold;">${isJa ? hero.nameJa : hero.nameEn}</span>
         <span style="font-size: 10px; color: #a855f7; font-family: monospace;">${isJa ? hero.titleJa : hero.titleEn}</span>
@@ -2624,6 +2626,7 @@ export function populateAscensionUpgrades() {
 }
 
 export function triggerStageClear() {
+  if (completeJourneyStage()) return;
   globals.gameState = 'paused';
   const levelUpModal = document.getElementById('level-up-screen');
   if (levelUpModal) levelUpModal.style.display = 'none';

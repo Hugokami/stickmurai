@@ -1,5 +1,6 @@
 import { svgAssets } from './svgAssets';
 import { assetCallbacks } from './callbacks';
+import { recordDiagnostic } from './comfort';
 import { globals } from './globals';
 
 export const i18n: Record<string, Record<string, string>> = {
@@ -669,8 +670,10 @@ function startLoadingItem(item: QueuedAsset) {
   item.img.onload = () => { failedAssets.delete(item.img); onDone(); };
   item.img.onerror = () => {
     failedAssets.set(item.img, item);
+    recordDiagnostic(`Image load failed: ${item.folder || 'asset'}`);
     console.warn(`[Assets] Failed to load: ${item.src}`);
     onDone();
+    if (item.isPriority) setTimeout(() => (window as any).__showLoadingRecovery?.(), 0);
   };
 
   item.img.src = item.src;

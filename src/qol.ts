@@ -2,6 +2,8 @@ import { globals } from './globals';
 import { safeStorage } from './storage';
 import { ActionBuffer, clamp, SAVE_KEYS, validateSave, type SaveFile } from './qolCore';
 import './qol.css';
+import { reducedMotion, setReducedMotion } from './comfort';
+import { bgmAudio } from './audio';
 
 export const actionBuffer = new ActionBuffer();
 type Position = {x:number;y:number};
@@ -80,7 +82,8 @@ function replaceSave(file:SaveFile) {
   for(const k of SAVE_KEYS){if(file.data[k]===undefined)safeStorage.removeItem(k);else safeStorage.setItem(k,file.data[k]);}
   location.reload();
 }
-export function initQol() {
+export function initQol(retryRun?: () => void) {
+  setReducedMotion(reducedMotion());
   const toast=document.createElement('div');toast.id='qol-toast';toast.hidden=true;toast.setAttribute('role','status');document.body.append(toast);
   window.addEventListener('qol-toast',e=>showToast(String((e as CustomEvent).detail)));
   const prefs=panel('qol-settings',text('Comfort & controls','操作と表示'));
@@ -88,6 +91,11 @@ export function initQol() {
   const addSelect=(label:string,key:'size'|'handed',opts:string[])=>{const row=document.createElement('label');row.className='qol-row';row.textContent=label;const select=document.createElement('select');select.setAttribute('aria-label',label);opts.forEach(value=>{const o=document.createElement('option');o.value=value;o.textContent=value;select.append(o);});select.value=qolSettings[key];select.onchange=()=>{qolSettings[key]=select.value;if(key==='handed')qolSettings.positions={};applySettings();};row.append(select);scroll.append(row);};
   const addRange=(label:string,key:'controlSize'|'opacity'|'sensitivity'|'buffer'|'sfx',min:number,max:number,step:number)=>{const row=document.createElement('label');row.className='qol-row';const name=document.createElement('span');const input=document.createElement('input');input.type='range';input.min=String(min);input.max=String(max);input.step=String(step);input.value=String(qolSettings[key]);input.setAttribute('aria-label',label);const update=()=>{name.textContent=`${label}: ${key==='buffer'?qolSettings[key]+' ms':key==='controlSize'?qolSettings[key]+' px':Math.round(qolSettings[key]*100)+'%'}`;};update();input.oninput=()=>{qolSettings[key]=Number(input.value);update();applySettings();};row.append(name,input);scroll.append(row);};
   addSelect('Text & HUD','size',['small','default','large']);addSelect('Action hand','handed',['right','left']);addRange('Button size','controlSize',48,100,2);addRange('Button opacity','opacity',.3,1,.05);addRange('Joystick sensitivity','sensitivity',.5,1.5,.1);addRange('Input buffer (solo)','buffer',0,120,20);addRange('Sound effects','sfx',0,1,.05);
+  const motionRow=document.createElement('label'); motionRow.className='qol-row'; motionRow.textContent='Reduced motion · fewer flashes, no camera shake';
+  const motion=document.createElement('input'); motion.type='checkbox'; motion.checked=reducedMotion(); motion.onchange=()=>setReducedMotion(motion.checked); motionRow.append(motion); scroll.append(motionRow);
+  const musicRow=document.createElement('label'); musicRow.className='qol-row'; musicRow.textContent='Music volume';
+  const musicControl=document.createElement('input'); musicControl.type='range'; musicControl.min='0'; musicControl.max='1'; musicControl.step='.05'; musicControl.value=String(bgmAudio.volume); musicControl.setAttribute('aria-label','Music volume');
+  musicControl.oninput=()=>{bgmAudio.volume=Number(musicControl.value);const original=document.getElementById('bgm-volume') as HTMLInputElement|null;if(original){original.value=musicControl.value;original.dispatchEvent(new Event('input'));}}; musicRow.append(musicControl);scroll.append(musicRow);
   const note=document.createElement('p');note.className='qol-note';note.textContent='Buffering remembers one early attack or dash. 0 ms disables it. Move controls in the layout editor; practice lets you test them.';scroll.append(note);
   const actions=document.createElement('div');actions.className='qol-actions';prefs.box.append(actions);
   const layout=panel('qol-layout','Move your controls');const desc=document.createElement('p');desc.textContent='Drag each circle. Positions are saved for this device. Keep buttons apart and away from the camera cutout.';layout.box.append(desc);
@@ -95,6 +103,9 @@ export function initQol() {
   layout.box.append(button('Save & Back',()=>layout.p.hidden=true));
   actions.append(button('Move buttons',()=>{layout.p.hidden=false;renderLayout();}),button('Restore controls',()=>{qolSettings={...defaults,sfx:qolSettings.sfx,music:qolSettings.music,positions:{}};applySettings();prefs.p.hidden=true;showToast('Default controls restored.');}),button('Back',()=>prefs.p.hidden=true));
   const settings=document.querySelector('#settings-screen .menu-box');settings?.append(button('Comfort & controls',()=>prefs.p.hidden=false));
+  const pauseActions=document.querySelector('#pause-screen .menu-buttons');
+  pauseActions?.append(button('Comfort & audio',()=>{musicControl.value=String(bgmAudio.volume);prefs.p.hidden=false;}));
+  if(retryRun) pauseActions?.append(button('Retry this stage',()=>{if(globals.gameMode==='pvp')return;cancelResume();clearGameInputs();retryRun();}));
   const save=panel('qol-saves','Save protection');const saveText=document.createElement('p');saveText.textContent='Export a local backup to move or protect your progress. Import replaces progression and keeps a recovery backup. Return to the title menu before importing. Settings and account credentials are excluded.';save.box.append(saveText);
   const confirm=panel('qol-import-confirm','Replace local progress?');const confirmText=document.createElement('p');confirm.box.append(confirmText);let pending:SaveFile|null=null;
   confirm.box.append(button('Replace & reload',()=>{if(!pending)return;try{replaceSave(pending);}catch(e){showToast((e as Error).message);}}),button('Cancel',()=>{pending=null;confirm.p.hidden=true;}));

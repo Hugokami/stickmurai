@@ -32,7 +32,7 @@ export function upgradePreview(key: string): string {
     puPetalArmorName: () => change('Armor level',globals.petalArmorLevel,globals.petalArmorLevel+1),
     puEchoSlashName: () => change('Echo level',globals.echoLevel,globals.echoLevel+1),
     puTempoMasteryName: () => change('Tempo level',globals.tempoMasteryLevel,globals.tempoMasteryLevel+1),
-    puCursedGlassName: () => { change('Max hearts',globals.maxLives,1); stat('Skill bonus damage','enhanceBonusDmg',n=>n+3); stat('Slash size ×','slashSizeMult',n=>Math.min(2.2,n+.25),2.2); stat('Dash cooldown','dashCooldownBase',n=>Math.max(.72,n*.85),.72,'s'); },
+    puCursedGlassName: () => { change('Max hearts',globals.maxLives,Math.max(1,globals.maxLives-3)); stat('Skill bonus damage','enhanceBonusDmg',n=>n+3); stat('Slash size ×','slashSizeMult',n=>Math.min(2.2,n+.25),2.2); stat('Dash cooldown','dashCooldownBase',n=>Math.max(.72,n*.85),.72,'s'); },
     puCursedBloodName: () => { stat('Flow gain ×','flowGenMult',n=>n+.5); change('Vampire chance',s.vampireChance*100,(s.vampireChance+.15)*100,undefined,'%'); },
     puCursedIronName: () => { stat('Dash cooldown','dashCooldownBase',n=>n*1.25,undefined,'s'); stat('Slash size ×','slashSizeMult',n=>Math.min(2.2,n+.5),2.2); stat('Deflect damage','deflectedDmg',n=>n+6); },
     puGaleVortexName: () => stat('Skill duration','enhanceDuration',n=>Math.max(1,n-1),1,'s'),
@@ -55,7 +55,7 @@ export function renderStageBriefing(stage: number, anchor: HTMLElement) {
   const first=!(globals.clearedStages||[]).includes(stage);
   const fortune=1+((globals.campaignUpgrades as any)?.infiniteFortune||0)*.02;
   const reward=Math.round(stage*100*fortune)*(first?3:1);
-  const objective=boss ? (ja?'ボスを倒す、または45体撃破':'Defeat the boss or eliminate 45 enemies') : `${ja?'撃破目標':'Eliminate'}: ${targets[stage]||Math.min(90,35+stage*4)}`;
+  const objective=boss ? (ja?'ボスを倒す':'Defeat the boss') : `${ja?'撃破目標':'Eliminate'}: ${targets[stage]||Math.min(90,35+stage*4)}`;
   el.textContent=`${objective} · ${ja?'報酬':'Clear reward'}: ${reward.toLocaleString()} 🔮${first?' (×3 first clear)':''} · ★ ${boss?90:60}s · ★ 20 combo · +300 🔮 ${ja?'初の三つ星':'first 3-star clear'}`;
   try { const best=JSON.parse(safeStorage.getItem('stickmurai_stage_bests')||'{}')[stage]; if(best && [best.time,best.damage,best.combo].every(Number.isFinite)) { const p=document.createElement('div'); p.textContent=`${ja?'自己ベスト':'Personal best'}: ${num(best.time)}s · ${best.damage} ${ja?'被ダメージ':'damage taken'} · ${best.combo} combo`; el.append(p); } } catch { /* Invalid optional records never block stage selection. */ }
 }

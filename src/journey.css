@@ -1,0 +1,14 @@
+.journey-box{width:min(960px,96vw);max-height:calc(100dvh - 24px - env(safe-area-inset-top) - env(safe-area-inset-bottom));display:flex;flex-direction:column;background:#10131d;border:1px solid var(--journey-accent,#ffd700);border-radius:14px;overflow:hidden;color:#e2e8f0;font-family:Outfit,system-ui,sans-serif}
+.journey-box header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 16px;flex:0 0 auto;border-bottom:1px solid #3a3d4a}
+.journey-box h2{font-size:20px;margin:0;color:var(--journey-accent,#ffd700)}
+.journey-grid{overflow:auto;overscroll-behavior:contain;touch-action:pan-y;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(280px,100%),1fr));gap:12px;padding:14px;min-height:0}
+.journey-card{background:#191d2a;padding:16px;border:1px solid #3b4255;border-radius:10px;min-width:0}
+.journey-card h3{margin:0 0 10px;font-size:17px}.journey-card p{font-size:14px;line-height:1.45;margin:8px 0;color:#cbd5e1}
+.journey-card select{width:100%;padding:10px;background:#10131d;color:#fff;border:1px solid #78839a;border-radius:6px;font:inherit}
+.journey-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.journey-card .qol-btn{margin:4px 4px 4px 0;white-space:normal;min-height:44px}.journey-card .qol-btn:disabled{opacity:.45;cursor:not-allowed}
+.journey-portrait{display:block;width:96px;height:96px;min-height:96px;object-fit:contain;image-rendering:pixelated;flex:0 0 96px;background:transparent}
+#journey-objective{font:600 12px Outfit,system-ui,sans-serif;color:var(--journey-accent,#ffd700);max-width:min(480px,65vw);margin:6px 12px;pointer-events:none;text-shadow:0 1px 3px #000}
+#journey-objective[hidden]{display:none}
+#journey-open{border-color:var(--journey-accent,#ffd700);color:var(--journey-accent,#ffd700)}
+.journey-badge{color:var(--journey-accent,#ffd700);font:700 12px Outfit,system-ui,sans-serif;flex-shrink:0}.journey-badge:empty{display:none}
+@media(max-height:450px){.journey-box h2{font-size:17px}.journey-grid{padding:8px;gap:8px}.journey-card{padding:10px}#journey-objective{font-size:10px;max-width:55vw}}

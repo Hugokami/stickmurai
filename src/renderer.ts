@@ -2,6 +2,8 @@ import { globals } from './globals';
 import { callbacks } from './callbacks';
 import { bgLayers, bgImages, vfxAnims } from './assets';
 import { Entity } from './entities';
+import { reducedMotion } from './comfort';
+import { drawCombatHazards } from './combatPolish';
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -246,6 +248,7 @@ export function draw() {
 
   ctx.save();
   ctx.scale(globals.gameZoom, globals.gameZoom);
+  drawCombatHazards(ctx);
   
   const vignette = document.getElementById('vignette-overlay');
   if (vignette) {
@@ -931,7 +934,7 @@ export function draw() {
 
   ctx.restore();
 
-  if (globals.invulnTimer > 1.5 && globals.graphicsSettings !== 'low' && globals.speedLinesEnabled === 'on') {
+  if (!reducedMotion() && globals.invulnTimer > 1.5 && globals.graphicsSettings !== 'low' && globals.speedLinesEnabled === 'on') {
     ctx.save();
     ctx.strokeStyle = 'rgba(255, 215, 0, 0.25)';
     ctx.lineWidth = 2;
@@ -950,7 +953,7 @@ export function draw() {
     ctx.restore();
   }
 
-  if (globals.graphicsSettings === 'low' && globals.invertScreenTimer > 0) {
+  if (!reducedMotion() && globals.graphicsSettings === 'low' && globals.invertScreenTimer > 0) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.fillRect(0, 0, globals.width, globals.height);
   }

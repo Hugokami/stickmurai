@@ -1,4 +1,5 @@
 /** Pure helpers shared by settings, input and save validation. */
+import { parseJourney } from './journeyCore';
 export const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 export class ActionBuffer {
   private pending = new Map<string, number>();
@@ -16,7 +17,7 @@ export class ActionBuffer {
 const numericKeys = ['stickmurai_magatama', 'stickmurai_current_stage', 'stickmurai_max_stage'];
 const listKeys = ['stickmurai_unlocked_heroes', 'stickmurai_unlocked_skills', 'stickmurai_fusions', 'stickmurai_seals', 'stickmurai_cleared_stages', 'stickmurai_redeemed_codes'];
 const objectKeys = ['stickmurai_campaign_upgrades', 'stickmurai_stage_stars', 'highScores', 'stickmurai_stage_bests'];
-export const SAVE_KEYS = [...numericKeys, ...listKeys, ...objectKeys, 'stickmurai_selected_hero', 'stickmurai_selected_skill'];
+export const SAVE_KEYS = [...numericKeys, ...listKeys, ...objectKeys, 'stickmurai_selected_hero', 'stickmurai_selected_skill', 'stickmurai_journey'];
 export interface SaveFile { game: 'stickmurai'; version: 1; savedAt: string; data: Record<string, string> }
 const record = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v);
 const integer = (v: unknown, max = 1e9) => typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 && v <= max;
@@ -27,7 +28,11 @@ export function validateSave(text: string): SaveFile {
   const data = Object.create(null) as Record<string, string>;
   for (const [key, value] of Object.entries(file.data)) {
     if (!SAVE_KEYS.includes(key) || typeof value !== 'string' || value.length > 200000) throw Error('Save contains an unsupported field.');
-    if (numericKeys.includes(key)) {
+    if (key==='stickmurai_journey') {
+      const parsed=JSON.parse(value);
+      if(!record(parsed)||parsed.version!==1)throw Error('Unsupported mastery save.');
+      data[key]=JSON.stringify(parseJourney(value));continue;
+    } else if (numericKeys.includes(key)) {
       if (!/^\d+$/.test(value) || !integer(Number(value)) || (key.includes('stage') && Number(value) < 1)) throw Error('Invalid progression value.');
     } else if (listKeys.includes(key)) {
       const a: unknown = JSON.parse(value);

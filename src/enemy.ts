@@ -5,12 +5,14 @@ import { Player } from './player';
 import { playSound, sfx, playSynthesizedThunder, playEnergyBeam, playTeleportSfx, playExplosionSfx } from './audio';
 import { vfxAnims, loadEnemyAssetsNow } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
+import { isBoss } from './combatPolish';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
 export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer' | 'barrel_bomber' | 'orc_brute' | 'agis_colossus' | 'skeleton_warlord' | 'toaster_bot';
 
 export class Enemy extends Entity {
+  get meleeHitRadius(){return 140+(this.scaleMult-1)*60;}
   target!: Player;
   attackLanded = false;
   chargeTimeMax = 1.6;
@@ -689,7 +691,8 @@ export class Enemy extends Entity {
 
     if (this.state === 'recover') {
       this.vx = 0; this.vy = 0;
-      if (this.stateTime > 0.8) {
+      const recovery=isBoss(this)&&globals.gameMode==='classic'?(this.hp/this.maxHp<=.33?.9:1.2):.8;
+      if (this.stateTime > recovery) {
         this.setState('idle');
         this.attackCooldownTimer = 0.8 + Math.random() * 0.5;
       }
@@ -813,15 +816,14 @@ export class Enemy extends Entity {
         }
       } else if (this.subType !== 'musketeer' && !this.attackLanded) {
         const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
-        const enemyHitRadius = (this.scaleMult - 1) * 60; 
-        const threshold = 140 + enemyHitRadius;
+        const threshold = this.meleeHitRadius;
         if (dxHit*dxHit + dyHit*dyHit < threshold * threshold) {
           this.executeAttack(); 
           this.attackLanded = true; 
         }
       }
       if (this.stateTime > this.lungeDuration) {
-        if (this.subType === 'skeleton_warlord') {
+        if (this.subType === 'skeleton_warlord' || (globals.gameMode==='classic'&&isBoss(this))) {
           this.setState('recover');
         } else {
           this.setState('idle');
@@ -1147,76 +1149,30 @@ export class Enemy extends Entity {
     }
 
     if (this.state === 'charge') {
-      ctx.save();
-      ctx.translate(rx, effectiveRy);
-
-      const p = Math.min(1, this.stateTime / this.chargeTimeMax);
-      ctx.rotate(this.targetAngle);
-
-      const isRanged = this.isRanged();
-      const laserLen = isRanged ? 520 * this.scaleMult : Math.max(160, this.lungeSpeed * this.lungeDuration * 0.5 + 75 * this.scaleMult);
-
-      if (isRanged) {
-        // Precision laser sight with target reticle
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(laserLen, 0);
-        if (this.isAimLocked) {
-          // Locked aim - solid bright glowing red warning
-          ctx.strokeStyle = `rgba(255, 40, 40, 0.95)`;
-          ctx.lineWidth = 3 * this.scaleMult;
-          ctx.setLineDash([]);
-        } else {
-          // Tracking aim - pulsing dashed red laser
-          ctx.strokeStyle = `rgba(255, 60, 60, ${0.3 + p * 0.5})`;
-          ctx.lineWidth = (1.5 + p * 2) * this.scaleMult;
-          ctx.setLineDash([12, 8]);
-        }
-        ctx.stroke();
-
-        // Reticle / target dot at the end
-        ctx.beginPath();
-        ctx.arc(laserLen, 0, (this.isAimLocked ? 7 : 4 + p * 3) * this.scaleMult, 0, Math.PI * 2);
-        ctx.fillStyle = this.isAimLocked ? '#ff0000' : `rgba(255, 80, 80, ${0.5 + p * 0.5})`;
-        ctx.fill();
-
-        // Lock-on ring when locked
-        if (this.isAimLocked) {
-          ctx.beginPath();
-          ctx.arc(laserLen, 0, 12 * this.scaleMult, 0, Math.PI * 2);
-          ctx.strokeStyle = '#ff0000';
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-        }
-      } else {
-        // Melee lunge corridor & hitbox telegraph strictly matching physical body collision
-        const baseWidth = (this.type === 'enemy03' ? 36 : (this.type === 'skeleton' ? 44 : (this.type === 'evil_wizard' ? 32 : (this.type === 'boss_agis' ? 55 : (this.type === 'enemy_orc' ? 34 : (this.type === 'enemy_barrel' ? 30 : 24))))));
-        const halfWidth = (baseWidth * this.scaleMult) | 0;
-
-        // Translucent danger corridor fill
-        ctx.fillStyle = this.isAimLocked ? `rgba(255, 30, 30, ${0.15 + p * 0.18})` : `rgba(255, 60, 60, ${0.08 + p * 0.12})`;
-        ctx.fillRect(0, -halfWidth, laserLen, halfWidth * 2);
-
-        // Boundary strokes
-        ctx.strokeStyle = this.isAimLocked ? `rgba(255, 50, 50, 0.95)` : `rgba(255, 80, 80, ${0.35 + p * 0.45})`;
-        ctx.lineWidth = this.isAimLocked ? 2 : 1.2;
-        ctx.setLineDash(this.isAimLocked ? [] : [10, 8]);
-        ctx.strokeRect(0, -halfWidth, laserLen, halfWidth * 2);
-
-        // Progress charge bar advancing down the corridor
-        ctx.fillStyle = `rgba(255, 50, 50, ${0.28 + p * 0.52})`;
-        ctx.fillRect(0, -halfWidth, laserLen * p, halfWidth * 2);
-
-        // Direction arrow at front
-        ctx.beginPath();
-        ctx.moveTo(laserLen, 0);
-        ctx.lineTo(laserLen - 14, -halfWidth * 0.65);
-        ctx.lineTo(laserLen - 14, halfWidth * 0.65);
-        ctx.closePath();
-        ctx.fillStyle = this.isAimLocked ? '#ff2222' : `rgba(255, 80, 80, ${p})`;
-        ctx.fill();
+      ctx.save();ctx.translate(rx,effectiveRy);
+      const p=Math.min(1,this.stateTime/this.chargeTimeMax);
+      const ranged=this.isRanged();
+      const color=ranged?'#67e8f9':'#fbbf24';
+      ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=this.isAimLocked?3:2;
+      ctx.setLineDash(this.isAimLocked?[]:[10,8]);
+      ctx.font="bold 12px Outfit,system-ui,sans-serif";ctx.textAlign='center';
+      ctx.fillText(ranged?'◇ RANGED':'▸ LUNGE',0,-this.meleeHitRadius-14);
+      // Area casts use the same radii as triggerCustomSpellCast.
+      if(this.subType==='agis_colossus'||this.subType==='skeleton_warlord'){
+        ctx.beginPath();ctx.arc(0,0,this.subType==='agis_colossus'?190:210,0,Math.PI*2);ctx.stroke();
       }
-
+      ctx.rotate(this.targetAngle);
+      if(ranged){
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(600,0);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(600,-9);ctx.lineTo(609,0);ctx.lineTo(600,9);ctx.lineTo(591,0);ctx.closePath();ctx.stroke();
+      }else{
+        const travel=this.lungeSpeed*this.lungeDuration*.5;
+        const radius=this.meleeHitRadius;
+        // Swept circle: its radius is also used by the melee damage check.
+        ctx.beginPath();ctx.arc(travel,0,radius,-Math.PI/2,Math.PI/2);ctx.arc(0,0,radius,Math.PI/2,Math.PI*1.5);ctx.closePath();
+        ctx.globalAlpha=.06+p*.08;ctx.fill();ctx.globalAlpha=1;ctx.stroke();
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(travel,0);ctx.stroke();
+      }
       ctx.restore();
     }
 

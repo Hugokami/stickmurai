@@ -1,4 +1,8 @@
 import './style.css';
+import { reducedMotion, recordFrameTime } from './comfort';
+import { initJourney, beginJourneyRun, journeyHurt, journeySkill, leaveJourney, updateJourneyHud, isBossRush } from './journey';
+import { encounterBudget } from './journeyCore';
+import { resetCombatPolish, updateCombatPolish } from './combatPolish';
 import { initQol, clearGameInputs, actionBuffer, qolSettings } from './qol';
 import { initRuntimeQol, isPractice, practiceStep, recordHurt, resetRunFeedback, showDefeatFeedback, updateThreats } from './runtimeQol';
 import { assetReadiness, retryRequiredAssets } from './assets';
@@ -67,7 +71,7 @@ let shogunSpawned = false;
 
 // Import helper modules
 import { initInput, pollGamepad } from './input';
-import { initUI, updateUI, updateEnhanceButton, updateStaticText, updateComboDisplay } from './ui';
+import { initUI, updateUI, updateEnhanceButton, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
 import { initRenderer, draw, resetCanvasVisuals } from './renderer';
 import { triggerLevelUp, activateAwakening, applyRandomStartUpgrade } from './powerups';
 
@@ -126,6 +130,9 @@ export function clearBattlefield() {
 }
 
 export function handleQuitToMainMenu() {
+  stopSpawner();
+  resetCombatPolish();
+  leaveJourney();
   globals.gameState = 'mainmenu';
   clearGameInputs();
   resetRunFeedback();
@@ -606,7 +613,8 @@ function startApp() {
       () => { initGame(); }, // Zen start
       () => { initGame(); }  // Restart run
     );
-    initQol();
+    initQol(initGame);
+    initJourney(initGame,HEROES_DATA);
     initRuntimeQol(initGame);
     window.addEventListener('qol-assets', updateLoaderProgress);
     (window as any).__showLoadingRecovery = showLoadingRecovery;
@@ -659,6 +667,8 @@ function startApp() {
     startLoaderStickmanAnimation();
     startBackgroundAssetLoading();
     setTimeout(updateLoaderProgress, 0);
+    // Offer recovery for stalled requests; elapsed time never unlocks play.
+    loaderTimeoutId = setTimeout(showLoadingRecovery, 20000);
   } catch (err) {
     console.error("Critical error in startApp:", err);
     try {
@@ -671,6 +681,7 @@ function startApp() {
 function showLoadingRecovery() {
   if (loadingFinished) return;
   updateLoaderProgress();
+  if (loadingFinished) return;
   const loader = document.getElementById('loader-screen');
   if (!loader || document.getElementById('qol-loader-retry')) return;
   const actions = document.createElement('div'); actions.className='qol-actions';
@@ -737,6 +748,7 @@ function showBossWarningBanner(stage: number) {
 
 function initGame() {
   if (!assetReadiness().ready) { showLoadingRecovery(); return; }
+  stopSpawner();
   startOrResumeGameLoop();
   clearGameInputs();
   resetRunFeedback();
@@ -1195,25 +1207,26 @@ function initGame() {
   updateEnhanceButton();
   updateStaticText();
   updateUI(); 
+  beginJourneyRun();
+  resetCombatPolish();
   spawnEnemy();
-
-  // Wave Influx: Immediate spawn on higher stages to eliminate early dead air
-  if (globals.gameMode === 'classic' && !isBossStage && currentStage >= 3) {
-    const initialInflux = Math.min(3, Math.floor(currentStage / 3));
-    for (let i = 0; i < initialInflux; i++) {
-      spawnEnemy();
-    }
-  }
 }
 
+let spawnTimer: ReturnType<typeof setTimeout> | undefined;
+function stopSpawner() { if (spawnTimer !== undefined) clearTimeout(spawnTimer); spawnTimer = undefined; }
+function scheduleSpawn(delay: number) {
+  stopSpawner();
+  spawnTimer = setTimeout(() => { spawnTimer = undefined; spawnEnemy(); }, delay);
+}
 function spawnEnemy() {
   if (isPractice()) return;
   if (globals.gameState !== 'playing') {
     if (globals.gameState === 'paused' || globals.gameState === 'levelup' || globals.gameState === 'ultchoice') {
-      setTimeout(spawnEnemy, 1000);
+      scheduleSpawn(1000);
     }
     return;
   }
+  if (isBossRush() && globals.stageBossSpawned) return;
   
   let maxEnemies = isMobile ? 14 : 22;
   let count = 1;
@@ -1262,14 +1275,18 @@ function spawnEnemy() {
     if (pvpManager.subMode !== 'insane_survival' || pvpManager.role !== 'host') {
       // Don't run standard spawner in classic PvP or if client
       const nextSpawn = 1000;
-      setTimeout(spawnEnemy, nextSpawn);
+      scheduleSpawn(nextSpawn);
       return;
     }
   }
 
+  const bossAlive=globals.enemies.some(e=>e.state!=='dead'&&['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(e.subType));
+  const encounter=encounterBudget(globals.currentStage,globals.runTime,isMobile,bossAlive);
+  if(globals.gameMode==='classic'){maxEnemies=encounter.cap;count=isBossRush()?1:encounter.batch;}
+  let aliveCount=globals.enemies.filter(e=>e.state!=='dead'&&!e.isPvpRemote).length;
   // Insane difficulty is used for insane_survival
   if (globals.enemies.filter(e => e.state !== 'dead' && !e.isPvpRemote).length < maxEnemies) {
-     for(let i=0; i<count; i++) {
+     for(let i=0; i<count && aliveCount<maxEnemies; i++) {
        const angle = Math.random() * Math.PI * 2;
        const dist = 800 + Math.random() * 400 + (i * 100);
        const enemy = new Enemy(globals.player.x + Math.cos(angle)*dist, globals.player.y + Math.sin(angle)*dist, globals.player);
@@ -1279,6 +1296,7 @@ function spawnEnemy() {
        (enemy as any).id = enemyId;
        
        globals.enemies.push(enemy);
+       aliveCount++;
 
        // Broadcast spawn to client
        pvpManager.send({
@@ -1291,8 +1309,8 @@ function spawnEnemy() {
      }
   }
   
-  const nextSpawn = (1200 - Math.min(700, globals.score * 15)) * nextSpawnMult;
-  setTimeout(spawnEnemy, nextSpawn);
+  const nextSpawn = globals.gameMode==='classic'?encounter.delay:(1200 - Math.min(700, globals.score * 15)) * nextSpawnMult;
+  scheduleSpawn(nextSpawn);
 }
 
 function triggerFlowingCounterReset() {
@@ -1492,6 +1510,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   
   if (globals.player.state !== 'dead') {
     recordHurt(enemy?.subType || 'attack', damageAmount);
+    journeyHurt(damageAmount);
     if (isPractice()) return;
     playSynthesizedHurt();
     globals.consecutiveParries = 0;
@@ -2411,7 +2430,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     }
   }
 
-  globals.runStats.damageDealt += dmg;
   if (globals.playerStats.fireStanceLevel && globals.playerStats.fireStanceLevel > 0) {
     e.burnTimer = 3.0;
     if (e.burnTickTimer <= 0) e.burnTickTimer = 0.5;
@@ -2691,7 +2709,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     }
   } else {
     globals.screenShake = Math.max(globals.screenShake, 6);
-    globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 30, `-${finalDmg}`, '#ff5555', 18));
+    globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 30, `-${Number(finalDmg.toFixed(1))}`, '#f8fafc', 18));
 
     if (typeof (e as any).addPostureDamage === 'function') {
       (e as any).addPostureDamage(10);
@@ -2710,6 +2728,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   }
   
   e.hp -= finalDmg;
+  globals.runStats.damageDealt += finalDmg;
   e.hitFlash = 0.15;
   
   const hitSparkCount = globals.graphicsSettings === 'low' ? 2 : 8;
@@ -2761,6 +2780,7 @@ function checkVampireHeal(e: Enemy) {
 }
 
 function killEnemy(e: Enemy) {
+  if(e.state==='dead')return;
   e.setState('dead'); 
   addCombo();
   globals.runStats.kills++;
@@ -2989,6 +3009,7 @@ function addFlow(amount: number) {
 }
 
 function update(realDt: number) {
+  updateJourneyHud(realDt);
   pollGamepad();
   practiceStep();
   updateThreats(realDt);
@@ -3010,6 +3031,7 @@ function update(realDt: number) {
   if (globals.gameState === 'levelup' || globals.gameState === 'ultchoice' || globals.gameState === 'paused') return; 
   if (globals.gameState !== 'playing' && (!globals.player || globals.player.state !== 'dead')) return;
   // Slow-motion and freeze-frame hitStop removed completely to ensure seamless 60fps
+  updateCombatPolish(realDt);
   globals.hitStop = 0;
 
   if (globals.timerLimit !== 'endless' && globals.gameState === 'playing') {
@@ -3301,6 +3323,7 @@ function update(realDt: number) {
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, t('zenWarningText'), "#ff3355", 24));
       }
     } else if (globals.enhanceCooldown <= 0) {
+      journeySkill();
       if (globals.selectedSkill === 'enhance') {
         playSynthesizedEnhance();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration; 
@@ -5205,7 +5228,7 @@ function update(realDt: number) {
       Particle.release(p);
     }
   }
-  const maxParticles = globals.graphicsSettings === 'low' ? 15 : (isMobile ? 40 : 85);
+  const maxParticles = reducedMotion() ? 12 : (globals.graphicsSettings === 'low' ? 15 : (isMobile ? 40 : 85));
   if (particleWriteIndex > maxParticles) {
     const toReleaseCount = particleWriteIndex - maxParticles;
     for (let i = 0; i < toReleaseCount; i++) {
@@ -5280,7 +5303,7 @@ function update(realDt: number) {
   globals.camera.y += camDy * step;
   if (globals.screenShake > 0) {
     if (globals.screenShake > 45) globals.screenShake = 45;
-    let shakeMult = globals.graphicsSettings === 'low' ? 0.12 : 0.4;
+    let shakeMult = reducedMotion() ? 0 : (globals.graphicsSettings === 'low' ? 0.12 : 0.4);
     if (globals.screenShakeEnabled === 'reduced') {
       shakeMult *= 0.35;
     } else if (globals.screenShakeEnabled === 'off') {
@@ -5304,6 +5327,7 @@ let isLoopActive = false;
 
 function loop(time: number) {
   try {
+    if (globals.gameState === 'playing') recordFrameTime(time - lastTime);
     const dt = Math.min((time - lastTime) / 1000, 0.1);
     lastTime = time;
     update(dt);
@@ -6562,7 +6586,7 @@ function runPvpStep(realDt: number) {
       Particle.release(p);
     }
   }
-  const maxParticles = globals.graphicsSettings === 'low' ? 15 : (isMobile ? 40 : 85);
+  const maxParticles = reducedMotion() ? 12 : (globals.graphicsSettings === 'low' ? 15 : (isMobile ? 40 : 85));
   if (particleWriteIndex > maxParticles) {
     const toReleaseCount = particleWriteIndex - maxParticles;
     for (let i = 0; i < toReleaseCount; i++) {

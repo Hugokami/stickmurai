@@ -29,3 +29,10 @@ html[data-qol-size=large] .hero-card { font-size:15px!important; }
 html[data-qol-size=large] #score-display,html[data-qol-size=large] #combo-display,html[data-qol-size=large] #objective-display { font-size:18px!important; }
 html[data-qol-size=small] #score-display,html[data-qol-size=small] #combo-display,html[data-qol-size=small] #objective-display { font-size:13px!important; }
 @media(max-height:500px){ .qol-box{padding:10px 14px}.qol-row{padding:6px 0}.qol-box h2{font-size:18px}.qol-box p{margin:7px 0} #qol-layout .qol-box{max-width:400px} }
+/* Motion preference affects cosmetic overlays, never the battlefield artwork. */
+.reduced-motion #manga-cutin,
+.reduced-motion #speedlines-overlay { display: none !important; }
+.reduced-motion .screen-flash { opacity: 0 !important; }
+.reduced-motion .qol-panel *, .reduced-motion .qol-toast { animation: none !important; }
+#pause-screen .pause-menu-box { max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 24px); overflow-y: auto; overscroll-behavior: contain; }
+#pause-screen .menu-buttons { flex-shrink: 0; }

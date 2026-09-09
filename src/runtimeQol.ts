@@ -7,6 +7,7 @@ let returnToMenu: (() => void) | null = null;
 let threatTimer = 0;
 let threatRoot: HTMLElement | null = null;
 let hurtCount = 0;
+let hurtSources:Record<string,number>={};
 export const isPractice = () => practice;
 export function initRuntimeQol(onReturn: () => void) {
   returnToMenu = onReturn;
@@ -23,8 +24,8 @@ export function initRuntimeQol(onReturn: () => void) {
 }
 function exitPractice() {practice=false;setPracticeStorage(false);document.getElementById('qol-practice-bar')?.remove();document.getElementById('qol-practice-dummy')?.remove();clearThreats();globals.gameState='mainmenu';if(returnToMenu)returnToMenu();showToast('Training ended. No rewards or progress were saved.');}
 export function practiceStep() {if(!practice)return; if(globals.enemies.length>0) globals.enemies.length=0;}
-export function resetRunFeedback() {hurtCount=0;threatTimer=0;clearThreats();}
-export function recordHurt(source:string, damage:number) {if(practice)return;hurtCount+=damage;showThreat(source);}
+export function resetRunFeedback() {hurtCount=0;hurtSources={};threatTimer=0;clearThreats();}
+export function recordHurt(source:string, damage:number) {if(practice)return;hurtCount+=damage;hurtSources[source]=(hurtSources[source]||0)+damage;showThreat(source);}
 function showThreat(source:string) {
   try {
     if(!threatRoot){
@@ -37,6 +38,7 @@ function showThreat(source:string) {
     e.className='qol-threat';
     e.textContent=`⚠ ${cleanSource} attack`;
     threatRoot.append(e);
+    while(threatRoot.children.length>2)threatRoot.firstElementChild?.remove();
     window.setTimeout(()=>{ try { e.remove(); } catch(err) {} }, 1100);
   } catch(err) {
     console.error('showThreat error:', err);
@@ -62,4 +64,12 @@ export function clearThreats(){
     console.error('clearThreats error:', err);
   }
 }
-export function showDefeatFeedback(timeLimit=false){const el=document.getElementById('stats-summary');if(!el)return;const old=el.innerHTML;el.insertAdjacentHTML('afterbegin',`<div class="qol-note">${timeLimit?'Objective timer expired.':'Run ended.'} Damage taken: ${hurtCount}. Review telegraphs and try the same loadout again.</div>`);setTimeout(()=>{if(el.isConnected)el.innerHTML=old;},9000);}
+export function showDefeatFeedback(timeLimit=false){
+  const el=document.getElementById('stats-summary');if(!el)return;
+  el.querySelector('.combat-recap')?.remove();
+  const recap=document.createElement('div');recap.className='qol-note combat-recap';
+  const top=Object.entries(hurtSources).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  const summary=document.createElement('p');summary.textContent=`${timeLimit?'Objective timer expired.':'Run ended.'} Damage taken: ${hurtCount} · Best combo: ${globals.runStats.maxCombo} · Parries: ${globals.runStats.parries}`;recap.append(summary);
+  const sources=document.createElement('p');sources.textContent='Damage sources: '+(top.map(([name,amount])=>`${name.replaceAll('_',' ')} (${amount})`).join(', ')||'none recorded');recap.append(sources);
+  const tip=document.createElement('p');tip.textContent=timeLimit?'Try prioritizing the stage objective over optional fights.':top.some(([name])=>/musketeer|mage|mancer|toaster/.test(name))?'Watch diamond-marked ranged aim; dodge after the aim locks.':'Dodge the amber lunge, then attack during the boss’s recovery window.';recap.append(tip);el.prepend(recap);
+}
