@@ -1,5 +1,11 @@
 import { heroBalance } from './balance';
 import './style.css';
+
+function skillDamage(base:number, ratio:number, target?:Enemy):number {
+  const slashPower = 10 * (1 + (globals.playerStats?.slashBonusDmgPct || 0));
+  const boss = target && ['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(target.subType);
+  return Math.max(1, Math.round((base + slashPower * ratio) * (boss ? 0.75 : 1)));
+}
 import { reducedMotion, recordFrameTime } from './comfort';
 import { initJourney, beginJourneyRun, journeyHurt, journeySkill, leaveJourney, updateJourneyHud, isBossRush } from './journey';
 import { encounterBudget } from './journeyCore';
@@ -3569,7 +3575,7 @@ function update(realDt: number) {
       if (firewheelProjectileTimer >= 0.45) {
         firewheelProjectileTimer = 0;
         const baseAngle = (performance.now() / 250);
-        const projDmg = 12 + 4 * (globals.playerStats.firewheelBlazeLevel || 0);
+        const projDmg = skillDamage(2 + 2 * (globals.playerStats.firewheelBlazeLevel || 0), 0.35);
         for (let i = 0; i < 4; i++) {
           const a = baseAngle + (i * Math.PI / 2);
           globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, a, false, projDmg, false, true));
@@ -3587,7 +3593,7 @@ function update(realDt: number) {
           const dy = e.y - globals.player.y;
           
           if (dx * dx + dy * dy < rangeSq) {
-            hitEnemy(e, 10 + 3 * (globals.playerStats.firewheelBlazeLevel || 0));
+            hitEnemy(e, skillDamage(2 + 1 * (globals.playerStats.firewheelBlazeLevel || 0), 0.12, e));
             e.burnTimer = 6.0;
             e.burnBonusDmg = (globals.playerStats.firewheelBlazeLevel || 0) + 2;
             
@@ -3659,7 +3665,6 @@ function update(realDt: number) {
     const pullRadius = 420 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0));
     const pullRadiusSq = pullRadius * pullRadius;
     const pullSpeed = 1800;
-    const tickDmg = 6 + 3 * (globals.playerStats.gravityDamageLevel || 0);
     
     if (Math.random() < 0.6) {
       const angle = Math.random() * Math.PI * 2;
@@ -3723,7 +3728,7 @@ function update(realDt: number) {
         const dx = globals.gravityWellX - e.x;
         const dy = globals.gravityWellY - e.y;
         if (dx * dx + dy * dy < pullRadiusSq) {
-          hitEnemy(e, tickDmg);
+          hitEnemy(e, skillDamage(1 + 1 * (globals.playerStats.gravityDamageLevel || 0), 0.18, e));
           for(let i=0; i<5; i++) {
             globals.particles.push(Particle.acquire(e.x, e.y, '#a855f7', 120, 0.3, 2.0));
           }
@@ -3733,7 +3738,7 @@ function update(realDt: number) {
     
     if (globals.gravityWellTimer <= 0) {
       globals.gravityWellTimer = 0;
-      const explosionDmg = 50 + 15 * (globals.playerStats.gravityExplosionLevel || 0);
+      const explosionDmg = skillDamage(10 + 3 * (globals.playerStats.gravityExplosionLevel || 0), 1.3);
       
       globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#c084fc'));
       globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#ec4899'));

@@ -81,7 +81,7 @@ export function resizeCanvas() {
   canvas.height = globals.height * currentDpr;
   ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
 
-  const targetVW = 1400;
+  const targetVW = 1650;
   globals.gameZoom = Math.min(1, globals.width / targetVW);
   globals.vw = globals.width / globals.gameZoom;
   globals.vh = globals.height / globals.gameZoom;
