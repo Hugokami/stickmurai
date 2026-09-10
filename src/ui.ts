@@ -1,3 +1,4 @@
+import { heroBalance, heroDescription } from './balance';
 import { heroComparison, renderStageBriefing, permanentPreview } from './progressionQol';
 import { renderCodex } from './codex';
 import { completeJourneyStage, masteryBadge } from './journey';
@@ -1999,15 +2000,7 @@ export const HEROES_DATA = [
     nameJa: '霧の浪人 (クラシック)',
     titleEn: 'Ronin of the Mist',
     titleJa: '疾風怒濤の流浪剣士',
-    descEn: 'The traditional stickmurai swordsman. Master of parry discipline with an expanded perfect parry window and deadly posture break.',
-    descJa: '伝統を受け継ぐ棒人間サムライ。弾きの道を極め、完璧なパリィの猶予時間が拡大し敵の体幹を激しく削る。',
-    cost: 0,
-    critChance: 0.05,
     image: '/sprites/portraits/portrait_ronin.png?v=clean2',
-    atk: '110%',
-    spd: '105%',
-    specialEn: 'Parry Prodigy (+35% Parry Window, +50% Stance Break)',
-    specialJa: '神速の弾き（パリィ判定強化・体幹削り増加）'
   },
   {
     id: 'luneblade',
@@ -2015,15 +2008,7 @@ export const HEROES_DATA = [
     nameJa: '月影の剣聖（ルーンブレイド）',
     titleEn: 'Axion Swordsman',
     titleJa: '星海を切り裂く双刃の英傑',
-    descEn: 'Wields an ethereal celestial greatsword. +35% Slash AoE, +5% Slash Damage, and +4 Iaijutsu Shockwave DMG.',
-    descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+35%、斬撃威力+5%、抜刀衝撃波威力+4。',
-    cost: 50000,
-    critChance: 0.10,
     image: '/sprites/portraits/portrait_luneblade.png?v=clean2',
-    atk: '140%',
-    spd: '100%',
-    specialEn: 'Lunar Resonance (+35% AoE, +5% Slash Damage, +4 Iai DMG)',
-    specialJa: '月華共鳴（超広範囲斬撃・抜刀術威力大幅上昇）'
   },
   {
     id: 'ninja',
@@ -2031,15 +2016,7 @@ export const HEROES_DATA = [
     nameJa: '闇夜の忍（シャドウ・シノビ）',
     titleEn: 'Silent Assassin',
     titleJa: '影を纏いし暗殺の達人',
-    descEn: 'Lethal shadow assassin. -25% Dash Cooldown, +30% Movement Speed, 12% Base Critical Strike Chance, and phantom dash afterimages.',
-    descJa: '闇に潜み急所を討つ達人。移動速度+30%、瞬歩クールダウン-25%、会心率12%、影分身残像追撃。',
-    cost: 60000,
-    critChance: 0.12,
     image: '/sprites/portraits/portrait_ninja.png?v=clean2',
-    atk: '125%',
-    spd: '130%',
-    specialEn: 'Phantom Strike (-25% Dash CD, 12% Base Crit Chance)',
-    specialJa: '幻影瞬歩（高速離脱・会心率上昇・影の追撃）'
   },
   {
     id: 'samurai',
@@ -2047,15 +2024,7 @@ export const HEROES_DATA = [
     nameJa: '極意の侍（グランドマスター）',
     titleEn: 'Kensei of the Blade',
     titleJa: '一騎当千の剣聖武士',
-    descEn: 'Supreme master of Bushido. -35% Attack Cooldown. Every 3rd basic attack unleashes a devastating 360° cross-cleave!',
-    descJa: '武士道を極めし孤高の剣聖。攻撃クールダウン-35%。通常連撃3段目で全方位360度十文字回転斬りを放つ！',
-    cost: 75000,
-    critChance: 0.15,
     image: '/sprites/portraits/portrait_samurai.png?v=clean2',
-    atk: '150%',
-    spd: '115%',
-    specialEn: 'Kensei Rapid Arts (-35% Atk CD, 360° Cleave)',
-    specialJa: '剣聖の連撃（攻撃速度大幅上昇・全方位十文字連撃）'
   },
   {
     id: 'nightborne',
@@ -2063,15 +2032,7 @@ export const HEROES_DATA = [
     nameJa: '常世の覇王（ナイトボーン）',
     titleEn: 'Abyssal Lord',
     titleJa: '冥府の深淵より現れし覇王',
-    descEn: 'Immortal void lord from the nether realms. +8% Slash Damage, +6 Iai DMG. Executions restore +1 Heart and siphon +25 Magatama!',
-    descJa: '深淵の冥府より来たりし不死の覇王。斬撃威力+8%、抜刀威力+6。処刑成功時に体力を1回復し追加で25勾玉を奪う！',
-    cost: 100000,
-    critChance: 0.18,
     image: '/sprites/portraits/portrait_nightborne.png?v=clean2',
-    atk: '165%',
-    spd: '110%',
-    specialEn: 'Abyssal Calamity (+1 Heart & +25 🔮 on Executions)',
-    specialJa: '深淵の天災（処刑時体力回復・追加勾玉獲得・虚無焔）'
   },
   {
     id: 'satyr',
@@ -2079,15 +2040,7 @@ export const HEROES_DATA = [
     nameJa: '原始の森神（サテュロス）',
     titleEn: 'Apex Nature Titan',
     titleJa: '深林を支配せし森羅の主',
-    descEn: 'Ancient demigod of wild tempest and stone. -18% Atk CD, +5% Slash Damage, +4 Iai DMG, +25% Slash AoE. Executions trigger Earthshaker Tremor staggering all foes!',
-    descJa: '大自然の怒りと剛力を宿す太古の半神。攻撃クールダウン-18%、斬撃+5%、抜刀+4、斬撃範囲+25%。処刑成功時に大地を震撼させ全周囲の敵を圧倒する！',
-    cost: 150000,
-    critChance: 0.21,
     image: '/sprites/portraits/portrait_satyr.png?v=clean2',
-    atk: '185%',
-    spd: '125%',
-    specialEn: 'Earthshaker Tremor (Screen Emerald Tremor on Executions, Emerald Thorns)',
-    specialJa: '天変地異の震撃（処刑時全周囲震撃・翡翠の棘刃・花嵐疾走）'
   },
   {
     id: 'akakage',
@@ -2095,17 +2048,15 @@ export const HEROES_DATA = [
     nameJa: '紅影・クリムゾン・レヴナント',
     titleEn: 'Crimson Revenant',
     titleJa: '紅蓮の亡影',
-    descEn: 'An overpowered crimson duelist who turns every dash into a second strike. Faster movement, rapid attacks, huge slash reach, and critical hits.',
-    descJa: '瞬歩そのものを追撃へ変える紅蓮の剣士。高速移動・連撃・広範囲斬撃・会心を極める。',
-    cost: 350000,
-    critChance: 0.25,
     image: '/sprites/portraits/portrait_akakage.png?v=akakage1',
-    atk: '210%',
-    spd: '140%',
-    specialEn: 'Crimson Aftermath (Every basic slash echoes once after 0.14s)',
-    specialJa: '紅蓮残影（通常斬撃が0.14秒後に一度だけ追撃する）'
   }
-];
+].map(hero => {
+  const stats = heroBalance(hero.id);
+  return {...hero, cost:stats.cost, critChance:stats.crit,
+    atk:`${Math.round((1+stats.slash)*100)}%`, spd:`${Math.round(stats.move*100)}%`,
+    descEn:heroDescription(hero.id), descJa:heroDescription(hero.id,true),
+    specialEn:stats.passiveEn, specialJa:stats.passiveJa};
+});
 
 export function refreshAllMagatamaDisplays() {
   const formatted = (globals.magatama || 0).toLocaleString();

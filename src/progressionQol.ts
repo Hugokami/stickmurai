@@ -1,3 +1,4 @@
+import { heroBalance } from './balance';
 import { globals } from './globals';
 import { safeStorage } from './storage';
 import './progressionQol.css';
@@ -60,14 +61,12 @@ export function renderStageBriefing(stage: number, anchor: HTMLElement) {
   try { const best=JSON.parse(safeStorage.getItem('stickmurai_stage_bests')||'{}')[stage]; if(best && [best.time,best.damage,best.combo].every(Number.isFinite)) { const p=document.createElement('div'); p.textContent=`${ja?'自己ベスト':'Personal best'}: ${num(best.time)}s · ${best.damage} ${ja?'被ダメージ':'damage taken'} · ${best.combo} combo`; el.append(p); } } catch { /* Invalid optional records never block stage selection. */ }
 }
 
-// Baseline archetype modifiers, verified against initGame in main.ts.
-const heroStats: Record<string,number[]>={default:[0,1.05,1,1,1,.05],luneblade:[.05,1,1,1,1.35,.10],ninja:[0,1.3,.85,.75,1,.12],samurai:[.03,1.15,.65,1,1,.15],nightborne:[.08,1.1,1,1,1.4,.18],satyr:[.05,1.12,.82,1,1.25,.21],akakage:[.12,1.2,.72,.82,1.35,.25]};
 export function heroComparison(id:string):string {
- const a=heroStats[id]||heroStats.default,b=heroStats[globals.selectedHero]||heroStats.default;
- const labels=['Bonus slash DMG','Move speed ×','Attack cooldown ×','Dash cooldown ×','Slash size ×','Crit chance'];
- return `<div class="qol-upgrade-details"><strong>${globals.currentLang==='ja'?'装備中 → この英雄':'Equipped → this hero'}</strong>${a.map((n,i)=>`<span>${labels[i]}: ${(i===0 || i===5) ? `${num(b[i]*100)}% → ${num(n*100)}%` : `${num(b[i])} → ${num(n)}`}</span>`).join('')}</div>`;
+ const values=(heroId:string)=>{const h=heroBalance(heroId);return [h.slash,h.move,h.attack,h.dash,h.area,h.crit,h.skillCooldown,h.iai]};
+ const a=values(id),b=values(globals.selectedHero);
+ const labels=['Bonus slash damage','Move speed ×','Attack cooldown ×','Dash cooldown ×','Slash size ×','Base crit chance','Skill cooldown ×','Bonus Iaijutsu damage'];
+ return `<div class="qol-upgrade-details"><strong>${globals.currentLang==='ja'?'装備中 → この英雄':'Equipped → this hero'}</strong>${a.map((n,i)=>`<span>${labels[i]}: ${i===0||i===5?`${num(b[i]*100)}% → ${num(n*100)}%`:`${num(b[i])} → ${num(n)}`}</span>`).join('')}</div>`;
 }
-
 export function permanentPreview(id: string, level: number, max: number, endless: boolean): string {
  const next=endless?level+1:Math.min(max,level+1);
  const effects:Record<string,[string,number,string]>={slashDamage:['Bonus slash damage',1,'%'],iaijutsuPower:['Bonus Iaijutsu damage',1,''],maxLives:['Extra hearts',1,''],dashCooldown:['Dash cooldown reduction',.08,'s'],spiritResonance:['Bonus flow gain',15,'%'],infiniteSharpness:['Bonus slash damage',.5,'%'],infiniteFlow:['Bonus flow gain',1,'%'],infiniteFortune:['Bonus Magatama',2,'%'],infiniteRiposte:['Bonus posture damage',1,'']};

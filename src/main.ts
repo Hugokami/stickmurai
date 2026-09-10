@@ -1,3 +1,4 @@
+import { heroBalance } from './balance';
 import './style.css';
 import { reducedMotion, recordFrameTime } from './comfort';
 import { initJourney, beginJourneyRun, journeyHurt, journeySkill, leaveJourney, updateJourneyHud, isBossRush } from './journey';
@@ -1059,47 +1060,17 @@ function initGame() {
     critChanceBonus: 0,
     executionLevel: 0
   };
-  // Hero-authored combat stats are the single source of truth.
-  const heroDefinition = HEROES_DATA.find(h => h.id === globals.selectedHero) as any;
-  globals.playerStats.heroCritChance = Math.max(0, Math.min(0.25, heroDefinition?.critChance || 0));
-
-  // Apply Hero Archetype Perks & update sprite type
-  if (globals.selectedHero === 'luneblade') {
-    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.05;
-    globals.playerStats.slashSizeMult *= 1.35;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 4;
-  } else if (globals.selectedHero === 'ninja') {
-    globals.playerStats.moveSpeedMult *= 1.30;
-    globals.playerStats.dashCooldownBase *= 0.75;
-    globals.playerStats.attackCooldownBase *= 0.85;
-  } else if (globals.selectedHero === 'samurai') {
-    globals.playerStats.moveSpeedMult *= 1.15;
-    globals.playerStats.attackCooldownBase *= 0.65; // -35% attack cooldown (Kensei Rapid Arts)
-    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.03;
-  } else if (globals.selectedHero === 'nightborne') {
-    globals.playerStats.moveSpeedMult *= 1.10;
-    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.08;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 6;
-    globals.playerStats.slashSizeMult *= 1.40;
-  } else if (globals.selectedHero === 'satyr') {
-    globals.playerStats.moveSpeedMult *= 1.12;
-    globals.playerStats.attackCooldownBase *= 0.82; // -18% attack cooldown (Primal Ferocity)
-    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.05;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 4;
-    globals.playerStats.slashSizeMult *= 1.25; // +25% slash AoE
-    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + 8;
-  } else if (globals.selectedHero === 'akakage') {
-    // Akakage, the Crimson Revenant: expensive glass-cannon duelist.
-    globals.playerStats.moveSpeedMult *= 1.20;
-    globals.playerStats.attackCooldownBase *= 0.72;
-    globals.playerStats.dashCooldownBase *= 0.82;
-    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.12;
-    globals.playerStats.slashSizeMult *= 1.35;
-  } else {
-    // Default Classic Ronin (Parry Prodigy)
-    globals.playerStats.moveSpeedMult *= 1.05;
-    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + 12;
-  }
+  // One shared balance table drives both run initialization and Dojo comparisons.
+  const hero = heroBalance(globals.selectedHero);
+  globals.playerStats.heroCritChance = hero.crit;
+  globals.playerStats.slashBonusDmgPct = hero.slash;
+  globals.playerStats.moveSpeedMult *= hero.move;
+  globals.playerStats.attackCooldownBase *= hero.attack;
+  globals.playerStats.dashCooldownBase *= hero.dash;
+  globals.playerStats.slashSizeMult *= hero.area;
+  globals.playerStats.iaijutsuBonusDmg = hero.iai;
+  globals.playerStats.postureDmgBonus = hero.posture;
+  globals.playerStats.enhanceCooldownMax *= hero.skillCooldown;
   globals.player?.updateHeroType();
   
   // Apply pre-game Stance Blessings
@@ -2527,19 +2498,19 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     playMagatamaPickup(0.65);
     globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🔮`, '#c084fc', 22));
 
-    // Nightborne Sovereign execution passive: Soul Siphon restores +1 Heart and siphons +25 extra Magatama
+    // Nightborne Sovereign execution passive: Soul Siphon restores +1 Heart and siphons +35 extra Magatama
     if (globals.selectedHero === 'nightborne') {
       globals.lives = Math.min(globals.maxLives, globals.lives + 1);
-      globals.magatama = (globals.magatama || 0) + 25;
+      globals.magatama = (globals.magatama || 0) + 35;
       safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
       playMagatamaPickup(1.0);
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "+1 ❤️ SOUL SIPHON! (+25 🔮)", "#c084fc", 26));
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "+1 ❤️ SOUL SIPHON! (+35 🔮)", "#c084fc", 26));
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
     }
 
-    // Primal Satyr Sovereign execution passive: Earthshaker Tremor (balanced with 4.5s ICD & target cap)
+    // Primal Satyr Sovereign execution passive: Earthshaker Tremor (balanced with 5s ICD & target cap)
     if (globals.selectedHero === 'satyr' && (globals.satyrEarthshakerCD || 0) <= 0) {
-      globals.satyrEarthshakerCD = 4.5;
+      globals.satyrEarthshakerCD = 5;
       globals.screenShake = Math.max(globals.screenShake, 18);
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#10b981', 200));
       playPrimalZap(0.9);
@@ -2554,12 +2525,12 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
         const ody = other.y - globals.player.y;
         if (odx * odx + ody * ody < 350 * 350) {
           staggeredCount++;
-          other.addPostureDamage(28);
+          other.addPostureDamage(32);
           other.knockbackTimer = 0.4;
           const kAng = Math.atan2(ody, odx);
           other.knockbackVx = Math.cos(kAng) * 600;
           other.knockbackVy = Math.sin(kAng) * 600;
-          other.hp -= 15;
+          other.hp -= 18;
           if (other.hp <= 0) killEnemy(other);
         }
       }
@@ -3070,8 +3041,9 @@ function update(realDt: number) {
       playSynthesizedTempleBell();
       const shogun = new Enemy(globals.player.x + 350, globals.player.y, globals.player);
       shogun.subType = 'shogun_boss';
-      shogun.hp = 350;
-      shogun.maxHp = 350;
+      shogun.hp = 263;
+      shogun.maxHp = 263;
+      shogun.hpDelayed = 263;
       (shogun as any).isBoss = true;
       (shogun as any).isSupremeShogun = true;
       globals.enemies.push(shogun);
@@ -4609,6 +4581,7 @@ function update(realDt: number) {
         const echoAngle = angle;
         const echoX = globals.player.x;
         const echoY = globals.player.y;
+        const echoDamage = Math.min(12, dmg * 0.45);
         globals.delayedActions.push({
           delay: 0.14,
           run: () => {
@@ -4623,7 +4596,7 @@ function update(realDt: number) {
               false,
               globals.player
             ));
-            globals.projectiles.push(Projectile.acquire(echoX, echoY, echoAngle, false, 1.5, false, true));
+            globals.projectiles.push(Projectile.acquire(echoX, echoY, echoAngle, false, echoDamage, false, true));
           }
         });
       }
@@ -4631,6 +4604,16 @@ function update(realDt: number) {
       // Grandmaster Samurai passive: Kensei 360-degree cross-cleave on every 3rd strike
       if (globals.selectedHero === 'samurai' && globals.comboSlashesCount >= 3 && attackPower < 1.7) {
         globals.comboSlashesCount = 0;
+        let cleaveHits = 0;
+        const cleaveRadius = 120 * size;
+        for (const target of globals.enemies) {
+          if (cleaveHits >= 5 || globals.gameState !== 'playing') break;
+          if (target.state === 'dead' || target.isPvpRemote) continue;
+          const dx = target.x - globals.player.x, dy = target.y - globals.player.y;
+          if (dx * dx + dy * dy > cleaveRadius * cleaveRadius) continue;
+          cleaveHits++;
+          hitEnemy(target, dmg * 0.5);
+        }
         for (let a = 0; a < Math.PI * 2; a += Math.PI / 2) {
           globals.slashes.push(Slash.acquire(
             globals.player.x + Math.cos(a) * 50,

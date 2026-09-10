@@ -1,4 +1,5 @@
 import { globals } from './globals';
+import { BOSS_BASE_HP, campaignHpMultiplier } from './balance';
 import { callbacks } from './callbacks';
 import { Entity, Particle, FloatingText, Projectile, AnimatedEffect, Shockwave } from './entities';
 import { Player } from './player';
@@ -352,7 +353,7 @@ export class Enemy extends Entity {
     } else if (this.subType === 'oni_boss') {
       this.type = 'skeleton';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.9; this.lungeDuration = 0.8;
-      this.scaleMult = 2.2; this.hp = this.maxHp = 200; this.expValue = 15;
+      this.scaleMult = 2.2; this.hp = this.maxHp = BOSS_BASE_HP.oni_boss; this.expValue = 15;
       this.colorTint = 'none';
       this.speed = 270;
       this.maxPosture = 280;
@@ -373,14 +374,14 @@ export class Enemy extends Entity {
     } else if (this.subType === 'agis_colossus') {
       this.type = 'boss_agis';
       this.lungeSpeed = 700; this.chargeTimeMax = 2.2; this.lungeDuration = 0.8;
-      this.scaleMult = 1.6; this.hp = this.maxHp = 340; this.expValue = 30;
+      this.scaleMult = 1.6; this.hp = this.maxHp = BOSS_BASE_HP.agis_colossus; this.expValue = 30;
       this.colorTint = 'none';
       this.speed = 190;
       this.maxPosture = 380;
     } else if (this.subType === 'skeleton_warlord') {
       this.type = 'boss_skeleton';
       this.lungeSpeed = 900; this.chargeTimeMax = 2.0; this.lungeDuration = 0.75;
-      this.scaleMult = 1.0; this.hp = this.maxHp = 300; this.expValue = 35;
+      this.scaleMult = 1.0; this.hp = this.maxHp = BOSS_BASE_HP.skeleton_warlord; this.expValue = 35;
       this.colorTint = 'none';
       this.speed = 220;
       this.maxPosture = 340;
@@ -394,7 +395,7 @@ export class Enemy extends Entity {
     } else { // shogun_boss
       this.type = 'evil_wizard';
       this.lungeSpeed = 1350; this.chargeTimeMax = 1.7; this.lungeDuration = 0.6;
-      this.scaleMult = 2.0; this.hp = this.maxHp = 260; this.expValue = 20;
+      this.scaleMult = 2.0; this.hp = this.maxHp = BOSS_BASE_HP.shogun_boss; this.expValue = 20;
       this.colorTint = 'none';
       this.speed = 280;
       this.maxPosture = 320;
@@ -413,7 +414,7 @@ export class Enemy extends Entity {
       }
       
       // Progressive endless scaling: keeps grunts killable in 1-3 clean strikes while steadily raising challenge
-      const stageHpMult = 1.5 * (isBoss ? (1.0 + (stage - 1) * 0.22) : (1.0 + (stage - 1) * 0.16));
+      const stageHpMult = campaignHpMultiplier(stage, isBoss);
       const stageSpeedMult = Math.min(1.55, 1.0 + (stage - 1) * 0.035);
       const stageChargeMult = Math.max(0.55, 1.0 - (stage - 1) * 0.03);
 
