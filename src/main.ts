@@ -2,7 +2,8 @@ import { heroBalance } from './balance';
 import './style.css';
 
 function skillDamage(base:number, ratio:number, target?:Enemy):number {
-  const slashPower = 10 * (1 + (globals.playerStats?.slashBonusDmgPct || 0));
+  // A basic slash is roughly one damage; skills should feel like deliberate multi-slash bursts.
+  const slashPower = 20 * (1 + (globals.playerStats?.slashBonusDmgPct || 0));
   const boss = target && ['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(target.subType);
   return Math.max(1, Math.round((base + slashPower * ratio) * (boss ? 0.75 : 1)));
 }
@@ -1801,32 +1802,32 @@ function fireFullyChargedIaijutsu(angle: number) {
       txtLabel = "🔥 DRAGON IAIJUTSU! 🔥";
     } else if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'shield';
-      projDmg = 10;
+      projDmg = skillDamage(2, 0.95);
       txtColor = '#00ffc8';
       txtLabel = "🌀 TORNADO IAIJUTSU! 🌀";
     } else if (globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'firewheel';
-      projDmg = 11;
+      projDmg = skillDamage(2, 0.85);
       txtColor = '#ff8800';
       txtLabel = "🔥 INFERNO IAIJUTSU! 🔥";
     } else if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'gravity';
-      projDmg = 9;
+      projDmg = skillDamage(3, 1.05);
       txtColor = '#c084fc';
       txtLabel = "🌌 GRAVITY IAIJUTSU! 🌌";
     } else if (globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'parry';
-      projDmg = 10;
+      projDmg = skillDamage(3, 1.0);
       txtColor = '#ffd700';
       txtLabel = "🛡️ PARRY IAIJUTSU! 🛡️";
     } else if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'decoy';
-      projDmg = 12;
+      projDmg = skillDamage(4, 1.15);
       txtColor = '#a855f7';
       txtLabel = "👤 DECOY IAIJUTSU! 👤";
     } else if (globals.selectedSkill === 'dash' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'storm_god';
-      projDmg = 12;
+      projDmg = skillDamage(3, 0.9);
       txtColor = '#fbbf24';
       txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
     }
@@ -3575,7 +3576,7 @@ function update(realDt: number) {
       if (firewheelProjectileTimer >= 0.45) {
         firewheelProjectileTimer = 0;
         const baseAngle = (performance.now() / 250);
-        const projDmg = skillDamage(2 + 2 * (globals.playerStats.firewheelBlazeLevel || 0), 0.35);
+        const projDmg = skillDamage(2 + 2 * (globals.playerStats.firewheelBlazeLevel || 0), 0.8);
         for (let i = 0; i < 4; i++) {
           const a = baseAngle + (i * Math.PI / 2);
           globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, a, false, projDmg, false, true));
@@ -3593,7 +3594,7 @@ function update(realDt: number) {
           const dy = e.y - globals.player.y;
           
           if (dx * dx + dy * dy < rangeSq) {
-            hitEnemy(e, skillDamage(2 + 1 * (globals.playerStats.firewheelBlazeLevel || 0), 0.12, e));
+            hitEnemy(e, skillDamage(2 + 1 * (globals.playerStats.firewheelBlazeLevel || 0), 0.24, e));
             e.burnTimer = 6.0;
             e.burnBonusDmg = (globals.playerStats.firewheelBlazeLevel || 0) + 2;
             
@@ -3728,7 +3729,7 @@ function update(realDt: number) {
         const dx = globals.gravityWellX - e.x;
         const dy = globals.gravityWellY - e.y;
         if (dx * dx + dy * dy < pullRadiusSq) {
-          hitEnemy(e, skillDamage(1 + 1 * (globals.playerStats.gravityDamageLevel || 0), 0.18, e));
+          hitEnemy(e, skillDamage(1 + 1 * (globals.playerStats.gravityDamageLevel || 0), 0.32, e));
           for(let i=0; i<5; i++) {
             globals.particles.push(Particle.acquire(e.x, e.y, '#a855f7', 120, 0.3, 2.0));
           }
@@ -3738,7 +3739,7 @@ function update(realDt: number) {
     
     if (globals.gravityWellTimer <= 0) {
       globals.gravityWellTimer = 0;
-      const explosionDmg = skillDamage(10 + 3 * (globals.playerStats.gravityExplosionLevel || 0), 1.3);
+      const explosionDmg = skillDamage(10 + 3 * (globals.playerStats.gravityExplosionLevel || 0), 2.0);
       
       globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#c084fc'));
       globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#ec4899'));
