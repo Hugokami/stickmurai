@@ -3759,3 +3759,4 @@ html.qol-left:not(.qol-touch-custom) #action-buttons > button { scale: -1 1; }
   #shrine-modal-feat { margin-bottom: 8px !important; }
 }
 
+#boss-location-indicator{position:fixed;left:50%;top:48%;z-index:140;pointer-events:none;color:#fecaca;background:rgba(127,29,29,.88);border:2px solid #fb7185;border-radius:999px;padding:8px 14px;font:800 12px/1 'Outfit',sans-serif;letter-spacing:.08em;box-shadow:0 0 18px rgba(248,113,113,.6)}

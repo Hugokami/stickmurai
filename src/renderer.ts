@@ -240,6 +240,23 @@ export function draw() {
   ctx.clearRect(0, 0, globals.width, globals.height);
   drawBackground(ctx);
 
+  // Boss locator: keep the player oriented during boss stages without darkening the scene.
+  const boss = globals.enemies.find(e => e.state !== 'dead' && ['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(e.subType));
+  const locator = document.getElementById('boss-location-indicator');
+  if (locator) {
+    if (boss && globals.gameState === 'playing') {
+      const dx = boss.x - globals.player.x, dy = boss.y - globals.player.y;
+      const dist = Math.round(Math.hypot(dx, dy));
+      const visible = Math.abs(dx) < globals.vw * .45 && Math.abs(dy) < globals.vh * .45;
+      locator.hidden = visible;
+      if (!visible) {
+        const angle = Math.atan2(dy, dx);
+        locator.textContent = `BOSS  ${dist}m  ${angle > -Math.PI/2 && angle < Math.PI/2 ? '▶' : '◀'}`;
+        locator.style.transform = `translate(-50%, -50%) rotate(${angle}rad)`;
+      }
+    } else locator.hidden = true;
+  }
+
   // Lift the atmospheric high-quality background before gameplay is drawn.
   if (globals.graphicsSettings !== 'low') {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';

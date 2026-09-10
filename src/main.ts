@@ -2448,6 +2448,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   const powerupCritChance = Math.min(0.4, globals.playerStats?.critChanceBonus || 0);
   const critChance = Math.min(1.0, heroCritChance + powerupCritChance);
   const isCrit = Math.random() < critChance;
+  globals.guaranteedCrit = false;
   
   let finalDmg = dmg;
 
