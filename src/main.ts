@@ -1019,7 +1019,7 @@ function initGame() {
   const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 10.0 : (globals.selectedSkill === 'dash' ? 0.9 : (globals.selectedSkill === 'firewheel' ? 11.0 : (globals.selectedSkill === 'gravity' ? 9.0 : (globals.selectedSkill === 'parry_master' ? 9.0 : (globals.selectedSkill === 'decoy_illusion' ? 12.0 : 14.0))))));
   const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 4.5 : (globals.selectedSkill === 'dash' ? 0.45 : (globals.selectedSkill === 'firewheel' ? 6.0 : (globals.selectedSkill === 'gravity' ? 4.5 : (globals.selectedSkill === 'parry_master' ? 4.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
   globals.playerStats = { 
-    slashBonusDmg: 0,
+    slashBonusDmgPct: 0,
     iaijutsuBonusDmg: 0,
     slashSizeMult: 1.0, 
     attackCooldownBase: 0.3, 
@@ -1062,7 +1062,7 @@ function initGame() {
 
   // Apply Hero Archetype Perks & update sprite type
   if (globals.selectedHero === 'luneblade') {
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 2;
+    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.05;
     globals.playerStats.slashSizeMult *= 1.35;
     globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 4;
   } else if (globals.selectedHero === 'ninja') {
@@ -1073,16 +1073,16 @@ function initGame() {
   } else if (globals.selectedHero === 'samurai') {
     globals.playerStats.moveSpeedMult *= 1.15;
     globals.playerStats.attackCooldownBase *= 0.65; // -35% attack cooldown (Kensei Rapid Arts)
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 1;
+    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.03;
   } else if (globals.selectedHero === 'nightborne') {
     globals.playerStats.moveSpeedMult *= 1.10;
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 3;
+    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.08;
     globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 6;
     globals.playerStats.slashSizeMult *= 1.40;
   } else if (globals.selectedHero === 'satyr') {
     globals.playerStats.moveSpeedMult *= 1.12;
     globals.playerStats.attackCooldownBase *= 0.82; // -18% attack cooldown (Primal Ferocity)
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 2;
+    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.05;
     globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 4;
     globals.playerStats.slashSizeMult *= 1.25; // +25% slash AoE
     globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + 8;
@@ -1091,7 +1091,7 @@ function initGame() {
     globals.playerStats.moveSpeedMult *= 1.20;
     globals.playerStats.attackCooldownBase *= 0.72;
     globals.playerStats.dashCooldownBase *= 0.82;
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 5;
+    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.12;
     globals.playerStats.slashSizeMult *= 1.35;
     globals.playerStats.heroCritChance = (globals.playerStats.heroCritChance || 0) + 0.25;
   } else {
@@ -1136,7 +1136,7 @@ function initGame() {
     const infFortune = cu.infiniteFortune ?? 0;
     const infRiposte = cu.infiniteRiposte ?? 0;
 
-    globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + slashLvl * 0.5 + infSharpness * 0.25;
+    globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + slashLvl * 0.01 + infSharpness * 0.005;
     globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + iaijutsuLvl * 1;
     globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + iaijutsuLvl * 0.08;
     globals.maxLives += hpLvl;
@@ -4584,9 +4584,8 @@ function update(realDt: number) {
           globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));
         }
       }
-      if (globals.playerStats.slashBonusDmg) {
-        dmg += globals.playerStats.slashBonusDmg;
-      }
+      const slashPct = globals.playerStats.slashBonusDmgPct || 0;
+      if (slashPct) dmg *= 1 + slashPct;
       
       if (attackPower >= 1.7) {
         fireFullyChargedIaijutsu(angle);

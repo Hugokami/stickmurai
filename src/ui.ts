@@ -703,7 +703,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
         if (globals.maxLives > 1) {
           globals.maxLives--;
           globals.lives = Math.min(globals.lives, globals.maxLives);
-          globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 2;
+          globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.05;
           globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '血刀の誓い成立！ +2 攻撃力' : 'BLOODBLADE SEALED! +2 DMG', '#ef4444', 28));
         }
       } else if (hermit.pactType === 'speed') {
@@ -744,7 +744,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       } else {
         globals.petalArmorActive = false;
         globals.petalArmorCooldown = 30;
-        globals.playerStats.slashBonusDmg = (globals.playerStats.slashBonusDmg || 0) + 1;
+        globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.03;
         globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 2;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, isJa ? '天恵拝領！ 抜刀威力向上' : 'ASCETIC GIFT! +2 IAI DMG', '#10b981', 28));
       }
@@ -1658,6 +1658,13 @@ export function updateUI() {
   }
   
   if (globals.lives !== lastLives || globals.maxLives !== lastRenderedMaxLives) {
+    const heartsHost = document.getElementById('hearts-container');
+    if (heartsHost && globals.maxLives > heartsHost.querySelectorAll('.heart').length) {
+      for (let i = heartsHost.querySelectorAll('.heart').length; i < globals.maxLives; i++) {
+        const h = document.createElement('span'); h.className = 'heart'; h.textContent = '❤️'; heartsHost.appendChild(h);
+      }
+      heartsElements = heartsHost.querySelectorAll('.heart');
+    }
     if (heartsElements) {
       heartsElements.forEach((h, i) => {
         if (i >= globals.maxLives) {

@@ -69,7 +69,7 @@ export const globals = {
   },
 
   playerStats: { 
-    slashBonusDmg: 0,
+    slashBonusDmgPct: 0,
     iaijutsuBonusDmg: 0,
     slashSizeMult: 1.0, 
     attackCooldownBase: 0.3, 
