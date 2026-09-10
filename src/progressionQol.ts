@@ -61,17 +61,18 @@ export function renderStageBriefing(stage: number, anchor: HTMLElement) {
 }
 
 // Baseline archetype modifiers, verified against initGame in main.ts.
-const heroStats: Record<string,number[]>={default:[0,1.05,1,1,1,0],luneblade:[2,1,1,1,1.35,0],ninja:[0,1.3,.85,.75,1,0.2],samurai:[1,1.15,.65,1,1,0],nightborne:[3,1.1,1,1,1.4,0],satyr:[2,1.12,.82,1,1.25,0],akakage:[5,1.2,.72,.82,1.35,0.25]};
+const heroStats: Record<string,number[]>={default:[0,1.05,1,1,1,.05],luneblade:[.05,1,1,1,1.35,.10],ninja:[0,1.3,.85,.75,1,.12],samurai:[.03,1.15,.65,1,1,.15],nightborne:[.08,1.1,1,1,1.4,.18],satyr:[.05,1.12,.82,1,1.25,.21],akakage:[.12,1.2,.72,.82,1.35,.25]};
 export function heroComparison(id:string):string {
  const a=heroStats[id]||heroStats.default,b=heroStats[globals.selectedHero]||heroStats.default;
  const labels=['Bonus slash DMG','Move speed ×','Attack cooldown ×','Dash cooldown ×','Slash size ×','Crit chance'];
- return `<div class="qol-upgrade-details"><strong>${globals.currentLang==='ja'?'装備中 → この英雄':'Equipped → this hero'}</strong>${a.map((n,i)=>`<span>${labels[i]}: ${i===5 ? `${num(b[i]*100)}% → ${num(n*100)}%` : `${num(b[i])} → ${num(n)}`}</span>`).join('')}</div>`;
+ return `<div class="qol-upgrade-details"><strong>${globals.currentLang==='ja'?'装備中 → この英雄':'Equipped → this hero'}</strong>${a.map((n,i)=>`<span>${labels[i]}: ${(i===0 || i===5) ? `${num(b[i]*100)}% → ${num(n*100)}%` : `${num(b[i])} → ${num(n)}`}</span>`).join('')}</div>`;
 }
 
 export function permanentPreview(id: string, level: number, max: number, endless: boolean): string {
  const next=endless?level+1:Math.min(max,level+1);
- const effects:Record<string,[string,number,string]>={slashDamage:['Bonus slash damage',.5,''],iaijutsuPower:['Bonus Iaijutsu damage',1,''],maxLives:['Extra hearts',1,''],dashCooldown:['Dash cooldown reduction',.08,'s'],spiritResonance:['Bonus flow gain',15,'%'],infiniteSharpness:['Bonus slash damage',.25,''],infiniteFlow:['Bonus flow gain',1,'%'],infiniteFortune:['Bonus Magatama',2,'%'],infiniteRiposte:['Bonus posture damage',1,'']};
+ const effects:Record<string,[string,number,string]>={slashDamage:['Bonus slash damage',1,'%'],iaijutsuPower:['Bonus Iaijutsu damage',1,''],maxLives:['Extra hearts',1,''],dashCooldown:['Dash cooldown reduction',.08,'s'],spiritResonance:['Bonus flow gain',15,'%'],infiniteSharpness:['Bonus slash damage',.5,'%'],infiniteFlow:['Bonus flow gain',1,'%'],infiniteFortune:['Bonus Magatama',2,'%'],infiniteRiposte:['Bonus posture damage',1,'']};
  const effect=effects[id];
  if(!effect)return '';
  return `<div>${effect[0]}: ${num(level*effect[1])}${effect[2]} → ${num(next*effect[1])}${effect[2]}${id==='dashCooldown'?' (cooldown floor 0.4s)':''}${id==='iaijutsuPower'?` · Range: +${level*8}% → +${next*8}%`:''}</div>`;
 }
+

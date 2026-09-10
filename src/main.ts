@@ -1059,6 +1059,9 @@ function initGame() {
     critChanceBonus: 0,
     executionLevel: 0
   };
+  // Hero-authored combat stats are the single source of truth.
+  const heroDefinition = HEROES_DATA.find(h => h.id === globals.selectedHero) as any;
+  globals.playerStats.heroCritChance = Math.max(0, Math.min(0.25, heroDefinition?.critChance || 0));
 
   // Apply Hero Archetype Perks & update sprite type
   if (globals.selectedHero === 'luneblade') {
@@ -1069,7 +1072,6 @@ function initGame() {
     globals.playerStats.moveSpeedMult *= 1.30;
     globals.playerStats.dashCooldownBase *= 0.75;
     globals.playerStats.attackCooldownBase *= 0.85;
-    globals.playerStats.heroCritChance = (globals.playerStats.heroCritChance || 0) + 0.20;
   } else if (globals.selectedHero === 'samurai') {
     globals.playerStats.moveSpeedMult *= 1.15;
     globals.playerStats.attackCooldownBase *= 0.65; // -35% attack cooldown (Kensei Rapid Arts)
@@ -1093,7 +1095,6 @@ function initGame() {
     globals.playerStats.dashCooldownBase *= 0.82;
     globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.12;
     globals.playerStats.slashSizeMult *= 1.35;
-    globals.playerStats.heroCritChance = (globals.playerStats.heroCritChance || 0) + 0.25;
   } else {
     // Default Classic Ronin (Parry Prodigy)
     globals.playerStats.moveSpeedMult *= 1.05;

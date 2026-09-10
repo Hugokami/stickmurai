@@ -1,4 +1,5 @@
 import { globals } from './globals';
+import { discoverCodex } from './codex';
 import { callbacks } from './callbacks';
 import type { Enemy } from './enemy';
 import { hazardContains } from './journeyCore';
@@ -18,6 +19,7 @@ export function bossStatus():string {
 }
 export function updateCombatPolish(dt:number){
   if(globals.gameMode!=='classic'||isPractice()||globals.gameState!=='playing')return;
+  discoverCodex();
   for(const e of globals.enemies){
     if(e.state==='dead'||!isBoss(e))continue;
     let memory=memories.get(e);if(!memory){memory={phase:1,state:e.state,cooldown:5};memories.set(e,memory);}

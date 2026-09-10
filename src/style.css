@@ -197,6 +197,8 @@ canvas.inverted {
 /* Hearts display */
 #hearts-container {
   display: flex;
+  flex-wrap: wrap;
+  max-width: min(280px, 45vw);
   gap: 6px;
   font-size: clamp(18px, 4vw, 24px);
 }

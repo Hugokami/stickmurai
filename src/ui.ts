@@ -1,4 +1,5 @@
 import { heroComparison, renderStageBriefing, permanentPreview } from './progressionQol';
+import { renderCodex } from './codex';
 import { completeJourneyStage, masteryBadge } from './journey';
 import { requestResume, handleBack, clearGameInputs } from './qol';
 import { globals, getStageAffix, getAscendantRank } from './globals';
@@ -79,7 +80,7 @@ export const ASCENSION_UPGRADES = [
     nameJa: '刃の研鑽',
     icon: '🗡️',
     max: 10,
-    desc: '+0.5 Slash DMG per level',
+    desc: '+1% Slash Damage per level',
     descJa: '通常斬撃ダメージ+0.5',
     baseCost: 100,
     costMult: 100,
@@ -136,7 +137,7 @@ export const ASCENSION_UPGRADES = [
     icon: '✨',
     max: 999,
     isEndless: true,
-    desc: '+0.25 Slash DMG per rank (Uncapped)',
+    desc: '+0.5% Slash Damage per rank (Uncapped)',
     descJa: '通常斬撃ダメージ+0.25 (上限なし)',
     baseCost: 400,
     costMult: 150,
@@ -1889,6 +1890,8 @@ export function populateGrimoireGrid() {
     asura_storm: 'icons/release_v1.2-single_88.png'
   };
 
+  renderCodex(grid);
+
   FUSION_RECIPES.forEach(recipe => {
     const isDiscovered = globals.discoveredFusions.includes(recipe.key) || globals.activeFusions.has(recipe.key);
     const card = document.createElement('div');
@@ -2012,14 +2015,14 @@ export const HEROES_DATA = [
     nameJa: '月影の剣聖（ルーンブレイド）',
     titleEn: 'Axion Swordsman',
     titleJa: '星海を切り裂く双刃の英傑',
-    descEn: 'Wields an ethereal celestial greatsword. +35% Slash AoE, +2 Base Slash DMG, and +4 Iaijutsu Shockwave DMG.',
-    descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+35%、基礎威力+2、抜刀衝撃波威力+4。',
+    descEn: 'Wields an ethereal celestial greatsword. +35% Slash AoE, +5% Slash Damage, and +4 Iaijutsu Shockwave DMG.',
+    descJa: '天空の霊力を帯びた双刃の大剣を振るう。通常斬撃範囲+35%、斬撃威力+5%、抜刀衝撃波威力+4。',
     cost: 50000,
     critChance: 0.10,
     image: '/sprites/portraits/portrait_luneblade.png?v=clean2',
     atk: '140%',
     spd: '100%',
-    specialEn: 'Lunar Resonance (+35% AoE, +2 Slash DMG, +4 Iai DMG)',
+    specialEn: 'Lunar Resonance (+35% AoE, +5% Slash Damage, +4 Iai DMG)',
     specialJa: '月華共鳴（超広範囲斬撃・抜刀術威力大幅上昇）'
   },
   {
@@ -2028,14 +2031,14 @@ export const HEROES_DATA = [
     nameJa: '闇夜の忍（シャドウ・シノビ）',
     titleEn: 'Silent Assassin',
     titleJa: '影を纏いし暗殺の達人',
-    descEn: 'Lethal shadow assassin. -25% Dash Cooldown, +30% Movement Speed, +20% Critical Strike Chance, and phantom dash afterimages.',
-    descJa: '闇に潜み急所を討つ達人。移動速度+30%、瞬歩クールダウン-25%、会心率+20%、影分身残像追撃。',
+    descEn: 'Lethal shadow assassin. -25% Dash Cooldown, +30% Movement Speed, 12% Base Critical Strike Chance, and phantom dash afterimages.',
+    descJa: '闇に潜み急所を討つ達人。移動速度+30%、瞬歩クールダウン-25%、会心率12%、影分身残像追撃。',
     cost: 60000,
     critChance: 0.12,
     image: '/sprites/portraits/portrait_ninja.png?v=clean2',
     atk: '125%',
     spd: '130%',
-    specialEn: 'Phantom Strike (-25% Dash CD, +20% Crit Chance)',
+    specialEn: 'Phantom Strike (-25% Dash CD, 12% Base Crit Chance)',
     specialJa: '幻影瞬歩（高速離脱・会心率上昇・影の追撃）'
   },
   {
@@ -2060,8 +2063,8 @@ export const HEROES_DATA = [
     nameJa: '常世の覇王（ナイトボーン）',
     titleEn: 'Abyssal Lord',
     titleJa: '冥府の深淵より現れし覇王',
-    descEn: 'Immortal void lord from the nether realms. +3 Slash DMG, +6 Iai DMG. Executions restore +1 Heart and siphon +25 Magatama!',
-    descJa: '深淵の冥府より来たりし不死の覇王。斬撃威力+3、抜刀威力+6。処刑成功時に体力を1回復し追加で25勾玉を奪う！',
+    descEn: 'Immortal void lord from the nether realms. +8% Slash Damage, +6 Iai DMG. Executions restore +1 Heart and siphon +25 Magatama!',
+    descJa: '深淵の冥府より来たりし不死の覇王。斬撃威力+8%、抜刀威力+6。処刑成功時に体力を1回復し追加で25勾玉を奪う！',
     cost: 100000,
     critChance: 0.18,
     image: '/sprites/portraits/portrait_nightborne.png?v=clean2',
@@ -2076,8 +2079,8 @@ export const HEROES_DATA = [
     nameJa: '原始の森神（サテュロス）',
     titleEn: 'Apex Nature Titan',
     titleJa: '深林を支配せし森羅の主',
-    descEn: 'Ancient demigod of wild tempest and stone. -18% Atk CD, +2 Slash DMG, +4 Iai DMG, +25% Slash AoE. Executions trigger Earthshaker Tremor staggering all foes!',
-    descJa: '大自然の怒りと剛力を宿す太古の半神。攻撃クールダウン-18%、斬撃+2、抜刀+4、斬撃範囲+25%。処刑成功時に大地を震撼させ全周囲の敵を圧倒する！',
+    descEn: 'Ancient demigod of wild tempest and stone. -18% Atk CD, +5% Slash Damage, +4 Iai DMG, +25% Slash AoE. Executions trigger Earthshaker Tremor staggering all foes!',
+    descJa: '大自然の怒りと剛力を宿す太古の半神。攻撃クールダウン-18%、斬撃+5%、抜刀+4、斬撃範囲+25%。処刑成功時に大地を震撼させ全周囲の敵を圧倒する！',
     cost: 150000,
     critChance: 0.21,
     image: '/sprites/portraits/portrait_satyr.png?v=clean2',
@@ -2788,3 +2791,4 @@ callbacks.openShrineCommuneModal = openShrineCommuneModal;
 callbacks.openHermitPactModal = openHermitPactModal;
 callbacks.triggerDawnVictory = triggerDawnVictory;
 callbacks.triggerStageClear = triggerStageClear;
+
