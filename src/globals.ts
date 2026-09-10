@@ -51,6 +51,7 @@ export const globals = {
   petalArmorActive: false,
   petalArmorCooldown: 0,
   echoLevel: 0,
+  levelUpRerollsRemaining: 0,
   tempoMasteryLevel: 0,
   shieldPulseTimer: 0,
   gravityWellTimer: 0,

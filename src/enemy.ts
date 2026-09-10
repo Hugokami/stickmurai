@@ -353,7 +353,7 @@ export class Enemy extends Entity {
     } else if (this.subType === 'oni_boss') {
       this.type = 'skeleton';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.9; this.lungeDuration = 0.8;
-      this.scaleMult = 2.2; this.hp = this.maxHp = BOSS_BASE_HP.oni_boss; this.expValue = 15;
+      this.scaleMult = 2.5; this.hp = this.maxHp = BOSS_BASE_HP.oni_boss; this.expValue = 15;
       this.colorTint = 'none';
       this.speed = 270;
       this.maxPosture = 280;
@@ -374,14 +374,14 @@ export class Enemy extends Entity {
     } else if (this.subType === 'agis_colossus') {
       this.type = 'boss_agis';
       this.lungeSpeed = 700; this.chargeTimeMax = 2.2; this.lungeDuration = 0.8;
-      this.scaleMult = 1.6; this.hp = this.maxHp = BOSS_BASE_HP.agis_colossus; this.expValue = 30;
+      this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.agis_colossus; this.expValue = 30;
       this.colorTint = 'none';
       this.speed = 190;
       this.maxPosture = 380;
     } else if (this.subType === 'skeleton_warlord') {
       this.type = 'boss_skeleton';
       this.lungeSpeed = 900; this.chargeTimeMax = 2.0; this.lungeDuration = 0.75;
-      this.scaleMult = 1.0; this.hp = this.maxHp = BOSS_BASE_HP.skeleton_warlord; this.expValue = 35;
+      this.scaleMult = 2.2; this.hp = this.maxHp = BOSS_BASE_HP.skeleton_warlord; this.expValue = 35;
       this.colorTint = 'none';
       this.speed = 220;
       this.maxPosture = 340;
@@ -395,7 +395,7 @@ export class Enemy extends Entity {
     } else { // shogun_boss
       this.type = 'evil_wizard';
       this.lungeSpeed = 1350; this.chargeTimeMax = 1.7; this.lungeDuration = 0.6;
-      this.scaleMult = 2.0; this.hp = this.maxHp = BOSS_BASE_HP.shogun_boss; this.expValue = 20;
+      this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.shogun_boss; this.expValue = 20;
       this.colorTint = 'none';
       this.speed = 280;
       this.maxPosture = 320;

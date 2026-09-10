@@ -64,7 +64,7 @@ export const powerUps: PowerUp[] = [
   { nameKey: "puDimensionalName", descKey: "puDimensionalDesc", apply: () => globals.playerStats.iaijutsuRangeMult += 0.3 },
   { nameKey: "puFireName", descKey: "puFireDesc", apply: () => globals.playerStats.fireStanceLevel = (globals.playerStats.fireStanceLevel || 0) + 1 },
   { nameKey: "puClonesName", descKey: "puClonesDesc", apply: () => globals.playerStats.shadowClonesLevel = (globals.playerStats.shadowClonesLevel || 0) + 1 },
-  { nameKey: "puStoutHeartName", descKey: "puStoutHeartDesc", apply: () => { globals.maxLives = Math.min(7, globals.maxLives + 1); globals.lives = Math.min(globals.maxLives, globals.lives + 1); callbacks.updateUI(); } },
+  { nameKey: "puStoutHeartName", descKey: "puStoutHeartDesc", apply: () => { globals.maxLives = Math.min(10, Math.max(globals.maxLives + 1, 7)); globals.lives = Math.min(globals.maxLives, globals.lives + 1); } },
   { nameKey: "puPetalArmorName", descKey: "puPetalArmorDesc", apply: () => { globals.petalArmorLevel++; if (!globals.petalArmorActive && globals.petalArmorCooldown <= 0) globals.petalArmorActive = true; } },
   { nameKey: "puEchoSlashName", descKey: "puEchoSlashDesc", apply: () => { globals.echoLevel++; } },
   { nameKey: "puTempoMasteryName", descKey: "puTempoMasteryDesc", apply: () => { globals.tempoMasteryLevel++; } },
@@ -264,7 +264,7 @@ export function triggerLevelUp() {
   powerChoicesContainer.innerHTML = '';
   
   // Heal 1 heart on level up
-  const maxHearts = globals.gameMode === 'zen' ? 3 : 5;
+  const maxHearts = globals.gameMode === 'zen' ? 3 : globals.maxLives;
   if (globals.lives < maxHearts) globals.lives++;
   callbacks.updateUI();
   
@@ -304,7 +304,7 @@ export function triggerLevelUp() {
   if (power.nameKey === 'puFeatherName') return s.dashCooldownBase > 0.72;
   if (power.nameKey === 'puSwiftName') return s.moveSpeedMult < 1.5;
   if (power.nameKey === 'puDeadeyeName') return (s.critChanceBonus || 0) < 0.4;
-  if (power.nameKey === 'puStoutHeartName') return globals.maxLives < 7;
+  if (power.nameKey === 'puStoutHeartName') return globals.maxLives < 10;
   return true;
   });
 
@@ -397,6 +397,8 @@ export function triggerLevelUp() {
       globals.level++;
       levelDisplay.textContent = globals.level.toString();
       levelUpScreen.style.display = 'none';
+      const existingReroll = document.getElementById('level-up-reroll-btn');
+      if (existingReroll) existingReroll.remove();
       
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, t('levelUpText'), "#00ff00", 30));
       const atkUp = (vfxAnims as any).spells?.attackUp;
@@ -411,6 +413,24 @@ export function triggerLevelUp() {
     card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(e); } });
     powerChoicesContainer.appendChild(card);
   });
+
+  // Yomi Seal V: Mirror Soul Choice Reroll
+  const existingReroll = document.getElementById('level-up-reroll-btn');
+  if (existingReroll) existingReroll.remove();
+  if (globals.levelUpRerollsRemaining > 0) {
+    const rerollBtn = document.createElement('button');
+    rerollBtn.id = 'level-up-reroll-btn';
+    rerollBtn.className = 'btn-action';
+    rerollBtn.style.cssText = 'margin: 16px auto 0; padding: 10px 24px; font-size: 15px; font-weight: bold; background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; border: 1px solid #c084fc; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);';
+    rerollBtn.innerHTML = `🎲 ${globals.currentLang === 'ja' ? '運命の再抽選 (残' : 'Reroll Choices ('}${globals.levelUpRerollsRemaining}${globals.currentLang === 'ja' ? '回)' : ' remaining)'}`;
+    rerollBtn.onclick = (e) => {
+      e.stopPropagation();
+      if (globals.levelUpRerollsRemaining <= 0) return;
+      globals.levelUpRerollsRemaining--;
+      triggerLevelUp();
+    };
+    levelUpScreen.appendChild(rerollBtn);
+  }
 }
 
 const ultOptions = [

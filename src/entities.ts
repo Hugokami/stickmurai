@@ -157,7 +157,7 @@ export class Entity {
     }
     
     let finalDir = this.dir;
-    if (this.type === 'skeleton' || this.type === 'heronightborne') {
+    if (this.type === 'skeleton') {
       finalDir = -this.dir;
     }
 
@@ -606,39 +606,43 @@ export class Projectile {
     }
 
     // Spawn cool trailing particles for player's shockwave projectile
-    if (!this.isEnemy && (this.isHuge || globals.voidStanceActive || this.enhancedType)) {
+    if (!this.isEnemy && (this.isHuge || globals.voidStanceActive || this.enhancedType || this.isEcho)) {
       const particleSpawnChance = isMobile ? 0.35 : 0.7;
       if (Math.random() < particleSpawnChance) {
         const offsetAngle = this.angle + Math.PI/2;
-        const sideOffsetRange = this.enhancedType ? (this.isHuge ? 200 : 100) : (this.isHuge ? 160 : 60);
+        const sideOffsetRange = this.isEcho ? 50 : (this.enhancedType ? (this.isHuge ? 200 : 100) : (this.isHuge ? 160 : 60));
         const sideOffset = (Math.random() - 0.5) * sideOffsetRange;
         const px = this.x + Math.cos(offsetAngle) * sideOffset;
         const py = this.y + Math.sin(offsetAngle) * sideOffset;
         
         let pColor = Math.random() > 0.5 ? '#00ffff' : '#ffffff';
-        if (globals.voidStanceActive) {
+        if (this.isEcho) {
+          pColor = Math.random() > 0.5 ? '#38bdf8' : '#c084fc';
+        } else if (globals.voidStanceActive) {
           pColor = Math.random() > 0.5 ? '#8833ff' : '#ff00ff';
         }
 
         // Custom colors for enhanced projectiles
-        if (this.enhancedType === 'dragon') {
-          pColor = Math.random() > 0.5 ? '#ff4400' : '#ffa500';
-        } else if (this.enhancedType === 'shield') {
-          pColor = Math.random() > 0.5 ? '#00ffc8' : '#ffffff';
-        } else if (this.enhancedType === 'firewheel') {
-          pColor = Math.random() > 0.5 ? '#ff8800' : '#ffcc00';
-        } else if (this.enhancedType === 'gravity') {
-          pColor = Math.random() > 0.5 ? '#c084fc' : '#8a2be2';
-        } else if (this.enhancedType === 'parry') {
-          pColor = Math.random() > 0.5 ? '#ffd700' : '#ffffff';
-        } else if (this.enhancedType === 'decoy') {
-          pColor = Math.random() > 0.5 ? '#aa66ff' : '#8a2be2';
-        } else if (this.enhancedType === 'shadow_awakening') {
-          pColor = Math.random() > 0.5 ? '#d8b4fe' : '#aa66ff';
-        } else if (this.enhancedType === 'storm_god') {
-          pColor = Math.random() > 0.5 ? '#fbbf24' : '#fef08a';
-        } else if (this.enhancedType === 'zen_field') {
-          pColor = Math.random() > 0.5 ? '#22d3ee' : '#e0f2fe';
+        if (!this.isEcho) {
+          if (this.enhancedType === 'dragon') {
+            pColor = Math.random() > 0.5 ? '#ff4400' : '#ffa500';
+          } else if (this.enhancedType === 'shield') {
+            pColor = Math.random() > 0.5 ? '#00ffc8' : '#ffffff';
+          } else if (this.enhancedType === 'firewheel') {
+            pColor = Math.random() > 0.5 ? '#ff8800' : '#ffcc00';
+          } else if (this.enhancedType === 'gravity') {
+            pColor = Math.random() > 0.5 ? '#c084fc' : '#8a2be2';
+          } else if (this.enhancedType === 'parry') {
+            pColor = Math.random() > 0.5 ? '#ffd700' : '#ffffff';
+          } else if (this.enhancedType === 'decoy') {
+            pColor = Math.random() > 0.5 ? '#aa66ff' : '#8a2be2';
+          } else if (this.enhancedType === 'shadow_awakening') {
+            pColor = Math.random() > 0.5 ? '#d8b4fe' : '#aa66ff';
+          } else if (this.enhancedType === 'storm_god') {
+            pColor = Math.random() > 0.5 ? '#fbbf24' : '#fef08a';
+          } else if (this.enhancedType === 'zen_field') {
+            pColor = Math.random() > 0.5 ? '#22d3ee' : '#e0f2fe';
+          }
         }
 
         // Tail wind particles moving backwards
@@ -706,24 +710,96 @@ export class Projectile {
       ctx.fill();
     } else {
       ctx.save();
+      
+      // Dedicated polished Echo Slash rendering
+      if (this.isEcho) {
+        ctx.scale(0.85, 0.85);
+        const pEcho = Math.sin(this.life * 26);
+        const echoAlpha = 0.65 + 0.3 * pEcho;
+        
+        // 1. Soft Outer Spectral Ghost Glow
+        ctx.save();
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 12;
+        ctx.globalAlpha = 0.32 * echoAlpha;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.arc(0, 0, 130, -Math.PI / 2.4, Math.PI / 2.4);
+        ctx.arc(28, 0, 105, Math.PI / 2.6, -Math.PI / 2.6, true);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+
+        // 2. Secondary Harmonic Reverberation Arc
+        ctx.save();
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 4.5;
+        ctx.globalAlpha = 0.7 * echoAlpha;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(10, 0, 124, -Math.PI / 2.5, Math.PI / 2.5);
+        ctx.stroke();
+        ctx.restore();
+
+        // 3. Razor-Sharp Spectral Core Edge
+        ctx.save();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2.5;
+        ctx.globalAlpha = 0.95;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(4, 0, 128, -Math.PI / 2.5, Math.PI / 2.5);
+        ctx.stroke();
+        ctx.restore();
+
+        // 4. Spectral Gradient Fill
+        const echoGrad = ctx.createLinearGradient(-20, 0, 140, 0);
+        echoGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+        echoGrad.addColorStop(0.35, 'rgba(56, 189, 248, 0.5)');
+        echoGrad.addColorStop(0.65, 'rgba(192, 132, 252, 0.65)');
+        echoGrad.addColorStop(0.9, 'rgba(255, 255, 255, 0.8)');
+        echoGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+        ctx.fillStyle = echoGrad;
+        ctx.beginPath();
+        ctx.arc(0, 0, 130, -Math.PI / 2.4, Math.PI / 2.4);
+        ctx.arc(28, 0, 105, Math.PI / 2.6, -Math.PI / 2.6, true);
+        ctx.closePath();
+        ctx.fill();
+
+        // 5. Delicate trailing echo speed streaks
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        for (let i = -2; i <= 2; i++) {
+          const arcAngle = (i / 3) * (Math.PI / 2.6);
+          const r1 = 125;
+          const r2 = 142 + Math.abs(i) * 5;
+          ctx.moveTo(Math.cos(arcAngle) * r1, Math.sin(arcAngle) * r1);
+          ctx.lineTo(Math.cos(arcAngle - 0.12) * r2, Math.sin(arcAngle - 0.12) * r2);
+        }
+        ctx.stroke();
+
+        ctx.restore();
+        ctx.restore();
+        return;
+      }
+
       const isUlt = globals.flowState === 'awakened';
       
-      let projSize = (globals.playerStats.iaijutsuRangeMult || 1.0) * 1.3;
+      let projSize = (globals.playerStats.iaijutsuRangeMult || 1.0) * 1.35;
       if (this.isHuge) {
-        projSize *= 1.9; // Even larger!
-      }
-      if (this.isEcho) {
-        projSize *= 0.5; // Half size
+        projSize *= 2.0; // Grand, sweeping crescent wave
       }
       
       if (this.enhancedType === 'dragon') {
-        projSize *= 1.6;
+        projSize *= 1.75;
       } else if (this.enhancedType === 'shadow_awakening') {
-        projSize *= 1.4;
+        projSize *= 1.5;
       } else if (this.enhancedType === 'storm_god') {
-        projSize *= 1.45;
+        projSize *= 1.55;
       } else if (this.enhancedType === 'shield') {
-        projSize *= 1.3;
+        projSize *= 1.35;
       }
       ctx.scale(projSize, projSize);
 
@@ -776,23 +852,23 @@ export class Projectile {
         colorBase = 'rgba(34, 211, 238, ';
       }
 
-      // Draw outer low-opacity glow outline
+      // 1. Deep outer luminous blade aura
       ctx.save();
       ctx.strokeStyle = shadowCol;
-      ctx.lineWidth = 14;
-      ctx.globalAlpha = 0.35;
+      ctx.lineWidth = 16;
+      ctx.globalAlpha = 0.38;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
-      ctx.arc(0, 0, 150, -Math.PI/2.3, Math.PI/2.3);
-      ctx.arc(35, 0, 120, Math.PI/2.6, -Math.PI/2.6, true);
+      ctx.arc(0, 0, 152, -Math.PI/2.3, Math.PI/2.3);
+      ctx.arc(36, 0, 118, Math.PI/2.6, -Math.PI/2.6, true);
       ctx.closePath();
       ctx.stroke();
       ctx.restore();
       
-      // Draw inner sharp outline
+      // 2. Mid sharp energy sheath
       ctx.strokeStyle = strokeCol;
-      ctx.lineWidth = 6;
+      ctx.lineWidth = 7;
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.beginPath();
@@ -801,36 +877,58 @@ export class Projectile {
       ctx.closePath();
       ctx.stroke();
 
-      
+      // 3. Radiant inner multi-stop energy gradient
       const grad = ctx.createLinearGradient(-30, 0, 160, 0);
       grad.addColorStop(0, colorBase + '0)');
-      grad.addColorStop(0.3, colorBase + '0.85)');
-      grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.95)');
-      grad.addColorStop(0.7, colorBase + '0.85)');
+      grad.addColorStop(0.25, colorBase + '0.85)');
+      grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.98)');
+      grad.addColorStop(0.75, colorBase + '0.85)');
       grad.addColorStop(1, colorBase + '0)');
-      
       ctx.fillStyle = grad;
       ctx.fill();
 
-      
+      // 4. Razor-sharp white cutting blade core
       ctx.beginPath();
-      ctx.arc(10, 0, 135, -Math.PI/2.4, Math.PI/2.4);
+      ctx.arc(8, 0, 136, -Math.PI/2.4, Math.PI/2.4);
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
       ctx.stroke();
 
-      
-      ctx.strokeStyle = isUlt ? 'rgba(255,215,0,0.45)' : 'rgba(0,255,255,0.45)';
-      ctx.lineWidth = 1.5;
+      // 5. Dynamic slicing discharge streaks & sparks along leading edge
+      ctx.strokeStyle = isUlt ? 'rgba(255,215,0,0.6)' : (strokeCol.startsWith('#') ? strokeCol : '#ffffff');
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      for (let i = -3; i <= 3; i++) {
-        const arcAngle = (i / 4) * (Math.PI / 2.4);
+      for (let i = -4; i <= 4; i++) {
+        const arcAngle = (i / 5) * (Math.PI / 2.35);
         const radiusStart = 150;
-        const radiusEnd = 150 + 20 + Math.random() * 20;
+        const radiusEnd = 150 + 16 + Math.sin(this.life * 30 + i * 2) * 14;
         ctx.moveTo(Math.cos(arcAngle) * radiusStart, Math.sin(arcAngle) * radiusStart);
         ctx.lineTo(Math.cos(arcAngle - 0.1) * radiusEnd, Math.sin(arcAngle - 0.1) * radiusEnd);
       }
       ctx.stroke();
+
+      // Elemental highlights
+      if (this.enhancedType === 'dragon') {
+        // Inner fiery flame ribbing
+        ctx.strokeStyle = '#ffd000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(14, 0, 125, -Math.PI/2.7, Math.PI/2.7);
+        ctx.stroke();
+      } else if (this.enhancedType === 'storm_god') {
+        // Electric lightning sparks
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        for (let i = -2; i <= 2; i++) {
+          const a1 = (i / 3) * (Math.PI / 2.5);
+          const r1 = 145;
+          ctx.moveTo(Math.cos(a1) * r1, Math.sin(a1) * r1);
+          ctx.lineTo(Math.cos(a1 + 0.05) * (r1 + 18), Math.sin(a1 + 0.05) * (r1 + 18));
+        }
+        ctx.stroke();
+      }
 
       ctx.restore();
     }

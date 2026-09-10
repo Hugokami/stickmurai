@@ -1015,16 +1015,11 @@ function initGame() {
   globals.plasmaTrails = [];
   globals.destructibleProps = [];
 
-  // Apply permanent Yomi Seal breakthrough bonuses
-  globals.unlockedSeals.forEach(id => {
-    YOMI_SEALS[id]?.applyPermanentReward();
-  });
-  
   if (globals.gameMode === 'zen') {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
   }
   
-  const eMax = globals.selectedSkill === 'enhance' ? 18.0 : (globals.selectedSkill === 'shield' ? 10.0 : (globals.selectedSkill === 'dash' ? 0.9 : (globals.selectedSkill === 'firewheel' ? 11.0 : (globals.selectedSkill === 'gravity' ? 9.0 : (globals.selectedSkill === 'parry_master' ? 9.0 : (globals.selectedSkill === 'decoy_illusion' ? 12.0 : 14.0))))));
+  const eMax = globals.selectedSkill === 'enhance' ? 12.0 : (globals.selectedSkill === 'shield' ? 10.0 : (globals.selectedSkill === 'dash' ? 0.9 : (globals.selectedSkill === 'firewheel' ? 11.0 : (globals.selectedSkill === 'gravity' ? 9.0 : (globals.selectedSkill === 'parry_master' ? 9.0 : (globals.selectedSkill === 'decoy_illusion' ? 12.0 : 14.0))))));
   const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 4.5 : (globals.selectedSkill === 'dash' ? 0.45 : (globals.selectedSkill === 'firewheel' ? 6.0 : (globals.selectedSkill === 'gravity' ? 4.5 : (globals.selectedSkill === 'parry_master' ? 4.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
   globals.playerStats = { 
     slashBonusDmgPct: 0,
@@ -1079,6 +1074,12 @@ function initGame() {
   globals.playerStats.postureDmgBonus = hero.posture;
   globals.playerStats.enhanceCooldownMax *= hero.skillCooldown;
   globals.player?.updateHeroType();
+
+  // Apply permanent Yomi Seal breakthrough bonuses AFTER stats and hero initialization
+  globals.unlockedSeals.forEach(id => {
+    YOMI_SEALS[id]?.applyPermanentReward();
+  });
+  globals.levelUpRerollsRemaining = (globals.unlockedSeals && globals.unlockedSeals.includes(5)) ? 1 : 0;
   
   // Apply pre-game Stance Blessings
   if (globals.activeBlessing === 'swift_strike') {
@@ -1776,58 +1777,59 @@ function fireFullyChargedIaijutsu(angle: number) {
     executeMirrorStrike(angle, 12);
   } else {
     let enhancedType = '';
-    let projDmg = 6;
+    const iaiBonus = globals.playerStats?.iaijutsuBonusDmg || 0;
+    let projDmg = skillDamage(8, 1.3) + iaiBonus;
     let txtColor = '#00ffff';
     let txtLabel = t('iaijutsuText');
     
     if (globals.flowState === 'awakened') {
       enhancedType = 'shadow_awakening';
-      projDmg = 11;
+      projDmg = skillDamage(15, 1.6) + iaiBonus;
       txtColor = '#aa66ff';
       txtLabel = "🔥 SHADOW IAIJUTSU! 🔥";
     } else if (globals.flowState === 'storm_god') {
       enhancedType = 'storm_god';
-      projDmg = 12;
+      projDmg = skillDamage(16, 1.7) + iaiBonus;
       txtColor = '#fbbf24';
       txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
     } else if (globals.zenFieldActiveTimer > 0 && globals.flowState !== 'omnislash') {
       enhancedType = 'zen_field';
-      projDmg = 12;
+      projDmg = skillDamage(15, 1.6) + iaiBonus;
       txtColor = '#22d3ee';
       txtLabel = "🌀 CHRONO IAIJUTSU! 🌀";
     } else if (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'dragon';
-      projDmg = 14;
+      projDmg = skillDamage(20, 2.0) + iaiBonus;
       txtColor = '#ff4400';
       txtLabel = "🔥 DRAGON IAIJUTSU! 🔥";
     } else if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'shield';
-      projDmg = skillDamage(2, 0.95);
+      projDmg = skillDamage(5, 1.2) + iaiBonus;
       txtColor = '#00ffc8';
       txtLabel = "🌀 TORNADO IAIJUTSU! 🌀";
     } else if (globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'firewheel';
-      projDmg = skillDamage(2, 0.85);
+      projDmg = skillDamage(6, 1.3) + iaiBonus;
       txtColor = '#ff8800';
       txtLabel = "🔥 INFERNO IAIJUTSU! 🔥";
     } else if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'gravity';
-      projDmg = skillDamage(3, 1.05);
+      projDmg = skillDamage(7, 1.4) + iaiBonus;
       txtColor = '#c084fc';
       txtLabel = "🌌 GRAVITY IAIJUTSU! 🌌";
     } else if (globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'parry';
-      projDmg = skillDamage(3, 1.0);
+      projDmg = skillDamage(6, 1.3) + iaiBonus;
       txtColor = '#ffd700';
       txtLabel = "🛡️ PARRY IAIJUTSU! 🛡️";
     } else if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'decoy';
-      projDmg = skillDamage(4, 1.15);
+      projDmg = skillDamage(7, 1.5) + iaiBonus;
       txtColor = '#a855f7';
       txtLabel = "👤 DECOY IAIJUTSU! 👤";
     } else if (globals.selectedSkill === 'dash' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'storm_god';
-      projDmg = skillDamage(3, 0.9);
+      projDmg = skillDamage(7, 1.4) + iaiBonus;
       txtColor = '#fbbf24';
       txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
     }
@@ -1841,6 +1843,21 @@ function fireFullyChargedIaijutsu(angle: number) {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 40, txtLabel, txtColor, 28));
     globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, txtColor));
     globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, projDmg, true, false, enhancedType));
+
+    // Directional slicing sparks along Iaijutsu trajectory
+    const slashSparks = 10;
+    for (let sp = 0; sp < slashSparks; sp++) {
+      const pAngle = angle + (Math.random() - 0.5) * 0.7;
+      globals.particles.push(Particle.acquire(
+        globals.player.x + Math.cos(angle) * 30,
+        globals.player.y + Math.sin(angle) * 30,
+        txtColor,
+        240 + Math.random() * 120,
+        0.35 + Math.random() * 0.2,
+        2.5 + Math.random() * 2,
+        pAngle
+      ));
+    }
   }
 
   if (globals.playerStats.judgementCutLevel && globals.playerStats.judgementCutLevel > 0) {
@@ -2465,8 +2482,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     (e as any).posture = 0;
     const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
     if (isBoss) {
-      // Boss execution: lower to ~12% max HP (capped at 25, min 12), stun boss for 2.5s
-      finalDmg = Math.min(25, Math.max(12, Math.round((e.maxHp || 100) * 0.12)));
+      // Boss execution: ~22% max HP (min 30, capped at 150), stun boss for 2.5s
+      finalDmg = Math.min(150, Math.max(30, Math.round((e.maxHp || 100) * 0.22)));
       e.stunTimer = 2.5;
       e.knockbackTimer = 0.45;
       const kbAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
@@ -2474,11 +2491,12 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       e.knockbackVy = Math.sin(kbAngle) * 900;
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `BOSS STAGGERED! 💥 -${finalDmg}`, 'neon-#ffd700', 34));
     } else {
-      // Regular execution: reduced to ~20% of max HP (min 8 DMG)
-      finalDmg = Math.max(8, Math.round((e.maxHp || 10) * 0.20));
+      // Regular execution: lethal deathblow to standard enemies
+      finalDmg = Math.max(e.hp, Math.round((e.maxHp || 10) * 1.5));
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
     }
 
+    globals.invulnTimer = Math.max(globals.invulnTimer, 0.45); // Safe execution recovery i-frames
     globals.screenShake = Math.max(globals.screenShake, isBoss ? 28 : 12);
     globals.hitStop = 0;
     if (isBoss) {
@@ -2914,7 +2932,7 @@ function killEnemy(e: Enemy) {
 
 function addCombo() {
   globals.combo++; 
-  globals.comboTimer = 6.0; 
+  globals.comboTimer = (globals.unlockedSeals && globals.unlockedSeals.includes(4)) ? 7.5 : 6.0; 
   globals.score += globals.curseOfGreedActive ? 2 : 1;
   if (globals.combo > globals.runStats.maxCombo) {
     globals.runStats.maxCombo = globals.combo;
@@ -4230,9 +4248,10 @@ function update(realDt: number) {
   const isCharging = globals.player.state === 'charge';
   const isFullyCharged = globals.player.chargeTimer >= 0.8;
   const isParryInput = (isCharging && isFullyCharged && isAttackReleased) || (isAttackPressed && globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0);
+  const parryWindowMult = globals.selectedHero === 'default' ? 1.35 : 1.0;
   if (!dashAttackTriggered && isParryInput && globals.player.state !== 'dash' && globals.player.state !== 'dead') {
     globals.enemies.forEach(e => {
-      if (!parryTriggered && (e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.15))) {
+      if (!parryTriggered && (e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - (0.15 * parryWindowMult)))) {
         const dx = e.x - globals.player.x; const dy = e.y - globals.player.y;
         const maxDist = 200 + (e.scaleMult - 1) * 60;
         if (dx * dx + dy * dy < maxDist * maxDist) {
@@ -4249,7 +4268,6 @@ function update(realDt: number) {
             }
           }
 
-          const parryWindowMult = globals.selectedHero === 'default' ? 1.35 : 1.0;
           const isPerfect = (e.state === 'attack' && e.stateTime < 0.18 * parryWindowMult) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08 * parryWindowMult);
           
           if (isPerfect) {
@@ -4682,14 +4700,36 @@ function update(realDt: number) {
       }
       
       if (globals.echoLevel > 0) {
-        const echoDmg = 0.5 * globals.echoLevel;
+        const echoDmg = Math.max(1, 0.8 * globals.echoLevel);
         const currentAngle = angle;
+        const currentX = globals.player.x;
+        const currentY = globals.player.y;
         globals.delayedActions.push({
           delay: 0.12,
           run: () => {
             if (globals.gameState === 'playing' && globals.player.state !== 'dead') {
-              globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, currentAngle, false, echoDmg, false, true));
+              globals.slashes.push(Slash.acquire(
+                currentX + Math.cos(currentAngle) * 45,
+                currentY + Math.sin(currentAngle) * 45,
+                currentAngle,
+                size * 0.85,
+                true,
+                'rgba(56, 189, 248, ALPHA)',
+                false,
+                globals.player
+              ));
+              globals.projectiles.push(Projectile.acquire(currentX, currentY, currentAngle, false, echoDmg, false, true));
               playSound(sfx.slash, 0.4);
+              for (let ep = 0; ep < 5; ep++) {
+                globals.particles.push(Particle.acquire(
+                  currentX + Math.cos(currentAngle) * (20 + ep * 15),
+                  currentY + Math.sin(currentAngle) * (20 + ep * 15),
+                  ep % 2 === 0 ? '#38bdf8' : '#c084fc',
+                  60,
+                  0.3,
+                  1.5
+                ));
+              }
             }
           }
         });
