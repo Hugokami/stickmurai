@@ -3817,8 +3817,26 @@ html.qol-left:not(.qol-touch-custom) #action-buttons > button { scale: -1 1; }
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
   position: relative;
-  opacity: 0.4;
+  overflow: hidden;
+  opacity: 0.45;
   pointer-events: none;
+}
+
+.ult-fill-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 0%;
+  background: rgba(255, 215, 0, 0.25);
+  pointer-events: none;
+  transition: height 0.15s ease-out;
+  z-index: 1;
+}
+
+.ult-action-btn > span {
+  position: relative;
+  z-index: 2;
 }
 
 .ult-action-btn .ult-icon {

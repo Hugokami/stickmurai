@@ -5,6 +5,8 @@ import {
   playSynthesizedLevelUp,
   playSynthesizedAwaken,
   playSynthesizedThunder,
+  playSynthesizedSingingBowl,
+  playSynthesizedTempleBell,
   playSound,
   sfx
 } from './audio';
@@ -504,20 +506,24 @@ export function triggerZenField() {
 export function triggerSpecificUltimate(type: 'shadow' | 'omni' | 'storm' | 'zen') {
   if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
   globals.flow = 0;
-  playSynthesizedAwaken();
 
-  if (globals.gameMode === 'zen') {
+  if (globals.gameMode === 'zen' || type === 'zen') {
+    playSynthesizedTempleBell();
     triggerZenField();
     return;
   }
 
   if (type === 'shadow') {
+    playSynthesizedSingingBowl();
     ultOptions[0].apply();
   } else if (type === 'omni') {
+    playSynthesizedAwaken();
     ultOptions[1].apply();
   } else if (type === 'storm') {
+    playSynthesizedThunder();
     ultOptions[2].apply();
   } else {
+    playSynthesizedAwaken();
     ultOptions[1].apply();
   }
 }
@@ -648,6 +654,19 @@ export function renderShopModal() {
         Temporary stage requisitions. All acquisitions and shards reset upon clearing or leaving this stage.
       </p>
 
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">❤️</span>
+          <div>
+            <div style="font-size: 13px; font-weight: bold; color: #f87171;">Field Ration (Emergency Heal)</div>
+            <div style="font-size: 11px; color: #94a3b8;">Restore 1 Heart immediately (Current: ${globals.lives}/${globals.maxLives})</div>
+          </div>
+        </div>
+        <button id="shop-ration-btn" class="menu-btn btn-compact" style="border-color: #ef4444; color: #ef4444; min-height: 32px; height: 32px; min-width: 105px;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
+          Buy (◆ 20)
+        </button>
+      </div>
+
       <div id="shop-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; width: 100%; margin-bottom: 16px;">
       </div>
 
@@ -718,6 +737,22 @@ export function renderShopModal() {
     }
     grid.appendChild(card);
   });
+
+  const rationBtn = modal.querySelector('#shop-ration-btn') as HTMLButtonElement;
+  if (rationBtn) {
+    const buyRation = (e: Event) => {
+      e.stopPropagation();
+      if ((globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives) return;
+      globals.stageCurrency -= 20;
+      globals.lives++;
+      callbacks.updateUI();
+      playSound(sfx.magatamaPickup, 1.0);
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "+1 ❤️", "#4ade80", 26));
+      renderShopModal();
+    };
+    rationBtn.addEventListener('pointerdown', buyRation);
+    rationBtn.addEventListener('click', buyRation);
+  }
 
   const refreshBtn = modal.querySelector('#shop-refresh-btn');
   if (refreshBtn) {

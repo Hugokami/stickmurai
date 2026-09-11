@@ -5,12 +5,12 @@ import { completeJourneyStage, masteryBadge } from './journey';
 import { requestResume, handleBack, clearGameInputs } from './qol';
 import { globals, getStageAffix, getAscendantRank } from './globals';
 import { safeStorage } from './storage';
-import { i18n, skillsData } from './assets';
+import { i18n, skillsData, preloadStageEnemyAssets, loadHeroAssets } from './assets';
 import { bgmAudio, pauseBgm } from './audio';
 import { callbacks } from './callbacks';
 import { pvpManager } from './pvpIaijutsuManager';
 import { AdManager } from './adManager';
-import { FUSION_RECIPES, openShop, triggerSpecificUltimate } from './powerups';
+import { FUSION_RECIPES, openShop, closeShop, triggerSpecificUltimate } from './powerups';
 import { YOMI_SEALS } from './shrine';
 import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered, triggerHapticFeedback } from './audio';
 import { FloatingText, Shockwave } from './entities';
@@ -462,6 +462,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
 
   bindDualListener(document.getElementById('start-run-btn'), () => {
     if (skillSelectScreen) skillSelectScreen.style.display = 'none';
+    loadHeroAssets(globals.selectedHero || 'default');
+    preloadStageEnemyAssets(globals.currentStage || 1);
     if (globals.gameMode === 'zen') {
       onZenPlayCallback();
     } else {
@@ -858,6 +860,19 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   });
 
   window.addEventListener('keydown', (e) => {
+    if (e.key === 'b' || e.key === 'B') {
+      if (globals.gameState === 'playing') {
+        openShop();
+        return;
+      } else if (globals.shopOpen) {
+        closeShop();
+        return;
+      }
+    }
+    if (e.key === 'Escape' && globals.shopOpen) {
+      closeShop();
+      return;
+    }
     if (e.key === 'Escape' && handleBack(e)) return;
     if (e.key === 'Escape') {
       const guideModal = document.getElementById('guide-modal');
@@ -1537,6 +1552,33 @@ export function updateCooldownsUI() {
   }
   
   const isUltReady = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
+  
+  // Update Flow progress overlay on all ultimate buttons
+  const flowRatio = Math.min(1, globals.flow / (globals.playerStats.flowMax || 100));
+  const flowPct = Math.round(flowRatio * 100);
+  const ultProgressBars = document.querySelectorAll('.ult-fill-progress');
+  ultProgressBars.forEach(bar => {
+    (bar as HTMLElement).style.height = `${flowPct}%`;
+  });
+
+  // Dynamic Zen Mode label on omnislash button
+  const omniBtnEl = document.getElementById('btn-ult-omni');
+  if (omniBtnEl) {
+    const textEl = omniBtnEl.querySelector('.ult-text');
+    const iconEl = omniBtnEl.querySelector('.ult-icon');
+    if (textEl && iconEl) {
+      if (globals.gameMode === 'zen') {
+        textEl.textContent = 'ZEN';
+        iconEl.textContent = '🌀';
+        omniBtnEl.title = 'Zen Sanctuary (Press 2 / F)';
+      } else {
+        textEl.textContent = 'OMNI';
+        iconEl.textContent = '⚔️';
+        omniBtnEl.title = 'Omnislash (Press 2 / F)';
+      }
+    }
+  }
+
   if (isUltReady !== lastBtnUltReady) {
     if (btnUlt) {
       if (isUltReady) btnUlt.classList.add('ready');
@@ -2279,6 +2321,7 @@ export function populateDojoHeroGrid() {
       if (!heroId) return;
       globals.selectedHero = heroId;
       safeStorage.setItem('stickmurai_selected_hero', heroId);
+      loadHeroAssets(heroId);
       globals.player?.updateHeroType();
       playSynthesizedTempleBell();
       populateDojoHeroGrid();

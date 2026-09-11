@@ -3,7 +3,7 @@ import { BOSS_BASE_HP, campaignHpMultiplier } from './balance';
 import { callbacks } from './callbacks';
 import { Entity, Particle, FloatingText, Projectile, AnimatedEffect, Shockwave } from './entities';
 import { Player } from './player';
-import { playSound, sfx, playSynthesizedThunder, playEnergyBeam, playTeleportSfx, playExplosionSfx } from './audio';
+import { playSound, sfx, playSynthesizedThunder, playEnergyBeam, playTeleportSfx, playExplosionSfx, playSynthesizedClash } from './audio';
 import { vfxAnims, loadEnemyAssetsNow } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 import { isBoss } from './combatPolish';
@@ -1130,13 +1130,14 @@ export class Enemy extends Entity {
     this.posture += (amount + bonus);
     if (this.posture >= this.maxPosture) {
       this.posture = this.maxPosture;
-      this.postureBrokenTimer = 2.5;
-      this.stunTimer = 2.5;
+      this.postureBrokenTimer = 3.0;
+      this.stunTimer = 3.0;
       this.vx = 0; this.vy = 0;
-      globals.screenShake = 14;
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#f59e0b'));
-      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 65, "STANCE BROKEN!", "#f59e0b", 22));
-      playSound(sfx.enemySlash, 0.4);
+      const bossEntity = isBoss(this);
+      globals.screenShake = bossEntity ? 22 : 14;
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ff003c', bossEntity ? 200 : 130));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 75, bossEntity ? "BOSS POSTURE BROKEN! 💀" : "STANCE BROKEN!", "#ff003c", bossEntity ? 26 : 22));
+      playSynthesizedClash();
     }
   }
 
@@ -1246,11 +1247,31 @@ export class Enemy extends Entity {
         ctx.fillStyle = flashColor;
         ctx.fillRect(barX, barY, barW, barH);
 
-        // Render glowing [EXECUTE] prompt over enemy head!
-        ctx.font = 'bold 11px Outfit, sans-serif';
+        // Render Deathblow kanji / reticle over enemy head
+        const deathblowY = barY - 20;
+        const pulse = 1 + 0.12 * Math.sin(Date.now() * 0.015);
+        ctx.save();
+        ctx.strokeStyle = '#ff003c';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(rx, deathblowY, 15 * pulse, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // 4 crosshairs
+        const arm = 6 * pulse;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(rx - 20 * pulse, deathblowY); ctx.lineTo(rx - 20 * pulse + arm, deathblowY);
+        ctx.moveTo(rx + 20 * pulse, deathblowY); ctx.lineTo(rx + 20 * pulse - arm, deathblowY);
+        ctx.moveTo(rx, deathblowY - 20 * pulse); ctx.lineTo(rx, deathblowY - 20 * pulse + arm);
+        ctx.moveTo(rx, deathblowY + 20 * pulse); ctx.lineTo(rx, deathblowY + 20 * pulse - arm);
+        ctx.stroke();
+
+        ctx.font = '900 12px Outfit, Shojumaru, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillStyle = flashColor;
-        ctx.fillText('[EXECUTE]', rx, barY - 8);
+        ctx.fillText(isBoss(this) ? '忍殺 DEATHBLOW' : '[EXECUTE]', rx, deathblowY - 22 * pulse);
+        ctx.restore();
       } else {
         // Building posture: Amber / Orange fill
         const postureRatio = Math.min(1, this.posture / this.maxPosture);
@@ -1270,6 +1291,25 @@ export class Enemy extends Entity {
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
     const shadowScale = totalElevation > 0 ? Math.max(0.25, 1.0 - totalElevation / 260) : 1.0;
     const shadowAlpha = (this.state === 'dead' ? alpha * 0.25 : 0.35) * shadowScale;
+    
+    // Elite enemy aura rings
+    const isEliteEnemy = (this as any).isElite || ['musketeer', 'pyromancer', 'orc_brute', 'astromancer', 'glacial_sentinel'].includes(this.subType);
+    if (isEliteEnemy && this.state !== 'dead') {
+      ctx.save();
+      const auraPulse = 0.65 + 0.35 * Math.sin(Date.now() * 0.006);
+      ctx.strokeStyle = `rgba(251, 191, 36, ${0.55 * auraPulse})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(shadowGroundRx, shadowGroundRy - 3, (28 * this.scaleMult) | 0, (10 * this.scaleMult) | 0, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = `rgba(245, 158, 11, ${0.3 * auraPulse})`;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.ellipse(shadowGroundRx, shadowGroundRy - 3, (36 * this.scaleMult) | 0, (13 * this.scaleMult) | 0, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
     
     ctx.save();
     ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;

@@ -13,7 +13,7 @@ import { encounterBudget } from './journeyCore';
 import { resetCombatPolish, updateCombatPolish } from './combatPolish';
 import { initQol, clearGameInputs, actionBuffer, qolSettings } from './qol';
 import { initRuntimeQol, isPractice, practiceStep, recordHurt, resetRunFeedback, showDefeatFeedback, updateThreats } from './runtimeQol';
-import { assetReadiness, retryRequiredAssets } from './assets';
+import { assetReadiness, retryRequiredAssets, preloadStageEnemyAssets, loadHeroAssets } from './assets';
 import { safeStorage } from './storage';
 import { globals, getStageAffix } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
@@ -762,6 +762,8 @@ function initGame() {
   resetRunFeedback();
   clearBattlefield();
   resetCanvasVisuals();
+  loadHeroAssets(globals.selectedHero || 'default');
+  preloadStageEnemyAssets(globals.currentStage || 1);
   loadCoreCombatAssetsNow();
   playSound(sfx.gameStart);
   startBgm();
@@ -2439,7 +2441,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     if (e.burnTickTimer <= 0) e.burnTickTimer = 0.5;
   }
   if (globals.activeFusions.has('plasma_tempest') && e.burnTimer > 0) {
-    triggerChainLightning(e, 8);
+    const plasmaDmg = Math.round((10 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 1.5) * (1 + (globals.level - 1) * 0.05));
+    triggerChainLightning(e, plasmaDmg);
   }
   if (globals.frostStanceActive) {
     e.chillTimer = 3.0;
@@ -2792,8 +2795,18 @@ function killEnemy(e: Enemy) {
   e.setState('dead'); 
   addCombo();
   globals.runStats.kills++;
-  globals.stageCurrency += (e.subType?.includes('boss') || (e as any).isBoss) ? 50 : ((e as any).isElite ? 10 : 2);
-  globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 35, `+${(e.subType?.includes('boss') || (e as any).isBoss) ? 50 : ((e as any).isElite ? 10 : 2)} ◆`, '#fbbf24', 16));
+  const isBossKill = (e.subType?.includes('boss') || (e as any).isBoss);
+  const currencyYield = isBossKill ? 50 : ((e as any).isElite ? 10 : 2);
+  globals.stageCurrency = (globals.stageCurrency || 0) + currencyYield;
+
+  // Flying golden currency shards
+  const shardCount = isBossKill ? 8 : ((e as any).isElite ? 4 : 2);
+  for (let p = 0; p < shardCount; p++) {
+    const pAngle = -Math.PI / 2 + (Math.random() - 0.5) * 1.6;
+    const pSpeed = 100 + Math.random() * 160;
+    globals.particles.push(Particle.acquire(e.x, e.y - 15, '#fbbf24', pSpeed, 0.45, 3.5, pAngle));
+  }
+  globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 35, `+${currencyYield} ◆`, '#fbbf24', isBossKill ? 24 : 16));
   globals.chiburuiKills = (globals.chiburuiKills || 0) + 1;
   checkVampireHeal(e);
 
@@ -2820,7 +2833,9 @@ function killEnemy(e: Enemy) {
         const dy = other.y - e.y;
         if (dx * dx + dy * dy < 14400) { // 120^2
           hitCount++;
-          callbacks.hitEnemy(other, globals.activeStageAffix?.id === 'infernal_domain' ? 6 : 4);
+          const baseExpDmg = globals.activeStageAffix?.id === 'infernal_domain' ? 12 : 8;
+          const scaledExpDmg = Math.round(baseExpDmg * (1 + ((globals.currentStage || 1) - 1) * 0.1));
+          callbacks.hitEnemy(other, scaledExpDmg);
           if (hitCount >= 5) break;
         }
       }
@@ -3176,7 +3191,8 @@ function update(realDt: number) {
         const dSq = (en.x - pt.x) ** 2 + (en.y - pt.y) ** 2;
         if (dSq < rSq) {
           en.burnTimer = 3.0;
-          hitEnemy(en, 6 * realDt);
+          const trailDmg = (6 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 0.6) * realDt;
+          hitEnemy(en, trailDmg);
         }
       }
     }
@@ -4577,6 +4593,7 @@ function update(realDt: number) {
       }
       if (globals.activeFusions.has('kamaitachi')) {
         const sSpd = 650;
+        const sickleDmg = Math.round(8 * (1 + (globals.playerStats?.slashBonusDmgPct || 0)) * (1 + Math.min(0.5, (globals.combo || 0) * 0.01)));
         globals.bouncingSickles.push({
           x: globals.player.x,
           y: globals.player.y,
@@ -4585,7 +4602,7 @@ function update(realDt: number) {
           life: 4.0,
           maxLife: 4.0,
           radius: 32,
-          damage: 6
+          damage: sickleDmg
         });
         globals.bouncingSickles.push({
           x: globals.player.x,
@@ -4595,7 +4612,7 @@ function update(realDt: number) {
           life: 4.0,
           maxLife: 4.0,
           radius: 32,
-          damage: 6
+          damage: sickleDmg
         });
         playSound(sfx.slash, 0.5);
       }
@@ -4611,6 +4628,14 @@ function update(realDt: number) {
         if (vfxAnims.gigapack?.explosion?.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));
         }
+        const cleaveDmg = Math.round((20 + (globals.playerStats?.enhanceBonusDmg || 0) * 3) * (1 + (globals.playerStats?.slashBonusDmgPct || 0)));
+        globals.enemies.forEach(en => {
+          if (en.state === 'dead') return;
+          const dist = Math.hypot(en.x - bhX, en.y - bhY);
+          if (dist < 180) {
+            hitEnemy(en, cleaveDmg);
+          }
+        });
       }
       const slashPct = globals.playerStats.slashBonusDmgPct || 0;
       if (slashPct) dmg *= 1 + slashPct;

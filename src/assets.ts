@@ -600,26 +600,38 @@ const priorityQueue: QueuedAsset[] = [];
 const backgroundQueue: QueuedAsset[] = [];
 const activeLoads = new Set<HTMLImageElement>();
 const failedAssets = new Map<HTMLImageElement, QueuedAsset>();
+const retryCounts = new Map<HTMLImageElement, number>();
 const requiredAssets: QueuedAsset[] = [];
+
 export function assetReadiness() {
   let loaded = 0; let failed = 0;
   for (const item of requiredAssets) {
     if (item.img.complete && item.img.naturalWidth > 0) loaded++;
     else if (failedAssets.has(item.img)) failed++;
   }
-  return {loaded, failed, total:requiredAssets.length, ready:requiredAssets.length > 0 && loaded === requiredAssets.length};
+  const isAllResolved = requiredAssets.length > 0 && (loaded + failed === requiredAssets.length);
+  const isSufficient = loaded >= Math.floor(requiredAssets.length * 0.95);
+  return {
+    loaded,
+    failed,
+    total: requiredAssets.length,
+    ready: requiredAssets.length > 0 && (loaded === requiredAssets.length || (isAllResolved && isSufficient))
+  };
 }
+
 export function retryRequiredAssets() {
   for (const item of requiredAssets) {
     if (item.img.complete && item.img.naturalWidth > 0) continue;
     if (activeLoads.has(item.img)) continue;
     failedAssets.delete(item.img);
+    retryCounts.delete(item.img);
     if (!priorityQueue.includes(item)) priorityQueue.push(item);
   }
   pumpPriorityQueue();
 }
-const MAX_CONCURRENT_PRIORITY = 16;
-const MAX_CONCURRENT_BACKGROUND = 4;
+
+const MAX_CONCURRENT_PRIORITY = 20;
+const MAX_CONCURRENT_BACKGROUND = 16;
 let isBackgroundLoadingActive = false;
 
 export function registerAssetToLoad(img: HTMLImageElement) {
@@ -667,11 +679,29 @@ function startLoadingItem(item: QueuedAsset) {
     window.dispatchEvent(new Event('qol-assets'));
   };
 
-  item.img.onload = () => { failedAssets.delete(item.img); onDone(); };
+  item.img.onload = () => {
+    failedAssets.delete(item.img);
+    retryCounts.delete(item.img);
+    onDone();
+  };
+
   item.img.onerror = () => {
+    const retries = (retryCounts.get(item.img) || 0) + 1;
+    retryCounts.set(item.img, retries);
+    if (retries <= 3) {
+      activeLoads.delete(item.img);
+      setTimeout(() => {
+        if (!item.img.complete || item.img.naturalWidth === 0) {
+          const sep = item.src.includes('?') ? '&' : '?';
+          item.img.src = `${item.src}${sep}retry=${retries}`;
+          startLoadingItem(item);
+        }
+      }, 350 * retries);
+      return;
+    }
     failedAssets.set(item.img, item);
-    recordDiagnostic(`Image load failed: ${item.folder || 'asset'}`);
-    console.warn(`[Assets] Failed to load: ${item.src}`);
+    recordDiagnostic(`Image load failed after retries: ${item.folder || 'asset'}`);
+    console.warn(`[Assets] Failed to load after 3 retries: ${item.src}`);
     onDone();
     if (item.isPriority) setTimeout(() => (window as any).__showLoadingRecovery?.(), 0);
   };
@@ -699,6 +729,13 @@ function pumpBackgroundQueue() {
 
 export function startBackgroundAssetLoading() {
   isBackgroundLoadingActive = true;
+  pumpPriorityQueue();
+  pumpBackgroundQueue();
+}
+
+export function loadAllAssets() {
+  isBackgroundLoadingActive = true;
+  pumpPriorityQueue();
   pumpBackgroundQueue();
 }
 
@@ -748,6 +785,23 @@ export function loadEnemyAssetsNow(type: string) {
       startLoadingItem(item);
     }
   }
+}
+
+export function preloadStageEnemyAssets(stage: number) {
+  if (stage % 5 === 0) {
+    if (stage === 5) loadEnemyAssetsNow('oni_boss');
+    else if (stage === 10) loadEnemyAssetsNow('boss_agis');
+    else if (stage === 15) loadEnemyAssetsNow('boss_skeleton');
+    else if (stage >= 20) loadEnemyAssetsNow('shogun_boss');
+  }
+  loadEnemyAssetsNow('enemy01');
+  loadEnemyAssetsNow('enemy02');
+  loadEnemyAssetsNow('skeleton');
+  loadEnemyAssetsNow('enemy_orc');
+  loadEnemyAssetsNow('enemy_barrel');
+  if (stage >= 3) loadEnemyAssetsNow('evil_wizard');
+  if (stage >= 6) loadEnemyAssetsNow('toaster_bot');
+  pumpBackgroundQueue();
 }
 
 export function loadHeroAssets(heroId: string) {
