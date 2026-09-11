@@ -10,7 +10,7 @@ import { bgmAudio, pauseBgm } from './audio';
 import { callbacks } from './callbacks';
 import { pvpManager } from './pvpIaijutsuManager';
 import { AdManager } from './adManager';
-import { FUSION_RECIPES, powerUps } from './powerups';
+import { FUSION_RECIPES, openShop, triggerSpecificUltimate } from './powerups';
 import { YOMI_SEALS } from './shrine';
 import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered, triggerHapticFeedback } from './audio';
 import { FloatingText, Shockwave } from './entities';
@@ -618,19 +618,10 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   };
 
   bindDualListener(openUpgradesBtn, openUpgrades);
-  const openShop = () => {
-    if (globals.gameState !== 'playing') return;
-    globals.gameState = 'paused'; globals.shopOpen = true;
-    const modal = document.getElementById('shop-modal') || (() => { const m=document.createElement('div'); m.id='shop-modal'; m.className='overlay'; document.body.appendChild(m); return m; })();
-    const refreshCost = 10 + globals.shopRefreshCount * 10;
-    const choices = [...powerUps].sort(() => Math.random() - .5).slice(0, 4);
-    modal.innerHTML = `<div class="menu-box"><h2>STAGE SHOP · ◆ ${globals.stageCurrency}</h2><div id="shop-items"></div><button id="shop-refresh" class="menu-btn">REFRESH ◆ ${refreshCost}</button><button id="shop-close" class="menu-btn">CLOSE</button></div>`;
-    modal.style.display='flex'; const items=modal.querySelector('#shop-items')!;
-    choices.forEach((p,i)=>{ const price=10 + i*10; const b=document.createElement('button'); b.className='menu-btn'; b.textContent=`${t(p.nameKey)} · ◆ ${price}`; b.onclick=()=>{ if (globals.stageCurrency < price) return; globals.stageCurrency-=price; p.apply(); globals.chosenPowerUps.push(p.nameKey); b.disabled=true; updateUI(); }; items.appendChild(b); });
-    modal.querySelector('#shop-refresh')!.addEventListener('click', openShop);
-    modal.querySelector('#shop-close')!.addEventListener('click', () => { modal.style.display='none'; globals.shopOpen=false; globals.gameState='playing'; });
-  };
-  bindDualListener(document.getElementById('openShop'), openShop);
+  bindDualListener(document.getElementById('shop-btn'), openShop);
+  bindDualListener(document.getElementById('btn-ult-shadow'), () => triggerSpecificUltimate('shadow'));
+  bindDualListener(document.getElementById('btn-ult-omni'), () => triggerSpecificUltimate(globals.gameMode === 'zen' ? 'zen' : 'omni'));
+  bindDualListener(document.getElementById('btn-ult-storm'), () => triggerSpecificUltimate('storm'));
   bindDualListener(closeUpgradesBtn, closeUpgrades);
   bindDualListener(closeUpgradesXBtn, closeUpgrades);
 
@@ -1545,13 +1536,25 @@ export function updateCooldownsUI() {
     }
   }
   
-  if (btnUlt) {
-    const isUltReady = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
-    if (isUltReady !== lastBtnUltReady) {
+  const isUltReady = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
+  if (isUltReady !== lastBtnUltReady) {
+    if (btnUlt) {
       if (isUltReady) btnUlt.classList.add('ready');
       else btnUlt.classList.remove('ready');
-      lastBtnUltReady = isUltReady;
     }
+    const btnShadow = document.getElementById('btn-ult-shadow');
+    const btnOmni = document.getElementById('btn-ult-omni');
+    const btnStorm = document.getElementById('btn-ult-storm');
+    if (isUltReady) {
+      btnShadow?.classList.add('ready');
+      btnOmni?.classList.add('ready');
+      btnStorm?.classList.add('ready');
+    } else {
+      btnShadow?.classList.remove('ready');
+      btnOmni?.classList.remove('ready');
+      btnStorm?.classList.remove('ready');
+    }
+    lastBtnUltReady = isUltReady;
   }
 }
 

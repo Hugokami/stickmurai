@@ -3762,3 +3762,114 @@ html.qol-left:not(.qol-touch-custom) #action-buttons > button { scale: -1 1; }
 }
 
 #boss-location-indicator{position:fixed;left:50%;top:48%;z-index:140;pointer-events:none;color:#fecaca;background:rgba(127,29,29,.88);border:2px solid #fb7185;border-radius:999px;padding:8px 14px;font:800 12px/1 'Outfit',sans-serif;letter-spacing:.08em;box-shadow:0 0 18px rgba(248,113,113,.6)}
+
+/* Stage Shop & HUD Controls */
+.hud-shop-btn {
+  position: absolute;
+  top: max(52px, calc(env(safe-area-inset-top) + 38px));
+  right: max(160px, calc(env(safe-area-inset-right) + 148px));
+  background: rgba(15, 15, 20, 0.85);
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  border-radius: 14px;
+  padding: 5px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  pointer-events: auto;
+  z-index: 15;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.hud-shop-btn:hover {
+  background: rgba(251, 191, 36, 0.2);
+  transform: scale(1.05);
+}
+.hud-shop-btn:active {
+  transform: scale(0.95);
+}
+
+/* In-game non-pausing Ultimate Controls Bar */
+#ult-buttons-wrap {
+  position: absolute;
+  bottom: clamp(100px, 19vh, 145px);
+  right: max(24px, env(safe-area-inset-right));
+  display: flex;
+  gap: clamp(8px, 1.5vw, 14px);
+  z-index: 25;
+  pointer-events: auto;
+  align-items: center;
+}
+
+.ult-action-btn {
+  width: clamp(54px, 10vh, 70px);
+  height: clamp(54px, 10vh, 70px);
+  border-radius: 50%;
+  background: rgba(15, 15, 20, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  touch-action: none;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  position: relative;
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.ult-action-btn .ult-icon {
+  font-size: clamp(14px, 2.5vh, 20px);
+  line-height: 1;
+}
+
+.ult-action-btn .ult-text {
+  font-size: clamp(7px, 1.2vh, 9px);
+  font-weight: 900;
+  font-family: 'Shojumaru', sans-serif;
+  letter-spacing: 0.5px;
+  margin-top: 1px;
+}
+
+.ult-action-btn .ult-hotkey {
+  font-size: clamp(6px, 1vh, 8px);
+  font-family: 'Space Mono', monospace;
+  opacity: 0.6;
+}
+
+.ult-action-btn.ready {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: scale(1.05);
+  animation: ult-pulse 1.2s infinite alternate;
+}
+
+#btn-ult-shadow.ready {
+  border-color: #c084fc !important;
+  color: #c084fc !important;
+  background: rgba(192, 132, 252, 0.15) !important;
+  box-shadow: 0 0 16px rgba(192, 132, 252, 0.6) !important;
+}
+
+#btn-ult-omni.ready {
+  border-color: #ffd700 !important;
+  color: #ffd700 !important;
+  background: rgba(255, 215, 0, 0.15) !important;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.7) !important;
+}
+
+#btn-ult-storm.ready {
+  border-color: #fbbf24 !important;
+  color: #fbbf24 !important;
+  background: rgba(251, 191, 36, 0.15) !important;
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.6) !important;
+}
+
+@keyframes ult-pulse {
+  0% { transform: scale(1.0); }
+  100% { transform: scale(1.08); }
+}
+

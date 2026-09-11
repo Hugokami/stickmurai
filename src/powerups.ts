@@ -1,13 +1,10 @@
-import { upgradePreview } from './progressionQol';
 import { globals } from './globals';
 import { callbacks } from './callbacks';
 import { i18n, vfxAnims } from './assets';
-import { safeStorage } from './storage';
 import {
   playSynthesizedLevelUp,
   playSynthesizedAwaken,
   playSynthesizedThunder,
-  playSynthesizedFusionUnlock,
   playSound,
   sfx
 } from './audio';
@@ -253,18 +250,21 @@ export const FUSION_RECIPES: FusionRecipe[] = [
 
 function applyStatLevelUp() {
   const stats = [
-    ['slashBonusDmgPct', 0.06],
-    ['attackCooldownBase', -0.018],
-    ['dashCooldownBase', -0.06],
-    ['moveSpeedMult', 0.05],
-    ['postureDmgBonus', 2],
-    ['iaijutsuBonusDmg', 2],
-    ['flowGenMult', 0.08]
+    ['slashBonusDmgPct', 0.06, '+6% Slash Dmg'],
+    ['attackCooldownBase', -0.018, '-0.018s Atk CD'],
+    ['dashCooldownBase', -0.06, '-0.06s Dash CD'],
+    ['moveSpeedMult', 0.05, '+5% Speed'],
+    ['postureDmgBonus', 2, '+2 Posture Break'],
+    ['iaijutsuBonusDmg', 2, '+2 Iai Dmg'],
+    ['flowGenMult', 0.08, '+8% Flow Gen']
   ] as const;
-  const [key, amount] = stats[Math.floor(Math.random() * stats.length)];
+  const [key, amount, label] = stats[Math.floor(Math.random() * stats.length)];
   const current = (globals.playerStats as any)[key] || 0;
-  (globals.playerStats as any)[key] = key.includes('Cooldown') ? Math.max(key === 'attackCooldownBase' ? 0.18 : 0.72, current + amount) : current + amount;
-  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, `${t('levelUpText')} · ${key}`, '#00ff00', 24));
+  (globals.playerStats as any)[key] = key.includes('Cooldown') 
+    ? Math.max(key === 'attackCooldownBase' ? 0.18 : 0.72, current + amount) 
+    : (key === 'moveSpeedMult' ? Math.min(1.5, current + amount) : current + amount);
+  
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, `LVL UP! ${label}`, '#4ade80', 24));
   callbacks.updateUI();
 }
 
@@ -273,189 +273,23 @@ export function triggerLevelUp() {
   globals.exp -= globals.maxExp;
   globals.maxExp = Math.round(globals.maxExp * 1.25);
   globals.level++;
-  applyStatLevelUp();
-  playSynthesizedLevelUp();
-  return; // Level-ups grant stats; combat never pauses.
-  /* legacy powerup choice UI retained below for later removal */
-  if (globals.gameState !== 'playing') return;
-  playSynthesizedLevelUp();
-  globals.gameState = 'levelup';
   
-  const levelUpScreen = document.getElementById('level-up-screen')!;
-  const powerChoicesContainer = document.getElementById('power-choices')!;
-  const levelDisplay = document.getElementById('level-display')!;
-  
-  levelUpScreen.style.display = 'flex';
-  powerChoicesContainer.innerHTML = '';
-  
-  // Heal 1 heart on level up
   const maxHearts = globals.gameMode === 'zen' ? 3 : globals.maxLives;
   if (globals.lives < maxHearts) globals.lives++;
-  callbacks.updateUI();
-  
-  let availablePowers = [...powerUps];
-  if (globals.gameMode === 'zen') {
-    availablePowers = [
-      { nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.90) },
-      { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult = Math.min(1.50, globals.playerStats.moveSpeedMult + 0.10) },
-      { nameKey: "puBloodName", descKey: "puBloodDesc", apply: () => globals.playerStats.flowGenMult += 0.15 },
-      { nameKey: "puDeadeyeName", descKey: "puDeadeyeDesc", apply: () => globals.playerStats.critChanceBonus = Math.min(0.4, (globals.playerStats.critChanceBonus || 0) + 0.1) },
-      { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => globals.playerStats.deflectedDmg += 2 },
-      { nameKey: "puZenRestoreName", descKey: "puZenRestoreDesc", apply: () => { globals.lives = Math.min(3, globals.lives + 1); callbacks.updateUI(); return 0; } }
-    ];
-  } else {
-    // Filter powerups dynamically based on chosen skill and uniqueness
-    availablePowers = availablePowers.filter(power => {
-      if (power.isCorrupted && globals.chosenPowerUps.includes(power.nameKey)) return false;
-      // Filter out unique one-time upgrades that are already acquired
-      if (power.nameKey === 'puFrostName' && globals.frostStanceActive) return false;
-      if (power.nameKey === 'puVoidName' && globals.voidStanceActive) return false;
-      if (power.nameKey === 'puFlowingCounterName' && globals.flowingCounterActive) return false;
-      if (power.nameKey === 'puGaleVortexName' && globals.galeVortexActive) return false;
-      if (power.nameKey === 'puBladeEchoesName' && globals.bladeEchoesActive) return false;
 
-      if (power.skill) {
-        return power.skill === globals.selectedSkill;
-      }
-      return true;
-    });
-  }
-  
-  // Do not offer capped upgrades (or clamp a faster hero to a slower cooldown).
-  availablePowers = availablePowers.filter(power => {
-  const s = globals.playerStats;
-  if (power.nameKey === 'puGiantName') return s.slashSizeMult < 2.2;
-  if (power.nameKey === 'puWindName') return s.attackCooldownBase > 0.18;
-  if (power.nameKey === 'puFeatherName') return s.dashCooldownBase > 0.72;
-  if (power.nameKey === 'puSwiftName') return s.moveSpeedMult < 1.5;
-  if (power.nameKey === 'puDeadeyeName') return (s.critChanceBonus || 0) < 0.4;
-  if (power.nameKey === 'puStoutHeartName') return globals.maxLives < 10;
-  return true;
-  });
+  applyStatLevelUp();
+  playSynthesizedLevelUp();
+}
 
-  const normalPowers = availablePowers.filter(p => !p.isCorrupted);
-  const cursedPowers = availablePowers.filter(p => p.isCorrupted);
-  const shuffledNormal = [...normalPowers].sort(() => 0.5 - Math.random());
-  const choices: PowerUp[] = [];
-
-  // Check for available, unacquired Forbidden Fusion Arts!
-  const readyFusion = FUSION_RECIPES.find(f => !globals.activeFusions.has(f.key) && f.checkPrereqs());
-  if (readyFusion) {
-    choices.push({
-      nameKey: readyFusion!.nameKey,
-      descKey: readyFusion!.descKey,
-      isFusion: true,
-      fusionKey: readyFusion!.key,
-      apply: () => {
-        readyFusion!.apply();
-        playSynthesizedFusionUnlock();
-        if (!globals.discoveredFusions.includes(readyFusion!.key)) {
-          globals.discoveredFusions.push(readyFusion!.key);
-          safeStorage.setItem('stickmurai_fusions', JSON.stringify(globals.discoveredFusions));
-        }
-        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '【神聖合一奥義習得！】' : 'FORBIDDEN FUSION SYNTHESIZED!', '#ffd700', 36));
-      }
-    });
-  }
-
-  // 35% chance to offer a Cursed Blessing in non-zen mode when level >= 3
-  const offerCurse = (globals.gameMode !== 'zen' && globals.level >= 3 && Math.random() < 0.35 && cursedPowers.length > 0 && choices.length === 0);
-  if (offerCurse) {
-    const randomCurse = cursedPowers[Math.floor(Math.random() * cursedPowers.length)];
-    choices.push(shuffledNormal[0], shuffledNormal[1], randomCurse);
-  } else {
-    while (choices.length < 3 && shuffledNormal.length > 0) {
-      choices.push(shuffledNormal.shift()!);
-    }
-  }
-  
-  choices.forEach((power, index) => {
-    const card = document.createElement('div');
-    card.className = 'power-card';
-    card.style.animation = 'power-card-entrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) both, card-glow-pulse 3s infinite alternate';
-    card.style.animationDelay = `${index * 0.08}s, ${index * 0.08 + 0.45}s`;
-    
-    let category = 'basic';
-    const nk = power.nameKey;
-    if (power.isFusion) {
-      card.style.borderColor = '#ffd700';
-      card.style.background = 'linear-gradient(135deg, rgba(35, 20, 5, 0.98), rgba(60, 30, 10, 0.98))';
-      card.style.boxShadow = '0 0 30px rgba(255, 215, 0, 0.6)';
-      card.innerHTML = `<span style="display:inline-block; font-size:10px; font-weight:900; letter-spacing:1.5px; color:#ffd700; background:rgba(255,215,0,0.2); padding:3px 10px; border-radius:10px; margin-bottom:8px; border:1px solid rgba(255,215,0,0.6);">⚡ FORBIDDEN FUSION</span><h3 style="color:#fef08a;">${t(power.nameKey)}</h3><p style="color:#fde047;">${t(power.descKey)}</p>`;
-    } else if (power.isCorrupted) {
-      category = 'cursed';
-      card.style.borderColor = 'rgba(239, 68, 68, 0.7)';
-      card.style.background = 'linear-gradient(135deg, rgba(30, 10, 20, 0.95), rgba(15, 5, 10, 0.98))';
-      card.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.35)';
-      card.innerHTML = `<span style="display:inline-block; font-size:10px; font-weight:800; letter-spacing:1px; color:#ef4444; background:rgba(239,68,68,0.18); padding:2px 8px; border-radius:10px; margin-bottom:8px; border:1px solid rgba(239,68,68,0.4);">☠ CURSED RELIC</span><h3 style="color:#fee2e2;">${t(power.nameKey)}</h3><p style="color:#fca5a5;">${t(power.descKey)}</p>`;
-    } else {
-      if (nk.includes('Fire') || nk.includes('Blaze')) {
-        category = 'fire';
-      } else if (nk.includes('Wind') || nk.includes('Shield') || nk.includes('Gale') || nk.includes('Swift') || nk.includes('Feather')) {
-        category = 'wind';
-      } else if (nk.includes('Dash') || nk.includes('Thunder') || nk.includes('Charge')) {
-        category = 'thunder';
-      } else if (nk.includes('Void') || nk.includes('Gravity') || nk.includes('Clones') || nk.includes('Dimensional') || nk.includes('Echo')) {
-        category = 'void';
-      } else if (nk.includes('Giant') || nk.includes('Lethal') || nk.includes('Colossal') || nk.includes('Vampire') || nk.includes('Heart') || nk.includes('Armor') || nk.includes('Frost') || nk.includes('Tempo')) {
-        if (nk.includes('Frost')) {
-          category = 'frost';
-        } else {
-          category = 'vitality';
-        }
-      }
-      card.classList.add(`category-${category}`);
-      card.innerHTML = `<h3>${t(power.nameKey)}</h3><p>${t(power.descKey)}</p>`;
-    }
-    card.insertAdjacentHTML('beforeend', upgradePreview(power.nameKey));
-    card.tabIndex = 0;
-    card.setAttribute('role', 'button');
-    const choose = (e: Event) => {
-      e.stopPropagation();
-      if (globals.gameState !== 'levelup') return;
-      power.apply();
-      globals.chosenPowerUps.push(power.nameKey);
-
-      globals.exp -= globals.maxExp;
-      globals.maxExp = Math.round(globals.maxExp * 1.25);
-      globals.level++;
-      levelDisplay.textContent = globals.level.toString();
-      levelUpScreen.style.display = 'none';
-      const existingReroll = document.getElementById('level-up-reroll-btn');
-      if (existingReroll) existingReroll.remove();
-      
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, t('levelUpText'), "#00ff00", 30));
-      const atkUp = (vfxAnims as any).spells?.attackUp;
-      if (atkUp && atkUp.length > 0) {
-        globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, atkUp, 0.55, 1.9));
-      }
-      callbacks.updateUI();
-      globals.gameState = 'playing';
-    };
-    card.addEventListener('pointerdown', choose);
-    card.addEventListener('click', choose);
-    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); choose(e); } });
-    powerChoicesContainer.appendChild(card);
-  });
-
-  // Yomi Seal V: Mirror Soul Choice Reroll
-  const existingReroll = document.getElementById('level-up-reroll-btn');
-  existingReroll?.remove();
-  if (globals.levelUpRerollsRemaining > 0) {
-    const rerollBtn = document.createElement('button');
-    rerollBtn.id = 'level-up-reroll-btn';
-    rerollBtn.className = 'btn-action';
-    rerollBtn.style.cssText = 'margin: 16px auto 0; padding: 10px 24px; font-size: 15px; font-weight: bold; background: linear-gradient(135deg, #7c3aed, #4f46e5); color: #fff; border: 1px solid #c084fc; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);';
-    rerollBtn.innerHTML = `🎲 ${globals.currentLang === 'ja' ? '運命の再抽選 (残' : 'Reroll Choices ('}${globals.levelUpRerollsRemaining}${globals.currentLang === 'ja' ? '回)' : ' remaining)'}`;
-    rerollBtn.onclick = (e) => {
-      e.stopPropagation();
-      if (globals.levelUpRerollsRemaining <= 0) return;
-      globals.levelUpRerollsRemaining--;
-      triggerLevelUp();
-    };
-    levelUpScreen.appendChild(rerollBtn);
-  }
+export function omnislashHitDmg(hitIndex: number, isFinalBlast = false): number {
+  const base = isFinalBlast ? 24 : 14;
+  const slashBonus = globals.playerStats?.slashBonusDmgPct || 0;
+  const iaiBonus = globals.playerStats?.iaijutsuBonusDmg || 0;
+  const enhanceBonus = (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) ? (globals.playerStats?.enhanceBonusDmg || 1) * 2 : 0;
+  const comboBonus = Math.min(0.6, (globals.combo || 0) * 0.01 + hitIndex * 0.02);
+  const scaling = 1 + slashBonus + Math.min(1.0, (globals.level - 1) * 0.04);
+  const dmg = Math.round((base * scaling * (1 + comboBonus)) + iaiBonus + enhanceBonus);
+  return Math.max(isFinalBlast ? 16 : 6, dmg);
 }
 
 const ultOptions = [
@@ -536,7 +370,9 @@ const ultOptions = [
              if (e.state === 'dead') return;
              
              // hit target for 16 DMG (always applied)
-             callbacks.hitEnemy(e, Math.min(80, Math.round(16 * (1 + globals.level * 0.04))));
+             const isBoss = e.subType?.includes('boss') || (e as any).isBoss;
+              const hitDmg = isBoss ? Math.min(32, omnislashHitDmg(idx)) : omnislashHitDmg(idx);
+              callbacks.hitEnemy(e, hitDmg);
              
              // limit heavy canvas and sound context resources to prevent lag
              if (idx < maxVisuals) {
@@ -586,7 +422,9 @@ const ultOptions = [
             // Deal 20 DMG to all remaining active enemies
             globals.enemies.forEach(enemy => {
               if (enemy.state !== 'dead') {
-                callbacks.hitEnemy(enemy, 20);
+                const isBoss = enemy.subType?.includes('boss') || (enemy as any).isBoss;
+                const finalDmg = isBoss ? Math.min(48, omnislashHitDmg(0, true)) : omnislashHitDmg(0, true);
+                callbacks.hitEnemy(enemy, finalDmg);
                 for (let i = 0; i < 4; i++) {
                   globals.particles.push(Particle.acquire(enemy.x, enemy.y, '#ffd700', 150 + Math.random() * 150, 0.4, 2, Math.random() * Math.PI * 2));
                 }
@@ -638,82 +476,275 @@ const ultOptions = [
   }
 ];
 
+export function triggerZenField() {
+  globals.flowState = 'normal';
+  globals.flow = 0;
+  globals.zenFieldActiveTimer = 8.0;
+  globals.zenFieldTickTimer = 0;
+  globals.invulnTimer = 8.0;
+  globals.timeSlowDuration = 0;
+  globals.targetTimeSlowFactor = 1.0;
+  globals.timeSlowFactor = 1.0;
+  
+  globals.screenShake = 40;
+  globals.invertScreenTimer = 0.25;
+  
+  triggerMangaCutin('zen');
+
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('zenFieldText'), "neon-#00ffff", 48));
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#00ffff'));
+  
+  for (let i = 0; i < 20; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 200 + Math.random() * 200;
+    globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#00ffff', speed, 0.6, 3, angle));
+  }
+}
+
+export function triggerSpecificUltimate(type: 'shadow' | 'omni' | 'storm' | 'zen') {
+  if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
+  globals.flow = 0;
+  playSynthesizedAwaken();
+
+  if (globals.gameMode === 'zen') {
+    triggerZenField();
+    return;
+  }
+
+  if (type === 'shadow') {
+    ultOptions[0].apply();
+  } else if (type === 'omni') {
+    ultOptions[1].apply();
+  } else if (type === 'storm') {
+    ultOptions[2].apply();
+  } else {
+    ultOptions[1].apply();
+  }
+}
+
 export function activateAwakening() {
   if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
-  
-  playSynthesizedAwaken();
-  // Flow activation stays in combat; choose random ultimate without modal pause.
-  globals.flow = 0;
-  const chosen = ultOptions[Math.floor(Math.random() * ultOptions.length)];
-  chosen.apply();
-  return;
-  /* legacy ultimate choice UI retained below */
-  globals.gameState = 'ultchoice';
-  
-  const ultScreen = document.getElementById('ult-screen')!;
-  const ultChoicesContainer = document.getElementById('ult-choices')!;
-  const btnUlt = document.getElementById('btn-ult')!;
-  
-  ultScreen.style.display = 'flex';
-  ultChoicesContainer.innerHTML = '';
-  
-  let optionsToUse = ultOptions;
   if (globals.gameMode === 'zen') {
-    optionsToUse = [{
-      nameKey: "ultZenFieldName",
-      descKey: "ultZenFieldDesc",
-      apply: () => {
-        globals.flowState = 'normal';
-        globals.flow = 0;
-        globals.zenFieldActiveTimer = 8.0;
-        globals.zenFieldTickTimer = 0;
-        globals.invulnTimer = 8.0; // Invulnerable for duration
-        globals.timeSlowDuration = 0;
-        globals.targetTimeSlowFactor = 1.0;
-        globals.timeSlowFactor = 1.0;
-        
-        globals.screenShake = 40;
-        globals.invertScreenTimer = 0.25;
-        
-        triggerMangaCutin('zen');
-
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('zenFieldText'), "neon-#00ffff", 48));
-        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#00ffff'));
-        
-        for (let i = 0; i < 20; i++) {
-          const angle = Math.random() * Math.PI * 2;
-          const speed = 200 + Math.random() * 200;
-          globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#00ffff', speed, 0.6, 3, angle));
-        }
-      }
-    }];
+    triggerSpecificUltimate('zen');
+  } else {
+    triggerSpecificUltimate('omni');
   }
-  
-  optionsToUse.forEach((ult, index) => {
-    const card = document.createElement('div');
-    card.className = 'power-card';
-    card.style.animation = 'power-card-entrance 0.45s cubic-bezier(0.16, 1, 0.3, 1) both, card-glow-pulse 3s infinite alternate';
-    card.style.animationDelay = `${index * 0.08}s, ${index * 0.08 + 0.45}s`;
-    
-    let category = 'basic';
-    const nk = ult.nameKey;
-    if (nk.includes('Shadow')) category = 'void';
-    else if (nk.includes('Omni')) category = 'vitality';
-    else if (nk.includes('Zen')) category = 'wind';
-    else if (nk.includes('Storm')) category = 'thunder';
-    
-    card.classList.add(`category-${category}`);
-    card.innerHTML = `<h3>${t(ult.nameKey)}</h3><p>${t(ult.descKey)}</p>`;
-    card.addEventListener('click', () => {
-      ultScreen.style.display = 'none';
-      btnUlt.classList.remove('ready');
-      ult.apply();
+}
 
-      
-      globals.gameState = 'playing';
-    });
-    ultChoicesContainer.appendChild(card);
+export interface ShopSlot {
+  power: PowerUp;
+  price: number;
+  quality: 'common' | 'rare' | 'epic' | 'legendary';
+}
+
+let currentShopInventory: ShopSlot[] = [];
+
+export function resetShop() {
+  currentShopInventory = [];
+  globals.shopRefreshCount = 0;
+  globals.shopOpen = false;
+  const modal = document.getElementById('shop-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+export function getPowerQuality(p: PowerUp): 'common' | 'rare' | 'epic' | 'legendary' {
+  if (p.isFusion) return 'legendary';
+  const nk = p.nameKey;
+  if (nk.includes('Void') || nk.includes('Tempo') || nk.includes('Execution') || nk.includes('Clones') || nk.includes('Blood')) return 'legendary';
+  if (nk.includes('Echo') || nk.includes('Fire') || nk.includes('Frost') || nk.includes('BladeEchoes') || nk.includes('Gale') || nk.includes('Lethal') || nk.includes('Colossal')) return 'epic';
+  if (nk.includes('Giant') || nk.includes('Deadeye') || nk.includes('Vampire') || nk.includes('ChargeSpeed') || nk.includes('Dimensional') || nk.includes('StoutHeart') || nk.includes('PetalArmor') || nk.includes('Pulse') || nk.includes('Blast')) return 'rare';
+  return 'common';
+}
+
+export function getQualityPrice(q: 'common' | 'rare' | 'epic' | 'legendary'): number {
+  switch (q) {
+    case 'legendary': return 75;
+    case 'epic': return 45;
+    case 'rare': return 25;
+    case 'common': return 12;
+  }
+}
+
+export function rollShopInventory(): ShopSlot[] {
+  const available = powerUps.filter(p => {
+    if (p.isCorrupted) return false;
+    if (p.nameKey === 'puFrostName' && globals.frostStanceActive) return false;
+    if (p.nameKey === 'puVoidName' && globals.voidStanceActive) return false;
+    if (p.nameKey === 'puFlowingCounterName' && globals.flowingCounterActive) return false;
+    if (p.nameKey === 'puGaleVortexName' && globals.galeVortexActive) return false;
+    if (p.nameKey === 'puBladeEchoesName' && globals.bladeEchoesActive) return false;
+    if (p.nameKey === 'puGiantName' && globals.playerStats.slashSizeMult >= 2.2) return false;
+    if (p.nameKey === 'puWindName' && globals.playerStats.attackCooldownBase <= 0.18) return false;
+    if (p.nameKey === 'puFeatherName' && globals.playerStats.dashCooldownBase <= 0.72) return false;
+    if (p.nameKey === 'puSwiftName' && globals.playerStats.moveSpeedMult >= 1.5) return false;
+    if (p.nameKey === 'puDeadeyeName' && (globals.playerStats.critChanceBonus || 0) >= 0.4) return false;
+    if (p.nameKey === 'puStoutHeartName' && globals.maxLives >= 10) return false;
+    if (p.skill && p.skill !== globals.selectedSkill) return false;
+    return true;
   });
+
+  const shuffled = [...available].sort(() => Math.random() - 0.5);
+  const selected = shuffled.slice(0, 4);
+  return selected.map(p => {
+    const q = getPowerQuality(p);
+    return {
+      power: p,
+      quality: q,
+      price: getQualityPrice(q)
+    };
+  });
+}
+
+export function openShop() {
+  if (globals.gameState !== 'playing') return;
+  globals.gameState = 'paused';
+  globals.shopOpen = true;
+  if (currentShopInventory.length === 0) {
+    currentShopInventory = rollShopInventory();
+  }
+  renderShopModal();
+}
+
+export function closeShop() {
+  globals.shopOpen = false;
+  const modal = document.getElementById('shop-modal');
+  if (modal) modal.style.display = 'none';
+  if (globals.gameState === 'paused') {
+    globals.gameState = 'playing';
+  }
+}
+
+export function renderShopModal() {
+  let modal = document.getElementById('shop-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'shop-modal';
+    modal.className = 'overlay';
+    document.getElementById('app')?.appendChild(modal);
+  }
+  modal.style.display = 'flex';
+
+  const refreshCost = Math.ceil(5 * Math.pow(1.35, globals.shopRefreshCount || 0));
+  const isFreeRefresh = !!(globals.unlockedSeals && globals.unlockedSeals.includes(5) && (globals.shopRefreshCount || 0) === 0);
+  const costLabel = isFreeRefresh ? 'FREE (SEAL V)' : `◆ ${refreshCost}`;
+
+  const qualityColorMap: Record<string, string> = {
+    common: '#94a3b8',
+    rare: '#38bdf8',
+    epic: '#c084fc',
+    legendary: '#fbbf24'
+  };
+
+  modal.innerHTML = `
+    <div class="menu-box" style="max-width: 680px; width: min(680px, 94vw); max-height: 90vh; padding: 20px; border-color: #fbbf24; box-shadow: 0 0 35px rgba(251, 191, 36, 0.35); overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px; border-bottom: 1px solid rgba(251, 191, 36, 0.3); padding-bottom: 8px;">
+        <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(18px, 3vh, 26px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ BATTLE REQUISITION</h2>
+        <div style="font-family: 'Orbitron', monospace; font-size: 16px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4);">
+          ◆ <span id="modal-currency-count">${globals.stageCurrency || 0}</span>
+        </div>
+      </div>
+      
+      <p style="font-size: 12px; color: #94a3b8; margin: 0 0 14px 0; font-family: 'Space Mono', monospace;">
+        Temporary stage requisitions. All acquisitions and shards reset upon clearing or leaving this stage.
+      </p>
+
+      <div id="shop-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; width: 100%; margin-bottom: 16px;">
+      </div>
+
+      <div style="display: flex; gap: 12px; width: 100%; justify-content: center; flex-wrap: wrap;">
+        <button id="shop-refresh-btn" class="menu-btn btn-compact" style="border-color: #38bdf8; color: #38bdf8; min-height: 36px; height: 36px; min-width: 140px;">
+          🔄 Reroll (${costLabel})
+        </button>
+        <button id="shop-close-btn" class="menu-btn exit-btn btn-compact" style="min-height: 36px; height: 36px; min-width: 100px;">
+          ✕ Resume
+        </button>
+      </div>
+    </div>
+  `;
+
+  const grid = modal.querySelector('#shop-items-grid')!;
+  currentShopInventory.forEach((slot, idx) => {
+    const card = document.createElement('div');
+    const qColor = qualityColorMap[slot.quality];
+    const canAfford = (globals.stageCurrency || 0) >= slot.price;
+
+    card.className = 'power-card';
+    card.style.cssText = `
+      border-color: ${qColor};
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(10, 10, 15, 0.95));
+      box-shadow: 0 0 15px ${qColor}33;
+      padding: 12px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 140px;
+      cursor: ${canAfford ? 'pointer' : 'not-allowed'};
+      opacity: ${canAfford ? '1' : '0.45'};
+      transition: transform 0.15s ease;
+    `;
+
+    card.innerHTML = `
+      <div>
+        <span style="font-size: 9px; font-weight: 900; letter-spacing: 1px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 6px; border-radius: 6px; display: inline-block; margin-bottom: 6px;">
+          ${slot.quality}
+        </span>
+        <h3 style="font-size: 13px; margin: 0 0 4px 0; color: #f8fafc;">${t(slot.power.nameKey)}</h3>
+        <p style="font-size: 10.5px; color: #cbd5e1; margin: 0; line-height: 1.35;">${t(slot.power.descKey)}</p>
+      </div>
+      <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-family: 'Orbitron', monospace; font-size: 13px; font-weight: bold; color: ${canAfford ? '#fbbf24' : '#ef4444'};">
+          ◆ ${slot.price}
+        </span>
+        <span style="font-size: 10px; color: ${canAfford ? '#4ade80' : '#94a3b8'}; font-weight: bold;">
+          ${canAfford ? 'BUY' : 'LACK'}
+        </span>
+      </div>
+    `;
+
+    if (canAfford) {
+      const buy = (e: Event) => {
+        e.stopPropagation();
+        if ((globals.stageCurrency || 0) < slot.price) return;
+        globals.stageCurrency -= slot.price;
+        slot.power.apply();
+        globals.chosenPowerUps.push(slot.power.nameKey);
+        currentShopInventory.splice(idx, 1);
+        callbacks.updateUI();
+        playSound(sfx.magatamaPickup, 1.0);
+        renderShopModal();
+      };
+      card.addEventListener('pointerdown', buy);
+      card.addEventListener('click', buy);
+    }
+    grid.appendChild(card);
+  });
+
+  const refreshBtn = modal.querySelector('#shop-refresh-btn');
+  if (refreshBtn) {
+    const doRefresh = (e: Event) => {
+      e.stopPropagation();
+      const cost = isFreeRefresh ? 0 : refreshCost;
+      if ((globals.stageCurrency || 0) < cost) return;
+      globals.stageCurrency -= cost;
+      globals.shopRefreshCount = (globals.shopRefreshCount || 0) + 1;
+      currentShopInventory = rollShopInventory();
+      callbacks.updateUI();
+      playSound(sfx.slash, 0.7);
+      renderShopModal();
+    };
+    refreshBtn.addEventListener('pointerdown', doRefresh);
+    refreshBtn.addEventListener('click', doRefresh);
+  }
+
+  const closeBtn = modal.querySelector('#shop-close-btn');
+  if (closeBtn) {
+    const doClose = (e: Event) => {
+      e.stopPropagation();
+      closeShop();
+    };
+    closeBtn.addEventListener('pointerdown', doClose);
+    closeBtn.addEventListener('click', doClose);
+  }
 }
 
 export function triggerMangaCutin(type: 'shadow' | 'omni' | 'storm' | 'zen') {

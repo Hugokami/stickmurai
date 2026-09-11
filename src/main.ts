@@ -81,7 +81,7 @@ let shogunSpawned = false;
 import { initInput, pollGamepad } from './input';
 import { initUI, updateUI, updateEnhanceButton, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
 import { initRenderer, draw, resetCanvasVisuals } from './renderer';
-import { triggerLevelUp, activateAwakening, applyRandomStartUpgrade } from './powerups';
+import { triggerLevelUp, activateAwakening, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate } from './powerups';
 
 // register callbacks
 callbacks.t = t;
@@ -770,6 +770,10 @@ function initGame() {
   globals.hasRevivedThisRun = false;
   globals.zenFieldActiveTimer = 0;
   globals.zenFieldTickTimer = 0;
+  globals.stageCurrency = 0;
+  globals.shopRefreshCount = 0;
+  globals.shopOpen = false;
+  resetShop();
   
   document.getElementById('game-over')!.style.display = 'none'; 
   const gameOverTitle = document.getElementById('game-over-title');
@@ -1132,6 +1136,7 @@ function initGame() {
   globals.stageCurrency = 0;
   globals.shopRefreshCount = 0;
   globals.shopOpen = false;
+  resetShop();
   globals.runTime = 0;
   globals.dayNightPhase = 'dawn';
   globals.calamityEvent = 'none';
@@ -2517,6 +2522,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       }
     }
     addFlow(20);
+    globals.stageCurrency += 5;
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, '+5 ◆', '#fbbf24', 20));
 
     // Execution Magatama Bounty (boosted by Fortune & Blood Surge / Blood Tithe)
     const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : (globals.activeStageAffix?.id === 'blood_tithe' ? 3 : 1);
@@ -3823,7 +3830,24 @@ function update(realDt: number) {
     if (globals.singularityCleaveCD < 0) globals.singularityCleaveCD = 0;
   }
   
-  const autoUltCondition = globals.autoUltEnabled === 'on' && globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
+  const isFlowReady = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
+  if (isFlowReady) {
+    if (globals.keys['Digit1'] || globals.keys['Numpad1']) {
+      globals.keys['Digit1'] = false;
+      globals.keys['Numpad1'] = false;
+      triggerSpecificUltimate('shadow');
+    } else if (globals.keys['Digit2'] || globals.keys['Numpad2']) {
+      globals.keys['Digit2'] = false;
+      globals.keys['Numpad2'] = false;
+      triggerSpecificUltimate('omni');
+    } else if (globals.keys['Digit3'] || globals.keys['Numpad3']) {
+      globals.keys['Digit3'] = false;
+      globals.keys['Numpad3'] = false;
+      triggerSpecificUltimate('storm');
+    }
+  }
+
+  const autoUltCondition = globals.autoUltEnabled === 'on' && isFlowReady;
   if ((globals.keys[globals.keyMaps.ult] || globals.mobileUltJustPressed || autoUltCondition) && globals.ultCooldown <= 0) {
     globals.mobileUltJustPressed = false;
     globals.keys[globals.keyMaps.ult] = false; // consume key
@@ -4286,6 +4310,8 @@ function update(realDt: number) {
             globals.magatama = (globals.magatama || 0) + parryMag;
             safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x + 35, globals.player.y - 85, `+${parryMag} 🔮`, '#c084fc', 20));
+            globals.stageCurrency += 2;
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x - 35, globals.player.y - 85, '+2 ◆', '#fbbf24', 18));
 
             if (globals.consecutiveParries >= 10 && !globals.unlockedSeals.includes(6)) {
               spawnShrine(6);
