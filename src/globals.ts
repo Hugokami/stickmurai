@@ -61,6 +61,14 @@ export const globals = {
   gravityWellX: 0,
   gravityWellY: 0,
   singularityCleaveCD: 0,
+  raijinSplitterActive: false,
+  arterialGushActive: false,
+  sonicBreakthroughActive: false,
+  miasmaCleaveActive: false,
+  hanabiBladeActive: false,
+  grimHarvestActive: false,
+  voidRuptureTimer: 0,
+  raijinCataclysmTimer: 0,
 
   runStats: {
     kills: 0,
@@ -321,7 +329,9 @@ export const globals = {
     }
   })() as string[],
   hasHeroAwakening(heroId?: string): boolean {
-    const id = heroId || (globals as any).selectedHero || 'default';
+    const currentHero = (globals as any).selectedHero || 'default';
+    if (heroId && currentHero !== heroId) return false;
+    const id = heroId || currentHero;
     return (((globals as any).unlockedHeroAwakenings || []) as string[]).includes(id);
   },
   selectedHero: (() => {

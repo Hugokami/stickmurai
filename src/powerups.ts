@@ -82,6 +82,54 @@ export const powerUps: PowerUp[] = [
       globals.playerStats.executionLevel = 1;
     }
   },
+  {
+    nameKey: "puRaijinSplitterName",
+    descKey: "puRaijinSplitterDesc",
+    isUnique: true,
+    apply: () => {
+      globals.raijinSplitterActive = true;
+    }
+  },
+  {
+    nameKey: "puArterialGushName",
+    descKey: "puArterialGushDesc",
+    isUnique: true,
+    apply: () => {
+      globals.arterialGushActive = true;
+    }
+  },
+  {
+    nameKey: "puSonicBreakName",
+    descKey: "puSonicBreakDesc",
+    isUnique: true,
+    apply: () => {
+      globals.sonicBreakthroughActive = true;
+    }
+  },
+  {
+    nameKey: "puMiasmaCleaveName",
+    descKey: "puMiasmaCleaveDesc",
+    isUnique: true,
+    apply: () => {
+      globals.miasmaCleaveActive = true;
+    }
+  },
+  {
+    nameKey: "puHanabiBladeName",
+    descKey: "puHanabiBladeDesc",
+    isUnique: true,
+    apply: () => {
+      globals.hanabiBladeActive = true;
+    }
+  },
+  {
+    nameKey: "puGrimHarvestName",
+    descKey: "puGrimHarvestDesc",
+    isUnique: true,
+    apply: () => {
+      globals.grimHarvestActive = true;
+    }
+  },
 
   // Option 6: Corrupted Blessings / Cursed Relics (High-Risk, High-Reward)
   {
@@ -312,25 +360,97 @@ export function omnislashHitDmg(hitIndex: number, isFinalBlast = false): number 
   return Math.max(isFinalBlast ? 16 : 6, dmg);
 }
 
+export function applyHeroSignatureUltimate() {
+  globals.flowState = 'awakened';
+  globals.screenShake = 35;
+  globals.invertScreenTimer = 0.25;
+
+  const hero = (globals as any).selectedHero || 'default';
+  const isJa = globals.currentLang === 'ja';
+
+  triggerMangaCutin('shadow');
+
+  if (hero === 'luneblade') {
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, isJa ? '月華降臨！ 🌙' : 'CRESCENT MOONFALL! 🌙', 'neon-#38bdf8', 56));
+    const starframes = (vfxAnims as any).custom?.starfall;
+    if (starframes && starframes.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y - 80, starframes, 0.45, 2.5));
+    }
+    for (let i = 0; i < 20; i++) {
+      globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#38bdf8', 180 + Math.random() * 200, 0.5, 3, Math.random() * Math.PI * 2));
+    }
+  } else if (hero === 'ninja') {
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#a855f7'));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, isJa ? '影分身乱舞！ 👤' : 'WRAITH MIRAGE! 👤', 'neon-#a855f7', 56));
+    const smokeFrames = (vfxAnims as any).skills?.decoySmoke;
+    if (smokeFrames && smokeFrames.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, smokeFrames, 0.4, 2.2));
+    }
+    for (let i = 0; i < 20; i++) {
+      globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#c084fc', 200 + Math.random() * 200, 0.5, 3, Math.random() * Math.PI * 2));
+    }
+  } else if (hero === 'samurai') {
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f59e0b'));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, isJa ? '真・龍咆哮！ 🐉' : 'DRAGON ROAR! 🐉', 'neon-#f59e0b', 56));
+    (globals.player as any).hyperArmorTimer = 10.0;
+    const goldImpact = (vfxAnims as any).shockwaves?.impactGold;
+    if (goldImpact && goldImpact.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, goldImpact, 0.45, 2.8));
+    }
+    for (let i = 0; i < 20; i++) {
+      globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#fbbf24', 220 + Math.random() * 200, 0.5, 3.5, Math.random() * Math.PI * 2));
+    }
+  } else if (hero === 'nightborne') {
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#7c3aed'));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, isJa ? '深淵特異点！ 🌌' : 'ABYSSAL SINGULARITY! 🌌', 'neon-#7c3aed', 56));
+    const voidFrames = (vfxAnims as any).skills?.voidWarp;
+    if (voidFrames && voidFrames.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, voidFrames, 0.5, 3.0));
+    }
+    for (let i = 0; i < 20; i++) {
+      globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#a855f7', 190 + Math.random() * 200, 0.5, 3, Math.random() * Math.PI * 2));
+    }
+  } else if (hero === 'satyr') {
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#10b981'));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, isJa ? '大地の地割れ！ 🌋' : 'TITAN CATACLYSM! 🌋', 'neon-#10b981', 56));
+    const slamDust = (vfxAnims as any).boss?.slamDust;
+    if (slamDust && slamDust.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, slamDust, 0.45, 2.5));
+    }
+    for (let i = 0; i < 20; i++) {
+      globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#34d399', 200 + Math.random() * 200, 0.5, 3.5, Math.random() * Math.PI * 2));
+    }
+  } else if (hero === 'akakage') {
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ef4444'));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, isJa ? '血の阿修羅！ 🩸' : 'BLOOD ASURA FRENZY! 🩸', 'neon-#ef4444', 56));
+    const bloodFx = (vfxAnims as any).combat?.bloodSplatter;
+    if (bloodFx && bloodFx.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, bloodFx, 0.45, 2.5));
+    }
+    for (let i = 0; i < 25; i++) {
+      globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#ef4444', 220 + Math.random() * 220, 0.5, 3, Math.random() * Math.PI * 2));
+    }
+  } else {
+    // default (Stickmurai / Ronin)
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f59e0b'));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, isJa ? '剣聖領域！ ⚔️' : 'KENSEI DOMAIN! ⚔️', 'neon-#f59e0b', 56));
+    const lightBurst = (vfxAnims as any).shockwaves?.lightBurst;
+    if (lightBurst && lightBurst.length > 0) {
+      globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, lightBurst, 0.4, 2.5));
+    }
+    for (let i = 0; i < 20; i++) {
+      globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#fbbf24', 180 + Math.random() * 220, 0.5, 3, Math.random() * Math.PI * 2));
+    }
+  }
+}
+
 const ultOptions = [
   { 
     nameKey: "ultShadowName", 
     descKey: "ultShadowDesc",
     apply: () => {
-       globals.flowState = 'awakened';
-       globals.screenShake = 35;
-       globals.invertScreenTimer = 0.25;
-
-       triggerMangaCutin('shadow');
-
-       // Shadow awakening blast
-       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
-       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, globals.currentLang === 'ja' ? '影の覚醒！' : 'SHADOW AWAKENING!', 'neon-#c084fc', 56));
-       for (let i = 0; i < 20; i++) {
-         const angle = Math.random() * Math.PI * 2;
-         const speed = 150 + Math.random() * 250;
-         globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#c084fc', speed, 0.5, 2.5 + Math.random() * 2, angle));
-       }
+      applyHeroSignatureUltimate();
     }
   },
   {
@@ -583,10 +703,10 @@ export const SYNERGY_INFO: Record<SynergyType, { label: string; icon: string; co
 
 export function getPowerSynergy(p: PowerUp): SynergyType {
   const nk = p.nameKey;
-  if (nk.includes('Giant') || nk.includes('Wind') || nk.includes('Deadeye') || nk.includes('Echo') || nk.includes('BladeEchoes') || nk.includes('Execution')) return 'blade';
-  if (nk.includes('Blood') || nk.includes('ChargeSpeed') || nk.includes('Dimensional') || nk.includes('Tempo') || nk.includes('Flowing')) return 'flow';
+  if (nk.includes('Giant') || nk.includes('Wind') || nk.includes('Deadeye') || nk.includes('Echo') || nk.includes('BladeEchoes') || nk.includes('Execution') || nk.includes('ArterialGush') || nk.includes('GrimHarvest')) return 'blade';
+  if (nk.includes('Blood') || nk.includes('ChargeSpeed') || nk.includes('Dimensional') || nk.includes('Tempo') || nk.includes('Flowing') || nk.includes('SonicBreak')) return 'flow';
   if (nk.includes('Feather') || nk.includes('Swift') || nk.includes('Clones') || nk.includes('Petal') || nk.includes('Dash')) return 'shadow';
-  if (nk.includes('Shield') || nk.includes('Deflect') || nk.includes('StoutHeart') || nk.includes('Gale')) return 'iron';
+  if (nk.includes('Shield') || nk.includes('Deflect') || nk.includes('StoutHeart') || nk.includes('Gale') || nk.includes('HanabiBlade')) return 'iron';
   return 'element';
 }
 
@@ -615,9 +735,9 @@ export function resetShop() {
 export function getPowerQuality(p: PowerUp): 'common' | 'rare' | 'epic' | 'legendary' {
   if (p.isFusion) return 'legendary';
   const nk = p.nameKey;
-  if (nk.includes('Void') || nk.includes('Tempo') || nk.includes('Execution') || nk.includes('Clones') || nk.includes('Blood')) return 'legendary';
-  if (nk.includes('Echo') || nk.includes('Fire') || nk.includes('Frost') || nk.includes('BladeEchoes') || nk.includes('Gale') || nk.includes('Lethal') || nk.includes('Colossal')) return 'epic';
-  if (nk.includes('Giant') || nk.includes('Deadeye') || nk.includes('Vampire') || nk.includes('ChargeSpeed') || nk.includes('Dimensional') || nk.includes('StoutHeart') || nk.includes('PetalArmor') || nk.includes('Pulse') || nk.includes('Blast')) return 'rare';
+  if (nk.includes('Void') || nk.includes('Tempo') || nk.includes('Execution') || nk.includes('Clones') || nk.includes('Blood') || nk.includes('GrimHarvest') || nk.includes('RaijinSplitter')) return 'legendary';
+  if (nk.includes('Echo') || nk.includes('Fire') || nk.includes('Frost') || nk.includes('BladeEchoes') || nk.includes('Gale') || nk.includes('Lethal') || nk.includes('Colossal') || nk.includes('ArterialGush') || nk.includes('SonicBreak') || nk.includes('MiasmaCleave')) return 'epic';
+  if (nk.includes('Giant') || nk.includes('Deadeye') || nk.includes('Vampire') || nk.includes('ChargeSpeed') || nk.includes('Dimensional') || nk.includes('StoutHeart') || nk.includes('PetalArmor') || nk.includes('Pulse') || nk.includes('Blast') || nk.includes('HanabiBlade')) return 'rare';
   return 'common';
 }
 
@@ -634,6 +754,12 @@ function rollSingleShopSlot(): ShopSlot {
   const available = powerUps.filter(p => {
     if (p.isCorrupted) return false;
     if (p.isUnique && globals.chosenPowerUps.includes(p.nameKey)) return false;
+    if (p.nameKey === 'puRaijinSplitterName' && globals.raijinSplitterActive) return false;
+    if (p.nameKey === 'puArterialGushName' && globals.arterialGushActive) return false;
+    if (p.nameKey === 'puSonicBreakName' && globals.sonicBreakthroughActive) return false;
+    if (p.nameKey === 'puMiasmaCleaveName' && globals.miasmaCleaveActive) return false;
+    if (p.nameKey === 'puHanabiBladeName' && globals.hanabiBladeActive) return false;
+    if (p.nameKey === 'puGrimHarvestName' && globals.grimHarvestActive) return false;
     if (p.nameKey === 'puFrostName' && globals.frostStanceActive) return false;
     if (p.nameKey === 'puVoidName' && globals.voidStanceActive) return false;
     if (p.nameKey === 'puFireName' && (globals.playerStats.fireStanceLevel || 0) >= 1) return false;

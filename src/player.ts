@@ -284,7 +284,7 @@ export class Player extends Entity {
         // Reset attack cooldown on dash so combos trigger instantly and reliably!
         this.attackCooldown = 0;
 
-        if (globals.hasHeroAwakening('ninja') && (!globals.lastMirageSpawn || performance.now() - globals.lastMirageSpawn > 3500)) {
+        if (globals.selectedHero === 'ninja' && globals.hasHeroAwakening('ninja') && (!globals.lastMirageSpawn || performance.now() - globals.lastMirageSpawn > 3500)) {
           globals.lastMirageSpawn = performance.now();
           globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 80, "👤 SHADOW MIRAGE!", "#c084fc", 22));
           for (let i = 0; i < 12; i++) {

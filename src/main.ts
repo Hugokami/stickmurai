@@ -53,7 +53,6 @@ import {
   Projectile,
   Shockwave,
   FloatingText,
-  Decoy,
   Collectible,
   LightningBeam,
   PvPShockwave,
@@ -1570,8 +1569,37 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     hitEnemy(enemy, 3); // deal 3 damage on parry riposte!
     triggerFlowingCounterReset();
 
+    if (globals.raijinSplitterActive) {
+      const boltFx = (vfxAnims as any).skills?.lightningStrike;
+      if (boltFx && boltFx.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(enemy.x, enemy.y - 60, boltFx, 0.35, 2.4));
+      }
+      const vBurst = (vfxAnims as any).skills?.lightningBurstViolet;
+      if (vBurst && vBurst.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(enemy.x, enemy.y, vBurst, 0.3, 2.2));
+      }
+      hitEnemy(enemy, 35);
+      if (typeof (enemy as any).addPostureDamage === 'function') {
+        (enemy as any).addPostureDamage(35);
+      }
+      globals.floatingTexts.push(FloatingText.acquire(enemy.x, enemy.y - 80, "⚡ HEAVEN-SPLITTER! ⚡", "#c084fc", 24));
+      let chained = 0;
+      for (const other of globals.enemies) {
+        if (other !== enemy && other.state !== 'dead' && chained < 4) {
+          const d = Math.hypot(other.x - enemy.x, other.y - enemy.y);
+          if (d < 350) {
+            hitEnemy(other, 25);
+            if (typeof (other as any).addPostureDamage === 'function') {
+              (other as any).addPostureDamage(20);
+            }
+            chained++;
+          }
+        }
+      }
+    }
+
     // Hero Awakening Skill: Default (Stickmurai) - Kensei Domain
-    if (globals.hasHeroAwakening('default')) {
+    if ((globals.selectedHero || 'default') === 'default' && globals.hasHeroAwakening('default')) {
       globals.targetTimeSlowFactor = 0.25;
       globals.timeSlowDuration = 1.2;
       globals.screenShake = 22;
@@ -1591,7 +1619,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     }
 
     // Hero Awakening Skill: Samurai - Dragon Roar Counter
-    if (globals.hasHeroAwakening('samurai')) {
+    if (globals.selectedHero === 'samurai' && globals.hasHeroAwakening('samurai')) {
       globals.screenShake = Math.max(globals.screenShake, 20);
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fbbf24'));
       (globals.player as any).hyperArmorTimer = 3.0;
@@ -1965,7 +1993,7 @@ function fireFullyChargedIaijutsu(angle: number) {
     globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, txtColor));
     globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, projDmg, true, false, enhancedType));
 
-    if (globals.hasHeroAwakening('luneblade')) {
+    if (globals.selectedHero === 'luneblade' && globals.hasHeroAwakening('luneblade')) {
       const cross1 = angle + Math.PI / 2;
       const cross2 = angle - Math.PI / 2;
       globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, cross1, false, Math.round(projDmg * 0.85), true, false, 'luneblade_cross'));
@@ -2664,7 +2692,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     }
 
     // Hero Awakening Skill: Nightborne - Abyssal Singularity
-    if (globals.hasHeroAwakening('nightborne')) {
+    if (globals.selectedHero === 'nightborne' && globals.hasHeroAwakening('nightborne')) {
       globals.screenShake = Math.max(globals.screenShake, 20);
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 95, "🌌 ABYSSAL SINGULARITY!", "#7c3aed", 26));
       globals.shockwaves.push(new Shockwave(e.x, e.y, '#7c3aed'));
@@ -2682,6 +2710,23 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       if (globals.lives < globals.maxLives) {
         globals.lives = Math.min(globals.maxLives, globals.lives + 1);
         updateUI();
+      }
+    }
+
+    if (globals.grimHarvestActive) {
+      let highestHpEnemy: Enemy | null = null;
+      let maxHp = 0;
+      globals.enemies.forEach(en => {
+        if (en !== e && en.state !== 'dead' && en.hp > maxHp) {
+          maxHp = en.hp;
+          highestHpEnemy = en;
+        }
+      });
+      if (highestHpEnemy) {
+        const rendDmg = Math.max(35, Math.round((e.maxHp || 100) * 0.5));
+        hitEnemy(highestHpEnemy, rendDmg);
+        globals.shockwaves.push(new Shockwave((highestHpEnemy as any).x, (highestHpEnemy as any).y, '#ef4444'));
+        globals.floatingTexts.push(FloatingText.acquire((highestHpEnemy as any).x, (highestHpEnemy as any).y - 80, `💀 SOUL REND -${rendDmg}!`, "#ef4444", 26));
       }
     }
 
@@ -2850,12 +2895,23 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       (e as any).addPostureDamage(18);
     }
 
-    if (globals.hasHeroAwakening('akakage')) {
+    if (globals.selectedHero === 'akakage' && globals.hasHeroAwakening('akakage')) {
       const scytheAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
       const scythe = Projectile.acquire(globals.player.x, globals.player.y, scytheAngle, false, Math.round(finalDmg * 0.75), false, true, 'blood_scythe');
       (scythe as any).colorTint = '#ef4444';
       globals.projectiles.push(scythe);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "🩸 BLOOD ASURA SCYTHE!", "#ef4444", 22));
+    }
+
+    if (globals.arterialGushActive) {
+      const bloodFx = (vfxAnims as any).combat?.bloodSplatter;
+      if (bloodFx && bloodFx.length > 0) {
+        globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, bloodFx, 0.35, 2.0));
+      }
+      const missingHp = Math.max(0, e.maxHp - e.hp);
+      const bleedDmg = Math.max(6, Math.round(missingHp * 0.20));
+      hitEnemy(e, bleedDmg);
+      globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `🩸 -${bleedDmg} GUSH`, "#dc2626", 18));
     }
 
     // Golden crit particles
@@ -2960,7 +3016,7 @@ function killEnemy(e: Enemy) {
   globals.chiburuiKills = (globals.chiburuiKills || 0) + 1;
   checkVampireHeal(e);
 
-  if (globals.flowState === 'awakened' && globals.hasHeroAwakening('akakage')) {
+  if (globals.flowState === 'awakened' && globals.selectedHero === 'akakage') {
     globals.flow = Math.min(globals.playerStats.flowMax, globals.flow + 15);
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "+15 FLOW FRENZY! 🩸", "#ef4444", 20));
   }
@@ -3757,14 +3813,55 @@ function update(realDt: number) {
           ));
         }
       } else if (globals.selectedSkill === 'gravity') {
-        playSynthesizedGravity();
-        globals.gravityWellX = globals.player.x;
-        globals.gravityWellY = globals.player.y;
-        globals.gravityWellTimer = 4.0;
-        globals.enhanceActiveTimer = 4.0;
+        playSynthesizedThunder();
+        globals.enhanceActiveTimer = 7.0;
+        globals.raijinCataclysmTimer = 7.0;
         globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '重力崩壊！' : 'GRAVITY WELL!', '#aa55ff', 24));
-        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#aa55ff'));
+        globals.screenShake = Math.max(globals.screenShake, 45);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '神罰天雷・雷神壊滅！ ⚡' : 'RAIJIN CATACLYSM! ⚡', 'neon-#a855f7', 36));
+
+        // Celestial lightning strikes down at player location
+        const starfallFx = (vfxAnims as any).custom?.starfall;
+        if (starfallFx && starfallFx.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y - 120, starfallFx, 0.45, 3.5));
+        }
+        const boltFx = (vfxAnims as any).skills?.lightningStrike;
+        if (boltFx && boltFx.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y - 60, boltFx, 0.35, 3.0));
+        }
+        const violetBurst = (vfxAnims as any).skills?.lightningBurstViolet;
+        if (violetBurst && violetBurst.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, violetBurst, 0.4, 3.2));
+        }
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#a855f7'));
+
+        // Obliterate all enemy projectiles on screen!
+        globals.projectiles.forEach(p => {
+          if (p.isEnemy) {
+            p.life = 0;
+            for (let i = 0; i < 4; i++) {
+              globals.particles.push(Particle.acquire(p.x, p.y, '#c084fc', 140, 0.25, 2.5));
+            }
+          }
+        });
+
+        // Wipes 120 posture from all enemies on screen and deals 90 AoE DMG!
+        globals.enemies.forEach(e => {
+          if (e.state === 'dead') return;
+          const dist = Math.hypot(e.x - globals.player.x, e.y - globals.player.y);
+          if (dist < 550) {
+            hitEnemy(e, 90 + 15 * (globals.playerStats.gravityDamageLevel || 0));
+            if (typeof (e as any).addPostureDamage === 'function') {
+              (e as any).addPostureDamage(120);
+            }
+            e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
+            e.airborneZ = 45;
+            for (let k = 0; k < 8; k++) {
+              globals.particles.push(Particle.acquire(e.x, e.y, '#c084fc', 200 + Math.random() * 150, 0.4, 3.0, Math.random() * Math.PI * 2));
+            }
+          }
+        });
       } else if (globals.selectedSkill === 'parry_master') {
         playSynthesizedPerfectParry();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration;
@@ -3776,23 +3873,74 @@ function update(realDt: number) {
         }
       } else if (globals.selectedSkill === 'decoy_illusion') {
         playSynthesizedPerfectParry();
-        globals.enhanceActiveTimer = globals.playerStats.enhanceDuration;
+        globals.enhanceActiveTimer = 6.0;
+        globals.voidRuptureTimer = 6.0;
         globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '影遁の術！' : 'SHADOW STEP!', '#c084fc', 24));
-        
-        globals.decoys.push(new Decoy(globals.player.x - 100, globals.player.y));
-        globals.decoys.push(new Decoy(globals.player.x + 100, globals.player.y));
-        globals.decoys.push(new Decoy(globals.player.x, globals.player.y - 80));
-        const smokeFrames = (vfxAnims as any).skills?.decoySmoke;
-        if (smokeFrames && smokeFrames.length > 0) {
-          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, smokeFrames, 0.45, 2.0));
-        }
-        globals.decoyInvisibilityTimer = 5.0;
-        globals.decoyCritPrimed = true;
+        globals.screenShake = Math.max(globals.screenShake, 30);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '虚空断絶・幻影裂斬！ 🌌' : 'VOID RUPTURE! 🌌', 'neon-#38bdf8', 34));
 
-        globals.screenShake = 12;
-        for (let i = 0; i < 15; i++) {
-          globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#c084fc', 250, 0.45, 3, Math.random() * Math.PI * 2));
+        const startX = globals.player.x;
+        const startY = globals.player.y;
+
+        let targetAngle = globals.player.facing === 'left' ? Math.PI : 0;
+        let nearestEnemy: Enemy | null = null;
+        let minDistSq = 450 * 450;
+        globals.enemies.forEach(e => {
+          if (e.state === 'dead') return;
+          const dSq = (e.x - startX) ** 2 + (e.y - startY) ** 2;
+          if (dSq < minDistSq) {
+            minDistSq = dSq;
+            nearestEnemy = e;
+          }
+        });
+        if (nearestEnemy) {
+          targetAngle = Math.atan2((nearestEnemy as any).y - startY, (nearestEnemy as any).x - startX);
+        }
+
+        const blinkDist = 320;
+        const endX = startX + Math.cos(targetAngle) * blinkDist;
+        const endY = startY + Math.sin(targetAngle) * blinkDist;
+
+        // Void warp at start
+        const warpFx = (vfxAnims as any).skills?.voidWarp;
+        if (warpFx && warpFx.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(startX, startY, warpFx, 0.4, 2.5));
+        }
+
+        globals.player.x = endX;
+        globals.player.y = endY;
+        globals.invulnTimer = 0.5;
+
+        // Phantom warp at destination
+        const pWarpFx = (vfxAnims as any).skills?.phantomWarp;
+        if (pWarpFx && pWarpFx.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(endX, endY, pWarpFx, 0.45, 2.6));
+        }
+        globals.shockwaves.push(new Shockwave(endX, endY, '#38bdf8'));
+
+        // Supersonic 5-hit dimensional strike along trajectory
+        globals.enemies.forEach(e => {
+          if (e.state === 'dead') return;
+          const ex = e.x, ey = e.y;
+          const l2 = blinkDist * blinkDist;
+          const t = Math.max(0, Math.min(1, ((ex - startX) * (endX - startX) + (ey - startY) * (endY - startY)) / l2));
+          const projX = startX + t * (endX - startX);
+          const projY = startY + t * (endY - startY);
+          const distSq = (ex - projX) ** 2 + (ey - projY) ** 2;
+
+          if (distSq < 160 * 160) {
+            hitEnemy(e, 80);
+            if (typeof (e as any).addPostureDamage === 'function') {
+              (e as any).addPostureDamage(60);
+            }
+            e.stunTimer = Math.max(e.stunTimer || 0, 1.8);
+            globals.slashes.push(Slash.acquire(e.x, e.y, targetAngle, 1.5, false, 'rgba(56, 189, 248, ALPHA)'));
+            globals.slashes.push(Slash.acquire(e.x, e.y, targetAngle + Math.PI/2, 1.3, false, 'rgba(192, 132, 252, ALPHA)'));
+          }
+        });
+
+        for (let i = 0; i < 20; i++) {
+          globals.particles.push(Particle.acquire(endX, endY, '#38bdf8', 250, 0.45, 3, Math.random() * Math.PI * 2));
         }
       }
     }
@@ -4888,6 +5036,89 @@ function update(realDt: number) {
         globals.player
       ));
 
+      // Active Skill: Void Rupture (Dimension Slicer) phantom blade projection
+      if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
+        const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, 3);
+        targets.forEach(t => {
+          globals.slashes.push(Slash.acquire(t.x, t.y, Math.random() * Math.PI * 2, 1.4, false, 'rgba(56, 189, 248, ALPHA)'));
+          hitEnemy(t, dmg * 0.85);
+          for (let i = 0; i < 4; i++) {
+            globals.particles.push(Particle.acquire(t.x, t.y, '#38bdf8', 150, 0.3, 2.0));
+          }
+        });
+      }
+
+      // Active Skill: Raijin's Cataclysm chained violet thunderbolts
+      if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
+        const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, 5);
+        targets.forEach(t => {
+          hitEnemy(t, 30 + 10 * (globals.playerStats.gravityDamageLevel || 0));
+          t.stunTimer = Math.max(t.stunTimer || 0, 1.2);
+          const vBurst = (vfxAnims as any).skills?.lightningBurstViolet;
+          if (vBurst && vBurst.length > 0) {
+            globals.animatedEffects.push(new AnimatedEffect(t.x, t.y, vBurst, 0.3, 2.0));
+          }
+          for (let i = 0; i < 5; i++) {
+            globals.particles.push(Particle.acquire(t.x, t.y, '#c084fc', 180, 0.35, 2.5));
+          }
+        });
+        playSynthesizedThunder();
+      }
+
+      // Passive Powerup: Sonic Breakthrough (dash attack supersonic shockwave)
+      if (globals.sonicBreakthroughActive && globals.player.state === 'dash') {
+        globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.3), true, false, 'sonic_wave'));
+        const lightBurst = (vfxAnims as any).shockwaves?.lightBurst;
+        if (lightBurst && lightBurst.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x + Math.cos(angle) * 70, globals.player.y + Math.sin(angle) * 70, lightBurst, 0.3, 2.2));
+        }
+      }
+
+      // Passive Powerup: Miasma Cleave (corrosive emerald mist)
+      if (globals.miasmaCleaveActive) {
+        for (let i = 0; i < 3; i++) {
+          const px = globals.player.x + Math.cos(angle) * (40 + i * 30);
+          const py = globals.player.y + Math.sin(angle) * (40 + i * 30);
+          globals.particles.push(Particle.acquire(px, py, '#22c55e', 40, 1.5, 5, Math.random() * Math.PI * 2));
+        }
+        globals.enemies.forEach(en => {
+          if (en.state !== 'dead') {
+            const d = Math.hypot(en.x - globals.player.x, en.y - globals.player.y);
+            if (d < 180) {
+              (en as any).miasmaTimer = 2.5;
+              (en as any).incomingDmgMult = 1.35;
+            }
+          }
+        });
+      }
+
+      // Hero Ultimates: Awakened flow slashes
+      if (globals.flowState === 'awakened') {
+        size *= 1.8;
+        const currentHero = (globals as any).selectedHero || 'default';
+        if (currentHero === 'luneblade') {
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.2), true, false, 'luneblade_cross'));
+          const starFx = (vfxAnims as any).custom?.starfall;
+          if (starFx && starFx.length > 0) {
+            globals.animatedEffects.push(new AnimatedEffect(globals.player.x + Math.cos(angle) * 120, globals.player.y + Math.sin(angle) * 120, starFx, 0.35, 2.2));
+          }
+        } else if (currentHero === 'samurai') {
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.5), true, false, 'dragon_fury'));
+          globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f59e0b'));
+        } else if (currentHero === 'akakage') {
+          const scythe = Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.4), false, true, 'blood_scythe');
+          (scythe as any).colorTint = '#ef4444';
+          globals.projectiles.push(scythe);
+        } else if (currentHero === 'satyr') {
+          globals.shockwaves.push(new Shockwave(globals.player.x + Math.cos(angle) * 60, globals.player.y + Math.sin(angle) * 60, '#10b981'));
+        } else if (currentHero === 'nightborne') {
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.3), true, false, 'void_cleave'));
+        } else {
+          // default (Ronin / Stickmurai)
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.2), true, false, 'kensei_crescent'));
+        }
+      }
+
       // Akakage passive: Crimson Aftermath leaves one delayed echo slash.
       // The single scheduled echo keeps the effect powerful while bounded.
       if (globals.selectedHero === 'akakage' && attackPower < 1.7) {
@@ -4946,7 +5177,7 @@ function update(realDt: number) {
       }
 
       // Satyr Hero Awakening Skill: Titan Earth Fissure
-      if (globals.hasHeroAwakening('satyr')) {
+      if (globals.selectedHero === 'satyr' && globals.hasHeroAwakening('satyr')) {
         globals.satyrSlashCounter = ((globals.satyrSlashCounter || 0) + 1);
         if (globals.satyrSlashCounter % 3 === 0) {
           globals.screenShake = Math.max(globals.screenShake, 16);
@@ -5075,6 +5306,23 @@ function update(realDt: number) {
             proj.isEnemy = false;
             proj.isDeflected = true;
             proj.life = 3.5;
+
+            if (globals.hanabiBladeActive) {
+              const goldImpact = (vfxAnims as any).shockwaves?.impactGold;
+              if (goldImpact && goldImpact.length > 0) {
+                globals.animatedEffects.push(new AnimatedEffect(proj.x, proj.y, goldImpact, 0.35, 2.0));
+              }
+              for (let k = 0; k < 6; k++) {
+                const fa = Math.random() * Math.PI * 2;
+                globals.projectiles.push(Projectile.acquire(proj.x, proj.y, fa, false, 18, false, true));
+              }
+              globals.enemies.forEach(en => {
+                if (en.state !== 'dead' && Math.hypot(en.x - proj.x, en.y - proj.y) < 140) {
+                  en.airborneZ = 35;
+                  hitEnemy(en, 18);
+                }
+              });
+            }
 
             let targetEnemy: Enemy | null = (proj.shooter && proj.shooter.state !== 'dead') ? proj.shooter : null;
             if (!targetEnemy) {
@@ -5291,20 +5539,49 @@ function update(realDt: number) {
             }
           }
           if (nearestEnemy) {
-            const clone = Afterimage.acquire(globals.player, '#c084fc');
+            const hero = (globals as any).selectedHero || 'default';
+            const heroColors: Record<string, string> = {
+              default: '#fbbf24',
+              luneblade: '#38bdf8',
+              ninja: '#a855f7',
+              samurai: '#f59e0b',
+              nightborne: '#7c3aed',
+              satyr: '#10b981',
+              akakage: '#ef4444',
+            };
+            const themeColor = heroColors[hero] || '#fbbf24';
+            const clone = Afterimage.acquire(globals.player, themeColor);
             clone.x = nearestEnemy.x;
             clone.y = nearestEnemy.y;
             clone.life = 0.35;
             clone.maxLife = 0.35;
             globals.afterimages.push(clone);
             
-            globals.slashes.push(Slash.acquire(nearestEnemy.x, nearestEnemy.y, Math.random() * Math.PI * 2, 1.2, false, 'rgba(192, 132, 252, ALPHA)'));
-            hitEnemy(nearestEnemy, 4);
+            globals.slashes.push(Slash.acquire(nearestEnemy.x, nearestEnemy.y, Math.random() * Math.PI * 2, 1.2, false, themeColor));
+            hitEnemy(nearestEnemy, 6);
+
+            if (hero === 'luneblade') {
+              const starFx = (vfxAnims as any).custom?.starfall;
+              if (starFx && starFx.length > 0) {
+                globals.animatedEffects.push(new AnimatedEffect(nearestEnemy.x, nearestEnemy.y - 60, starFx, 0.3, 1.8));
+              }
+            } else if (hero === 'samurai') {
+              if (typeof (nearestEnemy as any).addPostureDamage === 'function') {
+                (nearestEnemy as any).addPostureDamage(25);
+              }
+            } else if (hero === 'satyr') {
+              nearestEnemy.airborneZ = 45;
+            } else if (hero === 'nightborne') {
+              if (globals.lives < globals.maxLives && Math.random() < 0.2) {
+                globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+                updateUI();
+              }
+            }
             
             const lowGraphics = globals.graphicsSettings === 'low';
             const particleCount = lowGraphics ? 1 : 3;
             for (let i = 0; i < particleCount; i++) {
-              globals.particles.push(Particle.acquire(nearestEnemy.x, nearestEnemy.y, '#c084fc', 120, 0.3, 1.5));
+              globals.particles.push(Particle.acquire(nearestEnemy.x, nearestEnemy.y, themeColor, 120, 0.3, 1.5));
             }
           }
         }

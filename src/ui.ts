@@ -1347,8 +1347,7 @@ export function updateEnhanceButton() {
     if (textSpan) textSpan.innerHTML = t('btnGravity');
     if (iconSvg) {
       iconSvg.innerHTML = `
-        <path d="M12 2a10 10 0 1 0 10 10A8 8 0 0 0 12 4a6 6 0 0 0-6 6a4 4 0 0 0 4 4a2 2 0 0 0 2-2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
+        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/>
       `;
     }
   } else if (globals.selectedSkill === 'parry_master') {
@@ -1366,9 +1365,7 @@ export function updateEnhanceButton() {
     if (textSpan) textSpan.innerHTML = t('btnDecoy');
     if (iconSvg) {
       iconSvg.innerHTML = `
-        <path d="M12 21c-4 0-7-4-7-8c0-3 2-6 5-8l2-3l2 3c3 2 5 5 5 8c0 4-3 8-7 8z" stroke="currentColor" stroke-width="1.5" fill="none"/>
-        <path d="M5 11l-2-4l4 2M19 11l2-4l-4 2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-        <path d="M9 13c1 0 2 1 2 2M15 13c-1 0-2 1-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M4 4l16 16M20 4l-16 16M12 2v20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       `;
     }
   }
@@ -1567,6 +1564,29 @@ export function updateCooldownsUI() {
         iconEl.textContent = '⚔️';
         omniBtnEl.title = 'Omnislash (Press 2 / F)';
       }
+    }
+  }
+
+  // Dynamic Hero Signature Ultimate label on primary ultimate button
+  const shadowBtnEl = document.getElementById('btn-ult-shadow');
+  if (shadowBtnEl) {
+    const textEl = shadowBtnEl.querySelector('.ult-text');
+    const iconEl = shadowBtnEl.querySelector('.ult-icon');
+    if (textEl && iconEl) {
+      const hero = (globals as any).selectedHero || 'default';
+      const heroUlts: Record<string, { label: string; icon: string; title: string }> = {
+        default: { label: 'KENSEI', icon: '⚔️', title: 'Kensei Domain (Press 1)' },
+        luneblade: { label: 'LUNAR', icon: '🌙', title: 'Crescent Moonfall (Press 1)' },
+        ninja: { label: 'MIRAGE', icon: '👤', title: 'Wraith Mirage (Press 1)' },
+        samurai: { label: 'DRAGON', icon: '🐉', title: 'Dragon Roar (Press 1)' },
+        nightborne: { label: 'ABYSS', icon: '🌌', title: 'Abyssal Singularity (Press 1)' },
+        satyr: { label: 'TITAN', icon: '🌋', title: 'Titan Cataclysm (Press 1)' },
+        akakage: { label: 'ASURA', icon: '🩸', title: 'Blood Asura Frenzy (Press 1)' },
+      };
+      const info = heroUlts[hero] || heroUlts.default;
+      textEl.textContent = info.label;
+      iconEl.textContent = info.icon;
+      shadowBtnEl.title = info.title;
     }
   }
 
