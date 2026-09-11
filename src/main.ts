@@ -7,6 +7,13 @@ function skillDamage(base:number, ratio:number, target?:Enemy):number {
   const boss = target && ['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(target.subType);
   return Math.max(1, Math.round((base + slashPower * ratio) * (boss ? 0.75 : 1)));
 }
+
+export function getCurrentSlashDamage(): number {
+  const baseDmg = 1.0 + (globals.playerStats?.reapersMarkLevel || 0) * 2 + (globals.flowState === 'awakened' ? 2.5 : 0) + (globals.playerStats?.enhanceBonusDmg || 0);
+  const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+  const comboMult = 1.0 + Math.min(1.5, (globals.combo || 0) * 0.015);
+  return Math.max(1, baseDmg * slashPct * comboMult);
+}
 import { reducedMotion, recordFrameTime } from './comfort';
 import { initJourney, beginJourneyRun, journeyHurt, journeySkill, leaveJourney, updateJourneyHud, isBossRush } from './journey';
 import { encounterBudget } from './journeyCore';
@@ -1570,6 +1577,9 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     triggerFlowingCounterReset();
 
     if (globals.raijinSplitterActive) {
+      const slashDmg = getCurrentSlashDamage();
+      const boltDmg = Math.round(45 + slashDmg * 3.5);
+      const boltPosture = Math.round(35 + slashDmg * 0.8);
       const boltFx = (vfxAnims as any).skills?.lightningStrike;
       if (boltFx && boltFx.length > 0) {
         globals.animatedEffects.push(new AnimatedEffect(enemy.x, enemy.y - 60, boltFx, 0.35, 2.4));
@@ -1578,19 +1588,21 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       if (vBurst && vBurst.length > 0) {
         globals.animatedEffects.push(new AnimatedEffect(enemy.x, enemy.y, vBurst, 0.3, 2.2));
       }
-      hitEnemy(enemy, 35);
+      hitEnemy(enemy, boltDmg);
       if (typeof (enemy as any).addPostureDamage === 'function') {
-        (enemy as any).addPostureDamage(35);
+        (enemy as any).addPostureDamage(boltPosture);
       }
-      globals.floatingTexts.push(FloatingText.acquire(enemy.x, enemy.y - 80, "⚡ HEAVEN-SPLITTER! ⚡", "#c084fc", 24));
+      globals.floatingTexts.push(FloatingText.acquire(enemy.x, enemy.y - 80, `⚡ HEAVEN-SPLITTER -${boltDmg}! ⚡`, "#c084fc", 24));
       let chained = 0;
       for (const other of globals.enemies) {
         if (other !== enemy && other.state !== 'dead' && chained < 4) {
           const d = Math.hypot(other.x - enemy.x, other.y - enemy.y);
           if (d < 350) {
-            hitEnemy(other, 25);
+            const chainDmg = Math.round(30 + slashDmg * 2.0);
+            const chainPosture = Math.round(20 + slashDmg * 0.5);
+            hitEnemy(other, chainDmg);
             if (typeof (other as any).addPostureDamage === 'function') {
-              (other as any).addPostureDamage(20);
+              (other as any).addPostureDamage(chainPosture);
             }
             chained++;
           }
@@ -1610,11 +1622,13 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
         const db = Math.hypot(b.x - globals.player.x, b.y - globals.player.y);
         return da - db;
       });
+      const slashDmg = getCurrentSlashDamage();
+      const kenseiDmg = Math.round(25 + slashDmg * 3.0);
       for (let i = 0; i < Math.min(4, sorted.length); i++) {
         const targetEnemy = sorted[i];
         const sAngle = Math.atan2(targetEnemy.y - globals.player.y, targetEnemy.x - globals.player.x);
         globals.slashes.push(Slash.acquire(targetEnemy.x, targetEnemy.y, sAngle, 1.4, true, '#38bdf8', false));
-        hitEnemy(targetEnemy, Math.round(15 * (1 + (globals.playerStats.slashBonusDmgPct || 0))));
+        hitEnemy(targetEnemy, kenseiDmg);
       }
     }
 
@@ -1624,9 +1638,15 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fbbf24'));
       (globals.player as any).hyperArmorTimer = 3.0;
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, "🐉 DRAGON ROAR! HYPER ARMOR 3S", "#fbbf24", 26));
+      const slashDmg = getCurrentSlashDamage();
+      const roarDmg = Math.round(30 + slashDmg * 2.2);
+      const roarPosture = Math.round(40 + slashDmg * 1.5);
       globals.enemies.forEach(en => {
         if (en.state !== 'dead' && Math.hypot(en.x - globals.player.x, en.y - globals.player.y) < 300) {
-          if (typeof (en as any).addPostureDamage === 'function') (en as any).addPostureDamage(120);
+          if (typeof (en as any).addPostureDamage === 'function') {
+            (en as any).addPostureDamage(roarPosture);
+          }
+          hitEnemy(en, roarDmg);
         }
       });
     }
@@ -2696,6 +2716,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       globals.screenShake = Math.max(globals.screenShake, 20);
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 95, "🌌 ABYSSAL SINGULARITY!", "#7c3aed", 26));
       globals.shockwaves.push(new Shockwave(e.x, e.y, '#7c3aed'));
+      const slashDmg = getCurrentSlashDamage();
+      const voidPulseDmg = Math.round(15 + slashDmg * 1.5);
       globals.enemies.forEach(en => {
         if (en.state !== 'dead' && en !== e) {
           const d = Math.hypot(e.x - en.x, e.y - en.y);
@@ -2703,7 +2725,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
             const pullA = Math.atan2(e.y - en.y, e.x - en.x);
             en.vx += Math.cos(pullA) * 900;
             en.vy += Math.sin(pullA) * 900;
-            en.hp -= 3;
+            en.hp -= voidPulseDmg;
+            if (en.hp <= 0) killEnemy(en);
           }
         }
       });
@@ -2723,7 +2746,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
         }
       });
       if (highestHpEnemy) {
-        const rendDmg = Math.max(35, Math.round((e.maxHp || 100) * 0.5));
+        const slashDmg = getCurrentSlashDamage();
+        const rendDmg = Math.max(Math.round(75 + slashDmg * 5.0), Math.round((e.maxHp || 100) * 0.5));
         hitEnemy(highestHpEnemy, rendDmg);
         globals.shockwaves.push(new Shockwave((highestHpEnemy as any).x, (highestHpEnemy as any).y, '#ef4444'));
         globals.floatingTexts.push(FloatingText.acquire((highestHpEnemy as any).x, (highestHpEnemy as any).y - 80, `💀 SOUL REND -${rendDmg}!`, "#ef4444", 26));
@@ -2896,20 +2920,23 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     }
 
     if (globals.selectedHero === 'akakage' && globals.hasHeroAwakening('akakage')) {
+      const slashDmg = getCurrentSlashDamage();
       const scytheAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
-      const scythe = Projectile.acquire(globals.player.x, globals.player.y, scytheAngle, false, Math.round(finalDmg * 0.75), false, true, 'blood_scythe');
+      const scytheDmg = Math.round(finalDmg * 1.1 + slashDmg * 1.5);
+      const scythe = Projectile.acquire(globals.player.x, globals.player.y, scytheAngle, false, scytheDmg, false, true, 'blood_scythe');
       (scythe as any).colorTint = '#ef4444';
       globals.projectiles.push(scythe);
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "🩸 BLOOD ASURA SCYTHE!", "#ef4444", 22));
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, `🩸 BLOOD ASURA SCYTHE -${scytheDmg}!`, "#ef4444", 22));
     }
 
     if (globals.arterialGushActive) {
+      const slashDmg = getCurrentSlashDamage();
       const bloodFx = (vfxAnims as any).combat?.bloodSplatter;
       if (bloodFx && bloodFx.length > 0) {
         globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, bloodFx, 0.35, 2.0));
       }
       const missingHp = Math.max(0, e.maxHp - e.hp);
-      const bleedDmg = Math.max(6, Math.round(missingHp * 0.20));
+      const bleedDmg = Math.max(12, Math.round(missingHp * 0.20)) + Math.round(slashDmg * 1.25);
       hitEnemy(e, bleedDmg);
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `🩸 -${bleedDmg} GUSH`, "#dc2626", 18));
     }
@@ -3846,14 +3873,17 @@ function update(realDt: number) {
           }
         });
 
-        // Wipes 120 posture from all enemies on screen and deals 90 AoE DMG!
+        // Wipes posture and deals massive AoE DMG scaling with current slash damage!
+        const slashDmg = getCurrentSlashDamage();
+        const cataclysmDmg = Math.round((90 + 25 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 10.0);
+        const cataclysmPosture = Math.round(120 + slashDmg * 3.0);
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
           const dist = Math.hypot(e.x - globals.player.x, e.y - globals.player.y);
           if (dist < 550) {
-            hitEnemy(e, 90 + 15 * (globals.playerStats.gravityDamageLevel || 0));
+            hitEnemy(e, cataclysmDmg);
             if (typeof (e as any).addPostureDamage === 'function') {
-              (e as any).addPostureDamage(120);
+              (e as any).addPostureDamage(cataclysmPosture);
             }
             e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
             e.airborneZ = 45;
@@ -3918,7 +3948,10 @@ function update(realDt: number) {
         }
         globals.shockwaves.push(new Shockwave(endX, endY, '#38bdf8'));
 
-        // Supersonic 5-hit dimensional strike along trajectory
+        // Supersonic 5-hit dimensional strike along trajectory scaling with current slash damage!
+        const slashDmg = getCurrentSlashDamage();
+        const ruptureDmg = Math.round(80 + slashDmg * 8.0);
+        const rupturePosture = Math.round(60 + slashDmg * 2.0);
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
           const ex = e.x, ey = e.y;
@@ -3929,9 +3962,9 @@ function update(realDt: number) {
           const distSq = (ex - projX) ** 2 + (ey - projY) ** 2;
 
           if (distSq < 160 * 160) {
-            hitEnemy(e, 80);
+            hitEnemy(e, ruptureDmg);
             if (typeof (e as any).addPostureDamage === 'function') {
-              (e as any).addPostureDamage(60);
+              (e as any).addPostureDamage(rupturePosture);
             }
             e.stunTimer = Math.max(e.stunTimer || 0, 1.8);
             globals.slashes.push(Slash.acquire(e.x, e.y, targetAngle, 1.5, false, 'rgba(56, 189, 248, ALPHA)'));
@@ -5038,10 +5071,11 @@ function update(realDt: number) {
 
       // Active Skill: Void Rupture (Dimension Slicer) phantom blade projection
       if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
+        const slashDmg = getCurrentSlashDamage();
         const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, 3);
         targets.forEach(t => {
           globals.slashes.push(Slash.acquire(t.x, t.y, Math.random() * Math.PI * 2, 1.4, false, 'rgba(56, 189, 248, ALPHA)'));
-          hitEnemy(t, dmg * 0.85);
+          hitEnemy(t, Math.round(dmg * 1.35 + 15 + slashDmg * 0.8));
           for (let i = 0; i < 4; i++) {
             globals.particles.push(Particle.acquire(t.x, t.y, '#38bdf8', 150, 0.3, 2.0));
           }
@@ -5050,9 +5084,10 @@ function update(realDt: number) {
 
       // Active Skill: Raijin's Cataclysm chained violet thunderbolts
       if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
+        const slashDmg = getCurrentSlashDamage();
         const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, 5);
         targets.forEach(t => {
-          hitEnemy(t, 30 + 10 * (globals.playerStats.gravityDamageLevel || 0));
+          hitEnemy(t, Math.round((30 + 12 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 2.5));
           t.stunTimer = Math.max(t.stunTimer || 0, 1.2);
           const vBurst = (vfxAnims as any).skills?.lightningBurstViolet;
           if (vBurst && vBurst.length > 0) {
@@ -5067,7 +5102,9 @@ function update(realDt: number) {
 
       // Passive Powerup: Sonic Breakthrough (dash attack supersonic shockwave)
       if (globals.sonicBreakthroughActive && globals.player.state === 'dash') {
-        globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.3), true, false, 'sonic_wave'));
+        const slashDmg = getCurrentSlashDamage();
+        const sonicDmg = Math.round(dmg * 1.8 + 25 + slashDmg * 1.5);
+        globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, sonicDmg, true, false, 'sonic_wave'));
         const lightBurst = (vfxAnims as any).shockwaves?.lightBurst;
         if (lightBurst && lightBurst.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(globals.player.x + Math.cos(angle) * 70, globals.player.y + Math.sin(angle) * 70, lightBurst, 0.3, 2.2));
@@ -5076,6 +5113,8 @@ function update(realDt: number) {
 
       // Passive Powerup: Miasma Cleave (corrosive emerald mist)
       if (globals.miasmaCleaveActive) {
+        const slashDmg = getCurrentSlashDamage();
+        const acidDmg = Math.round(15 + slashDmg * 0.8);
         for (let i = 0; i < 3; i++) {
           const px = globals.player.x + Math.cos(angle) * (40 + i * 30);
           const py = globals.player.y + Math.sin(angle) * (40 + i * 30);
@@ -5087,6 +5126,7 @@ function update(realDt: number) {
             if (d < 180) {
               (en as any).miasmaTimer = 2.5;
               (en as any).incomingDmgMult = 1.35;
+              hitEnemy(en, acidDmg);
             }
           }
         });
@@ -5095,27 +5135,34 @@ function update(realDt: number) {
       // Hero Ultimates: Awakened flow slashes
       if (globals.flowState === 'awakened') {
         size *= 1.8;
+        const slashDmg = getCurrentSlashDamage();
         const currentHero = (globals as any).selectedHero || 'default';
         if (currentHero === 'luneblade') {
-          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.2), true, false, 'luneblade_cross'));
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.8 + slashDmg * 1.5), true, false, 'luneblade_cross'));
           const starFx = (vfxAnims as any).custom?.starfall;
           if (starFx && starFx.length > 0) {
             globals.animatedEffects.push(new AnimatedEffect(globals.player.x + Math.cos(angle) * 120, globals.player.y + Math.sin(angle) * 120, starFx, 0.35, 2.2));
           }
         } else if (currentHero === 'samurai') {
-          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.5), true, false, 'dragon_fury'));
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 2.2 + slashDmg * 2.5), true, false, 'dragon_fury'));
           globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f59e0b'));
         } else if (currentHero === 'akakage') {
-          const scythe = Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.4), false, true, 'blood_scythe');
+          const scythe = Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.8 + slashDmg * 1.8), false, true, 'blood_scythe');
           (scythe as any).colorTint = '#ef4444';
           globals.projectiles.push(scythe);
         } else if (currentHero === 'satyr') {
           globals.shockwaves.push(new Shockwave(globals.player.x + Math.cos(angle) * 60, globals.player.y + Math.sin(angle) * 60, '#10b981'));
+          globals.enemies.forEach(en => {
+            if (en.state !== 'dead' && Math.hypot(en.x - (globals.player.x + Math.cos(angle)*60), en.y - (globals.player.y + Math.sin(angle)*60)) < 180) {
+              en.airborneZ = 65;
+              hitEnemy(en, Math.round(50 + slashDmg * 3.0));
+            }
+          });
         } else if (currentHero === 'nightborne') {
-          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.3), true, false, 'void_cleave'));
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.7 + slashDmg * 1.8), true, false, 'void_cleave'));
         } else {
           // default (Ronin / Stickmurai)
-          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.2), true, false, 'kensei_crescent'));
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.5 + slashDmg * 1.2), true, false, 'kensei_crescent'));
         }
       }
 
@@ -5308,18 +5355,21 @@ function update(realDt: number) {
             proj.life = 3.5;
 
             if (globals.hanabiBladeActive) {
+              const slashDmg = getCurrentSlashDamage();
+              const microDmg = Math.round(20 + slashDmg * 1.1);
+              const aoeDmg = Math.round(25 + slashDmg * 1.5);
               const goldImpact = (vfxAnims as any).shockwaves?.impactGold;
               if (goldImpact && goldImpact.length > 0) {
                 globals.animatedEffects.push(new AnimatedEffect(proj.x, proj.y, goldImpact, 0.35, 2.0));
               }
               for (let k = 0; k < 6; k++) {
                 const fa = Math.random() * Math.PI * 2;
-                globals.projectiles.push(Projectile.acquire(proj.x, proj.y, fa, false, 18, false, true));
+                globals.projectiles.push(Projectile.acquire(proj.x, proj.y, fa, false, microDmg, false, true));
               }
               globals.enemies.forEach(en => {
                 if (en.state !== 'dead' && Math.hypot(en.x - proj.x, en.y - proj.y) < 140) {
                   en.airborneZ = 35;
-                  hitEnemy(en, 18);
+                  hitEnemy(en, aoeDmg);
                 }
               });
             }
@@ -5557,25 +5607,30 @@ function update(realDt: number) {
             clone.maxLife = 0.35;
             globals.afterimages.push(clone);
             
+            const slashDmg = getCurrentSlashDamage();
+            const autoDmg = Math.round(15 + slashDmg * 1.3);
             globals.slashes.push(Slash.acquire(nearestEnemy.x, nearestEnemy.y, Math.random() * Math.PI * 2, 1.2, false, themeColor));
-            hitEnemy(nearestEnemy, 6);
+            hitEnemy(nearestEnemy, autoDmg);
 
             if (hero === 'luneblade') {
               const starFx = (vfxAnims as any).custom?.starfall;
               if (starFx && starFx.length > 0) {
                 globals.animatedEffects.push(new AnimatedEffect(nearestEnemy.x, nearestEnemy.y - 60, starFx, 0.3, 1.8));
               }
+              hitEnemy(nearestEnemy, Math.round(20 + slashDmg * 1.5));
             } else if (hero === 'samurai') {
               if (typeof (nearestEnemy as any).addPostureDamage === 'function') {
-                (nearestEnemy as any).addPostureDamage(25);
+                (nearestEnemy as any).addPostureDamage(Math.round(30 + slashDmg * 1.2));
               }
             } else if (hero === 'satyr') {
               nearestEnemy.airborneZ = 45;
+              hitEnemy(nearestEnemy, Math.round(25 + slashDmg * 1.4));
             } else if (hero === 'nightborne') {
               if (globals.lives < globals.maxLives && Math.random() < 0.2) {
                 globals.lives = Math.min(globals.maxLives, globals.lives + 1);
                 updateUI();
               }
+              hitEnemy(nearestEnemy, Math.round(18 + slashDmg * 1.2));
             }
             
             const lowGraphics = globals.graphicsSettings === 'low';
