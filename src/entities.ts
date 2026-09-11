@@ -668,308 +668,301 @@ export class Projectile {
     }
     
     ctx.save();
-    ctx.translate(rx, ry);
-    ctx.rotate(this.angle);
-    
-    if (this.isEnemy) {
-      const tint = (this as any).colorTint;
-      let primary = '#ff0000';
-      let secondary = '#ffff00';
+    try {
+      ctx.translate(rx, ry);
+      ctx.rotate(this.angle);
       
-      if (tint === '#ff4400') {
-        primary = '#ff4400';
-        secondary = '#ffb700';
-      } else if (tint === '#a855f7') {
-        primary = '#a855f7';
-        secondary = '#d8b4fe';
-      } else if (tint === '#f43f5e') {
-        primary = '#f43f5e';
-        secondary = '#fda4af';
-      }
+      if (this.isEnemy) {
+        const tint = (this as any).colorTint;
+        let primary = '#ff0000';
+        let secondary = '#ffff00';
+        
+        if (tint === '#ff4400') {
+          primary = '#ff4400';
+          secondary = '#ffb700';
+        } else if (tint === '#a855f7') {
+          primary = '#a855f7';
+          secondary = '#d8b4fe';
+        } else if (tint === '#f43f5e') {
+          primary = '#f43f5e';
+          secondary = '#fda4af';
+        }
 
-      ctx.beginPath();
-      ctx.arc(0, 0, 22, 0, Math.PI*2);
-      ctx.fillStyle = primary;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(0, 0, 16, 0, Math.PI*2);
-      ctx.fillStyle = secondary;
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(0, 0, 8, 0, Math.PI*2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-    } else if (this.isDeflected) {
-      ctx.beginPath();
-      ctx.arc(0, 0, 15, 0, Math.PI*2);
-      ctx.fillStyle = '#00ffff';
-      ctx.fill();
-      ctx.beginPath();
-      ctx.arc(0, 0, 10, 0, Math.PI*2);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-    } else {
-      ctx.save();
-      
-      // Dedicated polished Echo Slash rendering
-      if (this.isEcho) {
-        const echoFrames = (vfxAnims as any).projectiles?.echoSlash;
-        if (echoFrames && echoFrames.length > 0) {
-          const progress = Math.min(0.99, Math.max(0, 1 - (this.life / ((this as any).maxLife || 0.45))));
-          const frameIndex = Math.min(echoFrames.length - 1, Math.floor(progress * echoFrames.length));
-          const frame = echoFrames[frameIndex];
+        ctx.beginPath();
+        ctx.arc(0, 0, 22, 0, Math.PI*2);
+        ctx.fillStyle = primary;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, 0, 16, 0, Math.PI*2);
+        ctx.fillStyle = secondary;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, 0, 8, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      } else if (this.isDeflected) {
+        ctx.beginPath();
+        ctx.arc(0, 0, 15, 0, Math.PI*2);
+        ctx.fillStyle = '#00ffff';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(0, 0, 10, 0, Math.PI*2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      } else {
+        // Dedicated polished Echo Slash rendering
+        if (this.isEcho) {
+          const echoFrames = (vfxAnims as any).projectiles?.echoSlash;
+          if (echoFrames && echoFrames.length > 0) {
+            const progress = Math.min(0.99, Math.max(0, 1 - (this.life / ((this as any).maxLife || 0.45))));
+            const frameIndex = Math.min(echoFrames.length - 1, Math.floor(progress * echoFrames.length));
+            const frame = echoFrames[frameIndex];
+            if (frame && frame.complete && frame.naturalWidth > 0) {
+              const tinted = getTintedImage(frame, '#38bdf8');
+              ctx.save();
+              ctx.globalAlpha = 0.95 * Math.min(1, this.life * 5);
+              const sw = frame.width * 2.8;
+              const sh = frame.height * 2.8;
+              ctx.drawImage(tinted, -sw * 0.4, -sh * 0.5, sw, sh);
+              ctx.restore();
+              return;
+            }
+          }
+          ctx.scale(0.85, 0.85);
+          const pEcho = Math.sin(this.life * 26);
+          const echoAlpha = 0.65 + 0.3 * pEcho;
+          
+          // 1. Soft Outer Spectral Ghost Glow
+          ctx.save();
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 12;
+          ctx.globalAlpha = 0.32 * echoAlpha;
+          ctx.lineCap = 'round';
+          ctx.lineJoin = 'round';
+          ctx.beginPath();
+          ctx.arc(0, 0, 130, -Math.PI / 2.4, Math.PI / 2.4);
+          ctx.arc(28, 0, 105, Math.PI / 2.6, -Math.PI / 2.6, true);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.restore();
+
+          // 2. Secondary Harmonic Reverberation Arc
+          ctx.save();
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 4.5;
+          ctx.globalAlpha = 0.7 * echoAlpha;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.arc(10, 0, 124, -Math.PI / 2.5, Math.PI / 2.5);
+          ctx.stroke();
+          ctx.restore();
+
+          // 3. Razor-Sharp Spectral Core Edge
+          ctx.save();
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.globalAlpha = 0.95;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.arc(4, 0, 128, -Math.PI / 2.5, Math.PI / 2.5);
+          ctx.stroke();
+          ctx.restore();
+
+          // 4. Spectral Gradient Fill
+          const echoGrad = ctx.createLinearGradient(-20, 0, 140, 0);
+          echoGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
+          echoGrad.addColorStop(0.35, 'rgba(56, 189, 248, 0.5)');
+          echoGrad.addColorStop(0.65, 'rgba(192, 132, 252, 0.65)');
+          echoGrad.addColorStop(0.9, 'rgba(255, 255, 255, 0.8)');
+          echoGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
+          ctx.fillStyle = echoGrad;
+          ctx.beginPath();
+          ctx.arc(0, 0, 130, -Math.PI / 2.4, Math.PI / 2.4);
+          ctx.arc(28, 0, 105, Math.PI / 2.6, -Math.PI / 2.6, true);
+          ctx.closePath();
+          ctx.fill();
+
+          // 5. Delicate trailing echo speed streaks
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
+          ctx.lineWidth = 1.2;
+          ctx.beginPath();
+          for (let i = -2; i <= 2; i++) {
+            const arcAngle = (i / 3) * (Math.PI / 2.6);
+            const r1 = 125;
+            const r2 = 142 + Math.abs(i) * 5;
+            ctx.moveTo(Math.cos(arcAngle) * r1, Math.sin(arcAngle) * r1);
+            ctx.lineTo(Math.cos(arcAngle - 0.12) * r2, Math.sin(arcAngle - 0.12) * r2);
+          }
+          ctx.stroke();
+          return;
+        }
+
+        const isUlt = globals.flowState === 'awakened';
+        
+        let projSize = (globals.playerStats.iaijutsuRangeMult || 1.0) * 1.35;
+        if (this.isHuge) {
+          projSize *= 2.0; // Grand, sweeping crescent wave
+        }
+        
+        if (this.enhancedType === 'dragon') {
+          projSize *= 1.75;
+        } else if (this.enhancedType === 'shadow_awakening') {
+          projSize *= 1.5;
+        } else if (this.enhancedType === 'storm_god') {
+          projSize *= 1.55;
+        } else if (this.enhancedType === 'shield') {
+          projSize *= 1.35;
+        }
+        ctx.scale(projSize, projSize);
+
+        let shadowCol = isUlt ? '#ffd700' : '#00ffff';
+        let strokeCol = isUlt ? '#ffffff' : '#00ffff';
+        let colorBase = isUlt ? 'rgba(255, 215, 0, ' : 'rgba(0, 255, 255, ';
+        
+        const isEnhanceActive = (globals.selectedSkill === 'enhance' || globals.selectedSkill === 'firewheel') && globals.enhanceActiveTimer > 0;
+        if (isEnhanceActive) {
+          shadowCol = '#ff4400';
+          strokeCol = '#ff6600';
+          colorBase = 'rgba(255, 68, 0, ';
+        }
+
+        if (this.enhancedType === 'dragon') {
+          shadowCol = '#ff1100';
+          strokeCol = '#ffa500';
+          colorBase = 'rgba(255, 68, 0, ';
+        } else if (this.enhancedType === 'shield') {
+          shadowCol = '#00ffc8';
+          strokeCol = '#ffffff';
+          colorBase = 'rgba(0, 255, 200, ';
+        } else if (this.enhancedType === 'firewheel') {
+          shadowCol = '#ff8800';
+          strokeCol = '#ffcc00';
+          colorBase = 'rgba(255, 136, 0, ';
+        } else if (this.enhancedType === 'gravity') {
+          shadowCol = '#c084fc';
+          strokeCol = '#8a2be2';
+          colorBase = 'rgba(192, 132, 252, ';
+        } else if (this.enhancedType === 'parry') {
+          shadowCol = '#ffd700';
+          strokeCol = '#ffffff';
+          colorBase = 'rgba(255, 215, 0, ';
+        } else if (this.enhancedType === 'decoy') {
+          shadowCol = '#aa66ff';
+          strokeCol = '#8a2be2';
+          colorBase = 'rgba(170, 102, 255, ';
+        } else if (this.enhancedType === 'shadow_awakening') {
+          shadowCol = '#d8b4fe';
+          strokeCol = '#aa66ff';
+          colorBase = 'rgba(216, 180, 254, ';
+        } else if (this.enhancedType === 'storm_god') {
+          shadowCol = '#fbbf24';
+          strokeCol = '#ffffff';
+          colorBase = 'rgba(251, 191, 36, ';
+        } else if (this.enhancedType === 'zen_field') {
+          shadowCol = '#22d3ee';
+          strokeCol = '#e0f2fe';
+          colorBase = 'rgba(34, 211, 238, ';
+        }
+
+        // Sprite-based Iaijutsu Shockwave animation
+        const iaiFrames = (vfxAnims as any).projectiles?.iaijutsuWave;
+        if (iaiFrames && iaiFrames.length > 0) {
+          const progress = Math.min(0.99, Math.max(0, 1 - (this.life / ((this as any).maxLife || 0.5))));
+          const frameIndex = Math.min(iaiFrames.length - 1, Math.floor(progress * iaiFrames.length));
+          const frame = iaiFrames[frameIndex];
           if (frame && frame.complete && frame.naturalWidth > 0) {
-            const tinted = getTintedImage(frame, '#38bdf8');
+            const tinted = getTintedImage(frame, strokeCol.startsWith('#') ? strokeCol : shadowCol);
             ctx.save();
-            ctx.globalAlpha = 0.95 * Math.min(1, this.life * 5);
-            const sw = frame.width * 2.8;
-            const sh = frame.height * 2.8;
+            ctx.globalAlpha = 0.98 * Math.min(1, this.life * 5);
+            const sw = frame.width * 3.4;
+            const sh = frame.height * 3.4;
             ctx.drawImage(tinted, -sw * 0.4, -sh * 0.5, sw, sh);
-            ctx.restore();
             ctx.restore();
             return;
           }
         }
-        ctx.scale(0.85, 0.85);
-        const pEcho = Math.sin(this.life * 26);
-        const echoAlpha = 0.65 + 0.3 * pEcho;
-        
-        // 1. Soft Outer Spectral Ghost Glow
+
+        // 1. Deep outer luminous blade aura
         ctx.save();
-        ctx.strokeStyle = '#38bdf8';
-        ctx.lineWidth = 12;
-        ctx.globalAlpha = 0.32 * echoAlpha;
+        ctx.strokeStyle = shadowCol;
+        ctx.lineWidth = 16;
+        ctx.globalAlpha = 0.38;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
-        ctx.arc(0, 0, 130, -Math.PI / 2.4, Math.PI / 2.4);
-        ctx.arc(28, 0, 105, Math.PI / 2.6, -Math.PI / 2.6, true);
+        ctx.arc(0, 0, 152, -Math.PI/2.3, Math.PI/2.3);
+        ctx.arc(36, 0, 118, Math.PI/2.6, -Math.PI/2.6, true);
         ctx.closePath();
         ctx.stroke();
         ctx.restore();
-
-        // 2. Secondary Harmonic Reverberation Arc
-        ctx.save();
-        ctx.strokeStyle = '#c084fc';
-        ctx.lineWidth = 4.5;
-        ctx.globalAlpha = 0.7 * echoAlpha;
+        
+        // 2. Mid sharp energy sheath
+        ctx.strokeStyle = strokeCol;
+        ctx.lineWidth = 7;
         ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
         ctx.beginPath();
-        ctx.arc(10, 0, 124, -Math.PI / 2.5, Math.PI / 2.5);
-        ctx.stroke();
-        ctx.restore();
-
-        // 3. Razor-Sharp Spectral Core Edge
-        ctx.save();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2.5;
-        ctx.globalAlpha = 0.95;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.arc(4, 0, 128, -Math.PI / 2.5, Math.PI / 2.5);
-        ctx.stroke();
-        ctx.restore();
-
-        // 4. Spectral Gradient Fill
-        const echoGrad = ctx.createLinearGradient(-20, 0, 140, 0);
-        echoGrad.addColorStop(0, 'rgba(56, 189, 248, 0)');
-        echoGrad.addColorStop(0.35, 'rgba(56, 189, 248, 0.5)');
-        echoGrad.addColorStop(0.65, 'rgba(192, 132, 252, 0.65)');
-        echoGrad.addColorStop(0.9, 'rgba(255, 255, 255, 0.8)');
-        echoGrad.addColorStop(1, 'rgba(56, 189, 248, 0)');
-        ctx.fillStyle = echoGrad;
-        ctx.beginPath();
-        ctx.arc(0, 0, 130, -Math.PI / 2.4, Math.PI / 2.4);
-        ctx.arc(28, 0, 105, Math.PI / 2.6, -Math.PI / 2.6, true);
+        ctx.arc(0, 0, 150, -Math.PI/2.3, Math.PI/2.3);
+        ctx.arc(35, 0, 120, Math.PI/2.6, -Math.PI/2.6, true);
         ctx.closePath();
+        ctx.stroke();
+
+        // 3. Radiant inner multi-stop energy gradient
+        const grad = ctx.createLinearGradient(-30, 0, 160, 0);
+        grad.addColorStop(0, colorBase + '0)');
+        grad.addColorStop(0.25, colorBase + '0.85)');
+        grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.98)');
+        grad.addColorStop(0.75, colorBase + '0.85)');
+        grad.addColorStop(1, colorBase + '0)');
+        ctx.fillStyle = grad;
         ctx.fill();
 
-        // 5. Delicate trailing echo speed streaks
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.55)';
-        ctx.lineWidth = 1.2;
+        // 4. Razor-sharp white cutting blade core
         ctx.beginPath();
-        for (let i = -2; i <= 2; i++) {
-          const arcAngle = (i / 3) * (Math.PI / 2.6);
-          const r1 = 125;
-          const r2 = 142 + Math.abs(i) * 5;
-          ctx.moveTo(Math.cos(arcAngle) * r1, Math.sin(arcAngle) * r1);
-          ctx.lineTo(Math.cos(arcAngle - 0.12) * r2, Math.sin(arcAngle - 0.12) * r2);
-        }
-        ctx.stroke();
-
-        ctx.restore();
-        ctx.restore();
-        return;
-      }
-
-      const isUlt = globals.flowState === 'awakened';
-      
-      let projSize = (globals.playerStats.iaijutsuRangeMult || 1.0) * 1.35;
-      if (this.isHuge) {
-        projSize *= 2.0; // Grand, sweeping crescent wave
-      }
-      
-      if (this.enhancedType === 'dragon') {
-        projSize *= 1.75;
-      } else if (this.enhancedType === 'shadow_awakening') {
-        projSize *= 1.5;
-      } else if (this.enhancedType === 'storm_god') {
-        projSize *= 1.55;
-      } else if (this.enhancedType === 'shield') {
-        projSize *= 1.35;
-      }
-      ctx.scale(projSize, projSize);
-
-      let shadowCol = isUlt ? '#ffd700' : '#00ffff';
-      let strokeCol = isUlt ? '#ffffff' : '#00ffff';
-      let colorBase = isUlt ? 'rgba(255, 215, 0, ' : 'rgba(0, 255, 255, ';
-      
-      const isEnhanceActive = (globals.selectedSkill === 'enhance' || globals.selectedSkill === 'firewheel') && globals.enhanceActiveTimer > 0;
-      if (isEnhanceActive) {
-        shadowCol = '#ff4400';
-        strokeCol = '#ff6600';
-        colorBase = 'rgba(255, 68, 0, ';
-      }
-
-      if (this.enhancedType === 'dragon') {
-        shadowCol = '#ff1100';
-        strokeCol = '#ffa500';
-        colorBase = 'rgba(255, 68, 0, ';
-      } else if (this.enhancedType === 'shield') {
-        shadowCol = '#00ffc8';
-        strokeCol = '#ffffff';
-        colorBase = 'rgba(0, 255, 200, ';
-      } else if (this.enhancedType === 'firewheel') {
-        shadowCol = '#ff8800';
-        strokeCol = '#ffcc00';
-        colorBase = 'rgba(255, 136, 0, ';
-      } else if (this.enhancedType === 'gravity') {
-        shadowCol = '#c084fc';
-        strokeCol = '#8a2be2';
-        colorBase = 'rgba(192, 132, 252, ';
-      } else if (this.enhancedType === 'parry') {
-        shadowCol = '#ffd700';
-        strokeCol = '#ffffff';
-        colorBase = 'rgba(255, 215, 0, ';
-      } else if (this.enhancedType === 'decoy') {
-        shadowCol = '#aa66ff';
-        strokeCol = '#8a2be2';
-        colorBase = 'rgba(170, 102, 255, ';
-      } else if (this.enhancedType === 'shadow_awakening') {
-        shadowCol = '#d8b4fe';
-        strokeCol = '#aa66ff';
-        colorBase = 'rgba(216, 180, 254, ';
-      } else if (this.enhancedType === 'storm_god') {
-        shadowCol = '#fbbf24';
-        strokeCol = '#ffffff';
-        colorBase = 'rgba(251, 191, 36, ';
-      } else if (this.enhancedType === 'zen_field') {
-        shadowCol = '#22d3ee';
-        strokeCol = '#e0f2fe';
-        colorBase = 'rgba(34, 211, 238, ';
-      }
-
-      // Sprite-based Iaijutsu Shockwave animation
-      const iaiFrames = (vfxAnims as any).projectiles?.iaijutsuWave;
-      if (iaiFrames && iaiFrames.length > 0) {
-        const progress = Math.min(0.99, Math.max(0, 1 - (this.life / ((this as any).maxLife || 0.5))));
-        const frameIndex = Math.min(iaiFrames.length - 1, Math.floor(progress * iaiFrames.length));
-        const frame = iaiFrames[frameIndex];
-        if (frame && frame.complete && frame.naturalWidth > 0) {
-          const tinted = getTintedImage(frame, strokeCol.startsWith('#') ? strokeCol : shadowCol);
-          ctx.save();
-          ctx.globalAlpha = 0.98 * Math.min(1, this.life * 5);
-          const sw = frame.width * 3.4;
-          const sh = frame.height * 3.4;
-          ctx.drawImage(tinted, -sw * 0.4, -sh * 0.5, sw, sh);
-          ctx.restore();
-          ctx.restore();
-          return;
-        }
-      }
-
-      // 1. Deep outer luminous blade aura
-      ctx.save();
-      ctx.strokeStyle = shadowCol;
-      ctx.lineWidth = 16;
-      ctx.globalAlpha = 0.38;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.arc(0, 0, 152, -Math.PI/2.3, Math.PI/2.3);
-      ctx.arc(36, 0, 118, Math.PI/2.6, -Math.PI/2.6, true);
-      ctx.closePath();
-      ctx.stroke();
-      ctx.restore();
-      
-      // 2. Mid sharp energy sheath
-      ctx.strokeStyle = strokeCol;
-      ctx.lineWidth = 7;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.beginPath();
-      ctx.arc(0, 0, 150, -Math.PI/2.3, Math.PI/2.3);
-      ctx.arc(35, 0, 120, Math.PI/2.6, -Math.PI/2.6, true);
-      ctx.closePath();
-      ctx.stroke();
-
-      // 3. Radiant inner multi-stop energy gradient
-      const grad = ctx.createLinearGradient(-30, 0, 160, 0);
-      grad.addColorStop(0, colorBase + '0)');
-      grad.addColorStop(0.25, colorBase + '0.85)');
-      grad.addColorStop(0.5, 'rgba(255, 255, 255, 0.98)');
-      grad.addColorStop(0.75, colorBase + '0.85)');
-      grad.addColorStop(1, colorBase + '0)');
-      ctx.fillStyle = grad;
-      ctx.fill();
-
-      // 4. Razor-sharp white cutting blade core
-      ctx.beginPath();
-      ctx.arc(8, 0, 136, -Math.PI/2.4, Math.PI/2.4);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 3;
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-      // 5. Dynamic slicing discharge streaks & sparks along leading edge
-      ctx.strokeStyle = isUlt ? 'rgba(255,215,0,0.6)' : (strokeCol.startsWith('#') ? strokeCol : '#ffffff');
-      ctx.lineWidth = 1.6;
-      ctx.beginPath();
-      for (let i = -4; i <= 4; i++) {
-        const arcAngle = (i / 5) * (Math.PI / 2.35);
-        const radiusStart = 150;
-        const radiusEnd = 150 + 16 + Math.sin(this.life * 30 + i * 2) * 14;
-        ctx.moveTo(Math.cos(arcAngle) * radiusStart, Math.sin(arcAngle) * radiusStart);
-        ctx.lineTo(Math.cos(arcAngle - 0.1) * radiusEnd, Math.sin(arcAngle - 0.1) * radiusEnd);
-      }
-      ctx.stroke();
-
-      // Elemental highlights
-      if (this.enhancedType === 'dragon') {
-        // Inner fiery flame ribbing
-        ctx.strokeStyle = '#ffd000';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(14, 0, 125, -Math.PI/2.7, Math.PI/2.7);
-        ctx.stroke();
-      } else if (this.enhancedType === 'storm_god') {
-        // Electric lightning sparks
+        ctx.arc(8, 0, 136, -Math.PI/2.4, Math.PI/2.4);
         ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+
+        // 5. Dynamic slicing discharge streaks & sparks along leading edge
+        ctx.strokeStyle = isUlt ? 'rgba(255,215,0,0.6)' : (strokeCol.startsWith('#') ? strokeCol : '#ffffff');
+        ctx.lineWidth = 1.6;
         ctx.beginPath();
-        for (let i = -2; i <= 2; i++) {
-          const a1 = (i / 3) * (Math.PI / 2.5);
-          const r1 = 145;
-          ctx.moveTo(Math.cos(a1) * r1, Math.sin(a1) * r1);
-          ctx.lineTo(Math.cos(a1 + 0.05) * (r1 + 18), Math.sin(a1 + 0.05) * (r1 + 18));
+        for (let i = -4; i <= 4; i++) {
+          const arcAngle = (i / 5) * (Math.PI / 2.35);
+          const radiusStart = 150;
+          const radiusEnd = 150 + 16 + Math.sin(this.life * 30 + i * 2) * 14;
+          ctx.moveTo(Math.cos(arcAngle) * radiusStart, Math.sin(arcAngle) * radiusStart);
+          ctx.lineTo(Math.cos(arcAngle - 0.1) * radiusEnd, Math.sin(arcAngle - 0.1) * radiusEnd);
         }
         ctx.stroke();
-      }
 
+        // Elemental highlights
+        if (this.enhancedType === 'dragon') {
+          // Inner fiery flame ribbing
+          ctx.strokeStyle = '#ffd000';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(14, 0, 125, -Math.PI/2.7, Math.PI/2.7);
+          ctx.stroke();
+        } else if (this.enhancedType === 'storm_god') {
+          // Electric lightning sparks
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (let i = -2; i <= 2; i++) {
+            const a1 = (i / 3) * (Math.PI / 2.5);
+            const r1 = 145;
+            ctx.moveTo(Math.cos(a1) * r1, Math.sin(a1) * r1);
+            ctx.lineTo(Math.cos(a1 + 0.05) * (r1 + 18), Math.sin(a1 + 0.05) * (r1 + 18));
+          }
+          ctx.stroke();
+        }
+      }
+    } finally {
       ctx.restore();
     }
-
-    ctx.restore();
   }
 }
 
@@ -1017,7 +1010,7 @@ export class Slash {
   x!: number; y!: number; angle!: number; sizeMult!: number; isEnhanced!: boolean;
   colorTint?: string;
   isCircular = false;
-  life = 0.25; maxLife = 0.25;
+  life = 0.35; maxLife = 0.35;
   owner?: any;
   offsetX = 0;
   offsetY = 0;
@@ -1031,7 +1024,7 @@ export class Slash {
     this.colorTint = colorTint;
     this.isCircular = isCircular;
     this.owner = owner;
-    this.life = 0.25; this.maxLife = 0.25;
+    this.life = 0.35; this.maxLife = 0.35;
     
     if (owner) {
       this.offsetX = x - owner.x;
@@ -1083,8 +1076,6 @@ export class Slash {
   update(dt: number) {
     this.life -= dt;
     if (this.owner && this.owner.state !== 'dead') {
-      // Slashes are carved in space. When the player dashes at high velocity,
-      // freezing the slash to the swing coordinate prevents extreme misalignment/distortion.
       if (this.owner.state !== 'dash') {
         this.x = this.owner.x + this.offsetX;
         this.y = this.owner.y + this.offsetY;
@@ -1095,91 +1086,190 @@ export class Slash {
     const rx = (this.x - cx + globals.vw/2) | 0;
     const yOff = (this.owner && this.owner.state !== 'dash' && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
     const ry = (this.y - cy + globals.vh/2 + yOff) | 0;
-    const safeMult = Number.isFinite(this.sizeMult) ? Math.min(2.5, Math.max(0.4, this.sizeMult)) : 1.0;
-    const buffer = Math.max(380, 320 * safeMult);
+    const safeMult = Number.isFinite(this.sizeMult) ? Math.min(2.8, Math.max(0.4, this.sizeMult)) : 1.0;
+    const buffer = Math.max(420, 360 * safeMult);
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {
       return;
     }
 
-    const slashes = (vfxAnims as any).heroSlashes;
-    let frames: HTMLImageElement[] = slashes?.ronin || vfxAnims.custom?.slash || [];
-    if (slashes) {
-      let heroType = this.owner?.type;
-      if (!heroType && this.owner?.subType === 'player') heroType = globals.player?.type;
-      if (!heroType) {
-        if (globals.selectedHero === 'nightborne') heroType = 'heronightborne';
-        else if (globals.selectedHero === 'samurai') heroType = 'herosamurai';
-        else if (globals.selectedHero === 'satyr') heroType = 'herosatyr';
-        else if (globals.selectedHero === 'luneblade') heroType = 'heroluneblade';
-        else if (globals.selectedHero === 'ninja') heroType = 'heroninja';
-        else if (globals.selectedHero === 'akakage') heroType = 'heroakakage';
-        else if (globals.selectedHero === 'dragon') heroType = 'herodragon';
-      }
+    const dir = (this.owner && typeof this.owner.dir === 'number') ? this.owner.dir : (Math.cos(this.angle) < 0 ? -1 : 1);
+    const drawAngle = dir === -1 ? Math.PI - this.angle : this.angle;
 
-      if (heroType === 'heronightborne' && slashes.nightborne) frames = slashes.nightborne;
-      else if (heroType === 'herosamurai' && slashes.samurai) frames = slashes.samurai;
-      else if (heroType === 'herosatyr' && slashes.satyr) frames = slashes.satyr;
-      else if (heroType === 'heroluneblade' && slashes.luneblade) frames = slashes.luneblade;
-      else if (heroType === 'heroninja' && slashes.ninja) frames = slashes.ninja;
-      else if (heroType === 'heroakakage' && slashes.akakage) frames = slashes.akakage;
-      else if ((heroType === 'herodragon' || (this.isEnhanced && globals.selectedSkill === 'enhance')) && slashes.dragon) frames = slashes.dragon;
-      else if (slashes.ronin) frames = slashes.ronin;
-    }
-    const maxL = this.maxLife > 0 ? this.maxLife : 0.25;
-    const progress = Math.max(0, Math.min(0.99, 1 - (this.life / maxL)));
-    const frameCount = frames && frames.length > 0 ? frames.length : 1;
-    const frameIdx = Math.min(frameCount - 1, Math.floor(progress * frameCount));
-    let img = frames ? frames[frameIdx] : null;
+    const maxL = this.maxLife > 0 ? this.maxLife : 0.35;
+    const p = Math.max(0, Math.min(1, this.life / maxL)); // 1.0 down to 0.0
+    const progress = 1 - p;
+    const easeInQuad = p * p;
+    const midRadius = (120 + 35 * (1 - p)) * safeMult;
+    const halfWidth = (30 * easeInQuad) * safeMult;
 
-    if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) {
-      const fallback = vfxAnims.heroSlashes?.ronin || vfxAnims.custom?.slash;
-      if (fallback && fallback.length > 0) {
-        const fbIdx = Math.min(fallback.length - 1, Math.floor(progress * fallback.length));
-        img = fallback[fbIdx] || fallback[0];
-      }
+    const isCircular = this.isCircular || false;
+    const startAngle = isCircular ? 0 : -Math.PI / 2.2;
+    const endAngle = isCircular ? Math.PI * 2 : Math.PI / 2.2;
+    const angleRange = endAngle - startAngle;
+    const steps = isCircular ? 48 : 26;
+
+    // Determine hero palette
+    let heroKey = this.owner?.type;
+    if (!heroKey && this.owner?.subType === 'player') heroKey = globals.player?.type;
+    if (!heroKey) {
+      if (globals.selectedHero === 'nightborne') heroKey = 'heronightborne';
+      else if (globals.selectedHero === 'samurai') heroKey = 'herosamurai';
+      else if (globals.selectedHero === 'satyr') heroKey = 'herosatyr';
+      else if (globals.selectedHero === 'luneblade') heroKey = 'heroluneblade';
+      else if (globals.selectedHero === 'ninja') heroKey = 'heroninja';
+      else if (globals.selectedHero === 'akakage') heroKey = 'heroakakage';
     }
 
-    if (img && img.complete && img.naturalWidth > 0) {
-      ctx.save();
-      ctx.translate(rx, ry);
-      ctx.rotate(this.angle);
-      
-      // Center the slash arc accurately along the aim vector with safe scale bounds
-      const scale = Math.min(5.5, Math.max(0.8, 4.6 * safeMult));
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, (-img.width / 2) | 0, (-img.height / 2) | 0);
-      ctx.restore();
-    } else {
-      // Guaranteed high-visibility procedural slash arc fallback
-      ctx.save();
-      ctx.translate(rx, ry);
-      ctx.rotate(this.angle);
-      const radius = 60 * safeMult;
-      const arcLen = Math.PI * 0.75;
-      const startA = -arcLen * 0.5;
-      const endA = startA + arcLen * Math.min(1, progress * 1.5);
-      
-      let strokeColor = this.colorTint && this.colorTint !== 'none' ? this.colorTint.replace('ALPHA', '0.95') : '#38bdf8';
-      if (this.isEnhanced) strokeColor = '#fbbf24';
+    let col1 = 'rgba(56, 189, 248, '; // cyan
+    let col2 = 'rgba(255, 255, 255, ';
+    let coreCol = '#ffffff';
+    let edgeCol = '#38bdf8';
 
+    if (this.colorTint && this.colorTint !== 'none') {
+      if (this.colorTint.includes('255, 0, 85') || this.colorTint.includes('#ff0055')) {
+        col1 = 'rgba(255, 0, 85, '; edgeCol = '#ff0055';
+      } else if (this.colorTint.includes('136, 51, 255') || this.colorTint.includes('#8833ff')) {
+        col1 = 'rgba(136, 51, 255, '; edgeCol = '#a855f7';
+      } else if (this.colorTint.includes('sakura') || this.colorTint.includes('255, 183, 197')) {
+        col1 = 'rgba(255, 150, 180, '; edgeCol = '#ffb7c5';
+      } else if (this.colorTint.includes('251, 191, 36') || this.colorTint.includes('#fbbf24')) {
+        col1 = 'rgba(251, 191, 36, '; edgeCol = '#f59e0b';
+      }
+    } else if (globals.flowState === 'awakened') {
+      col1 = 'rgba(34, 211, 238, '; edgeCol = '#00ffff';
+    } else if (globals.flowState === 'storm_god') {
+      col1 = 'rgba(251, 191, 36, '; edgeCol = '#f59e0b';
+    } else if (this.isEnhanced) {
+      col1 = 'rgba(251, 146, 60, '; edgeCol = '#f97316';
+    } else if (heroKey === 'heronightborne') {
+      col1 = 'rgba(147, 51, 234, '; edgeCol = '#c084fc';
+    } else if (heroKey === 'herosamurai') {
+      col1 = 'rgba(234, 179, 8, '; edgeCol = '#fbbf24';
+    } else if (heroKey === 'herosatyr') {
+      col1 = 'rgba(239, 68, 68, '; edgeCol = '#dc2626';
+    } else if (heroKey === 'heroluneblade') {
+      col1 = 'rgba(125, 211, 252, '; edgeCol = '#e0f2fe';
+    } else if (heroKey === 'heroninja') {
+      col1 = 'rgba(168, 85, 247, '; edgeCol = '#9333ea';
+    } else if (heroKey === 'heroakakage') {
+      col1 = 'rgba(244, 63, 94, '; edgeCol = '#f43f5e';
+    }
+
+    ctx.save();
+    try {
+      ctx.translate(rx, ry);
+      ctx.scale(dir, 1);
+      ctx.rotate(drawAngle);
+
+      // 1. Outer backing dark brush stroke
       ctx.beginPath();
-      ctx.arc(0, 0, radius, startA, endA);
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = Math.max(3, 8 * (1 - progress) * safeMult);
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const a = startAngle + angleRange * t;
+        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
+        const r = midRadius + halfWidth * factor * 1.25;
+        const px = Math.cos(a) * r;
+        const py = Math.sin(a) * r;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      for (let i = steps; i >= 0; i--) {
+        const t = i / steps;
+        const a = startAngle + angleRange * t;
+        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
+        const r = midRadius - halfWidth * factor * 1.25;
+        const px = Math.cos(a) * r;
+        const py = Math.sin(a) * r;
+        ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = `rgba(10, 10, 15, ${easeInQuad * 0.4})`;
+      ctx.fill();
+
+      // 2. Main crescent gradient ribbon
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const a = startAngle + angleRange * t;
+        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
+        const r = midRadius + halfWidth * factor;
+        const px = Math.cos(a) * r;
+        const py = Math.sin(a) * r;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      for (let i = steps; i >= 0; i--) {
+        const t = i / steps;
+        const a = startAngle + angleRange * t;
+        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
+        const r = midRadius - halfWidth * factor;
+        const px = Math.cos(a) * r;
+        const py = Math.sin(a) * r;
+        ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+
+      const grad = ctx.createRadialGradient(0, 0, Math.max(1, midRadius - halfWidth), 0, 0, midRadius + halfWidth);
+      grad.addColorStop(0, col1 + '0)');
+      grad.addColorStop(0.4, col1 + (easeInQuad * 0.9) + ')');
+      grad.addColorStop(0.7, col2 + (easeInQuad * 0.95) + ')');
+      grad.addColorStop(1, col1 + '0)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // 3. Razor-sharp white cutting edge
+      ctx.beginPath();
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const a = startAngle + angleRange * t;
+        const px = Math.cos(a) * midRadius;
+        const py = Math.sin(a) * midRadius;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = coreCol;
+      ctx.lineWidth = Math.max(1.5, 3.5 * easeInQuad * safeMult);
       ctx.lineCap = 'round';
       ctx.stroke();
 
+      // 4. Colored outer accent edge
       ctx.beginPath();
-      ctx.arc(0, 0, radius * 0.95, startA, endA);
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = Math.max(1.5, 4 * (1 - progress) * safeMult);
-      ctx.lineCap = 'round';
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const a = startAngle + angleRange * t;
+        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
+        const px = Math.cos(a) * (midRadius + halfWidth * factor * 0.5);
+        const py = Math.sin(a) * (midRadius + halfWidth * factor * 0.5);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = edgeCol;
+      ctx.lineWidth = Math.max(1.0, 2.0 * easeInQuad * safeMult);
       ctx.stroke();
+
+      // 5. Optional sprite sheet overlay if loaded and valid (exclude Akakage due to blank frames)
+      const slashes = (vfxAnims as any).heroSlashes;
+      let frames: HTMLImageElement[] | null = null;
+      if (slashes && heroKey !== 'heroakakage') {
+        if (heroKey === 'heronightborne' && slashes.nightborne) frames = slashes.nightborne;
+        else if (heroKey === 'herosamurai' && slashes.samurai) frames = slashes.samurai;
+        else if (heroKey === 'herosatyr' && slashes.satyr) frames = slashes.satyr;
+        else if (heroKey === 'heroluneblade' && slashes.luneblade) frames = slashes.luneblade;
+        else if (heroKey === 'heroninja' && slashes.ninja) frames = slashes.ninja;
+        else if (slashes.ronin) frames = slashes.ronin;
+      }
+      if (frames && frames.length > 0) {
+        const frameIdx = Math.min(frames.length - 1, Math.floor(progress * frames.length));
+        const img = frames[frameIdx];
+        if (img && img.complete && img.naturalWidth > 0) {
+          const sScale = Math.min(4.8, 3.8 * safeMult);
+          ctx.save();
+          ctx.globalAlpha = Math.min(1.0, easeInQuad * 1.15);
+          ctx.drawImage(img, (-img.width / 2 * sScale) | 0, (-img.height / 2 * sScale) | 0, (img.width * sScale) | 0, (img.height * sScale) | 0);
+          ctx.restore();
+        }
+      }
+    } finally {
       ctx.restore();
     }
   }
 }
-
 export class AnimatedEffect {
   x: number;
   y: number;

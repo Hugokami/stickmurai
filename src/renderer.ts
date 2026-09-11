@@ -161,34 +161,21 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
     const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.save();
-      const bufferFactor = 1.15;
-      const scale = (globals.height * bufferFactor) / img.naturalHeight;
+      // Ensure all 1080p parallax layers align seamlessly across canvas height
+      const scale = (globals.height * 1.05) / img.naturalHeight;
       const imgW = img.naturalWidth * scale;
       const imgH = img.naturalHeight * scale;
       
       const offsetX = -(globals.camera.x * layer.speed * globals.gameZoom) % imgW;
       let startX = offsetX > 0 ? offsetX - imgW : offsetX;
       
-      const midY = (globals.height - imgH) / 2;
-      const offsetY = midY - (globals.camera.y * 0.3 * globals.gameZoom);
+      // Subtle vertical parallax clamped to prevent any gaps
+      const maxNegativeY = -(imgH - globals.height);
+      const offsetY = Math.min(0, Math.max(maxNegativeY, (globals.height - imgH) * 0.5 - (globals.camera.y - 350) * 0.04 * layer.speed));
       
-      const maxDrawX = globals.width + 1;
-      const maxDrawY = globals.height + 1;
-      
-      if (isGroundLayer) {
-        // Ground layer tiles infinitely across entire lower screen
-        const offsetYMod = offsetY % imgH;
-        let startY = offsetYMod > 0 ? offsetYMod - imgH : offsetYMod;
-        for(let x = startX; x < maxDrawX; x += imgW) {
-          for(let y = startY; y < maxDrawY; y += imgH) {
-            ctx.drawImage(img, x, y, imgW, imgH);
-          }
-        }
-      } else {
-        // Decorative layers: tile horizontally only, single vertical position
-        for(let x = startX; x < maxDrawX; x += imgW) {
-          ctx.drawImage(img, x, offsetY, imgW, imgH);
-        }
+      // Tile horizontally only; each layer covers full vertical viewport
+      for(let x = startX; x < globals.width + imgW; x += imgW) {
+        ctx.drawImage(img, x, offsetY, imgW, imgH);
       }
       ctx.restore();
     }

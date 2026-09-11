@@ -4646,6 +4646,7 @@ function update(realDt: number) {
     }
 
     if (shouldAttack) {
+      globals.player.chargeTimer = 0;
       if (attackPower < 1.7) {
         const nowBasic = performance.now();
         if (nowBasic - globals.lastBasicSlashTime < 800) {
@@ -4667,6 +4668,9 @@ function update(realDt: number) {
       if (globals.tempoMasteryLevel > 0) {
         const speedBonus = Math.min(0.20, globals.combo * 0.02 * globals.tempoMasteryLevel);
         currentAtkCooldown *= (1 - speedBonus);
+      }
+      if (attackPower >= 1.7) {
+        currentAtkCooldown = Math.min(0.22, currentAtkCooldown * 0.65);
       }
       globals.player.attackCooldown = currentAtkCooldown;
 
