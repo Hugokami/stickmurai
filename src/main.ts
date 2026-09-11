@@ -1129,6 +1129,9 @@ function initGame() {
 
   // Initialize Stage Mode Objectives & Affixes
   globals.stageKills = 0;
+  globals.stageCurrency = 0;
+  globals.shopRefreshCount = 0;
+  globals.shopOpen = false;
   globals.runTime = 0;
   globals.dayNightPhase = 'dawn';
   globals.calamityEvent = 'none';
@@ -2782,6 +2785,8 @@ function killEnemy(e: Enemy) {
   e.setState('dead'); 
   addCombo();
   globals.runStats.kills++;
+  globals.stageCurrency += (e.subType?.includes('boss') || (e as any).isBoss) ? 50 : ((e as any).isElite ? 10 : 2);
+  globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 35, `+${(e.subType?.includes('boss') || (e as any).isBoss) ? 50 : ((e as any).isElite ? 10 : 2)} ◆`, '#fbbf24', 16));
   globals.chiburuiKills = (globals.chiburuiKills || 0) + 1;
   checkVampireHeal(e);
 

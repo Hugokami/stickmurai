@@ -251,7 +251,32 @@ export const FUSION_RECIPES: FusionRecipe[] = [
   }
 ];
 
+function applyStatLevelUp() {
+  const stats = [
+    ['slashBonusDmgPct', 0.06],
+    ['attackCooldownBase', -0.018],
+    ['dashCooldownBase', -0.06],
+    ['moveSpeedMult', 0.05],
+    ['postureDmgBonus', 2],
+    ['iaijutsuBonusDmg', 2],
+    ['flowGenMult', 0.08]
+  ] as const;
+  const [key, amount] = stats[Math.floor(Math.random() * stats.length)];
+  const current = (globals.playerStats as any)[key] || 0;
+  (globals.playerStats as any)[key] = key.includes('Cooldown') ? Math.max(key === 'attackCooldownBase' ? 0.18 : 0.72, current + amount) : current + amount;
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, `${t('levelUpText')} · ${key}`, '#00ff00', 24));
+  callbacks.updateUI();
+}
+
 export function triggerLevelUp() {
+  if (globals.gameState !== 'playing') return;
+  globals.exp -= globals.maxExp;
+  globals.maxExp = Math.round(globals.maxExp * 1.25);
+  globals.level++;
+  applyStatLevelUp();
+  playSynthesizedLevelUp();
+  return; // Level-ups grant stats; combat never pauses.
+  /* legacy powerup choice UI retained below for later removal */
   if (globals.gameState !== 'playing') return;
   playSynthesizedLevelUp();
   globals.gameState = 'levelup';
@@ -317,15 +342,15 @@ export function triggerLevelUp() {
   const readyFusion = FUSION_RECIPES.find(f => !globals.activeFusions.has(f.key) && f.checkPrereqs());
   if (readyFusion) {
     choices.push({
-      nameKey: readyFusion.nameKey,
-      descKey: readyFusion.descKey,
+      nameKey: readyFusion!.nameKey,
+      descKey: readyFusion!.descKey,
       isFusion: true,
-      fusionKey: readyFusion.key,
+      fusionKey: readyFusion!.key,
       apply: () => {
-        readyFusion.apply();
+        readyFusion!.apply();
         playSynthesizedFusionUnlock();
-        if (!globals.discoveredFusions.includes(readyFusion.key)) {
-          globals.discoveredFusions.push(readyFusion.key);
+        if (!globals.discoveredFusions.includes(readyFusion!.key)) {
+          globals.discoveredFusions.push(readyFusion!.key);
           safeStorage.setItem('stickmurai_fusions', JSON.stringify(globals.discoveredFusions));
         }
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
@@ -416,7 +441,7 @@ export function triggerLevelUp() {
 
   // Yomi Seal V: Mirror Soul Choice Reroll
   const existingReroll = document.getElementById('level-up-reroll-btn');
-  if (existingReroll) existingReroll.remove();
+  existingReroll?.remove();
   if (globals.levelUpRerollsRemaining > 0) {
     const rerollBtn = document.createElement('button');
     rerollBtn.id = 'level-up-reroll-btn';
@@ -511,7 +536,7 @@ const ultOptions = [
              if (e.state === 'dead') return;
              
              // hit target for 16 DMG (always applied)
-             callbacks.hitEnemy(e, 16);
+             callbacks.hitEnemy(e, Math.min(80, Math.round(16 * (1 + globals.level * 0.04))));
              
              // limit heavy canvas and sound context resources to prevent lag
              if (idx < maxVisuals) {
@@ -617,6 +642,12 @@ export function activateAwakening() {
   if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
   
   playSynthesizedAwaken();
+  // Flow activation stays in combat; choose random ultimate without modal pause.
+  globals.flow = 0;
+  const chosen = ultOptions[Math.floor(Math.random() * ultOptions.length)];
+  chosen.apply();
+  return;
+  /* legacy ultimate choice UI retained below */
   globals.gameState = 'ultchoice';
   
   const ultScreen = document.getElementById('ult-screen')!;

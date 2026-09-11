@@ -58,7 +58,9 @@ let lastBtnDashReady = false;
 let lastBtnEnhanceReady = false;
 let lastBtnEnhanceBuff = false;
 let lastRenderedMagatama = -1;
+let lastStageCurrency = -1;
 let hudMagatamaElement: HTMLElement | null = null;
+let stageCurrencyElement: HTMLElement | null = null;
 let cachedOnPlayCallback: (() => void) | null = null;
 
 export const STAGES = [
@@ -615,7 +617,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     if (upgradesModal) upgradesModal.style.display = 'none';
   };
 
-  bindDualListener(openUpgradesBtn, openUpgrades);
+  bindDualListener(openUpgradesBtn, openUpgrades); bindDualListener(document.getElementById("openShop"), openUpgrades);
   bindDualListener(closeUpgradesBtn, closeUpgrades);
   bindDualListener(closeUpgradesXBtn, closeUpgrades);
 
@@ -1575,6 +1577,9 @@ export function updateUI() {
     if (el) el.textContent = (globals.magatama || 0).toLocaleString();
     lastRenderedMagatama = globals.magatama;
   }
+
+  const currencyEl = stageCurrencyElement || (stageCurrencyElement = document.getElementById('stage-currency-count'));
+  if (currencyEl && globals.stageCurrency !== lastStageCurrency) { currencyEl.textContent = String(globals.stageCurrency || 0); lastStageCurrency = globals.stageCurrency || 0; }
 
   const objDisplay = objectiveDisplayElement || (objectiveDisplayElement = document.getElementById('objective-display'));
   if (objDisplay) {

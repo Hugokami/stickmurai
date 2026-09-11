@@ -101,6 +101,7 @@
           </div>
         </div>
         <div id="score-display">Kills: 0</div>
+        <div id="stage-currency-display" style="position: absolute; top: max(52px, calc(env(safe-area-inset-top) + 38px)); right: max(75px, calc(env(safe-area-inset-right) + 65px)); color:#fbbf24; background:rgba(0,0,0,.55); padding:5px 12px; border:1px solid rgba(251,191,36,.45); border-radius:14px; font:bold 13px Orbitron,monospace; pointer-events:none;">◆ <span id="stage-currency-count">0</span></div>
         <div id="magatama-display" style="position: absolute; top: max(16px, env(safe-area-inset-top)); right: max(75px, calc(env(safe-area-inset-right) + 65px)); font-family: 'Orbitron', monospace; font-size: 13px; color: #c084fc; font-weight: bold; background: rgba(0,0,0,0.55); padding: 5px 12px; border-radius: 14px; border: 1px solid rgba(192, 132, 252, 0.4); display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(192, 132, 252, 0.2); pointer-events: auto;">
           <span style="font-size: 14px;">🔮</span><span id="hud-magatama-count">0</span>
         </div>
@@ -297,7 +298,7 @@
               <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">⚔️ Iaijutsu PvP (1v1)</button>
               <div class="menu-grid-2x3">
                 <button id="open-dojo-btn" class="menu-btn" style="border-color: #c084fc; color: #c084fc; box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);">🏯 Dojo</button>
-                <button id="open-upgrades-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">⚡ Upgrades</button>
+                <button id="openShop" class="menu-btn">SHOP</button><button id="open-upgrades-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">⚡ Upgrades</button>
                 <button id="open-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">📜 Grimoire</button>
                 <button id="open-chronicle-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛩️ Chronicle</button>
                 <button id="open-guide-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);"><span data-i18n="openGuideBtn">📖 Codex</span></button>
