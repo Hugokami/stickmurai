@@ -81,7 +81,7 @@ let shogunSpawned = false;
 import { initInput, pollGamepad } from './input';
 import { initUI, updateUI, updateEnhanceButton, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
 import { initRenderer, draw, resetCanvasVisuals } from './renderer';
-import { triggerLevelUp, activateAwakening, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate } from './powerups';
+import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate } from './powerups';
 
 // register callbacks
 callbacks.t = t;
@@ -836,9 +836,6 @@ function initGame() {
         const hotkeyText = btnDash.querySelector('.hotkey') as HTMLElement;
         if (hotkeyText) hotkeyText.textContent = 'SPACE';
       }
-
-      const btnUlt = document.getElementById('btn-ult');
-      if (btnUlt) btnUlt.style.display = isSurvival ? 'block' : 'none';
     }
     
     globals.player = new Player();
@@ -3019,7 +3016,6 @@ function addFlow(amount: number) {
   if (globals.flow >= globals.playerStats.flowMax) {
     globals.flow = globals.playerStats.flowMax;
     if (globals.ultCooldown <= 0) {
-      document.getElementById('btn-ult')?.classList.add('ready');
       if (prevFlow < globals.playerStats.flowMax) {
         playSynthesizedPerfectParry(); 
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, "ULTIMATE READY!", "#ffd700", 32));
@@ -3863,11 +3859,10 @@ function update(realDt: number) {
     }
   }
 
-  const autoUltCondition = globals.autoUltEnabled === 'on' && isFlowReady;
-  if ((globals.keys[globals.keyMaps.ult] || globals.mobileUltJustPressed || autoUltCondition) && globals.ultCooldown <= 0) {
+  if ((globals.keys[globals.keyMaps.ult] || globals.mobileUltJustPressed) && globals.ultCooldown <= 0 && isFlowReady) {
     globals.mobileUltJustPressed = false;
     globals.keys[globals.keyMaps.ult] = false; // consume key
-    activateAwakening();
+    triggerSpecificUltimate(globals.gameMode === 'zen' ? 'zen' : 'omni');
   }
 
   if (globals.flowState === 'awakened') {

@@ -157,7 +157,6 @@ export const globals = {
   currentLang: (() => { try { return safeStorage.getItem('lang') || 'en'; } catch(e) { return 'en'; } })(),
   difficulty: (() => { try { return safeStorage.getItem('difficulty') || 'normal'; } catch(e) { return 'normal'; } })() as 'easy' | 'normal' | 'hard' | 'insane',
   screenShakeEnabled: (() => { try { return safeStorage.getItem('screenShake') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'reduced' | 'off',
-  autoUltEnabled: (() => { try { return safeStorage.getItem('autoUlt') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
   screenFlashEnabled: (() => { try { return safeStorage.getItem('screenFlash') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
   weatherEffectsEnabled: (() => { try { return safeStorage.getItem('weatherEffects') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
   speedLinesEnabled: (() => { try { return safeStorage.getItem('speedLines') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',

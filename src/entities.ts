@@ -713,6 +713,23 @@ export class Projectile {
       
       // Dedicated polished Echo Slash rendering
       if (this.isEcho) {
+        const echoFrames = (vfxAnims as any).projectiles?.echoSlash;
+        if (echoFrames && echoFrames.length > 0) {
+          const progress = Math.min(0.99, Math.max(0, 1 - (this.life / ((this as any).maxLife || 0.45))));
+          const frameIndex = Math.min(echoFrames.length - 1, Math.floor(progress * echoFrames.length));
+          const frame = echoFrames[frameIndex];
+          if (frame && frame.complete && frame.naturalWidth > 0) {
+            const tinted = getTintedImage(frame, '#38bdf8');
+            ctx.save();
+            ctx.globalAlpha = 0.95 * Math.min(1, this.life * 5);
+            const sw = frame.width * 2.8;
+            const sh = frame.height * 2.8;
+            ctx.drawImage(tinted, -sw * 0.4, -sh * 0.5, sw, sh);
+            ctx.restore();
+            ctx.restore();
+            return;
+          }
+        }
         ctx.scale(0.85, 0.85);
         const pEcho = Math.sin(this.life * 26);
         const echoAlpha = 0.65 + 0.3 * pEcho;
@@ -850,6 +867,25 @@ export class Projectile {
         shadowCol = '#22d3ee';
         strokeCol = '#e0f2fe';
         colorBase = 'rgba(34, 211, 238, ';
+      }
+
+      // Sprite-based Iaijutsu Shockwave animation
+      const iaiFrames = (vfxAnims as any).projectiles?.iaijutsuWave;
+      if (iaiFrames && iaiFrames.length > 0) {
+        const progress = Math.min(0.99, Math.max(0, 1 - (this.life / ((this as any).maxLife || 0.5))));
+        const frameIndex = Math.min(iaiFrames.length - 1, Math.floor(progress * iaiFrames.length));
+        const frame = iaiFrames[frameIndex];
+        if (frame && frame.complete && frame.naturalWidth > 0) {
+          const tinted = getTintedImage(frame, strokeCol.startsWith('#') ? strokeCol : shadowCol);
+          ctx.save();
+          ctx.globalAlpha = 0.98 * Math.min(1, this.life * 5);
+          const sw = frame.width * 3.4;
+          const sh = frame.height * 3.4;
+          ctx.drawImage(tinted, -sw * 0.4, -sh * 0.5, sw, sh);
+          ctx.restore();
+          ctx.restore();
+          return;
+        }
       }
 
       // 1. Deep outer luminous blade aura

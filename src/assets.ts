@@ -1138,6 +1138,20 @@ export const vfxAnims = {
     lightningBurstViolet: loadVfxFrames('vfx/lightning/burst_violet/frame_{N}.png', 9, 0, 2, false),
     lightningStrike: loadVfxFrames('vfx/skills/lightning_strike/frame_{N}.png', 7, 1, 2, false)
   },
+  projectiles: {
+    iaijutsuWave: loadVfxFrames('vfx/projectiles/iaijutsu_wave/frame_{N}.png', 4, 0, 2, true),
+    echoSlash: loadVfxFrames('vfx/projectiles/echo_slash/frame_{N}.png', 4, 0, 2, true),
+  },
+  ranks: {
+    d: loadVfxFrames('vfx/ui/rank_d/frame_{N}.png', 30, 0, 2, false),
+    c: loadVfxFrames('vfx/ui/rank_c/frame_{N}.png', 30, 0, 2, false),
+    b: loadVfxFrames('vfx/ui/rank_b/frame_{N}.png', 30, 0, 2, false),
+    a: loadVfxFrames('vfx/ui/rank_a/frame_{N}.png', 30, 0, 2, false),
+    s: loadVfxFrames('vfx/ui/rank_s/frame_{N}.png', 30, 0, 2, false),
+  },
+  banners: {
+    levelUp: loadVfxFrames('vfx/ui/level_up_banner/frame_{N}.png', 30, 0, 2, true),
+  },
   combat: {
     bloodSplatter: loadVfxFrames('vfx/combat/blood_splatter/frame_{N}.png', 8, 1, 2, true),
     executionBurst: loadVfxFrames('vfx/combat/execution_burst/frame_{N}.png', 11, 0, 2, true),

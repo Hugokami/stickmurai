@@ -54,7 +54,6 @@ export function initInput() {
   const btnAttack = document.getElementById('btn-attack')!;
   const btnDash = document.getElementById('btn-dash')!;
   const btnEnhance = document.getElementById('btn-enhance')!;
-  const btnUlt = document.getElementById('btn-ult')!;
 
   let joystickActive = false;
   let joystickOriginX = 0;
@@ -283,18 +282,6 @@ export function initInput() {
     globals.mobileRaijinAimActive = false;
     globals.useMobileRaijinAimAngle = false;
   }, { passive: false });
-
-  btnUlt.addEventListener('touchstart', (e) => { 
-    e.preventDefault(); 
-    if (globals.ultCooldown > 0) return;
-    globals.mobileUltJustPressed = true; 
-  }, { passive: false });
-
-  btnUlt.addEventListener('click', (e) => {
-    e.preventDefault();
-    if (globals.ultCooldown > 0) return;
-    globals.mobileUltJustPressed = true;
-  });
 
   function handleJoystickStart(e: TouchEvent) {
     e.preventDefault(); 

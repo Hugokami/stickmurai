@@ -16,7 +16,7 @@ try {
   qolSettings.controlSize=clamp(qolSettings.controlSize,48,100); qolSettings.opacity=clamp(qolSettings.opacity,.3,1); qolSettings.sensitivity=clamp(qolSettings.sensitivity,.5,1.5); qolSettings.buffer=clamp(qolSettings.buffer,0,120); qolSettings.sfx=clamp(qolSettings.sfx,0,1); qolSettings.music=clamp(qolSettings.music,0,1);
   if(['small','default','large'].includes(p.size)) qolSettings.size=p.size;
   if(p.handed==='left') qolSettings.handed='left';
-  for(const id of ['btn-attack','btn-dash','btn-enhance','btn-ult']) if(p.positions?.[id] && Number.isFinite(p.positions[id].x) && Number.isFinite(p.positions[id].y)) qolSettings.positions[id]={x:clamp(p.positions[id].x,.05,.95),y:clamp(p.positions[id].y,.1,.9)};
+  for(const id of ['btn-attack','btn-dash','btn-enhance']) if(p.positions?.[id] && Number.isFinite(p.positions[id].x) && Number.isFinite(p.positions[id].y)) qolSettings.positions[id]={x:clamp(p.positions[id].x,.05,.95),y:clamp(p.positions[id].y,.1,.9)};
 } catch { /* Defaults survive malformed preferences. */ }
 const text = (en:string,ja:string) => globals.currentLang==='ja'?ja:en;
 export function bindQolButton(el: HTMLElement, fn:()=>void) {
@@ -59,7 +59,7 @@ function applySettings() {
   const custom = Object.keys(qolSettings.positions).length > 0;
   document.documentElement.classList.toggle('qol-touch-custom', custom);
   document.documentElement.style.setProperty('--combat-size', `${qolSettings.controlSize}px`);
-  const ids=['btn-attack','btn-dash','btn-enhance','btn-ult'];
+  const ids=['btn-attack','btn-dash','btn-enhance'];
   ids.forEach((id,i)=>{const b=document.getElementById(id);if(!b)return;const p=controlPosition(id,i);b.style.setProperty('left',`${p.x*100}%`,'important');b.style.setProperty('top',`${p.y*100}%`,'important');b.style.setProperty('width',`${qolSettings.controlSize}px`,'important');b.style.setProperty('height',`${qolSettings.controlSize}px`,'important');b.style.setProperty('min-width',`${qolSettings.controlSize}px`,'important');b.style.setProperty('min-height',`${qolSettings.controlSize}px`,'important');b.style.opacity=String(qolSettings.opacity);});
   if (!custom) ids.forEach(id => {
     const b=document.getElementById(id); if(!b)return;
@@ -69,7 +69,7 @@ function applySettings() {
 }
 function controlPosition(id:string,i:number):Position {
   const w=innerWidth,h=innerHeight,s=qolSettings.controlSize;
-  const natural=[{x:w-s*.85,y:h-s*.9},{x:w-s*2.05,y:h-s*.9},{x:w-s*.85,y:h-s*2.1},{x:w-s*2.05,y:h-s*2.1}][i];
+  const natural=[{x:w-s*.85,y:h-s*.9},{x:w-s*2.05,y:h-s*.9},{x:w-s*.85,y:h-s*2.1}][i];
   const p=qolSettings.positions[id]||{x:qolSettings.handed==='left'?1-natural.x/w:natural.x/w,y:natural.y/h};
   return {x:clamp(p.x,(s/2+12)/w,1-(s/2+12)/w),y:clamp(p.y,(s/2+12)/h,1-(s/2+12)/h)};
 }
@@ -99,7 +99,7 @@ export function initQol(retryRun?: () => void) {
   const note=document.createElement('p');note.className='qol-note';note.textContent='Buffering remembers one early attack or dash. 0 ms disables it. Move controls in the layout editor; practice lets you test them.';scroll.append(note);
   const actions=document.createElement('div');actions.className='qol-actions';prefs.box.append(actions);
   const layout=panel('qol-layout','Move your controls');const desc=document.createElement('p');desc.textContent='Drag each circle. Positions are saved for this device. Keep buttons apart and away from the camera cutout.';layout.box.append(desc);
-  const renderLayout=()=>{layout.p.querySelectorAll('.qol-drag').forEach(e=>e.remove());['btn-attack','btn-dash','btn-enhance','btn-ult'].forEach((id,i)=>{const b=document.createElement('button');b.className='qol-drag';b.textContent=['Attack','Dash','Skill','Ultimate'][i];const pos=controlPosition(id,i);b.style.left=pos.x*100+'%';b.style.top=pos.y*100+'%';b.style.width=b.style.height=qolSettings.controlSize+'px';let dragging=false;b.onpointerdown=e=>{e.preventDefault();e.stopPropagation();dragging=true;b.setPointerCapture(e.pointerId);};b.onpointermove=e=>{if(!dragging)return;const margin=qolSettings.controlSize/2+12;const x=clamp(e.clientX,margin,innerWidth-margin)/innerWidth,y=clamp(e.clientY,margin,innerHeight-margin)/innerHeight;qolSettings.positions[id]={x,y};b.style.left=x*100+'%';b.style.top=y*100+'%';applySettings();};b.onpointerup=b.onpointercancel=()=>dragging=false;layout.p.append(b);});};
+  const renderLayout=()=>{layout.p.querySelectorAll('.qol-drag').forEach(e=>e.remove());['btn-attack','btn-dash','btn-enhance'].forEach((id,i)=>{const b=document.createElement('button');b.className='qol-drag';b.textContent=['Attack','Dash','Skill'][i];const pos=controlPosition(id,i);b.style.left=pos.x*100+'%';b.style.top=pos.y*100+'%';b.style.width=b.style.height=qolSettings.controlSize+'px';let dragging=false;b.onpointerdown=e=>{e.preventDefault();e.stopPropagation();dragging=true;b.setPointerCapture(e.pointerId);};b.onpointermove=e=>{if(!dragging)return;const margin=qolSettings.controlSize/2+12;const x=clamp(e.clientX,margin,innerWidth-margin)/innerWidth,y=clamp(e.clientY,margin,innerHeight-margin)/innerHeight;qolSettings.positions[id]={x,y};b.style.left=x*100+'%';b.style.top=y*100+'%';applySettings();};b.onpointerup=b.onpointercancel=()=>dragging=false;layout.p.append(b);});};
   layout.box.append(button('Save & Back',()=>layout.p.hidden=true));
   actions.append(button('Move buttons',()=>{layout.p.hidden=false;renderLayout();}),button('Restore controls',()=>{qolSettings={...defaults,sfx:qolSettings.sfx,music:qolSettings.music,positions:{}};applySettings();prefs.p.hidden=true;showToast('Default controls restored.');}),button('Back',()=>prefs.p.hidden=true));
   const settings=document.querySelector('#settings-screen .menu-box');settings?.append(button('Comfort & controls',()=>prefs.p.hidden=false));

@@ -43,10 +43,11 @@ let lastUltTextContent = '';
 let lastLives = 5;
 
 // Additional DOM element caches to prevent querySelector / getElementById thrashing
-let btnUltElement: HTMLElement | null = null;
 let btnEnhanceElement: HTMLElement | null = null;
 let btnDashElement: HTMLElement | null = null;
 let objectiveDisplayElement: HTMLElement | null = null;
+let levelDisplayElement: HTMLElement | null = null;
+let lastRenderedLevel = -1;
 
 let lastFlowWidth = -1;
 let lastExpWidth = -1;
@@ -318,10 +319,10 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   scoreDisplay = document.getElementById('score-display');
   comboDisplay = document.getElementById('combo-display');
   heartsElements = document.querySelectorAll('.heart');
-  btnUltElement = document.getElementById('btn-ult');
   btnEnhanceElement = document.getElementById('btn-enhance');
   btnDashElement = document.getElementById('btn-dash');
   objectiveDisplayElement = document.getElementById('objective-display');
+  levelDisplayElement = document.getElementById('level-display');
 
   const mainMenu = document.getElementById('main-menu');
   const settingsScreen = document.getElementById('settings-screen');
@@ -936,15 +937,6 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     });
   }
 
-  const autoUltSelect = document.getElementById('auto-ult-select') as HTMLSelectElement;
-  if (autoUltSelect) {
-    autoUltSelect.value = globals.autoUltEnabled;
-    autoUltSelect.addEventListener('change', (e) => {
-      globals.autoUltEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
-      safeStorage.setItem('autoUlt', globals.autoUltEnabled);
-    });
-  }
-
   const updateOverlayDisplays = () => {
     const flashOverlay = document.getElementById('flash-overlay');
     if (flashOverlay) {
@@ -1436,7 +1428,6 @@ export function updateComboDisplay() {
 }
 
 export function updateCooldownsUI() {
-  const btnUlt = btnUltElement || (btnUltElement = document.getElementById('btn-ult'));
   if (enhanceCooldownOverlay && enhanceCooldownText) {
     if (globals.enhanceActiveTimer > 0) {
       const p = Math.round((globals.enhanceActiveTimer / globals.playerStats.enhanceDuration) * 100);
@@ -1580,10 +1571,6 @@ export function updateCooldownsUI() {
   }
 
   if (isUltReady !== lastBtnUltReady) {
-    if (btnUlt) {
-      if (isUltReady) btnUlt.classList.add('ready');
-      else btnUlt.classList.remove('ready');
-    }
     const btnShadow = document.getElementById('btn-ult-shadow');
     const btnOmni = document.getElementById('btn-ult-omni');
     const btnStorm = document.getElementById('btn-ult-storm');
@@ -1605,6 +1592,12 @@ let lastRenderedMaxLives = -1;
 
 export function updateUI() {
   if (!flowMeterFill || !expMeterFill || !scoreDisplay || !flowMeterContainer) return;
+  
+  const lvlEl = levelDisplayElement || (levelDisplayElement = document.getElementById('level-display'));
+  if (lvlEl && globals.level !== lastRenderedLevel) {
+    lvlEl.textContent = String(globals.level);
+    lastRenderedLevel = globals.level;
+  }
   
   const flowPct = Math.round((globals.flow / globals.playerStats.flowMax) * 100);
   if (flowPct !== lastFlowWidth) {

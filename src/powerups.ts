@@ -251,36 +251,48 @@ export const FUSION_RECIPES: FusionRecipe[] = [
 ];
 
 function applyStatLevelUp() {
-  const stats = [
-    ['slashBonusDmgPct', 0.06, '+6% Slash Dmg'],
-    ['attackCooldownBase', -0.018, '-0.018s Atk CD'],
-    ['dashCooldownBase', -0.06, '-0.06s Dash CD'],
-    ['moveSpeedMult', 0.05, '+5% Speed'],
-    ['postureDmgBonus', 2, '+2 Posture Break'],
-    ['iaijutsuBonusDmg', 2, '+2 Iai Dmg'],
-    ['flowGenMult', 0.08, '+8% Flow Gen']
+  // Guaranteed stat gains on every level
+  globals.playerStats.slashBonusDmgPct += 0.05;
+  globals.playerStats.iaijutsuBonusDmg += 1;
+  globals.playerStats.flowGenMult += 0.03;
+  globals.playerStats.moveSpeedMult = Math.min(1.5, (globals.playerStats.moveSpeedMult || 1.0) + 0.02);
+
+  const bonusRolls = [
+    { key: 'slashBonusDmgPct', amount: 0.08, label: '+8% Slash DMG' },
+    { key: 'attackCooldownBase', amount: -0.02, label: '-0.02s Attack CD' },
+    { key: 'dashCooldownBase', amount: -0.08, label: '-0.08s Dash CD' },
+    { key: 'postureDmgBonus', amount: 3, label: '+3 Posture Break' },
+    { key: 'iaijutsuBonusDmg', amount: 2, label: '+2 Iaijutsu DMG' },
+    { key: 'critChanceBonus', amount: 0.04, label: '+4% Crit Rate' }
   ] as const;
-  const [key, amount, label] = stats[Math.floor(Math.random() * stats.length)];
-  const current = (globals.playerStats as any)[key] || 0;
-  (globals.playerStats as any)[key] = key.includes('Cooldown') 
-    ? Math.max(key === 'attackCooldownBase' ? 0.18 : 0.72, current + amount) 
-    : (key === 'moveSpeedMult' ? Math.min(1.5, current + amount) : current + amount);
+  const roll = bonusRolls[Math.floor(Math.random() * bonusRolls.length)];
+  const current = (globals.playerStats as any)[roll.key] || 0;
+  (globals.playerStats as any)[roll.key] = roll.key.includes('Cooldown') 
+    ? Math.max(roll.key === 'attackCooldownBase' ? 0.16 : 0.65, current + roll.amount) 
+    : current + roll.amount;
   
-  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, `LVL UP! ${label}`, '#4ade80', 24));
-  callbacks.updateUI();
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 65, `⚡ LVL UP: ${roll.label}`, '#4ade80', 22));
 }
 
 export function triggerLevelUp() {
   if (globals.gameState !== 'playing') return;
-  globals.exp -= globals.maxExp;
-  globals.maxExp = Math.round(globals.maxExp * 1.25);
-  globals.level++;
-  
-  const maxHearts = globals.gameMode === 'zen' ? 3 : globals.maxLives;
-  if (globals.lives < maxHearts) globals.lives++;
 
-  applyStatLevelUp();
-  playSynthesizedLevelUp();
+  while (globals.exp >= globals.maxExp && globals.gameState === 'playing') {
+    globals.exp -= globals.maxExp;
+    globals.maxExp = Math.round(globals.maxExp * 1.25);
+    globals.level++;
+    
+    const maxHearts = globals.gameMode === 'zen' ? 3 : globals.maxLives;
+    if (globals.lives < maxHearts) globals.lives++;
+
+    applyStatLevelUp();
+    playSynthesizedLevelUp();
+  }
+
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `⚔️ LEVEL ${globals.level}!`, '#ffd700', 36));
+  globals.screenShake = Math.max(globals.screenShake, 14);
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+  callbacks.updateUI();
 }
 
 export function omnislashHitDmg(hitIndex: number, isFinalBlast = false): number {
@@ -505,24 +517,30 @@ export function triggerZenField() {
 
 export function triggerSpecificUltimate(type: 'shadow' | 'omni' | 'storm' | 'zen') {
   if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
-  globals.flow = 0;
 
   if (globals.gameMode === 'zen' || type === 'zen') {
+    globals.flow = 0;
     playSynthesizedTempleBell();
     triggerZenField();
     return;
   }
 
   if (type === 'shadow') {
+    // Flow stays full so the 6-second drain in main.ts can run to completion
+    globals.flow = globals.playerStats.flowMax;
     playSynthesizedSingingBowl();
     ultOptions[0].apply();
   } else if (type === 'omni') {
+    globals.flow = 0;
     playSynthesizedAwaken();
     ultOptions[1].apply();
   } else if (type === 'storm') {
+    // Flow stays full so the 8-second drain in main.ts can run to completion
+    globals.flow = globals.playerStats.flowMax;
     playSynthesizedThunder();
     ultOptions[2].apply();
   } else {
+    globals.flow = 0;
     playSynthesizedAwaken();
     ultOptions[1].apply();
   }
@@ -537,10 +555,45 @@ export function activateAwakening() {
   }
 }
 
+export type SynergyType = 'blade' | 'flow' | 'shadow' | 'iron' | 'element';
+
 export interface ShopSlot {
   power: PowerUp;
   price: number;
+  originalPrice: number;
   quality: 'common' | 'rare' | 'epic' | 'legendary';
+  isFrozen?: boolean;
+  discountPct?: number;
+  synergy: SynergyType;
+}
+
+export const SYNERGY_INFO: Record<SynergyType, { label: string; icon: string; color: string; desc2: string; desc4: string }> = {
+  blade: { label: 'Blade Art', icon: '⚔️', color: '#f43f5e', desc2: '+15% Slash DMG', desc4: 'Inflicts Bleed' },
+  flow: { label: 'Flow Chi', icon: '🌊', color: '#06b6d4', desc2: '+25% Flow Gain', desc4: 'Ult Flow Cost -20%' },
+  shadow: { label: 'Shadow Step', icon: '👤', color: '#a855f7', desc2: '-15% Dash CD', desc4: 'Shadow Clones' },
+  iron: { label: 'Iron Guard', icon: '🛡️', color: '#eab308', desc2: '+4 Posture Break', desc4: 'Parry Deflects 200%' },
+  element: { label: 'Elemental', icon: '🔥', color: '#f97316', desc2: '+2 Skill DMG', desc4: 'Skills Chain Lightning' },
+};
+
+export function getPowerSynergy(p: PowerUp): SynergyType {
+  const nk = p.nameKey;
+  if (nk.includes('Giant') || nk.includes('Wind') || nk.includes('Deadeye') || nk.includes('Echo') || nk.includes('BladeEchoes') || nk.includes('Execution')) return 'blade';
+  if (nk.includes('Blood') || nk.includes('ChargeSpeed') || nk.includes('Dimensional') || nk.includes('Tempo') || nk.includes('Flowing')) return 'flow';
+  if (nk.includes('Feather') || nk.includes('Swift') || nk.includes('Clones') || nk.includes('Petal') || nk.includes('Dash')) return 'shadow';
+  if (nk.includes('Shield') || nk.includes('Deflect') || nk.includes('StoutHeart') || nk.includes('Gale')) return 'iron';
+  return 'element';
+}
+
+export function getActiveSynergies(): Record<SynergyType, number> {
+  const counts: Record<SynergyType, number> = { blade: 0, flow: 0, shadow: 0, iron: 0, element: 0 };
+  for (const nameKey of globals.chosenPowerUps) {
+    const power = powerUps.find(p => p.nameKey === nameKey);
+    if (power) {
+      const syn = getPowerSynergy(power);
+      counts[syn] = (counts[syn] || 0) + 1;
+    }
+  }
+  return counts;
 }
 
 let currentShopInventory: ShopSlot[] = [];
@@ -571,7 +624,7 @@ export function getQualityPrice(q: 'common' | 'rare' | 'epic' | 'legendary'): nu
   }
 }
 
-export function rollShopInventory(): ShopSlot[] {
+function rollSingleShopSlot(): ShopSlot {
   const available = powerUps.filter(p => {
     if (p.isCorrupted) return false;
     if (p.nameKey === 'puFrostName' && globals.frostStanceActive) return false;
@@ -589,16 +642,33 @@ export function rollShopInventory(): ShopSlot[] {
     return true;
   });
 
-  const shuffled = [...available].sort(() => Math.random() - 0.5);
-  const selected = shuffled.slice(0, 4);
-  return selected.map(p => {
-    const q = getPowerQuality(p);
-    return {
-      power: p,
-      quality: q,
-      price: getQualityPrice(q)
-    };
-  });
+  const p = available[Math.floor(Math.random() * available.length)] || powerUps[0];
+  const q = getPowerQuality(p);
+  const origPrice = getQualityPrice(q);
+  const hasDiscount = Math.random() < 0.28;
+  const discountPct = hasDiscount ? (Math.random() < 0.5 ? 25 : 35) : 0;
+  const price = discountPct > 0 ? Math.max(5, Math.round(origPrice * (1 - discountPct / 100))) : origPrice;
+
+  return {
+    power: p,
+    quality: q,
+    price,
+    originalPrice: origPrice,
+    discountPct,
+    isFrozen: false,
+    synergy: getPowerSynergy(p),
+  };
+}
+
+export function rollShopInventory(): ShopSlot[] {
+  if (currentShopInventory.length === 4) {
+    return currentShopInventory.map(slot => (slot.isFrozen ? slot : rollSingleShopSlot()));
+  }
+  const slots: ShopSlot[] = [];
+  for (let i = 0; i < 4; i++) {
+    slots.push(rollSingleShopSlot());
+  }
+  return slots;
 }
 
 export function openShop() {
@@ -641,42 +711,110 @@ export function renderShopModal() {
     legendary: '#fbbf24'
   };
 
-  modal.innerHTML = `
-    <div class="menu-box" style="max-width: 680px; width: min(680px, 94vw); max-height: 90vh; padding: 20px; border-color: #fbbf24; box-shadow: 0 0 35px rgba(251, 191, 36, 0.35); overflow-y: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 12px; border-bottom: 1px solid rgba(251, 191, 36, 0.3); padding-bottom: 8px;">
-        <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(18px, 3vh, 26px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ BATTLE REQUISITION</h2>
-        <div style="font-family: 'Orbitron', monospace; font-size: 16px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 4px 12px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4);">
-          ◆ <span id="modal-currency-count">${globals.stageCurrency || 0}</span>
-        </div>
-      </div>
-      
-      <p style="font-size: 12px; color: #94a3b8; margin: 0 0 14px 0; font-family: 'Space Mono', monospace;">
-        Temporary stage requisitions. All acquisitions and shards reset upon clearing or leaving this stage.
-      </p>
+  const activeSyn = getActiveSynergies();
+  const stageNum = globals.currentStage || 1;
+  const radarText = stageNum % 5 === 0
+    ? '⚠️ TACET THREAT: Boss Anomaly Detected! Armor-break & heavy burst damage advised.'
+    : stageNum % 3 === 0
+      ? '⚠️ TACET THREAT: Fast Skirmishers & Aerial Units Inbound! High mobility recommended.'
+      : '⚠️ TACET THREAT: Standard Grunt Patrol. Soul shard drop yields maximized.';
 
-      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 24px;">❤️</span>
-          <div>
-            <div style="font-size: 13px; font-weight: bold; color: #f87171;">Field Ration (Emergency Heal)</div>
-            <div style="font-size: 11px; color: #94a3b8;">Restore 1 Heart immediately (Current: ${globals.lives}/${globals.maxLives})</div>
+  modal.innerHTML = `
+    <div class="menu-box" style="max-width: 860px; width: min(860px, 96vw); max-height: 92vh; padding: 20px; border-color: #fbbf24; box-shadow: 0 0 35px rgba(251, 191, 36, 0.35); overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+      
+      <!-- Header -->
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(251, 191, 36, 0.3); padding-bottom: 10px;">
+        <div>
+          <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(18px, 2.8vh, 24px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ REQUISITION: TACET CRISIS</h2>
+          <div style="font-size: 11px; color: #94a3b8; font-family: 'Space Mono', monospace; margin-top: 2px;">
+            Stage ${stageNum} Battlefield Requisition Hub
           </div>
         </div>
-        <button id="shop-ration-btn" class="menu-btn btn-compact" style="border-color: #ef4444; color: #ef4444; min-height: 32px; height: 32px; min-width: 105px;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
-          Buy (◆ 20)
-        </button>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="font-family: 'Orbitron', monospace; font-size: 16px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 14px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4);">
+            ◆ <span id="modal-currency-count">${globals.stageCurrency || 0}</span>
+          </div>
+        </div>
       </div>
 
-      <div id="shop-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; width: 100%; margin-bottom: 16px;">
+      <!-- Threat Radar -->
+      <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 8px 12px; font-family: 'Space Mono', monospace; font-size: 11px; color: #fca5a5; display: flex; align-items: center; gap: 8px;">
+        <span>${radarText}</span>
       </div>
 
-      <div style="display: flex; gap: 12px; width: 100%; justify-content: center; flex-wrap: wrap;">
-        <button id="shop-refresh-btn" class="menu-btn btn-compact" style="border-color: #38bdf8; color: #38bdf8; min-height: 36px; height: 36px; min-width: 140px;">
-          🔄 Reroll (${costLabel})
-        </button>
-        <button id="shop-close-btn" class="menu-btn exit-btn btn-compact" style="min-height: 36px; height: 36px; min-width: 100px;">
-          ✕ Resume
-        </button>
+      <!-- Body: 2 Columns on Desktop, Stacked on Mobile -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; width: 100%;">
+        
+        <!-- Left Column: Shinobi Stat Sheet & Synergies -->
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: bold; color: #38bdf8; letter-spacing: 1px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 6px;">
+            📊 SHINOBI STAT SHEET
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+            <div style="color: #94a3b8;">Health: <b style="color: #ef4444;">${globals.lives}/${globals.maxLives} ❤️</b></div>
+            <div style="color: #94a3b8;">Level: <b style="color: #ffd700;">LVL ${globals.level}</b></div>
+            <div style="color: #94a3b8;">Slash DMG: <b style="color: #4ade80;">+${Math.round((globals.playerStats.slashBonusDmgPct || 0) * 100)}%</b></div>
+            <div style="color: #94a3b8;">Iaijutsu: <b style="color: #00ffff;">+${globals.playerStats.iaijutsuBonusDmg || 0}</b></div>
+            <div style="color: #94a3b8;">Attack CD: <b style="color: #cbd5e1;">${globals.playerStats.attackCooldownBase.toFixed(2)}s</b></div>
+            <div style="color: #94a3b8;">Dash CD: <b style="color: #cbd5e1;">${globals.playerStats.dashCooldownBase.toFixed(2)}s</b></div>
+            <div style="color: #94a3b8;">Speed: <b style="color: #38bdf8;">+${Math.round(((globals.playerStats.moveSpeedMult || 1.0) - 1.0) * 100)}%</b></div>
+            <div style="color: #94a3b8;">Flow Gen: <b style="color: #c084fc;">+${Math.round(((globals.playerStats.flowGenMult || 1.0) - 1.0) * 100)}%</b></div>
+            <div style="color: #94a3b8;">Posture Break: <b style="color: #fbbf24;">+${globals.playerStats.postureDmgBonus || 0}</b></div>
+            <div style="color: #94a3b8;">Crit Rate: <b style="color: #f43f5e;">+${Math.round(((globals.playerStats.critChanceBonus || 0) + (globals.playerStats.heroCritChance || 0)) * 100)}%</b></div>
+          </div>
+
+          <!-- Active Synergies -->
+          <div style="font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: bold; color: #a855f7; letter-spacing: 1px; margin-top: 4px; border-bottom: 1px solid rgba(168, 85, 247, 0.25); padding-bottom: 4px;">
+            🌀 ACTIVE DISCIPLINES
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 10.5px;">
+            ${(Object.keys(SYNERGY_INFO) as SynergyType[]).map(synKey => {
+              const count = activeSyn[synKey] || 0;
+              const info = SYNERGY_INFO[synKey];
+              const is2Active = count >= 2;
+              const is4Active = count >= 4;
+              const statusText = is4Active ? info.desc4 : (is2Active ? info.desc2 : 'Inactive (Need 2)');
+              const activeColor = is2Active ? info.color : '#64748b';
+              return `
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; border-left: 3px solid ${activeColor};">
+                  <div>
+                    <span style="color: ${activeColor}; font-weight: bold;">${info.icon} ${info.label} (${count})</span>
+                  </div>
+                  <div style="font-size: 9.5px; color: ${is2Active ? '#e2e8f0' : '#64748b'};">
+                    ${statusText}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <!-- Emergency Field Ration -->
+          <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 11px; color: #f87171; font-weight: bold;">
+              ❤️ Field Ration (+1 Heart)
+            </div>
+            <button id="shop-ration-btn" class="menu-btn btn-compact" style="border-color: #ef4444; color: #ef4444; min-height: 28px; height: 28px; padding: 2px 10px; font-size: 11px;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
+              ◆ 20
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: 4 Shop Requisition Cards -->
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div id="shop-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; width: 100%;">
+          </div>
+          
+          <!-- Bottom Action Buttons -->
+          <div style="display: flex; gap: 10px; width: 100%; justify-content: flex-end; margin-top: 6px;">
+            <button id="shop-refresh-btn" class="menu-btn btn-compact" style="border-color: #38bdf8; color: #38bdf8; min-height: 36px; height: 36px; min-width: 140px; font-size: 12px;">
+              🔄 Reroll Unlocked (${costLabel})
+            </button>
+            <button id="shop-close-btn" class="menu-btn exit-btn btn-compact" style="min-height: 36px; height: 36px; min-width: 100px; font-size: 12px;">
+              ✕ Resume
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -686,42 +824,79 @@ export function renderShopModal() {
     const card = document.createElement('div');
     const qColor = qualityColorMap[slot.quality];
     const canAfford = (globals.stageCurrency || 0) >= slot.price;
+    const isFrozen = !!slot.isFrozen;
+    const synInfo = SYNERGY_INFO[slot.synergy] || SYNERGY_INFO.element;
 
     card.className = 'power-card';
     card.style.cssText = `
-      border-color: ${qColor};
-      background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(10, 10, 15, 0.95));
-      box-shadow: 0 0 15px ${qColor}33;
+      border-color: ${isFrozen ? '#38bdf8' : qColor};
+      background: linear-gradient(135deg, ${isFrozen ? 'rgba(8, 47, 73, 0.95)' : 'rgba(15, 23, 42, 0.95)'}, rgba(10, 10, 15, 0.95));
+      box-shadow: 0 0 16px ${isFrozen ? 'rgba(56, 189, 248, 0.4)' : qColor + '33'};
       padding: 12px 10px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 140px;
-      cursor: ${canAfford ? 'pointer' : 'not-allowed'};
-      opacity: ${canAfford ? '1' : '0.45'};
-      transition: transform 0.15s ease;
+      min-height: 155px;
+      position: relative;
+      border-radius: 8px;
+      border-width: 2px;
+      border-style: solid;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
     `;
 
     card.innerHTML = `
       <div>
-        <span style="font-size: 9px; font-weight: 900; letter-spacing: 1px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 6px; border-radius: 6px; display: inline-block; margin-bottom: 6px;">
-          ${slot.quality}
-        </span>
-        <h3 style="font-size: 13px; margin: 0 0 4px 0; color: #f8fafc;">${t(slot.power.nameKey)}</h3>
-        <p style="font-size: 10.5px; color: #cbd5e1; margin: 0; line-height: 1.35;">${t(slot.power.descKey)}</p>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span style="font-size: 9px; font-weight: 900; letter-spacing: 0.5px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 6px; border-radius: 6px;">
+            ${slot.quality}
+          </span>
+          <span style="font-size: 9px; font-weight: bold; color: ${synInfo.color}; background: rgba(0,0,0,0.5); padding: 1px 6px; border-radius: 6px;">
+            ${synInfo.icon} ${synInfo.label}
+          </span>
+        </div>
+
+        ${slot.discountPct ? `
+          <div style="display: inline-block; background: #ef4444; color: #ffffff; font-size: 9px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">
+            🔥 -${slot.discountPct}% SALE
+          </div>
+        ` : ''}
+
+        <h3 style="font-size: 12.5px; margin: 0 0 4px 0; color: #f8fafc; font-family: 'Shojumaru', sans-serif;">
+          ${t(slot.power.nameKey)}
+        </h3>
+        <p style="font-size: 10px; color: #cbd5e1; margin: 0; line-height: 1.35; font-family: 'Space Mono', monospace;">
+          ${t(slot.power.descKey)}
+        </p>
       </div>
+
       <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-        <span style="font-family: 'Orbitron', monospace; font-size: 13px; font-weight: bold; color: ${canAfford ? '#fbbf24' : '#ef4444'};">
-          ◆ ${slot.price}
-        </span>
-        <span style="font-size: 10px; color: ${canAfford ? '#4ade80' : '#94a3b8'}; font-weight: bold;">
-          ${canAfford ? 'BUY' : 'LACK'}
-        </span>
+        <button class="shop-freeze-btn" style="background: ${isFrozen ? '#0284c7' : 'rgba(0,0,0,0.5)'}; border: 1px solid ${isFrozen ? '#38bdf8' : 'rgba(255,255,255,0.2)'}; color: ${isFrozen ? '#ffffff' : '#94a3b8'}; border-radius: 4px; padding: 2px 6px; font-size: 9.5px; cursor: pointer; display: flex; align-items: center; gap: 2px;">
+          ${isFrozen ? '❄️ FROZEN' : '🔒 LOCK'}
+        </button>
+
+        <button class="shop-buy-btn" style="background: ${canAfford ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${canAfford ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; color: ${canAfford ? '#fbbf24' : '#64748b'}; border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-family: 'Orbitron', monospace;" ${canAfford ? '' : 'disabled'}>
+          ${slot.discountPct ? `<span style="text-decoration: line-through; opacity: 0.6; font-size: 9px; margin-right: 4px;">◆${slot.originalPrice}</span>` : ''}◆ ${slot.price}
+        </button>
       </div>
     `;
 
-    if (canAfford) {
-      const buy = (e: Event) => {
+    // Freeze Button Handler
+    const freezeBtn = card.querySelector('.shop-freeze-btn');
+    if (freezeBtn) {
+      const toggleFreeze = (e: Event) => {
+        e.stopPropagation();
+        slot.isFrozen = !slot.isFrozen;
+        playSound(sfx.slash, 0.5);
+        renderShopModal();
+      };
+      freezeBtn.addEventListener('pointerdown', toggleFreeze);
+      freezeBtn.addEventListener('click', toggleFreeze);
+    }
+
+    // Buy Button Handler
+    const buyBtn = card.querySelector('.shop-buy-btn');
+    if (buyBtn && canAfford) {
+      const doBuy = (e: Event) => {
         e.stopPropagation();
         if ((globals.stageCurrency || 0) < slot.price) return;
         globals.stageCurrency -= slot.price;
@@ -730,11 +905,13 @@ export function renderShopModal() {
         currentShopInventory.splice(idx, 1);
         callbacks.updateUI();
         playSound(sfx.magatamaPickup, 1.0);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, `+${t(slot.power.nameKey)}`, '#ffd700', 22));
         renderShopModal();
       };
-      card.addEventListener('pointerdown', buy);
-      card.addEventListener('click', buy);
+      buyBtn.addEventListener('pointerdown', doBuy);
+      buyBtn.addEventListener('click', doBuy);
     }
+
     grid.appendChild(card);
   });
 
