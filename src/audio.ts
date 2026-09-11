@@ -277,10 +277,9 @@ export const resumeAudioContext = () => {
     decodeAllSfx();
   } catch (e) {}
   startBgm();
-};
+  };
 
-let lastHitTime = 0;
-let lastHurtTime = 0;
+  let lastHurtTime = 0;
 let lastParryTime = 0;
 let lastPerfectParryTime = 0;
 let lastDodgeTime = 0;
@@ -289,30 +288,7 @@ let lastFirewheelTime = 0;
 let lastGravityTime = 0;
 
 export function playSynthesizedHit() {
-  try {
-    const nowTime = performance.now();
-    if (nowTime - lastHitTime < 45) return;
-    lastHitTime = nowTime;
-
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(getSoundDestination(ctx));
-
-    osc.type = 'triangle';
-    const now = ctx.currentTime;
-    
-    osc.frequency.setValueAtTime(180, now);
-    osc.frequency.exponentialRampToValueAtTime(40, now + 0.12);
-    
-    gain.gain.setValueAtTime(getSfxVolume() * 0.4, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
-    
-    osc.start(now);
-    osc.stop(now + 0.13);
-  } catch (e) {}
+  // Removed per user instruction to eliminate repetitive clatter when hitting multiple enemies simultaneously
 }
 
 export function playSynthesizedHurt() {

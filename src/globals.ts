@@ -363,6 +363,7 @@ export const globals = {
   })(),
   activeStageAffix: null as StageAffix | null,
   stageBossSpawned: false,
+  stageBossDefeated: false,
   satyrEarthshakerCD: 0,
   campaignUpgrades: (() => {
     const defaults = {

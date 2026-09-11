@@ -703,10 +703,9 @@ export function closeShop() {
   globals.shopOpen = false;
   const modal = document.getElementById('shop-modal');
   if (modal) modal.style.display = 'none';
-  if (globals.gameState === 'paused') {
-    globals.gameState = 'playing';
-  }
+  globals.gameState = 'playing';
   if (globals.waveState === 'shop') {
+    globals.waveState = 'active';
     callbacks.advanceToNextWave();
   }
 }

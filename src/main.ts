@@ -760,6 +760,7 @@ export function setupWaveObjectives(wave: number, totalWaves: number, stage: num
   globals.waveEnemiesKilled = 0;
   globals.waveEnemiesSpawned = 0;
   globals.waveState = 'active';
+  globals.stageBossDefeated = false;
 
   const isFinalWave = wave >= totalWaves;
   if (isBossStage && isFinalWave) {
@@ -772,7 +773,9 @@ export function setupWaveObjectives(wave: number, totalWaves: number, stage: num
 }
 
 export function advanceToNextWave() {
-  if (globals.gameState !== 'playing' || globals.gameMode !== 'classic') return;
+  if (globals.gameMode !== 'classic') return;
+  globals.gameState = 'playing';
+  globals.waveState = 'active';
   const stage = globals.currentStage || 1;
   const isBossStage = stage % 5 === 0;
 
@@ -792,6 +795,7 @@ export function advanceToNextWave() {
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, waveTitle, isFinalWave ? '#ef4444' : '#ffd700', 26));
   playAffixAlert(0.9);
   updateUI();
+  stopSpawner();
   spawnEnemy();
 }
 callbacks.advanceToNextWave = advanceToNextWave;
@@ -963,6 +967,11 @@ function initGame() {
   globals.groundScars = []; 
   globals.playerPosHistory = []; 
   globals.delayedActions = [];
+  globals.animatedEffects = [];
+  globals.gravityWellTimer = 0;
+  globals.plasmaTrails = [];
+  globals.bouncingSickles = [];
+  globals.stageBossDefeated = false;
   globals.runStats = {
     kills: 0,
     bossesKilled: 0,
@@ -1183,6 +1192,7 @@ function initGame() {
   globals.calamityEvent = 'none';
   globals.calamityTimer = 0;
   globals.stageBossSpawned = false;
+  globals.stageBossDefeated = false;
   isZanFinisherActive = false;
   thunderGaleTimer = 0.0;
   gravityCollapseTimer = 0.0;
@@ -1311,8 +1321,18 @@ function spawnEnemy() {
 
   const bossAlive=globals.enemies.some(e=>e.state!=='dead'&&['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(e.subType));
   const encounter=encounterBudget(globals.currentStage,globals.runTime,isMobile,bossAlive);
+  let aliveCount=globals.enemies.filter(e=>e.state!=='dead'&&!e.isPvpRemote).length;
+
   if(globals.gameMode==='classic'){
-    if (globals.waveState === 'shop' || globals.waveState === 'cleared') {
+    if (globals.waveState === 'shop') {
+      if (!globals.shopOpen) {
+        globals.waveState = 'active';
+      } else {
+        scheduleSpawn(800);
+        return;
+      }
+    }
+    if (globals.waveState === 'cleared') {
       scheduleSpawn(800);
       return;
     }
@@ -1321,8 +1341,10 @@ function spawnEnemy() {
       return;
     }
     maxEnemies=encounter.cap;count=isBossRush()?1:encounter.batch;
+    if (aliveCount === 0) {
+      count = Math.min(3, Math.max(1, (globals.waveEnemiesTotal || 10) - (globals.waveEnemiesSpawned || 0)));
+    }
   }
-  let aliveCount=globals.enemies.filter(e=>e.state!=='dead'&&!e.isPvpRemote).length;
   // Insane difficulty is used for insane_survival
   if (globals.enemies.filter(e => e.state !== 'dead' && !e.isPvpRemote).length < maxEnemies) {
      for(let i=0; i<count && aliveCount<maxEnemies; i++) {
@@ -2544,8 +2566,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if (globals.frostStanceActive) {
     e.chillTimer = 3.0;
   }
-
-  playSynthesizedHit();
   
   // Critical Hit calculation (hero base crit + powerup crit, with powerup bonus capped at 40%)
   const heroCritChance = globals.playerStats?.heroCritChance || 0;
@@ -2923,6 +2943,9 @@ function killEnemy(e: Enemy) {
   addCombo();
   globals.runStats.kills++;
   const isBossKill = (e.subType?.includes('boss') || (e as any).isBoss);
+  if (isBossKill) {
+    globals.stageBossDefeated = true;
+  }
   const currencyYield = isBossKill ? 50 : ((e as any).isElite ? 10 : 2);
   globals.stageCurrency = (globals.stageCurrency || 0) + currencyYield;
 
@@ -2994,11 +3017,23 @@ function killEnemy(e: Enemy) {
   if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
     const stage = globals.currentStage || 1;
     const isBossStage = stage % 5 === 0;
-    const isBossDefeated = e.subType === 'oni_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || e.subType === 'shogun_boss' || (e as any).isBoss;
     const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
-    const aliveEnemies = globals.enemies.filter(other => other && other !== e && other.state !== 'dead').length;
 
-    const isWaveComplete = globals.waveEnemiesKilled >= (globals.waveEnemiesTotal || 1) && aliveEnemies === 0;
+    // In boss stage final wave, defeating the boss also eliminates remaining minor minions
+    if (isBossStage && isFinalWave && isBossKill) {
+      globals.stageBossDefeated = true;
+      globals.enemies.forEach(other => {
+        if (other && other !== e && other.state !== 'dead' && !other.isPvpRemote) {
+          killEnemy(other);
+        }
+      });
+    }
+
+    const aliveEnemies = globals.enemies.filter(other => other && other !== e && other.state !== 'dead').length;
+    const allSpawned = (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1);
+    const allKilled = globals.waveEnemiesKilled >= (globals.waveEnemiesTotal || 1);
+    const bossConditionMet = !isBossStage || globals.stageBossDefeated || isBossKill;
+    const isWaveComplete = (allKilled || allSpawned || (isBossStage && isFinalWave && globals.stageBossDefeated)) && aliveEnemies === 0 && bossConditionMet;
 
     if (isWaveComplete) {
       if (!isFinalWave) {
@@ -3012,7 +3047,7 @@ function killEnemy(e: Enemy) {
         globals.delayedActions.push({
           delay: 0.75,
           run: () => {
-            if (globals.gameState === 'playing') {
+            if (globals.gameState === 'playing' || globals.gameState === 'paused') {
               refreshShop();
               openShop();
             }
@@ -3020,18 +3055,16 @@ function killEnemy(e: Enemy) {
         });
       } else {
         // Final wave completion
-        if (!isBossStage || isBossDefeated) {
-          globals.gameState = 'stageclear';
-          const lvlScreen = document.getElementById('level-up-screen');
-          if (lvlScreen) lvlScreen.style.display = 'none';
-          const ultScreen = document.getElementById('ult-screen');
-          if (ultScreen) ultScreen.style.display = 'none';
+        globals.gameState = 'stageclear';
+        const lvlScreen = document.getElementById('level-up-screen');
+        if (lvlScreen) lvlScreen.style.display = 'none';
+        const ultScreen = document.getElementById('ult-screen');
+        if (ultScreen) ultScreen.style.display = 'none';
 
-          if (!isZanFinisherActive && callbacks.triggerStageClear) {
-            triggerZanFinisher(() => {
-              callbacks.triggerStageClear();
-            });
-          }
+        if (!isZanFinisherActive && callbacks.triggerStageClear) {
+          triggerZanFinisher(() => {
+            callbacks.triggerStageClear();
+          });
         }
       }
     }
@@ -3247,6 +3280,58 @@ function update(realDt: number) {
     globals.runTime += realDt;
     globals.dayNightPhase = 'dawn';
 
+    // Classic Stage & Wave Progress Watchdog: prevents stalls, missing spawns, and stranded wave states
+    if (globals.gameMode === 'classic') {
+      const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
+      const isBossStage = (globals.currentStage || 1) % 5 === 0;
+      const activeAlive = globals.enemies.filter(en => en && en.state !== 'dead' && !en.isPvpRemote).length;
+
+      // 1. If wave shop was closed or never opened, ensure active progression resumes
+      if (globals.waveState === 'shop' && !globals.shopOpen) {
+        advanceToNextWave();
+      }
+
+      // 2. Final wave boss stage completion: boss slain and all minions defeated
+      if (isFinalWave && isBossStage && globals.stageBossDefeated && activeAlive === 0 && !isZanFinisherActive) {
+        globals.gameState = 'stageclear';
+        if (callbacks.triggerStageClear) {
+          triggerZanFinisher(() => callbacks.triggerStageClear());
+        }
+      }
+
+      // 3. Wave completion watchdog: all quota spawned and 0 enemies alive
+      if (globals.waveState === 'active' && activeAlive === 0 && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1)) {
+        if (!isFinalWave) {
+          globals.waveState = 'shop';
+          playSynthesizedTempleBell();
+          const isJa = globals.currentLang === 'ja';
+          const bannerTxt = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `⚡ ${bannerTxt} ⚡`, '#38bdf8', 30));
+          globals.delayedActions.push({
+            delay: 0.5,
+            run: () => {
+              if (globals.gameState === 'playing' || globals.gameState === 'paused') {
+                refreshShop();
+                openShop();
+              }
+            }
+          });
+        } else if (!isBossStage || globals.stageBossDefeated) {
+          globals.gameState = 'stageclear';
+          if (!isZanFinisherActive && callbacks.triggerStageClear) {
+            triggerZanFinisher(() => callbacks.triggerStageClear());
+          }
+        }
+      }
+
+      // 4. Enemy Spawner Watchdog: if wave is active and 0 enemies on screen while quota remains, trigger spawn immediately!
+      if (globals.waveState === 'active' && activeAlive === 0 && (globals.waveEnemiesSpawned || 0) < (globals.waveEnemiesTotal || 1)) {
+        if (spawnTimer === undefined) {
+          spawnEnemy();
+        }
+      }
+    }
+
     // 10-Minute Showdown: Supreme Shogun Boss Spawn (Survival / Endless modes only)
     if (globals.runTime >= 540 && globals.gameMode !== 'zen' && globals.gameMode !== 'classic' && !shogunSpawned) {
       shogunSpawned = true;
@@ -3290,16 +3375,21 @@ function update(realDt: number) {
       }
     }
 
-    // Endless Abyss Affix: Void Collapse (Gravity Collapse) periodic vortex
+    // Endless Abyss Affix: Void Collapse (Gravity Collapse) periodic vortex (strictly when enemies exist)
     if (globals.activeStageAffix?.id === 'gravity_collapse') {
-      gravityCollapseTimer += realDt;
-      if (gravityCollapseTimer >= 14.0) {
+      const aliveEnemies = globals.enemies.filter(e => e.state !== 'dead');
+      if (aliveEnemies.length > 0) {
+        gravityCollapseTimer += realDt;
+        if (gravityCollapseTimer >= 14.0) {
+          gravityCollapseTimer = 0.0;
+          globals.gravityWellX = globals.player.x + (Math.random() - 0.5) * 220;
+          globals.gravityWellY = globals.player.y + (Math.random() - 0.5) * 220;
+          globals.gravityWellTimer = 3.5;
+          playSynthesizedSingingBowl();
+          globals.floatingTexts.push(FloatingText.acquire(globals.gravityWellX, globals.gravityWellY - 60, "🌀 VOID COLLAPSE!", "#c084fc", 24));
+        }
+      } else {
         gravityCollapseTimer = 0.0;
-        globals.gravityWellX = globals.player.x + (Math.random() - 0.5) * 220;
-        globals.gravityWellY = globals.player.y + (Math.random() - 0.5) * 220;
-        globals.gravityWellTimer = 3.5;
-        playSynthesizedSingingBowl();
-        globals.floatingTexts.push(FloatingText.acquire(globals.gravityWellX, globals.gravityWellY - 60, "🌀 VOID COLLAPSE!", "#c084fc", 24));
       }
     }
 
@@ -3945,44 +4035,45 @@ function update(realDt: number) {
     
     if (globals.gravityWellTimer <= 0) {
       globals.gravityWellTimer = 0;
-      const explosionDmg = skillDamage(10 + 3 * (globals.playerStats.gravityExplosionLevel || 0), 2.0);
-      
-      globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#c084fc'));
-      globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#ec4899'));
-      
-      const goldImpact = (vfxAnims as any).shockwaves?.impactGold;
-      if (goldImpact && goldImpact.length > 0) {
-        globals.animatedEffects.push(new AnimatedEffect(globals.gravityWellX, globals.gravityWellY, goldImpact, 0.5, 3.2));
+      const aliveEnemies = globals.enemies.filter(e => e.state !== 'dead');
+      if (aliveEnemies.length > 0) {
+        const explosionDmg = skillDamage(10 + 3 * (globals.playerStats.gravityExplosionLevel || 0), 2.0);
+        
+        globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#c084fc'));
+        globals.shockwaves.push(new Shockwave(globals.gravityWellX, globals.gravityWellY, '#ec4899'));
+        
+        const goldImpact = (vfxAnims as any).shockwaves?.impactGold;
+        if (goldImpact && goldImpact.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.gravityWellX, globals.gravityWellY, goldImpact, 0.5, 3.2));
+        }
+        
+        globals.screenShake = Math.max(globals.screenShake, 35);
+        
+        for (let i = 0; i < 35; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 350 + Math.random() * 350;
+          globals.particles.push(Particle.acquire(
+            globals.gravityWellX, 
+            globals.gravityWellY, 
+            Math.random() < 0.5 ? '#f472b6' : '#c084fc', 
+            speed, 
+            0.6, 
+            3.0 + Math.random() * 2.0, 
+            angle
+          ));
+        }
+        
+        if (explosionDmg > 0) {
+          globals.enemies.forEach(e => {
+            if (e.state === 'dead') return;
+            const dx = globals.gravityWellX - e.x;
+            const dy = globals.gravityWellY - e.y;
+            if (dx * dx + dy * dy < pullRadiusSq) {
+              hitEnemy(e, explosionDmg);
+            }
+          });
+        }
       }
-      
-      globals.screenShake = Math.max(globals.screenShake, 35);
-      
-      for (let i = 0; i < 35; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 350 + Math.random() * 350;
-        globals.particles.push(Particle.acquire(
-          globals.gravityWellX, 
-          globals.gravityWellY, 
-          Math.random() < 0.5 ? '#f472b6' : '#c084fc', 
-          speed, 
-          0.6, 
-          3.0 + Math.random() * 2.0, 
-          angle
-        ));
-      }
-      
-      if (explosionDmg > 0) {
-        globals.enemies.forEach(e => {
-          if (e.state === 'dead') return;
-          const dx = globals.gravityWellX - e.x;
-          const dy = globals.gravityWellY - e.y;
-          if (dx * dx + dy * dy < pullRadiusSq) {
-            hitEnemy(e, explosionDmg);
-            globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 70, `SUPERNOVA -${explosionDmg}`, '#f472b6', 28));
-          }
-        });
-      }
-      playSynthesizedPerfectParry();
     }
   }
   
@@ -4779,27 +4870,6 @@ function update(realDt: number) {
         });
         playSound(sfx.slash, 0.5);
       }
-      if (globals.activeFusions.has('singularity_cleave') && globals.singularityCleaveCD <= 0) {
-        const bhX = globals.player.x + Math.cos(angle) * 150;
-        const bhY = globals.player.y + Math.sin(angle) * 150;
-        globals.gravityWellTimer = 2.0;
-        globals.gravityWellX = bhX;
-        globals.gravityWellY = bhY;
-        globals.singularityCleaveCD = 4.0;
-        playEnergyBeam(0.6);
-        globals.shockwaves.push(new Shockwave(bhX, bhY, '#a855f7'));
-        if (vfxAnims.gigapack?.explosion?.length > 0) {
-          globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));
-        }
-        const cleaveDmg = Math.round((20 + (globals.playerStats?.enhanceBonusDmg || 0) * 3) * (1 + (globals.playerStats?.slashBonusDmgPct || 0)));
-        globals.enemies.forEach(en => {
-          if (en.state === 'dead') return;
-          const dist = Math.hypot(en.x - bhX, en.y - bhY);
-          if (dist < 180) {
-            hitEnemy(en, cleaveDmg);
-          }
-        });
-      }
       const slashPct = globals.playerStats.slashBonusDmgPct || 0;
       if (slashPct) dmg *= 1 + slashPct;
       
@@ -5059,6 +5129,7 @@ function update(realDt: number) {
       }
 
       let hasChained = false;
+      let enemyHitCount = 0;
       for (let j = 0; j < globals.enemies.length; j++) {
         const e = globals.enemies[j];
         if (e.state === 'dead') continue;
@@ -5102,6 +5173,7 @@ function update(realDt: number) {
               continue;
             }
 
+            enemyHitCount++;
             hitEnemy(e, dmg);
             if (globals.flowState === 'storm_god' && !hasChained) {
               hasChained = true;
@@ -5116,6 +5188,28 @@ function update(realDt: number) {
             }
           }
         }
+      }
+
+      if (globals.activeFusions.has('singularity_cleave') && globals.singularityCleaveCD <= 0 && enemyHitCount > 0) {
+        const bhX = globals.player.x + Math.cos(angle) * 150;
+        const bhY = globals.player.y + Math.sin(angle) * 150;
+        globals.gravityWellTimer = 2.0;
+        globals.gravityWellX = bhX;
+        globals.gravityWellY = bhY;
+        globals.singularityCleaveCD = 4.0;
+        playEnergyBeam(0.6);
+        globals.shockwaves.push(new Shockwave(bhX, bhY, '#a855f7'));
+        if (vfxAnims.gigapack?.explosion?.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));
+        }
+        const cleaveDmg = Math.round((20 + (globals.playerStats?.enhanceBonusDmg || 0) * 3) * (1 + (globals.playerStats?.slashBonusDmgPct || 0)));
+        globals.enemies.forEach(en => {
+          if (en.state === 'dead') return;
+          const dist = Math.hypot(en.x - bhX, en.y - bhY);
+          if (dist < 180) {
+            hitEnemy(en, cleaveDmg);
+          }
+        });
       }
 
       if (globals.bladeEchoesActive && globals.flowState === 'awakened') {
