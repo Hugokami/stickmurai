@@ -10,7 +10,7 @@ import { isBoss } from './combatPolish';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer' | 'barrel_bomber' | 'orc_brute' | 'agis_colossus' | 'skeleton_warlord' | 'toaster_bot';
+export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer' | 'barrel_bomber' | 'orc_brute' | 'agis_colossus' | 'skeleton_warlord' | 'toaster_bot' | 'tengu_sorcerer' | 'shadow_sniper' | 'corrupted_shaman' | 'crimson_berserker';
 
 export class Enemy extends Entity {
   get meleeHitRadius(){return 140+(this.scaleMult-1)*60;}
@@ -160,62 +160,68 @@ export class Enemy extends Entity {
         else if (r < 0.80) this.subType = 'giant';
         else this.subType = 'glacial_sentinel';
       } else if (stage === 5) {
-        // Stage 5: Yomi Gateway - Oni Boss Encounter
+        // Stage 5: Yomi Gateway - Oni Boss Encounter on Final Wave
+        const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
         const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'oni_boss');
-        if (!bossAlive && !globals.stageBossSpawned) {
+        if (isFinalWave && !bossAlive && !globals.stageBossSpawned) {
           this.subType = 'oni_boss';
           globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
-          this.subType = r < 0.5 ? 'brawler' : 'samurai';
+          if (r < 0.35) this.subType = 'tengu_sorcerer';
+          else if (r < 0.65) this.subType = 'samurai';
+          else if (r < 0.85) this.subType = 'ronin';
+          else this.subType = 'brawler';
         }
       } else if (stage === 6) {
-        // Stage 6: Cursed Graveyard - Sorcery & Barrel Bombers
+        // Stage 6: Cursed Graveyard - Sorcery, Shamans & Barrel Bombers
         const r = Math.random();
         if (r < 0.25) this.subType = 'necromancer';
-        else if (r < 0.50) this.subType = 'astromancer';
+        else if (r < 0.50) this.subType = 'corrupted_shaman';
         else if (r < 0.75) this.subType = 'barrel_bomber';
         else this.subType = 'orc_brute';
       } else if (stage === 7) {
-        // Stage 7: Blood River - Chaos Vanguard & Advanced Bots
+        // Stage 7: Blood River - Chaos Vanguard, Snipers & Advanced Bots
         const r = Math.random();
-        if (r < 0.25) this.subType = 'assassin';
+        if (r < 0.25) this.subType = 'shadow_sniper';
         else if (r < 0.50) this.subType = 'toaster_bot';
-        else if (r < 0.75) this.subType = 'barrel_bomber';
+        else if (r < 0.75) this.subType = 'crimson_berserker';
         else this.subType = 'pyromancer';
       } else if (stage === 8) {
         // Stage 8: Castle Ramparts - Shogun's Guard & Artillery
         const r = Math.random();
-        if (r < 0.25) this.subType = 'orc_brute';
+        if (r < 0.25) this.subType = 'tengu_sorcerer';
         else if (r < 0.50) this.subType = 'glacial_sentinel';
-        else if (r < 0.75) this.subType = 'toaster_bot';
+        else if (r < 0.75) this.subType = 'crimson_berserker';
         else this.subType = 'giant';
       } else if (stage === 9) {
         // Stage 9: Throne Ante-Chamber - Purgatory Rampage
-        const elitePool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'necromancer', 'astromancer', 'berserker', 'assassin', 'toaster_bot'];
+        const elitePool: EnemySubType[] = ['orc_brute', 'crimson_berserker', 'corrupted_shaman', 'shadow_sniper', 'tengu_sorcerer', 'astromancer', 'toaster_bot'];
         this.subType = elitePool[Math.floor(Math.random() * elitePool.length)];
       } else if (stage === 10) {
-        // Stage 10: Sanctum of Oblivion - Agis Colossus Boss
+        // Stage 10: Sanctum of Oblivion - Agis Colossus Boss on Final Wave
+        const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
         const agisAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'agis_colossus');
-        if (!agisAlive && !globals.stageBossSpawned) {
+        if (isFinalWave && !agisAlive && !globals.stageBossSpawned) {
           this.subType = 'agis_colossus';
           globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
-          if (r < 0.4) this.subType = 'barrel_bomber';
-          else if (r < 0.7) this.subType = 'orc_brute';
-          else this.subType = 'berserker';
+          if (r < 0.35) this.subType = 'shadow_sniper';
+          else if (r < 0.70) this.subType = 'orc_brute';
+          else this.subType = 'crimson_berserker';
         }
       } else if (stage === 15) {
-        // Stage 15: Tomb of the Ancient King - Skeleton Warlord Boss
+        // Stage 15: Tomb of the Ancient King - Skeleton Warlord Boss on Final Wave
+        const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
         const warlordAlive = globals.enemies?.some(e => e && e.state !== 'dead' && e.subType === 'skeleton_warlord');
-        if (!warlordAlive && !globals.stageBossSpawned) {
+        if (isFinalWave && !warlordAlive && !globals.stageBossSpawned) {
           this.subType = 'skeleton_warlord';
           globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
-          if (r < 0.4) this.subType = 'toaster_bot';
-          else if (r < 0.7) this.subType = 'orc_brute';
+          if (r < 0.35) this.subType = 'corrupted_shaman';
+          else if (r < 0.70) this.subType = 'tengu_sorcerer';
           else this.subType = 'necromancer';
         }
       } else {
@@ -223,28 +229,29 @@ export class Enemy extends Entity {
         const realm = Math.floor((stage - 1) / 5) + 1;
         const stageInRealm = ((stage - 1) % 5) + 1;
         if (stageInRealm === 5) {
-          // Boss stage every 5 stages
+          // Boss stage on final wave
+          const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
           const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'skeleton_warlord', 'shogun_boss'];
           const targetBoss = bossTypes[(realm - 1) % bossTypes.length];
           const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && (e.subType === targetBoss || (e as any).isBoss));
-          if (!bossAlive && !globals.stageBossSpawned) {
+          if (isFinalWave && !bossAlive && !globals.stageBossSpawned) {
             this.subType = targetBoss;
             globals.stageBossSpawned = true;
           } else {
-            const minionPool: EnemySubType[] = ['orc_brute', 'barrel_bomber', 'berserker', 'toaster_bot', 'glacial_sentinel'];
+            const minionPool: EnemySubType[] = ['orc_brute', 'crimson_berserker', 'corrupted_shaman', 'shadow_sniper', 'tengu_sorcerer', 'glacial_sentinel'];
             this.subType = minionPool[Math.floor(Math.random() * minionPool.length)];
           }
         } else if (stageInRealm === 1) {
-          const pool: EnemySubType[] = ['samurai', 'ronin', 'assassin', 'brawler'];
+          const pool: EnemySubType[] = ['samurai', 'ronin', 'assassin', 'tengu_sorcerer'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else if (stageInRealm === 2) {
-          const pool: EnemySubType[] = ['musketeer', 'toaster_bot', 'berserker', 'orc_brute', 'assassin'];
+          const pool: EnemySubType[] = ['musketeer', 'shadow_sniper', 'crimson_berserker', 'orc_brute', 'assassin'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else if (stageInRealm === 3) {
-          const pool: EnemySubType[] = ['barrel_bomber', 'pyromancer', 'toaster_bot', 'orc_brute', 'giant'];
+          const pool: EnemySubType[] = ['barrel_bomber', 'pyromancer', 'toaster_bot', 'corrupted_shaman', 'giant'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else {
-          const pool: EnemySubType[] = ['glacial_sentinel', 'necromancer', 'astromancer', 'orc_brute', 'berserker'];
+          const pool: EnemySubType[] = ['glacial_sentinel', 'necromancer', 'astromancer', 'crimson_berserker', 'shadow_sniper'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         }
       }
@@ -269,7 +276,7 @@ export class Enemy extends Entity {
   }
 
   isRanged(): boolean {
-    return this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'glacial_sentinel' || this.subType === 'astromancer' || this.subType === 'necromancer' || this.subType === 'toaster_bot';
+    return this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'glacial_sentinel' || this.subType === 'astromancer' || this.subType === 'necromancer' || this.subType === 'toaster_bot' || this.subType === 'shadow_sniper' || this.subType === 'tengu_sorcerer' || this.subType === 'corrupted_shaman';
   }
 
   configureSubType() {
@@ -279,126 +286,154 @@ export class Enemy extends Entity {
       this.scaleMult = 1; this.hp = this.maxHp = 6; this.expValue = 1;
       this.colorTint = 'none';
       this.speed = 260;
-      this.maxPosture = 50;
+      this.maxPosture = 120;
     } else if (this.subType === 'samurai') {
       this.type = 'enemy02';
       this.lungeSpeed = 900; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
       this.scaleMult = 1.1; this.hp = this.maxHp = 7; this.expValue = 1;
       this.colorTint = 'none';
       this.speed = 260;
-      this.maxPosture = 60;
+      this.maxPosture = 140;
     } else if (this.subType === 'ronin') {
       this.type = 'enemy03';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.8; this.lungeDuration = 0.7;
       this.scaleMult = 1.2; this.hp = this.maxHp = 10; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 260;
-      this.maxPosture = 80;
+      this.maxPosture = 160;
     } else if (this.subType === 'berserker') {
       this.type = 'enemy02';
       this.lungeSpeed = 1300; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
       this.scaleMult = 1.3; this.hp = this.maxHp = 12; this.expValue = 3;
       this.colorTint = 'none';
       this.speed = 320;
-      this.maxPosture = 100;
+      this.maxPosture = 200;
+    } else if (this.subType === 'crimson_berserker') {
+      this.type = 'enemy02';
+      this.lungeSpeed = 1400; this.chargeTimeMax = 1.2; this.lungeDuration = 0.6;
+      this.scaleMult = 1.4; this.hp = this.maxHp = 26; this.expValue = 6;
+      this.colorTint = '#ef4444';
+      this.speed = 340;
+      this.maxPosture = 320;
     } else if (this.subType === 'giant') {
       this.type = 'enemy03';
       this.lungeSpeed = 650; this.chargeTimeMax = 2.4; this.lungeDuration = 0.8;
       this.scaleMult = 2; this.hp = this.maxHp = 18; this.expValue = 4;
       this.colorTint = 'none';
       this.speed = 150;
-      this.maxPosture = 140;
+      this.maxPosture = 280;
     } else if (this.subType === 'assassin') {
       this.type = 'enemy01';
       this.lungeSpeed = 1500; this.chargeTimeMax = 1.0; this.lungeDuration = 0.4;
       this.scaleMult = 0.8; this.hp = this.maxHp = 5; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 360;
-      this.maxPosture = 40;
+      this.maxPosture = 100;
     } else if (this.subType === 'musketeer') {
       this.type = 'enemy05';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.5; this.lungeDuration = 0.55; // Double-shot projectile
       this.scaleMult = 1.6; this.hp = this.maxHp = 4; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 180;
-      this.maxPosture = 45;
+      this.maxPosture = 110;
+    } else if (this.subType === 'shadow_sniper') {
+      this.type = 'enemy05';
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.1; this.lungeDuration = 0.45;
+      this.scaleMult = 1.4; this.hp = this.maxHp = 9; this.expValue = 4;
+      this.colorTint = '#881337';
+      this.speed = 200;
+      this.maxPosture = 180;
+    } else if (this.subType === 'tengu_sorcerer') {
+      this.type = 'enemy01';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.9; this.lungeDuration = 0.55;
+      this.scaleMult = 1.35; this.hp = this.maxHp = 14; this.expValue = 5;
+      this.colorTint = '#38bdf8';
+      this.speed = 240;
+      this.maxPosture = 220;
+    } else if (this.subType === 'corrupted_shaman') {
+      this.type = 'evil_wizard';
+      this.lungeSpeed = 0; this.chargeTimeMax = 2.4; this.lungeDuration = 0.6;
+      this.scaleMult = 1.5; this.hp = this.maxHp = 22; this.expValue = 7;
+      this.colorTint = '#059669';
+      this.speed = 170;
+      this.maxPosture = 260;
     } else if (this.subType === 'pyromancer') {
       this.type = 'enemy01';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.5; this.lungeDuration = 0.55;
       this.scaleMult = 1.5; this.hp = this.maxHp = 8; this.expValue = 4;
       this.colorTint = '#ff4400';
       this.speed = 160;
-      this.maxPosture = 70;
+      this.maxPosture = 150;
     } else if (this.subType === 'glacial_sentinel') {
       this.type = 'enemy02';
       this.lungeSpeed = 850; this.chargeTimeMax = 2.0; this.lungeDuration = 0.7;
       this.scaleMult = 1.4; this.hp = this.maxHp = 14; this.expValue = 5;
       this.colorTint = '#60a5fa';
       this.speed = 190;
-      this.maxPosture = 110;
+      this.maxPosture = 260;
     } else if (this.subType === 'astromancer') {
       this.type = 'enemy01';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.3; this.lungeDuration = 0.5;
       this.scaleMult = 1.5; this.hp = this.maxHp = 7; this.expValue = 5;
       this.colorTint = '#f43f5e';
       this.speed = 210;
-      this.maxPosture = 60;
+      this.maxPosture = 160;
     } else if (this.subType === 'necromancer') {
       this.type = 'enemy05';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.7; this.lungeDuration = 0.6;
       this.scaleMult = 1.8; this.hp = this.maxHp = 22; this.expValue = 8;
       this.colorTint = '#a855f7';
       this.speed = 150;
-      this.maxPosture = 120;
+      this.maxPosture = 240;
     } else if (this.subType === 'oni_boss') {
       this.type = 'skeleton';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.9; this.lungeDuration = 0.8;
       this.scaleMult = 2.5; this.hp = this.maxHp = BOSS_BASE_HP.oni_boss; this.expValue = 15;
       this.colorTint = 'none';
       this.speed = 270;
-      this.maxPosture = 280;
+      this.maxPosture = 850;
     } else if (this.subType === 'barrel_bomber') {
       this.type = 'enemy_barrel';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
       this.scaleMult = 1.1; this.hp = this.maxHp = 6; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 340;
-      this.maxPosture = 35;
+      this.maxPosture = 90;
     } else if (this.subType === 'orc_brute') {
       this.type = 'enemy_orc';
       this.lungeSpeed = 800; this.chargeTimeMax = 1.8; this.lungeDuration = 0.65;
       this.scaleMult = 1.2; this.hp = this.maxHp = 16; this.expValue = 4;
       this.colorTint = 'none';
       this.speed = 220;
-      this.maxPosture = 130;
+      this.maxPosture = 250;
     } else if (this.subType === 'agis_colossus') {
       this.type = 'boss_agis';
       this.lungeSpeed = 700; this.chargeTimeMax = 2.2; this.lungeDuration = 0.8;
       this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.agis_colossus; this.expValue = 30;
       this.colorTint = 'none';
       this.speed = 190;
-      this.maxPosture = 380;
+      this.maxPosture = 1100;
     } else if (this.subType === 'skeleton_warlord') {
       this.type = 'boss_skeleton';
       this.lungeSpeed = 900; this.chargeTimeMax = 2.0; this.lungeDuration = 0.75;
       this.scaleMult = 2.2; this.hp = this.maxHp = BOSS_BASE_HP.skeleton_warlord; this.expValue = 35;
       this.colorTint = 'none';
       this.speed = 220;
-      this.maxPosture = 340;
+      this.maxPosture = 950;
     } else if (this.subType === 'toaster_bot') {
       this.type = 'toaster_bot';
       this.lungeSpeed = 0; this.chargeTimeMax = 2.0; this.lungeDuration = 0.6;
       this.scaleMult = 1.0; this.hp = this.maxHp = 10; this.expValue = 3;
       this.colorTint = 'none';
       this.speed = 190;
-      this.maxPosture = 45;
+      this.maxPosture = 130;
     } else { // shogun_boss
       this.type = 'evil_wizard';
       this.lungeSpeed = 1350; this.chargeTimeMax = 1.7; this.lungeDuration = 0.6;
       this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.shogun_boss; this.expValue = 20;
       this.colorTint = 'none';
       this.speed = 280;
-      this.maxPosture = 320;
+      this.maxPosture = 900;
     }
 
     // Apply scaling modifiers
@@ -815,6 +850,103 @@ export class Enemy extends Entity {
             playEnergyBeam(0.45);
           }
         }
+      } else if (this.subType === 'tengu_sorcerer') {
+        if (!this.attackLanded && this.stateTime >= 0.10) {
+          const p1 = Projectile.acquire(this.x, this.y, this.targetAngle - 0.18, true, 1);
+          const p2 = Projectile.acquire(this.x, this.y, this.targetAngle + 0.18, true, 1);
+          (p1 as any).shooter = this; (p1 as any).colorTint = '#38bdf8';
+          (p2 as any).shooter = this; (p2 as any).colorTint = '#38bdf8';
+          globals.projectiles.push(p1, p2);
+          this.attackLanded = true;
+          playSound(sfx.enemySlash, 0.3);
+        }
+      } else if (this.subType === 'shadow_sniper') {
+        if (!this.attackLanded && this.stateTime >= 0.08) {
+          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 2);
+          (p as any).shooter = this; (p as any).colorTint = '#ef4444';
+          p.vx = Math.cos(this.targetAngle) * 1600;
+          p.vy = Math.sin(this.targetAngle) * 1600;
+          globals.projectiles.push(p);
+          this.attackLanded = true;
+          playSound(sfx.enemySlash, 0.35);
+        }
+      } else if (this.subType === 'corrupted_shaman') {
+        if (!this.attackLanded && this.stateTime >= 0.12) {
+          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 2);
+          (p as any).shooter = this; (p as any).colorTint = '#10b981';
+          globals.projectiles.push(p);
+          this.attackLanded = true;
+          playSound(sfx.enemySlash, 0.3);
+        }
+      } else if (this.subType === 'oni_boss') {
+        const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
+        if (!this.attackLanded && distToTarget > 200 && this.stateTime >= 0.15) {
+          const p1 = Projectile.acquire(this.x, this.y, this.targetAngle - 0.18, true, 2, true);
+          const p2 = Projectile.acquire(this.x, this.y, this.targetAngle + 0.18, true, 2, true);
+          (p1 as any).shooter = this; (p1 as any).colorTint = '#ef4444';
+          (p2 as any).shooter = this; (p2 as any).colorTint = '#ef4444';
+          globals.projectiles.push(p1, p2);
+          globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444'));
+          this.attackLanded = true;
+          playSound(sfx.enemySlash, 0.4);
+        } else if (!this.attackLanded) {
+          const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
+          if (dxHit*dxHit + dyHit*dyHit < this.meleeHitRadius * this.meleeHitRadius) {
+            this.executeAttack();
+            this.attackLanded = true;
+          }
+        }
+      } else if (this.subType === 'skeleton_warlord') {
+        const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
+        if (!this.attackLanded && distToTarget > 220 && this.stateTime >= 0.15) {
+          for (let off of [-0.25, 0, 0.25]) {
+            const p = Projectile.acquire(this.x, this.y, this.targetAngle + off, true, 2);
+            (p as any).shooter = this; (p as any).colorTint = '#a855f7';
+            globals.projectiles.push(p);
+          }
+          this.attackLanded = true;
+          playSound(sfx.enemySlash, 0.4);
+        } else if (!this.attackLanded) {
+          const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
+          if (dxHit*dxHit + dyHit*dyHit < this.meleeHitRadius * this.meleeHitRadius) {
+            this.executeAttack();
+            this.attackLanded = true;
+          }
+        }
+      } else if (this.subType === 'agis_colossus') {
+        const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
+        if (!this.attackLanded && distToTarget > 220 && this.stateTime >= 0.18) {
+          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 3, true);
+          (p as any).shooter = this; (p as any).colorTint = '#00ffff';
+          globals.projectiles.push(p);
+          globals.shockwaves.push(new Shockwave(this.x, this.y, '#00ffff'));
+          globals.screenShake = Math.max(globals.screenShake, 18);
+          this.attackLanded = true;
+          playSound(sfx.enemySlash, 0.4);
+        } else if (!this.attackLanded) {
+          const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
+          if (dxHit*dxHit + dyHit*dyHit < this.meleeHitRadius * this.meleeHitRadius) {
+            this.executeAttack();
+            this.attackLanded = true;
+          }
+        }
+      } else if (this.subType === 'shogun_boss') {
+        const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
+        if (!this.attackLanded && distToTarget > 180 && this.stateTime >= 0.15) {
+          for (let off of [-0.3, -0.1, 0.1, 0.3]) {
+            const p = Projectile.acquire(this.x, this.y, this.targetAngle + off, true, 2);
+            (p as any).shooter = this; (p as any).colorTint = '#fbbf24';
+            globals.projectiles.push(p);
+          }
+          this.attackLanded = true;
+          playSound(sfx.enemySlash, 0.4);
+        } else if (!this.attackLanded) {
+          const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
+          if (dxHit*dxHit + dyHit*dyHit < this.meleeHitRadius * this.meleeHitRadius) {
+            this.executeAttack();
+            this.attackLanded = true;
+          }
+        }
       } else if (this.subType !== 'musketeer' && !this.attackLanded) {
         const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
         const threshold = this.meleeHitRadius;
@@ -845,6 +977,18 @@ export class Enemy extends Entity {
     else if (this.subType === 'astromancer') { attackRange = 600; }
     else if (this.subType === 'necromancer') { attackRange = 500; }
     else if (this.subType === 'toaster_bot') { attackRange = 460; }
+    else if (this.subType === 'shadow_sniper') { attackRange = 620; }
+    else if (this.subType === 'tengu_sorcerer') { attackRange = 460; }
+    else if (this.subType === 'corrupted_shaman') { attackRange = 480; }
+    else if (this.subType === 'oni_boss') { attackRange = 420; }
+    else if (this.subType === 'skeleton_warlord') { attackRange = 420; }
+    else if (this.subType === 'agis_colossus') { attackRange = 440; }
+    else if (this.subType === 'shogun_boss') { attackRange = 450; }
+
+    // Active boss poise regeneration: recovers posture when not under active pressure
+    if (isBoss(this) && this.posture > 0 && this.postureBrokenTimer <= 0) {
+      this.posture = Math.max(0, this.posture - 28 * effectiveDt);
+    }
 
     if (this.chillTimer > 0) {
       speed *= 0.7;
@@ -1191,6 +1335,18 @@ export class Enemy extends Entity {
     else if (this.type === 'enemy05') headOffset = 26;
     else if (this.type === 'enemy_orc') headOffset = 44;
     else if (this.type === 'enemy_barrel') headOffset = 52;
+
+    // Sniper Laser Aim Telegraph
+    if (this.subType === 'shadow_sniper' && this.state === 'charge') {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(rx, effectiveRy);
+      ctx.lineTo(rx + Math.cos(this.targetAngle) * 600, effectiveRy + Math.sin(this.targetAngle) * 600);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // Perilous Attack Danger Telegraph ("!") for charging bosses, unblockable lunges, and locked aim
     if (this.state === 'charge' && (this.isAimLocked || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' || this.subType === 'giant')) {

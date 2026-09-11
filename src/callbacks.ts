@@ -28,6 +28,7 @@ export const callbacks = {
   openHermitPactModal: () => {},
   triggerDawnVictory: () => {},
   triggerStageClear: () => {},
+  advanceToNextWave: () => {},
   onQuitToMainMenu: () => {},
 };
 

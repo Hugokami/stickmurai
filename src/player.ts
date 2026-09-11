@@ -284,6 +284,20 @@ export class Player extends Entity {
         // Reset attack cooldown on dash so combos trigger instantly and reliably!
         this.attackCooldown = 0;
 
+        if (globals.hasHeroAwakening('ninja') && (!globals.lastMirageSpawn || performance.now() - globals.lastMirageSpawn > 3500)) {
+          globals.lastMirageSpawn = performance.now();
+          globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 80, "👤 SHADOW MIRAGE!", "#c084fc", 22));
+          for (let i = 0; i < 12; i++) {
+            globals.particles.push(Particle.acquire(this.x, this.y, '#a855f7', 220, 0.45, 3));
+          }
+          globals.enemies.forEach(en => {
+            if (en.state !== 'dead' && Math.hypot(en.x - this.x, en.y - this.y) < 180) {
+              en.setState('stun');
+              en.stateTime = 0;
+            }
+          });
+        }
+
         if ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god') {
           this.dashCooldown = 0.2;
         } else {

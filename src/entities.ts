@@ -1083,18 +1083,17 @@ export class Slash {
   update(dt: number) {
     this.life -= dt;
     if (this.owner && this.owner.state !== 'dead') {
-      this.x = this.owner.x + this.offsetX;
-      this.y = this.owner.y + this.offsetY;
+      // Slashes are carved in space. When the player dashes at high velocity,
+      // freezing the slash to the swing coordinate prevents extreme misalignment/distortion.
+      if (this.owner.state !== 'dash') {
+        this.x = this.owner.x + this.offsetX;
+        this.y = this.owner.y + this.offsetY;
+      }
     }
   }
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
-    let dir = 1;
-    if (this.owner && this.owner.subType === 'player') {
-      dir = this.owner.dir || 1;
-    }
-
     const rx = (this.x - cx + globals.vw/2) | 0;
-    const yOff = (this.owner && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
+    const yOff = (this.owner && this.owner.state !== 'dash' && typeof this.owner.yOffset === 'number') ? this.owner.yOffset : 0;
     const ry = (this.y - cy + globals.vh/2 + yOff) | 0;
     const safeMult = Number.isFinite(this.sizeMult) ? Math.min(2.5, Math.max(0.4, this.sizeMult)) : 1.0;
     const buffer = Math.max(380, 320 * safeMult);
@@ -1143,8 +1142,7 @@ export class Slash {
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.save();
       ctx.translate(rx, ry);
-      ctx.scale(dir, 1);
-      ctx.rotate(dir === -1 ? Math.PI - this.angle : this.angle);
+      ctx.rotate(this.angle);
       
       // Center the slash arc accurately along the aim vector with safe scale bounds
       const scale = Math.min(5.5, Math.max(0.8, 4.6 * safeMult));

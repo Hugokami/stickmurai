@@ -671,6 +671,11 @@ export function rollShopInventory(): ShopSlot[] {
   return slots;
 }
 
+export function refreshShop() {
+  currentShopInventory = rollShopInventory();
+  renderShopModal();
+}
+
 export function openShop() {
   if (globals.gameState !== 'playing') return;
   globals.gameState = 'paused';
@@ -687,6 +692,9 @@ export function closeShop() {
   if (modal) modal.style.display = 'none';
   if (globals.gameState === 'paused') {
     globals.gameState = 'playing';
+  }
+  if (globals.waveState === 'shop') {
+    callbacks.advanceToNextWave();
   }
 }
 
@@ -806,13 +814,18 @@ export function renderShopModal() {
           </div>
           
           <!-- Bottom Action Buttons -->
-          <div style="display: flex; gap: 10px; width: 100%; justify-content: flex-end; margin-top: 6px;">
-            <button id="shop-refresh-btn" class="menu-btn btn-compact" style="border-color: #38bdf8; color: #38bdf8; min-height: 36px; height: 36px; min-width: 140px; font-size: 12px;">
-              🔄 Reroll Unlocked (${costLabel})
-            </button>
-            <button id="shop-close-btn" class="menu-btn exit-btn btn-compact" style="min-height: 36px; height: 36px; min-width: 100px; font-size: 12px;">
-              ✕ Resume
-            </button>
+          <div style="display: flex; gap: 12px; width: 100%; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; flex-wrap: wrap;">
+            <div style="font-size: 11px; color: #94a3b8; font-family: 'Space Mono', monospace; display: flex; align-items: center; gap: 6px;">
+              <span>❄️ Frozen cards stay locked through rerolls</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-left: auto;">
+              <button id="shop-refresh-btn" class="menu-btn btn-compact" style="border-color: #38bdf8; color: #38bdf8; min-height: 38px; height: 38px; width: auto; max-width: none; min-width: 140px; padding: 0 16px; font-size: 12px; white-space: nowrap; flex-shrink: 0;">
+                🔄 Reroll Unlocked (${costLabel})
+              </button>
+              <button id="shop-close-btn" class="menu-btn exit-btn btn-compact" style="min-height: 38px; height: 38px; width: auto; max-width: none; min-width: 100px; padding: 0 16px; font-size: 12px; white-space: nowrap; flex-shrink: 0;">
+                ✕ Resume Battle
+              </button>
+            </div>
           </div>
         </div>
       </div>

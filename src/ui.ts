@@ -1,4 +1,4 @@
-import { heroBalance, heroDescription } from './balance';
+import { heroBalance, heroDescription, heroAwakeningSkill } from './balance';
 import { heroComparison, renderStageBriefing, permanentPreview } from './progressionQol';
 import { renderCodex } from './codex';
 import { completeJourneyStage, masteryBadge } from './journey';
@@ -1686,19 +1686,26 @@ export function updateUI() {
         const stage = globals.currentStage || 1;
         const isBoss = stage % 5 === 0;
         const isJa = globals.currentLang === 'ja';
+        const curWave = globals.currentWave || 1;
+        const totWaves = globals.totalWaves || 3;
+        const isFinalWave = curWave >= totWaves;
         let text = '';
-        if (isBoss) {
+        if (isBoss && isFinalWave) {
           const bossStageData = getStageData(stage);
           const rawName = isJa ? (bossStageData.nameJa || bossStageData.name) : bossStageData.name;
           const cleanName = rawName.replace(/^ステージ\s*\d+:\s*|^STAGE\s*\d+:\s*/i, '');
-          text = isJa ? `ステージ ${stage}: ${cleanName}` : `STAGE ${stage}: ${cleanName}`;
+          text = isJa ? `ステージ ${stage} · 最終波：${cleanName}` : `STAGE ${stage} · FINAL WAVE: ${cleanName}`;
         } else {
-          text = `STAGE ${stage}: ${globals.stageKills} / ${globals.stageTargetKills} KILLS`;
+          const waveKills = Math.min(globals.waveEnemiesTotal || 1, globals.waveEnemiesKilled || 0);
+          const waveTot = globals.waveEnemiesTotal || 1;
+          text = isJa 
+            ? `ステージ ${stage} · 第 ${curWave}/${totWaves} 波 (${waveKills}/${waveTot})`
+            : `STAGE ${stage} · WAVE ${curWave}/${totWaves} (${waveKills}/${waveTot})`;
         }
         if (text !== lastObjectiveText) {
           objDisplay.textContent = text;
-          objDisplay.style.borderColor = isBoss ? 'rgba(239, 68, 68, 0.7)' : 'rgba(255, 215, 0, 0.4)';
-          objDisplay.style.color = isBoss ? '#ef4444' : '#ffd700';
+          objDisplay.style.borderColor = (isBoss && isFinalWave) ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255, 215, 0, 0.4)';
+          objDisplay.style.color = (isBoss && isFinalWave) ? '#ef4444' : '#ffd700';
           lastObjectiveText = text;
         }
       } else {
@@ -2270,6 +2277,37 @@ export function populateDojoHeroGrid() {
 
     const statsHtml = heroComparison(hero.id);
 
+    const awk = heroAwakeningSkill(hero.id);
+    const hasAwakening = ((globals as any).unlockedHeroAwakenings || []).includes(hero.id);
+    let awakeningHtml = '';
+    if (awk) {
+      if (hasAwakening) {
+        awakeningHtml = `
+          <div style="margin-top: 4px; padding: 6px 8px; border-radius: 6px; background: rgba(251, 191, 36, 0.12); border: 1px solid #fbbf24; display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 11px; font-weight: bold; color: #fbbf24;">⚡ ${isJa ? '覚醒スキル習得済み' : 'AWAKENING ACQUIRED'}</span>
+              <span style="font-size: 10px; color: #ffd700; font-family: monospace;">${awk.icon} ${isJa ? awk.nameJa : awk.nameEn}</span>
+            </div>
+            <div style="font-size: 10px; color: #fef08a; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
+          </div>
+        `;
+      } else if (isUnlocked) {
+        const canAffordAwk = (globals.magatama || 0) >= awk.cost;
+        awakeningHtml = `
+          <div style="margin-top: 4px; padding: 6px 8px; border-radius: 6px; background: rgba(15, 23, 42, 0.85); border: 1px dashed rgba(251, 191, 36, 0.4); display: flex; flex-direction: column; gap: 3px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 11px; font-weight: bold; color: #fbbf24;">⚡ ${isJa ? '追加覚醒スキル' : 'AWAKENING SKILL'}</span>
+              <span style="font-size: 10px; color: #f59e0b; font-family: monospace;">${awk.icon} ${isJa ? awk.nameJa : awk.nameEn}</span>
+            </div>
+            <div style="font-size: 10px; color: #94a3b8; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
+            <button class="menu-btn btn-card buy-awakening-btn" data-hero="${hero.id}" ${canAffordAwk ? '' : 'disabled'} style="margin-top: 4px; padding: 4px 10px !important; min-height: 28px !important; font-size: 11px !important; border-color: ${canAffordAwk ? '#fbbf24' : '#64748b'}; color: ${canAffordAwk ? '#fbbf24' : '#94a3b8'}; cursor: ${canAffordAwk ? 'pointer' : 'not-allowed'};">
+              ${isJa ? `覚醒習得: ${awk.cost.toLocaleString()} 🔮` : `AWAKEN: ${awk.cost.toLocaleString()} 🔮`}
+            </button>
+          </div>
+        `;
+      }
+    }
+
     let actionBtnHtml = '';
     if (isEquipped) {
       actionBtnHtml = `<button class="menu-btn btn-card" disabled style="margin: 0; background: #166534; border-color: #22c55e; color: #bbf7d0; cursor: default;">✓ ${isJa ? '装備中' : 'EQUIPPED'}</button>`;
@@ -2292,6 +2330,7 @@ export function populateDojoHeroGrid() {
       <div style="font-size: 11px; color: #fef08a; background: rgba(254, 240, 138, 0.08); padding: 4px 8px; border-radius: 4px; border-left: 2px solid #ffd700; margin-top: 2px;">
         ✨ ${isJa ? hero.specialJa : hero.specialEn}
       </div>
+      ${awakeningHtml}
       <div style="margin-top: auto; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
         ${!isUnlocked && hero.cost > globals.magatama ? `<div class="qol-shortfall">${isJa?'あと':'Need'} ${(hero.cost-globals.magatama).toLocaleString()} 🔮</div>` : ''}
         ${actionBtnHtml}
@@ -2341,6 +2380,29 @@ export function populateDojoHeroGrid() {
       globals.player?.updateHeroType();
       playSynthesizedFusionUnlock();
       playShrineBlessing(0.85);
+      refreshAllMagatamaDisplays();
+      populateDojoHeroGrid();
+    });
+  });
+
+  grid.querySelectorAll('.buy-awakening-btn').forEach(btn => {
+    bindDualListener(btn as HTMLElement, () => {
+      const heroId = (btn as HTMLElement).dataset.hero;
+      if (!heroId) return;
+      const awk = heroAwakeningSkill(heroId);
+      if (!awk) return;
+      const currentAwakenings = ((globals as any).unlockedHeroAwakenings || []) as string[];
+      if (currentAwakenings.includes(heroId) || (globals.magatama || 0) < awk.cost) return;
+
+      globals.magatama -= awk.cost;
+      if (!(globals as any).unlockedHeroAwakenings) (globals as any).unlockedHeroAwakenings = [];
+      (globals as any).unlockedHeroAwakenings.push(heroId);
+      safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+      safeStorage.setItem('stickmurai_hero_awakenings', JSON.stringify((globals as any).unlockedHeroAwakenings));
+
+      window.dispatchEvent(new CustomEvent('qol-toast', { detail: `⚡ ${isJa ? awk.nameJa : awk.nameEn} ${isJa ? '解放！' : 'UNLOCKED!'}` }));
+      playSynthesizedFusionUnlock();
+      playShrineBlessing(0.95);
       refreshAllMagatamaDisplays();
       populateDojoHeroGrid();
     });

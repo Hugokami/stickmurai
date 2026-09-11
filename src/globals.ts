@@ -312,6 +312,18 @@ export const globals = {
       return ['default'];
     }
   })() as string[],
+  unlockedHeroAwakenings: (() => {
+    try {
+      const stored = safeStorage.getItem('stickmurai_hero_awakenings');
+      return stored ? JSON.parse(stored) : [];
+    } catch(e) {
+      return [];
+    }
+  })() as string[],
+  hasHeroAwakening(heroId?: string): boolean {
+    const id = heroId || (globals as any).selectedHero || 'default';
+    return (((globals as any).unlockedHeroAwakenings || []) as string[]).includes(id);
+  },
   selectedHero: (() => {
     try { return safeStorage.getItem('stickmurai_selected_hero') || 'default'; } catch(e) { return 'default'; }
   })(),
@@ -322,6 +334,17 @@ export const globals = {
   maxStageUnlocked: (() => {
     try { return parseInt(safeStorage.getItem('stickmurai_max_stage') || '1', 10) || 1; } catch(e) { return 1; }
   })(),
+  currentWave: 1,
+  totalWaves: 3,
+  waveEnemiesTotal: 10,
+  waveEnemiesKilled: 0,
+  waveEnemiesSpawned: 0,
+  waveState: 'active' as 'spawning' | 'active' | 'cleared' | 'shop',
+  waveBannerTimer: 0,
+  waveBannerText: '',
+  waveBannerSub: '',
+  satyrSlashCounter: 0,
+  lastMirageSpawn: 0,
   stageKills: 0,
   stageTargetKills: 12,
   clearedStages: (() => {

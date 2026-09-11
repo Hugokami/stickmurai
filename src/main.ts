@@ -81,7 +81,7 @@ let shogunSpawned = false;
 import { initInput, pollGamepad } from './input';
 import { initUI, updateUI, updateEnhanceButton, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
 import { initRenderer, draw, resetCanvasVisuals } from './renderer';
-import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate } from './powerups';
+import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate, openShop, refreshShop } from './powerups';
 
 // register callbacks
 callbacks.t = t;
@@ -754,6 +754,48 @@ function showBossWarningBanner(stage: number) {
   }, 3200);
 }
 
+export function setupWaveObjectives(wave: number, totalWaves: number, stage: number, isBossStage: boolean) {
+  globals.currentWave = wave;
+  globals.totalWaves = totalWaves;
+  globals.waveEnemiesKilled = 0;
+  globals.waveEnemiesSpawned = 0;
+  globals.waveState = 'active';
+
+  const isFinalWave = wave >= totalWaves;
+  if (isBossStage && isFinalWave) {
+    globals.waveEnemiesTotal = 1 + Math.min(6, 2 + Math.floor(stage * 0.3));
+    globals.stageBossSpawned = false;
+  } else {
+    globals.waveEnemiesTotal = Math.min(24, Math.max(6, 4 + wave * 3 + Math.floor(stage * 0.7)));
+  }
+  globals.stageTargetKills = globals.waveEnemiesTotal;
+}
+
+export function advanceToNextWave() {
+  if (globals.gameState !== 'playing' || globals.gameMode !== 'classic') return;
+  const stage = globals.currentStage || 1;
+  const isBossStage = stage % 5 === 0;
+
+  globals.currentWave++;
+  setupWaveObjectives(globals.currentWave, globals.totalWaves, stage, isBossStage);
+
+  const isJa = globals.currentLang === 'ja';
+  const isFinalWave = globals.currentWave >= globals.totalWaves;
+  let waveTitle = '';
+  if (isBossStage && isFinalWave) {
+    waveTitle = isJa ? '🚨 最終波：魔王降臨！ 🚨' : '🚨 FINAL WAVE: BOSS INBOUND! 🚨';
+    showBossWarningBanner(stage);
+  } else {
+    waveTitle = isJa ? `⚠️ 第 ${globals.currentWave} / ${globals.totalWaves} 波 開始！ ⚠️` : `⚠️ WAVE ${globals.currentWave} / ${globals.totalWaves} COMMENCING! ⚠️`;
+  }
+
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, waveTitle, isFinalWave ? '#ef4444' : '#ffd700', 26));
+  playAffixAlert(0.9);
+  updateUI();
+  spawnEnemy();
+}
+callbacks.advanceToNextWave = advanceToNextWave;
+
 function initGame() {
   if (!assetReadiness().ready) { showLoadingRecovery(); return; }
   stopSpawner();
@@ -1146,14 +1188,14 @@ function initGame() {
   gravityCollapseTimer = 0.0;
   const currentStage = globals.currentStage || 1;
   const isBossStage = currentStage % 5 === 0;
-  const stageTargets: Record<number, number> = {
-    1: 25, 2: 35, 3: 45, 4: 55, 5: 1, 6: 40, 7: 50, 8: 60, 9: 70, 10: 1
-  };
+
+  // Wave Progression (3 to 10 waves per stage, boss on final wave)
+  globals.totalWaves = Math.min(10, Math.max(3, 2 + Math.floor(currentStage * 0.65)));
   if (isBossStage) {
-    globals.stageTargetKills = 1;
-  } else {
-    globals.stageTargetKills = stageTargets[currentStage] || Math.min(90, 35 + currentStage * 4);
+    globals.totalWaves = Math.min(10, Math.max(4, 3 + Math.floor(currentStage * 0.5)));
   }
+  globals.currentWave = 1;
+  setupWaveObjectives(globals.currentWave, globals.totalWaves, currentStage, isBossStage);
 
   // Active Stage Affix (Calamity Winds & Endless Abyss Affixes)
   if (globals.gameMode === 'classic') {
@@ -1269,7 +1311,17 @@ function spawnEnemy() {
 
   const bossAlive=globals.enemies.some(e=>e.state!=='dead'&&['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(e.subType));
   const encounter=encounterBudget(globals.currentStage,globals.runTime,isMobile,bossAlive);
-  if(globals.gameMode==='classic'){maxEnemies=encounter.cap;count=isBossRush()?1:encounter.batch;}
+  if(globals.gameMode==='classic'){
+    if (globals.waveState === 'shop' || globals.waveState === 'cleared') {
+      scheduleSpawn(800);
+      return;
+    }
+    if ((globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 10)) {
+      scheduleSpawn(600);
+      return;
+    }
+    maxEnemies=encounter.cap;count=isBossRush()?1:encounter.batch;
+  }
   let aliveCount=globals.enemies.filter(e=>e.state!=='dead'&&!e.isPvpRemote).length;
   // Insane difficulty is used for insane_survival
   if (globals.enemies.filter(e => e.state !== 'dead' && !e.isPvpRemote).length < maxEnemies) {
@@ -1283,6 +1335,9 @@ function spawnEnemy() {
        (enemy as any).id = enemyId;
        
        globals.enemies.push(enemy);
+       if (globals.gameMode === 'classic') {
+         globals.waveEnemiesSpawned = (globals.waveEnemiesSpawned || 0) + 1;
+       }
        aliveCount++;
 
        // Broadcast spawn to client
@@ -1492,10 +1547,47 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, parryLabel, sparkColor, 22));
     hitEnemy(enemy, 3); // deal 3 damage on parry riposte!
     triggerFlowingCounterReset();
+
+    // Hero Awakening Skill: Default (Stickmurai) - Kensei Domain
+    if (globals.hasHeroAwakening('default')) {
+      globals.targetTimeSlowFactor = 0.25;
+      globals.timeSlowDuration = 1.2;
+      globals.screenShake = 22;
+      playSynthesizedThunder();
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, "⚡ KENSEI DOMAIN! ⚡", "#38bdf8", 26));
+      const sorted = globals.enemies.filter(en => en.state !== 'dead').sort((a, b) => {
+        const da = Math.hypot(a.x - globals.player.x, a.y - globals.player.y);
+        const db = Math.hypot(b.x - globals.player.x, b.y - globals.player.y);
+        return da - db;
+      });
+      for (let i = 0; i < Math.min(4, sorted.length); i++) {
+        const targetEnemy = sorted[i];
+        const sAngle = Math.atan2(targetEnemy.y - globals.player.y, targetEnemy.x - globals.player.x);
+        globals.slashes.push(Slash.acquire(targetEnemy.x, targetEnemy.y, sAngle, 1.4, true, '#38bdf8', false));
+        hitEnemy(targetEnemy, Math.round(15 * (1 + (globals.playerStats.slashBonusDmgPct || 0))));
+      }
+    }
+
+    // Hero Awakening Skill: Samurai - Dragon Roar Counter
+    if (globals.hasHeroAwakening('samurai')) {
+      globals.screenShake = Math.max(globals.screenShake, 20);
+      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fbbf24'));
+      (globals.player as any).hyperArmorTimer = 3.0;
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, "🐉 DRAGON ROAR! HYPER ARMOR 3S", "#fbbf24", 26));
+      globals.enemies.forEach(en => {
+        if (en.state !== 'dead' && Math.hypot(en.x - globals.player.x, en.y - globals.player.y) < 300) {
+          if (typeof (en as any).addPostureDamage === 'function') (en as any).addPostureDamage(120);
+        }
+      });
+    }
+
     return;
   }
   
   if (globals.player.state !== 'dead') {
+    if ((globals.player as any).hyperArmorTimer > 0) {
+      damageAmount = Math.max(1, Math.floor(damageAmount * 0.5));
+    }
     recordHurt(enemy?.subType || 'attack', damageAmount);
     journeyHurt(damageAmount);
     if (isPractice()) return;
@@ -1850,6 +1942,14 @@ function fireFullyChargedIaijutsu(angle: number) {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 40, txtLabel, txtColor, 28));
     globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, txtColor));
     globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, projDmg, true, false, enhancedType));
+
+    if (globals.hasHeroAwakening('luneblade')) {
+      const cross1 = angle + Math.PI / 2;
+      const cross2 = angle - Math.PI / 2;
+      globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, cross1, false, Math.round(projDmg * 0.85), true, false, 'luneblade_cross'));
+      globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, cross2, false, Math.round(projDmg * 0.85), true, false, 'luneblade_cross'));
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "🌙 CRESCENT MOONFALL! 🌙", "#c7d2fe", 24));
+    }
 
     // Directional slicing sparks along Iaijutsu trajectory
     const slashSparks = 10;
@@ -2543,6 +2643,28 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
     }
 
+    // Hero Awakening Skill: Nightborne - Abyssal Singularity
+    if (globals.hasHeroAwakening('nightborne')) {
+      globals.screenShake = Math.max(globals.screenShake, 20);
+      globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 95, "🌌 ABYSSAL SINGULARITY!", "#7c3aed", 26));
+      globals.shockwaves.push(new Shockwave(e.x, e.y, '#7c3aed'));
+      globals.enemies.forEach(en => {
+        if (en.state !== 'dead' && en !== e) {
+          const d = Math.hypot(e.x - en.x, e.y - en.y);
+          if (d < 350) {
+            const pullA = Math.atan2(e.y - en.y, e.x - en.x);
+            en.vx += Math.cos(pullA) * 900;
+            en.vy += Math.sin(pullA) * 900;
+            en.hp -= 3;
+          }
+        }
+      });
+      if (globals.lives < globals.maxLives) {
+        globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+        updateUI();
+      }
+    }
+
     // Primal Satyr Sovereign execution passive: Earthshaker Tremor (balanced with 5s ICD & target cap)
     if (globals.selectedHero === 'satyr' && (globals.satyrEarthshakerCD || 0) <= 0) {
       globals.satyrEarthshakerCD = 5;
@@ -2708,6 +2830,14 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       (e as any).addPostureDamage(18);
     }
 
+    if (globals.hasHeroAwakening('akakage')) {
+      const scytheAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
+      const scythe = Projectile.acquire(globals.player.x, globals.player.y, scytheAngle, false, Math.round(finalDmg * 0.75), false, true, 'blood_scythe');
+      (scythe as any).colorTint = '#ef4444';
+      globals.projectiles.push(scythe);
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "🩸 BLOOD ASURA SCYTHE!", "#ef4444", 22));
+    }
+
     // Golden crit particles
     const critSparkCount = globals.graphicsSettings === 'low' ? 3 : 12;
     for(let i=0; i<critSparkCount; i++) {
@@ -2807,6 +2937,11 @@ function killEnemy(e: Enemy) {
   globals.chiburuiKills = (globals.chiburuiKills || 0) + 1;
   checkVampireHeal(e);
 
+  if (globals.flowState === 'awakened' && globals.hasHeroAwakening('akakage')) {
+    globals.flow = Math.min(globals.playerStats.flowMax, globals.flow + 15);
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "+15 FLOW FRENZY! 🩸", "#ef4444", 20));
+  }
+
   if (e.subType === 'barrel_bomber') {
     triggerBarrelExplosion(e);
   }
@@ -2854,21 +2989,50 @@ function killEnemy(e: Enemy) {
 
   // Stage Mode Progress & Clear Condition (Visceral "斬" Finisher Trigger)
   globals.stageKills = (globals.stageKills || 0) + 1;
+  globals.waveEnemiesKilled = (globals.waveEnemiesKilled || 0) + 1;
+
   if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
     const stage = globals.currentStage || 1;
     const isBossStage = stage % 5 === 0;
     const isBossDefeated = e.subType === 'oni_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || e.subType === 'shogun_boss' || (e as any).isBoss;
-    if ((isBossStage && isBossDefeated) || (!isBossStage && globals.stageKills >= globals.stageTargetKills)) {
-      globals.gameState = 'stageclear';
-      const lvlScreen = document.getElementById('level-up-screen');
-      if (lvlScreen) lvlScreen.style.display = 'none';
-      const ultScreen = document.getElementById('ult-screen');
-      if (ultScreen) ultScreen.style.display = 'none';
+    const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
+    const aliveEnemies = globals.enemies.filter(other => other && other !== e && other.state !== 'dead').length;
 
-      if (!isZanFinisherActive && callbacks.triggerStageClear) {
-        triggerZanFinisher(() => {
-          callbacks.triggerStageClear();
+    const isWaveComplete = globals.waveEnemiesKilled >= (globals.waveEnemiesTotal || 1) && aliveEnemies === 0;
+
+    if (isWaveComplete) {
+      if (!isFinalWave) {
+        // Wave cleared! Transition to Shop between waves (inspired by Lament Recon: Tacet Crisis)
+        globals.waveState = 'shop';
+        playSynthesizedTempleBell();
+        const isJa = globals.currentLang === 'ja';
+        const bannerTxt = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `⚡ ${bannerTxt} ⚡`, '#38bdf8', 30));
+
+        globals.delayedActions.push({
+          delay: 0.75,
+          run: () => {
+            if (globals.gameState === 'playing') {
+              refreshShop();
+              openShop();
+            }
+          }
         });
+      } else {
+        // Final wave completion
+        if (!isBossStage || isBossDefeated) {
+          globals.gameState = 'stageclear';
+          const lvlScreen = document.getElementById('level-up-screen');
+          if (lvlScreen) lvlScreen.style.display = 'none';
+          const ultScreen = document.getElementById('ult-screen');
+          if (ultScreen) ultScreen.style.display = 'none';
+
+          if (!isZanFinisherActive && callbacks.triggerStageClear) {
+            triggerZanFinisher(() => {
+              callbacks.triggerStageClear();
+            });
+          }
+        }
       }
     }
   }
@@ -4707,6 +4871,25 @@ function update(realDt: number) {
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 75, "KENSEI CROSS-CLEAVE! ⚔️", "#fbbf24", 22));
       }
 
+      // Satyr Hero Awakening Skill: Titan Earth Fissure
+      if (globals.hasHeroAwakening('satyr')) {
+        globals.satyrSlashCounter = ((globals.satyrSlashCounter || 0) + 1);
+        if (globals.satyrSlashCounter % 3 === 0) {
+          globals.screenShake = Math.max(globals.screenShake, 16);
+          globals.shockwaves.push(new Shockwave(globals.player.x + Math.cos(angle) * 70, globals.player.y + Math.sin(angle) * 70, '#10b981'));
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, "🌋 TITAN FISSURE!", "#10b981", 24));
+          globals.enemies.forEach(en => {
+            if (en.state !== 'dead') {
+              const dist = Math.hypot(en.x - globals.player.x, en.y - globals.player.y);
+              if (dist < 260) {
+                en.airborneZ = 65;
+                en.incomingDmgMult = (en.incomingDmgMult || 1.0) * 1.4;
+              }
+            }
+          });
+        }
+      }
+
       // Nightborne Sovereign passive: lingering void flame particles along slash trajectory
       if (globals.selectedHero === 'nightborne') {
         for (let i = 0; i < 4; i++) {
@@ -5148,11 +5331,28 @@ function update(realDt: number) {
         const enemyHitRadius = (e.scaleMult - 1) * 60;
         const dx = e.x - proj.x;
         const dy = e.y - proj.y;
-        let baseRadius = proj.isDeflected ? 60 : (200 * (globals.playerStats.iaijutsuRangeMult || 1.0) * 1.3);
-        if (proj.isHuge) {
-          baseRadius *= 1.8;
+        let isHit = false;
+        if (proj.isDeflected) {
+          isHit = (dx * dx + dy * dy < (60 + enemyHitRadius) * (60 + enemyHitRadius));
+        } else if (proj.isHuge) {
+          // Precise forward directional crescent arc trajectory check along proj.angle
+          const rangeMult = globals.playerStats.iaijutsuRangeMult || 1.0;
+          const forwardDist = dx * Math.cos(proj.angle) + dy * Math.sin(proj.angle);
+          const lateralDist = Math.abs(-dx * Math.sin(proj.angle) + dy * Math.cos(proj.angle));
+          const maxLateral = (130 * rangeMult) + enemyHitRadius;
+          const maxForward = (80 * rangeMult) + enemyHitRadius;
+          const minForward = -35;
+          isHit = (forwardDist >= minForward && forwardDist <= maxForward && lateralDist <= maxLateral);
+        } else {
+          const rangeMult = globals.playerStats.iaijutsuRangeMult || 1.0;
+          const forwardDist = dx * Math.cos(proj.angle) + dy * Math.sin(proj.angle);
+          const lateralDist = Math.abs(-dx * Math.sin(proj.angle) + dy * Math.cos(proj.angle));
+          const maxLateral = (75 * rangeMult) + enemyHitRadius;
+          const maxForward = (60 * rangeMult) + enemyHitRadius;
+          const minForward = -25;
+          isHit = (forwardDist >= minForward && forwardDist <= maxForward && lateralDist <= maxLateral);
         }
-        if (dx * dx + dy * dy < (baseRadius + enemyHitRadius) * (baseRadius + enemyHitRadius)) {
+        if (isHit) {
           if (proj.isDeflected) {
             hitEnemy(e, proj.damage || 5);
             if (typeof (e as any).addPostureDamage === 'function') {
