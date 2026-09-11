@@ -682,6 +682,49 @@ export function draw() {
         ctx.restore();
       }
 
+      // Grim Harvest: Render orbital spectral death scythes
+      if (globals.grimHarvestActive && (globals.grimHarvestScytheCount || 0) > 0) {
+        const scCount = Math.min(4, globals.grimHarvestScytheCount || 2);
+        const orbitR = 90;
+        ctx.save();
+        for (let i = 0; i < scCount; i++) {
+          const sAngle = (globals.grimHarvestAngle || 0) + (i * Math.PI * 2) / scCount;
+          const sx = (px + Math.cos(sAngle) * orbitR) | 0;
+          const sy = (py + Math.sin(sAngle) * orbitR) | 0;
+
+          // Menacing curved spectral scythe blade
+          ctx.save();
+          ctx.translate(sx, sy);
+          ctx.rotate(sAngle + Math.PI / 2);
+          
+          // Scythe outer crescent arc
+          ctx.beginPath();
+          ctx.arc(0, 0, 18, -Math.PI / 3, Math.PI / 2, false);
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 4;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          // Inner blade edge
+          ctx.beginPath();
+          ctx.arc(0, 0, 14, -Math.PI / 3, Math.PI / 2, false);
+          ctx.strokeStyle = '#f43f5e';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          // Scythe staff / hilt
+          ctx.beginPath();
+          ctx.moveTo(0, 18);
+          ctx.lineTo(-6, -14);
+          ctx.strokeStyle = '#3b0764';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+
       if (globals.bladeEchoesActive && globals.flowState === 'awakened') {
         const originalY = globals.player.y;
         try {

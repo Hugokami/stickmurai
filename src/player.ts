@@ -272,6 +272,7 @@ export class Player extends Entity {
         this.dashStartY = this.y;
         this.lastAfterimageX = this.x;
         this.lastAfterimageY = this.y;
+        (this as any).rupturePhaseHit = false;
 
         // Spawn directional dash dust puff opposite to player motion vector
         const dustFrames = (vfxAnims as any).player?.dashDust;
@@ -546,7 +547,7 @@ export class Player extends Entity {
             if (!globals.raijinHitEnemies.has(e)) {
               globals.raijinHitEnemies.add(e);
               const dmg = 12 + 3 * (globals.playerStats.dashDamageLevel || 0);
-              const stunDur = 2.2 + 0.8 * (globals.playerStats.dashDamageLevel || 0);
+              const stunDur = 0.5 + 0.15 * (globals.playerStats.dashDamageLevel || 0);
               callbacks.hitEnemy(e, dmg);
               e.stunTimer = stunDur;
               for (let i = 0; i < 8; i++) {
@@ -558,6 +559,26 @@ export class Player extends Entity {
           }
         }
       });
+
+      if (globals.rupturePhaseStrikeActive && !(this as any).rupturePhaseHit) {
+        (this as any).rupturePhaseHit = true;
+        const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 25;
+        const warpDmg = Math.round(45 + slashDmg * 2.0);
+        globals.slashes.push(Slash.acquire(this.x, this.y, 0, 1.8, true, '#38bdf8'));
+        globals.slashes.push(Slash.acquire(this.x, this.y, Math.PI / 2, 1.8, true, '#c084fc'));
+        globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8'));
+        globals.enemies.forEach(e => {
+          if (e.state === 'dead') return;
+          const distSq = (e.x - this.x) ** 2 + (e.y - this.y) ** 2;
+          if (distSq < 220 * 220) {
+            callbacks.hitEnemy(e, warpDmg);
+            if (typeof (e as any).addPostureDamage === 'function') {
+              (e as any).addPostureDamage(30);
+            }
+            e.stunTimer = Math.max(e.stunTimer || 0, 0.45);
+          }
+        });
+      }
 
       // distance-based afterimage spawning for extremely smooth trails (squared distance invariant)
       const dx = this.x - this.lastAfterimageX;

@@ -1111,6 +1111,10 @@ function initGame() {
     gravityRadiusLevel: 0,
     gravityDamageLevel: 0,
     gravityExplosionLevel: 0,
+    ruptureSeveranceLevel: 0,
+    rupturePhantomLegionLevel: 0,
+    cataclysmSuperconductorLevel: 0,
+    cataclysmThunderclapLevel: 0,
     judgementCutLevel: 0,
     sakuraBlizzardLevel: 0,
     unstableOverloadLevel: 0,
@@ -3672,6 +3676,58 @@ function update(realDt: number) {
       }
     }
   }
+
+  // Grim Harvest: Orbital Spectral Death Scythes
+  if (globals.grimHarvestActive && (globals.grimHarvestScytheCount || 0) > 0) {
+    globals.grimHarvestAngle = (globals.grimHarvestAngle || 0) + realDt * 4.2;
+    const scytheCount = Math.min(4, globals.grimHarvestScytheCount || 2);
+    const orbitRadius = 90;
+    const slashDmg = getCurrentSlashDamage();
+    const scytheDmg = Math.round(40 + slashDmg * 1.8);
+
+    for (let i = 0; i < scytheCount; i++) {
+      const angle = globals.grimHarvestAngle + (i * Math.PI * 2) / scytheCount;
+      const sx = globals.player.x + Math.cos(angle) * orbitRadius;
+      const sy = globals.player.y + Math.sin(angle) * orbitRadius;
+
+      // Particle aura tracing the sickle arc
+      if (Math.random() < 0.4 && globals.particles.length < 350) {
+        globals.particles.push(Particle.acquire(sx, sy, '#c084fc', 25, 0.2, 3.0, angle + Math.PI / 2));
+        globals.particles.push(Particle.acquire(sx, sy, '#ef4444', 18, 0.15, 2.2, angle));
+      }
+
+      // Slice through nearby enemies
+      for (const en of globals.enemies) {
+        if (en.state !== 'dead') {
+          const d = Math.hypot(en.x - sx, en.y - sy);
+          if (d < 50) {
+            const now = performance.now();
+            if (!(en as any).lastGrimHit || now - (en as any).lastGrimHit > 320) {
+              (en as any).lastGrimHit = now;
+              hitEnemy(en, scytheDmg);
+              if (typeof (en as any).addPostureDamage === 'function') {
+                (en as any).addPostureDamage(25);
+              }
+              globals.slashes.push(Slash.acquire(en.x, en.y, angle + Math.PI/2, 1.2, false, '#c084fc'));
+            }
+          }
+        }
+      }
+
+      // Slice down incoming enemy projectiles!
+      for (const proj of globals.projectiles) {
+        if (proj.isEnemy && proj.life > 0) {
+          const d = Math.hypot(proj.x - sx, proj.y - sy);
+          if (d < 55) {
+            proj.life = 0;
+            for (let k = 0; k < 5; k++) {
+              globals.particles.push(Particle.acquire(proj.x, proj.y, '#c084fc', 160, 0.25, 2.5));
+            }
+          }
+        }
+      }
+    }
+  }
   
   if (globals.enhanceCooldown > 0) globals.enhanceCooldown -= realDt;
   if (globals.keys[globals.keyMaps.skill] || globals.mobileEnhanceJustPressed) {
@@ -3874,18 +3930,20 @@ function update(realDt: number) {
         });
 
         // Wipes posture and deals massive AoE DMG scaling with current slash damage!
+        const thunderclapLvl = globals.playerStats.cataclysmThunderclapLevel || 0;
+        const blastRadius = 550 * (1 + 0.45 * thunderclapLvl);
         const slashDmg = getCurrentSlashDamage();
         const cataclysmDmg = Math.round((90 + 25 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 10.0);
-        const cataclysmPosture = Math.round(120 + slashDmg * 3.0);
+        const cataclysmPosture = Math.round(120 + 40 * thunderclapLvl + slashDmg * 3.0);
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
           const dist = Math.hypot(e.x - globals.player.x, e.y - globals.player.y);
-          if (dist < 550) {
+          if (dist < blastRadius) {
             hitEnemy(e, cataclysmDmg);
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(cataclysmPosture);
             }
-            e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
+            e.stunTimer = Math.max(e.stunTimer || 0, 0.75);
             e.airborneZ = 45;
             for (let k = 0; k < 8; k++) {
               globals.particles.push(Particle.acquire(e.x, e.y, '#c084fc', 200 + Math.random() * 150, 0.4, 3.0, Math.random() * Math.PI * 2));
@@ -3949,6 +4007,8 @@ function update(realDt: number) {
         globals.shockwaves.push(new Shockwave(endX, endY, '#38bdf8'));
 
         // Supersonic 5-hit dimensional strike along trajectory scaling with current slash damage!
+        const severanceLvl = globals.playerStats.ruptureSeveranceLevel || 0;
+        const hitWidth = 160 * (1 + 0.6 * severanceLvl);
         const slashDmg = getCurrentSlashDamage();
         const ruptureDmg = Math.round(80 + slashDmg * 8.0);
         const rupturePosture = Math.round(60 + slashDmg * 2.0);
@@ -3961,19 +4021,30 @@ function update(realDt: number) {
           const projY = startY + t * (endY - startY);
           const distSq = (ex - projX) ** 2 + (ey - projY) ** 2;
 
-          if (distSq < 160 * 160) {
+          if (distSq < hitWidth * hitWidth) {
             hitEnemy(e, ruptureDmg);
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(rupturePosture);
             }
-            e.stunTimer = Math.max(e.stunTimer || 0, 1.8);
+            e.stunTimer = Math.max(e.stunTimer || 0, 0.7);
             globals.slashes.push(Slash.acquire(e.x, e.y, targetAngle, 1.5, false, 'rgba(56, 189, 248, ALPHA)'));
             globals.slashes.push(Slash.acquire(e.x, e.y, targetAngle + Math.PI/2, 1.3, false, 'rgba(192, 132, 252, ALPHA)'));
           }
         });
 
-        for (let i = 0; i < 20; i++) {
-          globals.particles.push(Particle.acquire(endX, endY, '#38bdf8', 250, 0.45, 3, Math.random() * Math.PI * 2));
+        for (let step = 0.2; step <= 0.8; step += 0.2) {
+          const stepX = startX + (endX - startX) * step;
+          const stepY = startY + (endY - startY) * step;
+          globals.slashes.push(Slash.acquire(stepX, stepY, targetAngle + (Math.random() - 0.5) * 0.4, 1.6, true, '#38bdf8'));
+          globals.slashes.push(Slash.acquire(stepX, stepY, targetAngle + Math.PI / 2, 1.4, false, '#c084fc'));
+          for (let p = 0; p < 6; p++) {
+            globals.particles.push(Particle.acquire(stepX, stepY, '#a855f7', 180, 0.35, 3.0, targetAngle + (Math.random() - 0.5) * 1.5));
+          }
+        }
+
+        for (let i = 0; i < 28; i++) {
+          globals.particles.push(Particle.acquire(endX, endY, '#38bdf8', 280, 0.45, 3.5, Math.random() * Math.PI * 2));
+          globals.particles.push(Particle.acquire(endX, endY, '#c084fc', 220, 0.4, 2.5, Math.random() * Math.PI * 2));
         }
       }
     }
@@ -3981,6 +4052,35 @@ function update(realDt: number) {
 
   if (globals.enhanceActiveTimer > 0) {
     globals.enhanceActiveTimer -= realDt;
+    
+    if (globals.selectedSkill === 'gravity') {
+      if (Math.random() < 0.4 && globals.particles.length < 320) {
+        const pAngle = Math.random() * Math.PI * 2;
+        globals.particles.push(Particle.acquire(
+          globals.player.x + (Math.random() - 0.5) * 45,
+          globals.player.y + (Math.random() - 0.5) * 60,
+          Math.random() < 0.5 ? '#c084fc' : '#a855f7',
+          140,
+          0.3,
+          2.5,
+          pAngle
+        ));
+      }
+    }
+    if (globals.selectedSkill === 'decoy_illusion') {
+      if (Math.random() < 0.4 && globals.particles.length < 320) {
+        const pAngle = Math.random() * Math.PI * 2;
+        globals.particles.push(Particle.acquire(
+          globals.player.x + (Math.random() - 0.5) * 45,
+          globals.player.y + (Math.random() - 0.5) * 60,
+          Math.random() < 0.5 ? '#38bdf8' : '#67e8f9',
+          140,
+          0.3,
+          2.5,
+          pAngle
+        ));
+      }
+    }
     
     if (globals.selectedSkill === 'enhance') {
       // Spawn purple dragon fury fire particles!
@@ -5072,7 +5172,8 @@ function update(realDt: number) {
       // Active Skill: Void Rupture (Dimension Slicer) phantom blade projection
       if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
         const slashDmg = getCurrentSlashDamage();
-        const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, 3);
+        const bladeCount = 3 + (globals.playerStats.rupturePhantomLegionLevel || 0) * 2;
+        const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, bladeCount);
         targets.forEach(t => {
           globals.slashes.push(Slash.acquire(t.x, t.y, Math.random() * Math.PI * 2, 1.4, false, 'rgba(56, 189, 248, ALPHA)'));
           hitEnemy(t, Math.round(dmg * 1.35 + 15 + slashDmg * 0.8));
@@ -5085,10 +5186,13 @@ function update(realDt: number) {
       // Active Skill: Raijin's Cataclysm chained violet thunderbolts
       if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
         const slashDmg = getCurrentSlashDamage();
-        const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, 5);
+        const superconductorLvl = globals.playerStats.cataclysmSuperconductorLevel || 0;
+        const maxTargets = 5 + superconductorLvl * 3;
+        const chainMult = 1.0 + superconductorLvl * 0.5;
+        const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, maxTargets);
         targets.forEach(t => {
-          hitEnemy(t, Math.round((30 + 12 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 2.5));
-          t.stunTimer = Math.max(t.stunTimer || 0, 1.2);
+          hitEnemy(t, Math.round(((30 + 12 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 2.5) * chainMult));
+          t.stunTimer = Math.max(t.stunTimer || 0, 0.4);
           const vBurst = (vfxAnims as any).skills?.lightningBurstViolet;
           if (vBurst && vBurst.length > 0) {
             globals.animatedEffects.push(new AnimatedEffect(t.x, t.y, vBurst, 0.3, 2.0));
@@ -5098,6 +5202,11 @@ function update(realDt: number) {
           }
         });
         playSynthesizedThunder();
+
+        if (globals.cataclysmConduitActive) {
+          globals.flow = Math.min(globals.playerStats.flowMax, globals.flow + 5);
+          globals.enhanceActiveTimer = Math.min(10.0, globals.enhanceActiveTimer + 0.6);
+        }
       }
 
       // Passive Powerup: Sonic Breakthrough (dash attack supersonic shockwave)

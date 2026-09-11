@@ -18,7 +18,7 @@ export interface PowerUp {
   nameKey: string;
   descKey: string;
   apply: () => void;
-  skill?: 'enhance' | 'shield' | 'dash' | 'firewheel' | 'gravity' | 'parry_master';
+  skill?: 'enhance' | 'shield' | 'dash' | 'firewheel' | 'gravity' | 'parry_master' | 'decoy_illusion';
   isCorrupted?: boolean;
   isFusion?: boolean;
   fusionKey?: string;
@@ -53,15 +53,20 @@ export const powerUps: PowerUp[] = [
   { skill: "firewheel", nameKey: "puFirewheelBlazeName", descKey: "puFirewheelBlazeDesc", apply: () => globals.playerStats.firewheelBlazeLevel = (globals.playerStats.firewheelBlazeLevel || 0) + 1 },
   { skill: "firewheel", nameKey: "puFirewheelEchoName", descKey: "puFirewheelEchoDesc", apply: () => globals.playerStats.firewheelEchoLevel = (globals.playerStats.firewheelEchoLevel || 0) + 1 },
   
-  // Gravity Well (Gravity) specific
-  { skill: "gravity", nameKey: "puGravityRadiusName", descKey: "puGravityRadiusDesc", apply: () => globals.playerStats.gravityRadiusLevel = (globals.playerStats.gravityRadiusLevel || 0) + 1 },
-  { skill: "gravity", nameKey: "puGravityDamageName", descKey: "puGravityDamageDesc", apply: () => globals.playerStats.gravityDamageLevel = (globals.playerStats.gravityDamageLevel || 0) + 1 },
-  { skill: "gravity", nameKey: "puGravityExplosionName", descKey: "puGravityExplosionDesc", apply: () => globals.playerStats.gravityExplosionLevel = (globals.playerStats.gravityExplosionLevel || 0) + 1 },
+  // Raijin's Cataclysm (Gravity) specific
+  { skill: "gravity", nameKey: "puCataclysmSuperconductorName", descKey: "puCataclysmSuperconductorDesc", apply: () => globals.playerStats.cataclysmSuperconductorLevel = (globals.playerStats.cataclysmSuperconductorLevel || 0) + 1 },
+  { skill: "gravity", nameKey: "puCataclysmThunderclapName", descKey: "puCataclysmThunderclapDesc", apply: () => globals.playerStats.cataclysmThunderclapLevel = (globals.playerStats.cataclysmThunderclapLevel || 0) + 1 },
+  { skill: "gravity", nameKey: "puCataclysmConduitName", descKey: "puCataclysmConduitDesc", isUnique: true, apply: () => { globals.cataclysmConduitActive = true; } },
+
+  // Void Rupture (Decoy Illusion) specific
+  { skill: "decoy_illusion", nameKey: "puRuptureSeveranceName", descKey: "puRuptureSeveranceDesc", apply: () => globals.playerStats.ruptureSeveranceLevel = (globals.playerStats.ruptureSeveranceLevel || 0) + 1 },
+  { skill: "decoy_illusion", nameKey: "puRupturePhantomLegionName", descKey: "puRupturePhantomLegionDesc", apply: () => globals.playerStats.rupturePhantomLegionLevel = (globals.playerStats.rupturePhantomLegionLevel || 0) + 1 },
+  { skill: "decoy_illusion", nameKey: "puRupturePhaseStrikeName", descKey: "puRupturePhaseStrikeDesc", isUnique: true, apply: () => { globals.rupturePhaseStrikeActive = true; } },
   
-  { nameKey: "puChargeSpeedName", descKey: "puChargeSpeedDesc", apply: () => globals.playerStats.iaijutsuChargeSpeed += 0.35 },
-  { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => globals.playerStats.deflectedDmg += 2 },
-  { nameKey: "puVampireName", descKey: "puVampireDesc", apply: () => globals.playerStats.vampireChance += 0.06 },
-  { nameKey: "puDimensionalName", descKey: "puDimensionalDesc", apply: () => globals.playerStats.iaijutsuRangeMult += 0.3 },
+  { nameKey: "puChargeSpeedName", descKey: "puChargeSpeedDesc", apply: () => { globals.playerStats.iaijutsuChargeSpeed += 0.4; globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 25; } },
+  { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => { globals.playerStats.deflectedDmg += 4; } },
+  { nameKey: "puVampireName", descKey: "puVampireDesc", apply: () => { globals.playerStats.vampireChance += 0.12; } },
+  { nameKey: "puDimensionalName", descKey: "puDimensionalDesc", apply: () => { globals.playerStats.iaijutsuRangeMult += 0.45; globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.15; } },
   { nameKey: "puFireName", descKey: "puFireDesc", isUnique: true, apply: () => globals.playerStats.fireStanceLevel = 1 },
   { nameKey: "puClonesName", descKey: "puClonesDesc", isUnique: true, apply: () => globals.playerStats.shadowClonesLevel = 1 },
   { nameKey: "puStoutHeartName", descKey: "puStoutHeartDesc", apply: () => { globals.maxLives = Math.min(10, Math.max(globals.maxLives + 1, 7)); globals.lives = Math.min(globals.maxLives, globals.lives + 1); } },
@@ -128,6 +133,7 @@ export const powerUps: PowerUp[] = [
     isUnique: true,
     apply: () => {
       globals.grimHarvestActive = true;
+      globals.grimHarvestScytheCount = 2; // immediately manifests 2 orbiting spectral death scythes!
     }
   },
 
@@ -998,7 +1004,7 @@ export function renderShopModal() {
     card.innerHTML = `
       <div>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
-          <div style="display: flex; align-items: center; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
             <span style="font-size: 9px; font-weight: 900; letter-spacing: 0.5px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 6px; border-radius: 6px;">
               ${slot.quality}
             </span>
@@ -1007,17 +1013,38 @@ export function renderShopModal() {
                 ⚡ UNIQUE
               </span>
             ` : ''}
+            ${slot.power.skill && slot.power.skill === globals.selectedSkill ? `
+              <span style="font-size: 8.5px; font-weight: 900; color: #38bdf8; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; padding: 1px 5px; border-radius: 5px;">
+                ⚡ SKILL SYNERGY
+              </span>
+            ` : ''}
           </div>
           <span style="font-size: 9px; font-weight: bold; color: ${synInfo.color}; background: rgba(0,0,0,0.5); padding: 1px 6px; border-radius: 6px;">
             ${synInfo.icon} ${synInfo.label}
           </span>
         </div>
 
-        ${slot.discountPct ? `
-          <div style="display: inline-block; background: #ef4444; color: #ffffff; font-size: 9px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">
-            🔥 -${slot.discountPct}% SALE
-          </div>
-        ` : ''}
+        ${(() => {
+          let badges = '';
+          if (slot.discountPct) {
+            badges += `<div style="display: inline-block; background: #ef4444; color: #ffffff; font-size: 9px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">🔥 -${slot.discountPct}% SALE</div>`;
+          }
+          const name = slot.power.nameKey;
+          if (!globals.activeFusions.has('plasma_tempest') && (name.includes('Fire') || name.includes('Thunder') || name.includes('Feather'))) {
+            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">⚡ COMBO: PLASMA</div>`;
+          } else if (!globals.activeFusions.has('singularity_cleave') && (name.includes('Cataclysm') || name.includes('Lethal') || name.includes('Giant') || name.includes('Void'))) {
+            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">🌌 COMBO: SINGULARITY</div>`;
+          } else if (!globals.activeFusions.has('hundred_phantoms') && (name.includes('Rupture') || name.includes('Clones') || name.includes('Cursed'))) {
+            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">👥 COMBO: PHANTOMS</div>`;
+          } else if (!globals.activeFusions.has('kamaitachi') && (name.includes('Wind') || name.includes('Gale') || name.includes('Deflect') || name.includes('Echo'))) {
+            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">🌪️ COMBO: KAMAITACHI</div>`;
+          }
+          const curSyn = activeSyn[slot.synergy] || 0;
+          if (curSyn === 1 || curSyn === 3) {
+            badges += `<div style="display: inline-block; background: rgba(34, 197, 94, 0.25); color: #bbf7d0; border: 1px solid #22c55e; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">🔥 SYNERGY UNLOCK (${curSyn + 1})</div>`;
+          }
+          return badges;
+        })()}
 
         <h3 style="font-size: 12.5px; margin: 0 0 4px 0; color: #f8fafc; font-family: 'Shojumaru', sans-serif;">
           ${t(slot.power.nameKey)}
