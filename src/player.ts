@@ -663,7 +663,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     if (!this.isPvpRemote && globals.invulnTimer > 0 && Math.floor(performance.now() / 100) % 2 === 0 && colorTint === 'none') return;
     
     // petal barrier
-    if (!this.isPvpRemote && globals.petalArmorActive) {
+    if (!this.isPvpRemote && globals.petalArmorActive && colorTint === 'none') {
       ctx.save();
       ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
       ctx.strokeStyle = 'rgba(255, 183, 197, 0.7)';
@@ -676,7 +676,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // wind shield
-    if (this.shieldVisualScale > 0.01) {
+    if (this.shieldVisualScale > 0.01 && colorTint === 'none') {
       ctx.save();
       ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
       const time = globals.galeVortexActive ? (performance.now() / 50) : (performance.now() / 150);
@@ -725,7 +725,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // firewheel arcs
-    if (this.firewheelVisualScale > 0.01) {
+    if (this.firewheelVisualScale > 0.01 && colorTint === 'none') {
       ctx.save();
       ctx.translate(this.x - cx + globals.vw/2, this.y - cy + globals.vh/2 + (this.yOffset || 0));
       const time = performance.now() / 150;

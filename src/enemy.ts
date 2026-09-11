@@ -1033,7 +1033,11 @@ export class Enemy extends Entity {
 
     if (distSq > attackRange * attackRange || this.attackCooldownTimer > 0) {
       const dist = Math.sqrt(distSq) || 0.001;
-      this.vx = (dx / dist) * speed; this.vy = (dy / dist) * speed; this.setState('walk');
+      // Dynamic pursuit boost: enemies sprint up to 2.2x faster when the player is moving far away
+      const pursuitBoost = dist > 500 ? Math.min(2.2, 1.0 + (dist - 500) / 350) : 1.0;
+      this.vx = (dx / dist) * speed * pursuitBoost;
+      this.vy = (dy / dist) * speed * pursuitBoost;
+      this.setState('walk');
     } else {
       this.vx = 0; this.vy = 0; this.setState('charge');
       this.targetAngle = Math.atan2(dy, dx);

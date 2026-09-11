@@ -534,17 +534,14 @@ export function draw() {
     if (!e) return;
     if (e === globals.player && globals.player && globals.player.state !== 'dead') {
       if (globals.playerStats?.shadowClonesLevel && globals.playerStats.shadowClonesLevel > 0) {
-        const cloneDelays = [18];
-        if (globals.playerStats.shadowClonesLevel >= 2) {
-          cloneDelays.push(36);
-        }
         const originalX = globals.player.x;
         const originalY = globals.player.y;
         const originalDir = globals.player.dir;
         const originalState = globals.player.state;
         const originalFrame = globals.player.animFrame;
         
-        cloneDelays.forEach(delay => {
+        try {
+          const delay = 16;
           const historyIdx = globals.playerPosHistory.length - 1 - delay;
           if (historyIdx >= 0) {
             const hist = globals.playerPosHistory[historyIdx];
@@ -556,13 +553,13 @@ export function draw() {
             }
             globals.player.draw(ctx, globals.camera.x, globals.camera.y, 0.45, '#aa66ff');
           }
-        });
-        
-        globals.player.x = originalX;
-        globals.player.y = originalY;
-        globals.player.dir = originalDir;
-        globals.player.state = originalState;
-        globals.player.animFrame = originalFrame;
+        } finally {
+          globals.player.x = originalX;
+          globals.player.y = originalY;
+          globals.player.dir = originalDir;
+          globals.player.state = originalState;
+          globals.player.animFrame = originalFrame;
+        }
       }
 
       // stance effects
@@ -687,14 +684,16 @@ export function draw() {
 
       if (globals.bladeEchoesActive && globals.flowState === 'awakened') {
         const originalY = globals.player.y;
-        // Top clone
-        globals.player.y = originalY - 90;
-        globals.player.draw(ctx, globals.camera.x, globals.camera.y, 0.4, '#00ffff');
-        // Bottom clone
-        globals.player.y = originalY + 90;
-        globals.player.draw(ctx, globals.camera.x, globals.camera.y, 0.4, '#00ffff');
-        
-        globals.player.y = originalY;
+        try {
+          // Top clone
+          globals.player.y = originalY - 80;
+          globals.player.draw(ctx, globals.camera.x, globals.camera.y, 0.35, '#00ffff');
+          // Bottom clone
+          globals.player.y = originalY + 80;
+          globals.player.draw(ctx, globals.camera.x, globals.camera.y, 0.35, '#00ffff');
+        } finally {
+          globals.player.y = originalY;
+        }
       }
     }
 
@@ -777,6 +776,75 @@ export function draw() {
     globals.shockwaves.forEach(s => s.draw(ctx, globals.camera.x, globals.camera.y));
   }
   globals.floatingTexts.forEach(f => f.draw(ctx, globals.camera.x, globals.camera.y));
+
+  // Off-screen Enemy Threat Radar Chevrons
+  // Renders small warning chevrons pointing toward distant enemies so none are lost in the vast battlefield
+  if (globals.gameState === 'playing' && globals.enemies && globals.enemies.length > 0) {
+    const margin = 28;
+    const minX = margin;
+    const maxX = globals.vw - margin;
+    const minY = margin + 50;
+    const maxY = globals.vh - margin - 60;
+    
+    ctx.save();
+    globals.enemies.forEach(e => {
+      if (!e || e.state === 'dead' || e.isPvpRemote) return;
+      const rx = e.x - globals.camera.x + globals.vw / 2;
+      const ry = e.y - globals.camera.y + globals.vh / 2;
+      
+      // Only draw if enemy is outside viewport
+      if (rx >= 0 && rx <= globals.vw && ry >= 0 && ry <= globals.vh) return;
+      
+      const cx = globals.vw / 2;
+      const cy = globals.vh / 2;
+      const dx = rx - cx;
+      const dy = ry - cy;
+      const angle = Math.atan2(dy, dx);
+      
+      // Intersect ray with viewport box
+      let ix = cx;
+      let iy = cy;
+      const slope = dy / (dx || 0.0001);
+      
+      if (dx > 0) {
+        ix = maxX;
+        iy = cy + slope * (maxX - cx);
+      } else {
+        ix = minX;
+        iy = cy + slope * (minX - cx);
+      }
+      
+      if (iy < minY) {
+        iy = minY;
+        ix = cx + (minY - cy) / slope;
+      } else if (iy > maxY) {
+        iy = maxY;
+        ix = cx + (maxY - cy) / slope;
+      }
+      
+      ix = Math.max(minX, Math.min(maxX, ix));
+      iy = Math.max(minY, Math.min(maxY, iy));
+      
+      const isBossUnit = (e as any).isBoss || e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'skeleton_warlord' || e.subType === 'agis_colossus';
+      const chevronColor = isBossUnit ? '#fbbf24' : '#ef4444';
+      const chevronSize = isBossUnit ? 12 : 8;
+      
+      ctx.save();
+      ctx.translate(ix, iy);
+      ctx.rotate(angle);
+      ctx.fillStyle = chevronColor;
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.moveTo(chevronSize, 0);
+      ctx.lineTo(-chevronSize * 0.8, -chevronSize * 0.7);
+      ctx.lineTo(-chevronSize * 0.3, 0);
+      ctx.lineTo(-chevronSize * 0.8, chevronSize * 0.7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    });
+    ctx.restore();
+  }
 
   // Draw PvP Storm Mode lightning warning indicators
   if (globals.gameState === 'game' && globals.gameMode === 'pvp' && globals.pvpStormWarningTarget) {

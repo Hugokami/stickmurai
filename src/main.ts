@@ -5154,33 +5154,28 @@ function update(realDt: number) {
       }
 
       if (globals.playerStats.shadowClonesLevel && globals.playerStats.shadowClonesLevel > 0) {
-        const cloneDelays = [18];
-        if (globals.playerStats.shadowClonesLevel >= 2) {
-          cloneDelays.push(36);
-        }
-        cloneDelays.forEach(delay => {
-          const delaySec = delay / 60;
-          globals.delayedActions.push({
-            delay: delaySec,
-            run: () => {
-              const historyIdx = globals.playerPosHistory.length - 1 - delay;
-              if (historyIdx >= 0) {
-                const hist = globals.playerPosHistory[historyIdx];
-                const cloneSize = size * 0.7;
-                globals.slashes.push(Slash.acquire(hist.x + Math.cos(angle)*50, hist.y + Math.sin(angle)*50, angle, cloneSize, false, 'rgba(136, 51, 255, ALPHA)'));
-                globals.enemies.forEach(e => {
-                  if (e.state === 'dead') return;
-                  const dx = e.x - hist.x; const dy = e.y - hist.y;
-                  const dist = Math.hypot(dx, dy); const a = Math.atan2(dy, dx);
-                  let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
-                  const enemyHitRadius = (e.scaleMult - 1) * 60; 
-                  if (dist < 280 * cloneSize + enemyHitRadius && diff < Math.PI/1.5) {
-                    hitEnemy(e, 1);
-                  }
-                });
-              }
+        const delay = 16;
+        const delaySec = delay / 60;
+        globals.delayedActions.push({
+          delay: delaySec,
+          run: () => {
+            const historyIdx = globals.playerPosHistory.length - 1 - delay;
+            if (historyIdx >= 0) {
+              const hist = globals.playerPosHistory[historyIdx];
+              const cloneSize = size * 0.7;
+              globals.slashes.push(Slash.acquire(hist.x + Math.cos(angle)*50, hist.y + Math.sin(angle)*50, angle, cloneSize, false, 'rgba(136, 51, 255, ALPHA)'));
+              globals.enemies.forEach(e => {
+                if (e.state === 'dead') return;
+                const dx = e.x - hist.x; const dy = e.y - hist.y;
+                const dist = Math.hypot(dx, dy); const a = Math.atan2(dy, dx);
+                let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
+                const enemyHitRadius = (e.scaleMult - 1) * 60; 
+                if (dist < 280 * cloneSize + enemyHitRadius && diff < Math.PI/1.5) {
+                  hitEnemy(e, 1);
+                }
+              });
             }
-          });
+          }
         });
       }
       if (globals.flowState === 'awakened') {
@@ -5444,20 +5439,31 @@ function update(realDt: number) {
     const dx = e.x - globals.player.x;
     const dy = e.y - globals.player.y;
     const distSq = dx * dx + dy * dy;
+    const dist = Math.sqrt(distSq) || 0.001;
     
-    if (distSq > cullDist * cullDist) {
-      // offscreen logic bypass
-      // move directly
-      const dist = Math.sqrt(distSq) || 0.001;
-      let speed = 300;
-      if (e.subType === 'giant') speed = 160;
-      else if (e.subType === 'assassin') speed = 450;
-      else if (e.subType === 'berserker') speed = 380;
-      else if (e.subType === 'musketeer') speed = 200;
-      
-      e.x += -(dx / dist) * speed * dt;
-      e.y += -(dy / dist) * speed * dt;
+    // Leash: if stranded far away in the vast battlefield, reposition to arena perimeter
+    if (dist > 1500) {
+      const ang = Math.atan2(dy, dx);
+      e.x = globals.player.x + Math.cos(ang) * 850;
+      e.y = globals.player.y + Math.sin(ang) * 850;
       e.vx = 0; e.vy = 0;
+      e.stateTime = 0;
+      if (e.state !== 'charge' && e.state !== 'attack') {
+        e.setState('walk');
+      }
+    } else if (distSq > cullDist * cullDist) {
+      // Offscreen catch-up: fast pursuit sprint so enemies never lag behind
+      let baseSpeed = 400;
+      if (e.subType === 'assassin') baseSpeed = 550;
+      else if (e.subType === 'berserker') baseSpeed = 480;
+      else if (e.subType === 'giant') baseSpeed = 280;
+      const catchUpMult = Math.min(3.0, 1.2 + (dist - cullDist) / 300);
+      const moveSpeed = baseSpeed * catchUpMult;
+
+      e.x += -(dx / dist) * moveSpeed * dt;
+      e.y += -(dy / dist) * moveSpeed * dt;
+      e.vx = 0; e.vy = 0;
+      e.dir = dx > 0 ? -1 : 1;
       e.stateTime += dt;
       continue;
     }

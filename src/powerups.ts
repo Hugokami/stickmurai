@@ -22,6 +22,7 @@ export interface PowerUp {
   isCorrupted?: boolean;
   isFusion?: boolean;
   fusionKey?: string;
+  isUnique?: boolean;
 }
 
 export const powerUps: PowerUp[] = [
@@ -61,23 +62,24 @@ export const powerUps: PowerUp[] = [
   { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => globals.playerStats.deflectedDmg += 2 },
   { nameKey: "puVampireName", descKey: "puVampireDesc", apply: () => globals.playerStats.vampireChance += 0.06 },
   { nameKey: "puDimensionalName", descKey: "puDimensionalDesc", apply: () => globals.playerStats.iaijutsuRangeMult += 0.3 },
-  { nameKey: "puFireName", descKey: "puFireDesc", apply: () => globals.playerStats.fireStanceLevel = (globals.playerStats.fireStanceLevel || 0) + 1 },
-  { nameKey: "puClonesName", descKey: "puClonesDesc", apply: () => globals.playerStats.shadowClonesLevel = (globals.playerStats.shadowClonesLevel || 0) + 1 },
+  { nameKey: "puFireName", descKey: "puFireDesc", isUnique: true, apply: () => globals.playerStats.fireStanceLevel = 1 },
+  { nameKey: "puClonesName", descKey: "puClonesDesc", isUnique: true, apply: () => globals.playerStats.shadowClonesLevel = 1 },
   { nameKey: "puStoutHeartName", descKey: "puStoutHeartDesc", apply: () => { globals.maxLives = Math.min(10, Math.max(globals.maxLives + 1, 7)); globals.lives = Math.min(globals.maxLives, globals.lives + 1); } },
-  { nameKey: "puPetalArmorName", descKey: "puPetalArmorDesc", apply: () => { globals.petalArmorLevel++; if (!globals.petalArmorActive && globals.petalArmorCooldown <= 0) globals.petalArmorActive = true; } },
-  { nameKey: "puEchoSlashName", descKey: "puEchoSlashDesc", apply: () => { globals.echoLevel++; } },
-  { nameKey: "puTempoMasteryName", descKey: "puTempoMasteryDesc", apply: () => { globals.tempoMasteryLevel++; } },
-  { nameKey: "puFrostName", descKey: "puFrostDesc", apply: () => { globals.frostStanceActive = true; } },
-  { nameKey: "puVoidName", descKey: "puVoidDesc", apply: () => { globals.voidStanceActive = true; } },
-  { skill: "dash", nameKey: "puFlowingCounterName", descKey: "puFlowingCounterDesc", apply: () => { globals.flowingCounterActive = true; } },
-  { skill: "shield", nameKey: "puGaleVortexName", descKey: "puGaleVortexDesc", apply: () => { globals.galeVortexActive = true; globals.playerStats.enhanceDuration = Math.max(1.0, globals.playerStats.enhanceDuration - 1.0); } },
-  { nameKey: "puBladeEchoesName", descKey: "puBladeEchoesDesc", apply: () => { globals.bladeEchoesActive = true; } },
+  { nameKey: "puPetalArmorName", descKey: "puPetalArmorDesc", isUnique: true, apply: () => { globals.petalArmorLevel = 1; if (!globals.petalArmorActive && globals.petalArmorCooldown <= 0) globals.petalArmorActive = true; } },
+  { nameKey: "puEchoSlashName", descKey: "puEchoSlashDesc", isUnique: true, apply: () => { globals.echoLevel = 1; } },
+  { nameKey: "puTempoMasteryName", descKey: "puTempoMasteryDesc", isUnique: true, apply: () => { globals.tempoMasteryLevel = 1; } },
+  { nameKey: "puFrostName", descKey: "puFrostDesc", isUnique: true, apply: () => { globals.frostStanceActive = true; } },
+  { nameKey: "puVoidName", descKey: "puVoidDesc", isUnique: true, apply: () => { globals.voidStanceActive = true; } },
+  { skill: "dash", nameKey: "puFlowingCounterName", descKey: "puFlowingCounterDesc", isUnique: true, apply: () => { globals.flowingCounterActive = true; } },
+  { skill: "shield", nameKey: "puGaleVortexName", descKey: "puGaleVortexDesc", isUnique: true, apply: () => { globals.galeVortexActive = true; globals.playerStats.enhanceDuration = Math.max(1.0, globals.playerStats.enhanceDuration - 1.0); } },
+  { nameKey: "puBladeEchoesName", descKey: "puBladeEchoesDesc", isUnique: true, apply: () => { globals.bladeEchoesActive = true; } },
   {
     nameKey: "puExecutionName",
     descKey: "puExecutionDesc",
+    isUnique: true,
     apply: () => {
       globals.executionUnlocked = true;
-      globals.playerStats.executionLevel = (globals.playerStats.executionLevel || 0) + 1;
+      globals.playerStats.executionLevel = 1;
     }
   },
 
@@ -86,6 +88,7 @@ export const powerUps: PowerUp[] = [
     nameKey: "puCursedGlassName",
     descKey: "puCursedGlassDesc",
     isCorrupted: true,
+    isUnique: true,
     apply: () => {
       globals.maxLives = Math.max(1, globals.maxLives - 3);
       globals.lives = Math.min(globals.lives, globals.maxLives);
@@ -100,6 +103,7 @@ export const powerUps: PowerUp[] = [
     nameKey: "puCursedBloodName",
     descKey: "puCursedBloodDesc",
     isCorrupted: true,
+    isUnique: true,
     apply: () => {
       globals.bloodThirstCurseActive = true;
       globals.playerStats.flowGenMult += 0.5;
@@ -110,6 +114,7 @@ export const powerUps: PowerUp[] = [
     nameKey: "puCursedIronName",
     descKey: "puCursedIronDesc",
     isCorrupted: true,
+    isUnique: true,
     apply: () => {
       globals.playerStats.dashCooldownBase *= 1.25; // Replaces sluggish movement speed penalty with shorter dash recovery
       globals.playerStats.slashSizeMult = Math.min(2.2, globals.playerStats.slashSizeMult + 0.5);
@@ -120,6 +125,7 @@ export const powerUps: PowerUp[] = [
     nameKey: "puCursedGreedName",
     descKey: "puCursedGreedDesc",
     isCorrupted: true,
+    isUnique: true,
     apply: () => {
       globals.curseOfGreedActive = true;
     }
@@ -627,11 +633,18 @@ export function getQualityPrice(q: 'common' | 'rare' | 'epic' | 'legendary'): nu
 function rollSingleShopSlot(): ShopSlot {
   const available = powerUps.filter(p => {
     if (p.isCorrupted) return false;
+    if (p.isUnique && globals.chosenPowerUps.includes(p.nameKey)) return false;
     if (p.nameKey === 'puFrostName' && globals.frostStanceActive) return false;
     if (p.nameKey === 'puVoidName' && globals.voidStanceActive) return false;
+    if (p.nameKey === 'puFireName' && (globals.playerStats.fireStanceLevel || 0) >= 1) return false;
     if (p.nameKey === 'puFlowingCounterName' && globals.flowingCounterActive) return false;
     if (p.nameKey === 'puGaleVortexName' && globals.galeVortexActive) return false;
     if (p.nameKey === 'puBladeEchoesName' && globals.bladeEchoesActive) return false;
+    if (p.nameKey === 'puClonesName' && (globals.playerStats.shadowClonesLevel || 0) >= 1) return false;
+    if (p.nameKey === 'puExecutionName' && globals.executionUnlocked) return false;
+    if (p.nameKey === 'puPetalArmorName' && (globals.petalArmorLevel || 0) >= 1) return false;
+    if (p.nameKey === 'puEchoSlashName' && (globals.echoLevel || 0) >= 1) return false;
+    if (p.nameKey === 'puTempoMasteryName' && (globals.tempoMasteryLevel || 0) >= 1) return false;
     if (p.nameKey === 'puGiantName' && globals.playerStats.slashSizeMult >= 2.2) return false;
     if (p.nameKey === 'puWindName' && globals.playerStats.attackCooldownBase <= 0.18) return false;
     if (p.nameKey === 'puFeatherName' && globals.playerStats.dashCooldownBase <= 0.72) return false;
@@ -859,10 +872,17 @@ export function renderShopModal() {
 
     card.innerHTML = `
       <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-          <span style="font-size: 9px; font-weight: 900; letter-spacing: 0.5px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 6px; border-radius: 6px;">
-            ${slot.quality}
-          </span>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <span style="font-size: 9px; font-weight: 900; letter-spacing: 0.5px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 6px; border-radius: 6px;">
+              ${slot.quality}
+            </span>
+            ${slot.power.isUnique ? `
+              <span style="font-size: 8.5px; font-weight: 900; color: #fbbf24; background: rgba(251, 191, 36, 0.2); border: 1px solid #fbbf24; padding: 1px 5px; border-radius: 5px; letter-spacing: 0.4px;">
+                ⚡ UNIQUE
+              </span>
+            ` : ''}
+          </div>
           <span style="font-size: 9px; font-weight: bold; color: ${synInfo.color}; background: rgba(0,0,0,0.5); padding: 1px 6px; border-radius: 6px;">
             ${synInfo.icon} ${synInfo.label}
           </span>
