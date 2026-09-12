@@ -243,78 +243,17 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
 
 let lastSlashSfxTime = 0;
 
-export function playSynthesizedSlash(volumeMult: number = 1.0) {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    if (ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
-    }
-    const now = ctx.currentTime;
-    const baseVol = Math.max(0.001, getSfxVolume() * 0.85 * volumeMult);
-
-    // 1. Aerodynamic blade swoosh (bandpassed noise)
-    const bufferSize = Math.floor(ctx.sampleRate * 0.11);
-    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const output = noiseBuffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) {
-      output[i] = Math.random() * 2 - 1;
-    }
-    const noiseSource = ctx.createBufferSource();
-    noiseSource.buffer = noiseBuffer;
-
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime(3600, now);
-    filter.frequency.exponentialRampToValueAtTime(650, now + 0.10);
-    filter.Q.setValueAtTime(2.2, now);
-
-    const noiseGain = ctx.createGain();
-    noiseGain.gain.setValueAtTime(baseVol * 0.85, now);
-    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
-
-    noiseSource.connect(filter);
-    filter.connect(noiseGain);
-    noiseGain.connect(getSoundDestination(ctx));
-
-    noiseSource.start(now);
-    noiseSource.stop(now + 0.11);
-
-    // 2. High-tensile steel blade slice ring (dual oscillators)
-    const osc1 = ctx.createOscillator();
-    const osc2 = ctx.createOscillator();
-    const bladeGain = ctx.createGain();
-
-    osc1.type = 'triangle';
-    osc1.frequency.setValueAtTime(1850, now);
-    osc1.frequency.exponentialRampToValueAtTime(520, now + 0.08);
-
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(2700, now);
-    osc2.frequency.exponentialRampToValueAtTime(980, now + 0.07);
-
-    bladeGain.gain.setValueAtTime(baseVol * 0.55, now);
-    bladeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-
-    osc1.connect(bladeGain);
-    osc2.connect(bladeGain);
-    bladeGain.connect(getSoundDestination(ctx));
-
-    osc1.start(now);
-    osc2.start(now);
-    osc1.stop(now + 0.08);
-    osc2.stop(now + 0.08);
-  } catch (e) {}
+export function playSynthesizedSlash(_volumeMult: number = 1.0) {
+  // Intentionally no-op: synthetic oscillator swoop sounded like a blunt hit effect.
 }
 
 export function playSlashSfx(volumeMult: number = 1.0) {
   const nowTime = performance.now();
-  if (nowTime - lastSlashSfxTime < 38) return;
+  if (nowTime - lastSlashSfxTime < 50) return;
   lastSlashSfxTime = nowTime;
 
-  // Procedural swoosh is the sole slash sound source. The WAV pool could overlap
-  // under rapid input and made one player slash sound like dozens.
-  playSynthesizedSlash(volumeMult);
+  // Restore the real sword slash sound effect (audio/slash.wav)
+  playSound(sfx.slash, volumeMult);
 }
 
 let audioCtx: AudioContext | null = null;
@@ -360,7 +299,6 @@ export const resumeAudioContext = () => {
   startBgm();
   };
 
-  let lastHurtTime = 0;
 let lastParryTime = 0;
 let lastPerfectParryTime = 0;
 let lastDodgeTime = 0;
@@ -373,30 +311,7 @@ export function playSynthesizedHit() {
 }
 
 export function playSynthesizedHurt() {
-  try {
-    const nowTime = performance.now();
-    if (nowTime - lastHurtTime < 100) return;
-    lastHurtTime = nowTime;
-
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(getSoundDestination(ctx));
-
-    osc.type = 'sawtooth';
-    const now = ctx.currentTime;
-    
-    osc.frequency.setValueAtTime(100, now);
-    osc.frequency.linearRampToValueAtTime(30, now + 0.22);
-    
-    gain.gain.setValueAtTime(getSfxVolume() * 0.5, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.22);
-    
-    osc.start(now);
-    osc.stop(now + 0.23);
-  } catch (e) {}
+  // Hit and damage sounds intentionally disabled to keep audio clean and free of repetitive clatter.
 }
 
 export function triggerHapticFeedback(pattern: number | number[] = 15) {

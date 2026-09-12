@@ -45,8 +45,6 @@ import {
   playSynthesizedTempleBell,
   playSynthesizedSingingBowl,
   startBgm,
-  playSwordClash,
-  playEnergyBeam,
   playTeleportSfx,
   playAffixAlert,
   getConsecutiveParries,
@@ -1117,7 +1115,7 @@ function initGame() {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
   }
   
-  const eMax = globals.selectedSkill === 'enhance' ? 12.0 : (globals.selectedSkill === 'shield' ? 10.0 : (globals.selectedSkill === 'dash' ? 0.9 : (globals.selectedSkill === 'firewheel' ? 11.0 : (globals.selectedSkill === 'gravity' ? 9.0 : (globals.selectedSkill === 'parry_master' ? 9.0 : (globals.selectedSkill === 'decoy_illusion' ? 12.0 : 14.0))))));
+  const eMax = globals.selectedSkill === 'enhance' ? 12.0 : (globals.selectedSkill === 'shield' ? 10.0 : (globals.selectedSkill === 'dash' ? 0.9 : (globals.selectedSkill === 'firewheel' ? 11.0 : (globals.selectedSkill === 'gravity' ? 10.0 : (globals.selectedSkill === 'parry_master' ? 10.0 : (globals.selectedSkill === 'decoy_illusion' ? 12.0 : 10.0))))));
   const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 4.5 : (globals.selectedSkill === 'dash' ? 0.45 : (globals.selectedSkill === 'firewheel' ? 6.0 : (globals.selectedSkill === 'gravity' ? 7.0 : (globals.selectedSkill === 'parry_master' ? 4.0 : (globals.selectedSkill === 'decoy_illusion' ? 6.0 : 3.5))))));
   globals.fullScreenSkillEffect = 'none';
   globals.fullScreenSkillTimer = 0;
@@ -2577,7 +2575,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if (e.state === 'dead') return;
   // Shadow Doppelganger Mirror Counter-Parry
   if ((e as any).isShadowDoppelganger && e.state === 'charge' && Math.random() < 0.45) {
-    playSynthesizedParry();
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 50, globals.currentLang === 'ja' ? '影の受け流し！ 🛡️' : 'SHADOW PARRY! 🛡️', '#a855f7', 26));
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#9333ea'));
     e.setState('attack');
@@ -2587,7 +2584,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if ((e as any).iceShieldActive) {
     (e as any).iceShieldActive = false;
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, globals.currentLang === 'ja' ? '防ぐ！' : 'BLOCKED!', '#60a5fa', 22));
-    playSynthesizedParry();
     for (let i = 0; i < 10; i++) {
       globals.particles.push(Particle.acquire(e.x, e.y, '#60a5fa', 200, 0.4, 2 + Math.random() * 2));
     }
@@ -2595,8 +2591,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   }
   // Skeleton Warlord Guard Stance Parry & Counter-Thrust
   if (e.subType === 'skeleton_warlord' && e.state === 'react') {
-    playSynthesizedParry();
-    playSwordClash();
     globals.screenShake = Math.max(globals.screenShake, 18);
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 60, globals.currentLang === 'ja' ? '骨刃受け流し！ 🛡️' : 'BONE DEFLECTION! 🛡️', '#cbd5e1', 26));
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#f59e0b'));
@@ -3073,7 +3067,6 @@ function killEnemy(e: Enemy) {
 
   // Corpse Ignition & Infernal Domain Stage Affix (slain enemies burst into burning embers)
   if (globals.activeStageAffix?.id === 'corpse_ignition' || globals.activeStageAffix?.id === 'infernal_domain') {
-    playSynthesizedFirewheel();
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#ef4444'));
     const emberCount = globals.activeStageAffix?.id === 'infernal_domain' ? 20 : 12;
     for (let p = 0; p < emberCount; p++) {
@@ -3101,7 +3094,6 @@ function killEnemy(e: Enemy) {
 
   // Phantom Convergence / Phantom Ambush Stage Affix (Ethereal shadow phantoms flank on death)
   if (globals.activeStageAffix?.id === 'phantom_ambush' && Math.random() < 0.25) {
-    playTeleportSfx(0.45);
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, "👥 PHANTOM AMBUSH!", "#a855f7", 20));
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#a855f7'));
     const phantom = new Enemy(e.x + (Math.random() - 0.5) * 60, e.y + (Math.random() - 0.5) * 60, globals.player);
@@ -3742,7 +3734,7 @@ function update(realDt: number) {
     }
   }
   
-  if (globals.enhanceCooldown > 0) globals.enhanceCooldown -= realDt;
+  if (globals.enhanceActiveTimer <= 0 && globals.enhanceCooldown > 0) globals.enhanceCooldown -= realDt;
   if (globals.keys[globals.keyMaps.skill] || globals.mobileEnhanceJustPressed) {
     globals.mobileEnhanceJustPressed = false;
     if (globals.gameMode === 'zen') {
@@ -3751,12 +3743,12 @@ function update(realDt: number) {
         globals.lastZenWarningTime = now;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, t('zenWarningText'), "#ff3355", 24));
       }
-    } else if (globals.enhanceCooldown <= 0) {
+    } else if (globals.enhanceCooldown <= 0 && globals.enhanceActiveTimer <= 0) {
       journeySkill();
       if (globals.selectedSkill === 'enhance') {
         playSynthesizedEnhance();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration; 
-        globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
+        globals.enhanceCooldown = 0;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, t('swordEnhancedText'), "#ff6600", 24));
         const atkUp = (vfxAnims as any).spells?.attackUp;
         if (atkUp && atkUp.length > 0) {
@@ -3765,7 +3757,7 @@ function update(realDt: number) {
       } else if (globals.selectedSkill === 'shield') {
         playSynthesizedParry();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration;
-        globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
+        globals.enhanceCooldown = 0;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '烈風 of 加護！' : 'WIND AEGIS!', '#00ffff', 24));
         const defUp = (vfxAnims as any).spells?.defenseUp;
         if (defUp && defUp.length > 0) {
@@ -3777,7 +3769,7 @@ function update(realDt: number) {
       } else if (globals.selectedSkill === 'dash') {
         playSynthesizedThunder();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration;
-        globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
+        globals.enhanceCooldown = 0;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '雷神の瞬歩！' : 'RAIJIN STEP!', '#00ffff', 24));
         
         globals.player.setState('dash');
@@ -3891,7 +3883,7 @@ function update(realDt: number) {
       } else if (globals.selectedSkill === 'firewheel') {
         playSynthesizedFirewheel();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration;
-        globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
+        globals.enhanceCooldown = 0;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '業火の回天！' : 'INFERNO SWEEP!', '#ff4400', 24));
         
         for (let i = 0; i < 20; i++) {
@@ -3914,7 +3906,7 @@ function update(realDt: number) {
         globals.raijinCataclysmTimer = 7.0;
         globals.fullScreenSkillEffect = 'raijin_cataclysm';
         globals.fullScreenSkillTimer = 0.45;
-        globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
+        globals.enhanceCooldown = 0;
         globals.screenShake = Math.max(globals.screenShake, 45);
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '神罰天雷・雷神壊滅！ ⚡' : 'RAIJIN CATACLYSM! ⚡', 'neon-#a855f7', 36));
 
@@ -3972,7 +3964,7 @@ function update(realDt: number) {
       } else if (globals.selectedSkill === 'parry_master') {
         playSynthesizedPerfectParry();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration;
-        globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
+        globals.enhanceCooldown = 0;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '弾きの極意！' : 'PARRY MASTER!', '#ffd700', 24));
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
         for (let i = 0; i < 15; i++) {
@@ -3984,7 +3976,7 @@ function update(realDt: number) {
         globals.voidRuptureTimer = 6.0;
         globals.fullScreenSkillEffect = 'void_rupture';
         globals.fullScreenSkillTimer = 0.45;
-        globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
+        globals.enhanceCooldown = 0;
         globals.screenShake = Math.max(globals.screenShake, 30);
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '虚空断絶・幻影裂斬！ 🌌' : 'VOID RUPTURE! 🌌', 'neon-#38bdf8', 34));
 
@@ -4233,6 +4225,7 @@ function update(realDt: number) {
 
     if (globals.enhanceActiveTimer <= 0) {
       globals.enhanceActiveTimer = 0;
+      globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
       if (globals.selectedSkill === 'firewheel') {
         // Inferno Sweep expiration: expanding Flame Shockwave + Inferno Blast VFX!
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ff4400'));
@@ -4241,7 +4234,6 @@ function update(realDt: number) {
         if (infBlast && infBlast.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, infBlast, 0.55, 2.5));
         }
-        playSynthesizedThunder();
         globals.screenShake = Math.max(globals.screenShake, 25);
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '業火大爆裂！ 🔥' : 'INFERNO SUPERNOVA! 🔥', 'neon-#ff4400', 32));
         const burstRadiusSq = 300 * 300;
@@ -5145,7 +5137,6 @@ function update(realDt: number) {
         isRiposteStrike = true;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 40, "RIPOSTE!", "#ff0055", 26));
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, 'rgba(255, 0, 85, 0.7)'));
-        playSynthesizedPerfectParry();
       }
 
       if (globals.decoyCritPrimed) {
@@ -5154,7 +5145,6 @@ function update(realDt: number) {
         size *= 1.6;
         isEnhanced = true;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, "CRITICAL STRIKE!", "#ff0055", 30));
-        playSynthesizedPerfectParry();
         globals.screenShake = Math.max(globals.screenShake, 35);
       }
 
@@ -5241,11 +5231,9 @@ function update(realDt: number) {
             globals.particles.push(Particle.acquire(t.x, t.y, '#c084fc', 180, 0.35, 2.5));
           }
         });
-        playSynthesizedThunder();
 
         if (globals.cataclysmConduitActive) {
-          globals.flow = Math.min(globals.playerStats.flowMax, globals.flow + 5);
-          globals.enhanceActiveTimer = Math.min(10.0, globals.enhanceActiveTimer + 0.6);
+          globals.flow = Math.min(globals.playerStats.flowMax, globals.flow + 8);
         }
       }
 
@@ -5375,7 +5363,6 @@ function update(realDt: number) {
         }
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#fbbf24'));
         globals.screenShake = Math.max(globals.screenShake, 14);
-        playSynthesizedPerfectParry();
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 75, "KENSEI CROSS-CLEAVE! ⚔️", "#fbbf24", 22));
       }
 
@@ -5436,8 +5423,6 @@ function update(realDt: number) {
         });
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffcc00'));
         globals.screenShake += 15;
-      
-        playSynthesizedPerfectParry(); // Add high-frequency crunch sound feedback
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, "💥 COMBO FINISHER! 💥", "#ffcc00", 24));
       }
       
@@ -5650,7 +5635,6 @@ function update(realDt: number) {
         globals.gravityWellX = bhX;
         globals.gravityWellY = bhY;
         globals.singularityCleaveCD = 4.0;
-        playEnergyBeam(0.6);
         globals.shockwaves.push(new Shockwave(bhX, bhY, '#a855f7'));
         if (vfxAnims.gigapack?.explosion?.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));

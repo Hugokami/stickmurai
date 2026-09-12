@@ -274,7 +274,7 @@ export class Enemy extends Entity {
 
     // Desynchronize ranged attacks with random cadence offset to prevent simultaneous off-screen bullet walls
     if (this.isRanged()) {
-      this.chargeTimeMax += 0.1 + Math.random() * 0.35;
+      this.chargeTimeMax += 0.05 + Math.random() * 0.15;
     }
   }
 
@@ -334,35 +334,35 @@ export class Enemy extends Entity {
       this.maxPosture = 100;
     } else if (this.subType === 'musketeer') {
       this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.5; this.lungeDuration = 0.55; // Double-shot projectile
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.3; this.lungeDuration = 0.55; // Double-shot projectile
       this.scaleMult = 2.0; this.hp = this.maxHp = 15; this.expValue = 2;
       this.colorTint = 'none';
       this.speed = 180;
       this.maxPosture = 110;
     } else if (this.subType === 'shadow_sniper') {
       this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.1; this.lungeDuration = 0.45;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.45;
       this.scaleMult = 2.0; this.hp = this.maxHp = 24; this.expValue = 4;
       this.colorTint = '#881337';
       this.speed = 200;
       this.maxPosture = 180;
     } else if (this.subType === 'tengu_sorcerer') {
       this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.9; this.lungeDuration = 0.55;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.1; this.lungeDuration = 0.55;
       this.scaleMult = 2.1; this.hp = this.maxHp = 32; this.expValue = 5;
       this.colorTint = '#38bdf8';
       this.speed = 240;
       this.maxPosture = 220;
     } else if (this.subType === 'corrupted_shaman') {
       this.type = 'evil_wizard';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.4; this.lungeDuration = 0.6;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.3; this.lungeDuration = 0.6;
       this.scaleMult = 2.2; this.hp = this.maxHp = 40; this.expValue = 7;
       this.colorTint = '#059669';
       this.speed = 170;
       this.maxPosture = 260;
     } else if (this.subType === 'pyromancer') {
       this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.5; this.lungeDuration = 0.55;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.3; this.lungeDuration = 0.55;
       this.scaleMult = 2.0; this.hp = this.maxHp = 20; this.expValue = 4;
       this.colorTint = '#ff4400';
       this.speed = 160;
@@ -376,14 +376,14 @@ export class Enemy extends Entity {
       this.maxPosture = 260;
     } else if (this.subType === 'astromancer') {
       this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.3; this.lungeDuration = 0.5;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.5;
       this.scaleMult = 2.1; this.hp = this.maxHp = 22; this.expValue = 5;
       this.colorTint = '#f43f5e';
       this.speed = 210;
       this.maxPosture = 160;
     } else if (this.subType === 'necromancer') {
       this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.7; this.lungeDuration = 0.6;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.4; this.lungeDuration = 0.6;
       this.scaleMult = 2.1; this.hp = this.maxHp = 42; this.expValue = 8;
       this.colorTint = '#a855f7';
       this.speed = 150;
@@ -425,7 +425,7 @@ export class Enemy extends Entity {
       this.maxPosture = 950;
     } else if (this.subType === 'toaster_bot') {
       this.type = 'toaster_bot';
-      this.lungeSpeed = 0; this.chargeTimeMax = 2.0; this.lungeDuration = 0.6;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.6;
       this.scaleMult = 1.4; this.hp = this.maxHp = 26; this.expValue = 3;
       this.colorTint = 'none';
       this.speed = 190;
@@ -963,21 +963,21 @@ export class Enemy extends Entity {
         this.burstShotsFired = 0;
         this.burstShotTimer = 0;
         this.isAimLocked = false;
-        this.attackCooldownTimer = 1.0 + Math.random() * 0.6;
+        this.attackCooldownTimer = this.isRanged() ? (0.35 + Math.random() * 0.3) : (1.0 + Math.random() * 0.6);
       }
       return;
     }
     
     let speed = this.speed, attackRange = 250 * this.scaleMult;
-    if (this.subType === 'musketeer') { attackRange = 500; }
-    else if (this.subType === 'pyromancer') { attackRange = 450; }
+    if (this.subType === 'musketeer') { attackRange = 950; }
+    else if (this.subType === 'pyromancer') { attackRange = 900; }
     else if (this.subType === 'glacial_sentinel') { attackRange = 200; }
-    else if (this.subType === 'astromancer') { attackRange = 600; }
-    else if (this.subType === 'necromancer') { attackRange = 500; }
-    else if (this.subType === 'toaster_bot') { attackRange = 460; }
-    else if (this.subType === 'shadow_sniper') { attackRange = 620; }
-    else if (this.subType === 'tengu_sorcerer') { attackRange = 460; }
-    else if (this.subType === 'corrupted_shaman') { attackRange = 480; }
+    else if (this.subType === 'astromancer') { attackRange = 1100; }
+    else if (this.subType === 'necromancer') { attackRange = 950; }
+    else if (this.subType === 'toaster_bot') { attackRange = 900; }
+    else if (this.subType === 'shadow_sniper') { attackRange = 1250; }
+    else if (this.subType === 'tengu_sorcerer') { attackRange = 920; }
+    else if (this.subType === 'corrupted_shaman') { attackRange = 950; }
     else if (this.subType === 'oni_boss') { attackRange = 420; }
     else if (this.subType === 'skeleton_warlord') { attackRange = 420; }
     else if (this.subType === 'agis_colossus') { attackRange = 440; }
@@ -1316,8 +1316,9 @@ export class Enemy extends Entity {
       }
       ctx.rotate(this.targetAngle);
       if(ranged){
-        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(600,0);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(600,-9);ctx.lineTo(609,0);ctx.lineTo(600,9);ctx.lineTo(591,0);ctx.closePath();ctx.stroke();
+        const rangeLine = this.subType === 'shadow_sniper' ? 1250 : 950;
+        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(rangeLine,0);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(rangeLine,-9);ctx.lineTo(rangeLine+9,0);ctx.lineTo(rangeLine,9);ctx.lineTo(rangeLine-9,0);ctx.closePath();ctx.stroke();
       }else{
         const travel=this.lungeSpeed*this.lungeDuration*.5;
         const radius=this.meleeHitRadius;
@@ -1350,7 +1351,7 @@ export class Enemy extends Entity {
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.moveTo(rx, effectiveRy);
-      ctx.lineTo(rx + Math.cos(this.targetAngle) * 600, effectiveRy + Math.sin(this.targetAngle) * 600);
+      ctx.lineTo(rx + Math.cos(this.targetAngle) * 1250, effectiveRy + Math.sin(this.targetAngle) * 1250);
       ctx.stroke();
       ctx.restore();
     }

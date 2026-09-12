@@ -485,14 +485,14 @@ export class Projectile {
     this.enhancedType = enhancedType;
     this.isDeflected = false;
     this.hitEnemies.clear();
-    this.life = 2.0;
+    this.life = isEnemy ? 2.5 : 2.0;
     this.shooter = undefined;
     (this as any).colorTint = undefined;
     (this as any).isBloodScythe = undefined;
     (this as any).isHoming = undefined;
     (this as any).hasReversed = undefined;
-    (this as any).maxLife = 2.0;
-    const speed = isEnemy ? 600 : (isEcho ? 2800 : 3000);
+    (this as any).maxLife = this.life;
+    const speed = isEnemy ? 750 : (isEcho ? 2800 : 3000);
     this.vx = Math.cos(angle) * speed;
     this.vy = Math.sin(angle) * speed;
   }
