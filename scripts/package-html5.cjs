@@ -47,18 +47,52 @@ zip_path = sys.argv[2]
 exclude_exts = {'.unitypackage', '.map'}
 exclude_names = {'.ds_store', 'thumbs.db'}
 
-count = 0
+# HTML5 standalone package whitelist
+# Sprites, VFX, and backgrounds are cleanly packed inside assets.bin (6.4 MB)
+# to stay well within itch.io's strict 1,000-file platform limit.
+allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin'}
+allowed_dirs = {'assets', 'audio', 'fonts'}
+allowed_icons = {
+    'release_v1.2-single_38.png',
+    'release_v1.2-single_15.png',
+    'release_v1.2-single_77.png',
+    'release_v1.2-single_5.png',
+    'release_v1.2-single_88.png',
+    'release_v1.2-single_1.png'
+}
+
+files_to_pack = []
+
+# 1. Root files
+for rf in allowed_root_files:
+    fp = os.path.join(dist_dir, rf)
+    if os.path.exists(fp):
+        files_to_pack.append((fp, rf))
+
+# 2. Allowed subdirectories (assets, audio, fonts)
+for ad in allowed_dirs:
+    sdir = os.path.join(dist_dir, ad)
+    if os.path.exists(sdir):
+        for root, dirs, files in os.walk(sdir):
+            for f in files:
+                if f.lower() in exclude_names or os.path.splitext(f)[1].lower() in exclude_exts:
+                    continue
+                abs_path = os.path.join(root, f)
+                rel_path = os.path.relpath(abs_path, dist_dir).replace('\\\\', '/')
+                files_to_pack.append((abs_path, rel_path))
+
+# 3. Allowed icons
+icons_dir = os.path.join(dist_dir, 'icons')
+if os.path.exists(icons_dir):
+    for icon in allowed_icons:
+        fp = os.path.join(icons_dir, icon)
+        if os.path.exists(fp):
+            files_to_pack.append((fp, f'icons/{icon}'))
+
+count = len(files_to_pack)
 with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
-    for root, dirs, files in os.walk(dist_dir):
-        # Skip __MACOSX directories
-        dirs[:] = [d for d in dirs if d != '__MACOSX']
-        for file in files:
-            if file.lower() in exclude_names or os.path.splitext(file)[1].lower() in exclude_exts:
-                continue
-            abs_path = os.path.join(root, file)
-            rel_path = os.path.relpath(abs_path, dist_dir)
-            zf.write(abs_path, rel_path)
-            count += 1
+    for abs_path, rel_path in files_to_pack:
+        zf.write(abs_path, rel_path)
 
 print(f"Packaged {count} files into {zip_path}")
 size_mb = os.path.getsize(zip_path) / (1024 * 1024)
@@ -70,7 +104,11 @@ with zipfile.ZipFile(zip_path, 'r') as zf:
     if 'index.html' not in names:
         print("ERROR: index.html is missing from zip root!", file=sys.stderr)
         sys.exit(1)
+    if count > 1000:
+        print(f"ERROR: Archive contains {count} files, exceeding itch.io limit of 1000!", file=sys.stderr)
+        sys.exit(1)
     print("Verification: index.html confirmed at archive root.")
+    print(f"Verification: File count ({count} files) is well within itch.io limit (<= 1000).")
 `;
 
 const tempPy = path.join(releaseDir, '_zip_helper.py');

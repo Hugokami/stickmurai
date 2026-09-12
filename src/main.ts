@@ -20,7 +20,7 @@ import { encounterBudget } from './journeyCore';
 import { resetCombatPolish, updateCombatPolish } from './combatPolish';
 import { initQol, clearGameInputs, actionBuffer, qolSettings } from './qol';
 import { initRuntimeQol, isPractice, practiceStep, recordHurt, resetRunFeedback, showDefeatFeedback, updateThreats } from './runtimeQol';
-import { assetReadiness, retryRequiredAssets, preloadStageEnemyAssets, loadHeroAssets } from './assets';
+import { assetReadiness, retryRequiredAssets, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
 import { safeStorage } from './storage';
 import { globals, getStageAffix } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
@@ -256,7 +256,7 @@ function startLoaderStickmanAnimation() {
     const currentImg = document.getElementById('loader-stickman-img') as HTMLImageElement;
     if (currentImg) {
       loaderStickmanFrame = (loaderStickmanFrame % 8) + 1;
-      currentImg.src = encodeURI(`sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_000${loaderStickmanFrame}.png`);
+      currentImg.src = resolveAssetUrl(encodeURI(`sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_000${loaderStickmanFrame}.png`));
     }
   }, 120);
 }

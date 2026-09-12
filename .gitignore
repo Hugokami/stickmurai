@@ -27,4 +27,5 @@ dist-ssr
 graphify-out/
 release/
 *.zip
+*.bin
 

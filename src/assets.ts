@@ -669,6 +669,55 @@ export function registerAssetToLoad(img: HTMLImageElement) {
   }
 }
 
+export const packedAssetMap = new Map<string, string>();
+let bundleInitPromise: Promise<boolean> | null = null;
+
+export function ensurePackedAssets(): Promise<boolean> {
+  if (bundleInitPromise) return bundleInitPromise;
+  bundleInitPromise = (async () => {
+    try {
+      const res = await fetch('./assets.bin');
+      if (!res.ok) return false;
+      const ab = await res.arrayBuffer();
+      const view = new DataView(ab);
+      const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
+      if (magic !== 'STIK') return false;
+      const fileCount = view.getUint32(4, true);
+      const indexLen = view.getUint32(8, true);
+      const dataStart = 12 + indexLen;
+      const decoder = new TextDecoder();
+      let offset = 12;
+      for (let i = 0; i < fileCount; i++) {
+        const pathLen = view.getUint16(offset, true);
+        offset += 2;
+        const pathBytes = new Uint8Array(ab, offset, pathLen);
+        offset += pathLen;
+        const pathStr = decoder.decode(pathBytes);
+        const dataOffset = view.getUint32(offset, true);
+        offset += 4;
+        const dataLen = view.getUint32(offset, true);
+        offset += 4;
+        const mime = pathStr.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
+        const blob = new Blob([new Uint8Array(ab, dataStart + dataOffset, dataLen)], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        packedAssetMap.set(pathStr, blobUrl);
+        packedAssetMap.set(encodeURI(pathStr), blobUrl);
+      }
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  return bundleInitPromise;
+}
+
+// Immediately trigger bundled assets load
+ensurePackedAssets();
+
+export function resolveAssetUrl(src: string): string {
+  return packedAssetMap.get(src) || packedAssetMap.get(decodeURI(src)) || src;
+}
+
 function queueAsset(img: HTMLImageElement, src: string, folder?: string, isPriority = false) {
   if (isPriority) {
     globals.totalAssetsToLoad++;
@@ -724,9 +773,18 @@ function startLoadingItem(item: QueuedAsset) {
     if (item.isPriority) setTimeout(() => (window as any).__showLoadingRecovery?.(), 0);
   };
 
-  item.img.src = item.src;
-  if (item.img.complete && item.img.naturalWidth > 0) {
-    Promise.resolve().then(onDone);
+  const applySrc = () => {
+    const mappedSrc = resolveAssetUrl(item.src);
+    item.img.src = mappedSrc;
+    if (item.img.complete && item.img.naturalWidth > 0) {
+      Promise.resolve().then(onDone);
+    }
+  };
+
+  if (bundleInitPromise) {
+    bundleInitPromise.then(applySrc);
+  } else {
+    applySrc();
   }
 }
 
