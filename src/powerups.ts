@@ -11,6 +11,7 @@ import {
   sfx
 } from './audio';
 import { Slash, FloatingText, Shockwave, Particle, AnimatedEffect } from './entities';
+import { bindDualListener } from './ui';
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
 
@@ -1069,23 +1070,19 @@ export function renderShopModal() {
     `;
 
     // Freeze Button Handler
-    const freezeBtn = card.querySelector('.shop-freeze-btn');
+    const freezeBtn = card.querySelector('.shop-freeze-btn') as HTMLElement;
     if (freezeBtn) {
-      const toggleFreeze = (e: Event) => {
-        e.stopPropagation();
+      bindDualListener(freezeBtn, () => {
         slot.isFrozen = !slot.isFrozen;
         playSound(sfx.slash, 0.5);
         renderShopModal();
-      };
-      freezeBtn.addEventListener('pointerdown', toggleFreeze);
-      freezeBtn.addEventListener('click', toggleFreeze);
+      });
     }
 
     // Buy Button Handler
-    const buyBtn = card.querySelector('.shop-buy-btn');
+    const buyBtn = card.querySelector('.shop-buy-btn') as HTMLElement;
     if (buyBtn && canAfford) {
-      const doBuy = (e: Event) => {
-        e.stopPropagation();
+      bindDualListener(buyBtn, () => {
         if ((globals.stageCurrency || 0) < slot.price) return;
         globals.stageCurrency -= slot.price;
         slot.power.apply();
@@ -1095,18 +1092,15 @@ export function renderShopModal() {
         playSound(sfx.magatamaPickup, 1.0);
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, `+${t(slot.power.nameKey)}`, '#ffd700', 22));
         renderShopModal();
-      };
-      buyBtn.addEventListener('pointerdown', doBuy);
-      buyBtn.addEventListener('click', doBuy);
+      });
     }
 
     grid.appendChild(card);
   });
 
-  const rationBtn = modal.querySelector('#shop-ration-btn') as HTMLButtonElement;
+  const rationBtn = modal.querySelector('#shop-ration-btn') as HTMLElement;
   if (rationBtn) {
-    const buyRation = (e: Event) => {
-      e.stopPropagation();
+    bindDualListener(rationBtn, () => {
       if ((globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives) return;
       globals.stageCurrency -= 20;
       globals.lives++;
@@ -1114,15 +1108,12 @@ export function renderShopModal() {
       playSound(sfx.magatamaPickup, 1.0);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "+1 ❤️", "#4ade80", 26));
       renderShopModal();
-    };
-    rationBtn.addEventListener('pointerdown', buyRation);
-    rationBtn.addEventListener('click', buyRation);
+    });
   }
 
-  const refreshBtn = modal.querySelector('#shop-refresh-btn');
+  const refreshBtn = modal.querySelector('#shop-refresh-btn') as HTMLElement;
   if (refreshBtn) {
-    const doRefresh = (e: Event) => {
-      e.stopPropagation();
+    bindDualListener(refreshBtn, () => {
       const cost = isFreeRefresh ? 0 : refreshCost;
       if ((globals.stageCurrency || 0) < cost) return;
       globals.stageCurrency -= cost;
@@ -1131,19 +1122,14 @@ export function renderShopModal() {
       callbacks.updateUI();
       playSound(sfx.slash, 0.7);
       renderShopModal();
-    };
-    refreshBtn.addEventListener('pointerdown', doRefresh);
-    refreshBtn.addEventListener('click', doRefresh);
+    });
   }
 
-  const closeBtn = modal.querySelector('#shop-close-btn');
+  const closeBtn = modal.querySelector('#shop-close-btn') as HTMLElement;
   if (closeBtn) {
-    const doClose = (e: Event) => {
-      e.stopPropagation();
+    bindDualListener(closeBtn, () => {
       closeShop();
-    };
-    closeBtn.addEventListener('pointerdown', doClose);
-    closeBtn.addEventListener('click', doClose);
+    });
   }
 }
 

@@ -74,7 +74,13 @@ export function initJourney(start:()=>void,heroes:typeof heroList){
   const box=document.createElement('div');box.className='journey-box';panel.append(box);
   const header=document.createElement('header');const heading=document.createElement('h2');heading.textContent='Trials & Mastery';header.append(heading,btn('Close ✕',close));box.append(header);
   body=document.createElement('div');body.className='journey-grid';box.append(body);document.body.append(panel);
-  const openBtn=btn('Trials & Mastery',open);openBtn.id='journey-open';document.querySelector('#main-menu .menu-buttons')?.append(openBtn);
+  const openBtn = document.getElementById('journey-open-btn') || btn('Trials & Mastery', open);
+  openBtn.id = 'journey-open';
+  if (!document.getElementById('journey-open-btn')) {
+    document.querySelector('#main-menu .menu-buttons')?.append(openBtn);
+  } else {
+    openBtn.addEventListener('click', open);
+  }
   detail=document.createElement('div');detail.id='journey-objective';detail.hidden=true;document.getElementById('objective-display')?.after(detail);
 }
 export function beginJourneyRun(){runDamage=0;skillUses=0;runFinished=false;runContract=!isPractice()&&globals.gameMode==='classic'&&selectedContract?.stage===globals.currentStage?{...selectedContract}:null;}

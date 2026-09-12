@@ -152,6 +152,10 @@ export function handleQuitToMainMenu() {
   clearBattlefield();
   resetCanvasVisuals();
   startOrResumeGameLoop();
+  const uiLayer = document.getElementById('ui-layer');
+  if (uiLayer) uiLayer.style.display = 'none';
+  const mobileControls = document.getElementById('mobile-controls');
+  if (mobileControls) mobileControls.style.display = 'none';
 }
 
 callbacks.onQuitToMainMenu = handleQuitToMainMenu;
@@ -187,7 +191,7 @@ function finishLoading() {
   const statusText = document.getElementById('loader-status');
 
   if (fill) fill.style.width = '100%';
-  if (flare) flare.style.left = '100%';
+  if (flare) flare.style.left = 'calc(100% - 7px)';
   if (percentText) percentText.innerText = '100%';
   if (text) {
     text.innerText = t('tapToContinue') || 'TAP / CLICK TO CONTINUE';
@@ -214,6 +218,10 @@ function finishLoading() {
       
       const proceedToMenu = () => {
         loaderScreen.classList.add('fade-out');
+        const uiLayer = document.getElementById('ui-layer');
+        if (uiLayer) uiLayer.style.display = 'none';
+        const mobileControls = document.getElementById('mobile-controls');
+        if (mobileControls) mobileControls.style.display = 'none';
         setTimeout(() => {
           loaderScreen.classList.add('hidden');
           loaderScreen.style.display = 'none';
@@ -279,7 +287,10 @@ function updateLoaderProgress() {
   const statusText = document.getElementById('loader-status');
 
   if (fill) fill.style.width = percent + '%';
-  if (flare) flare.style.left = percent + '%';
+  if (flare) {
+    flare.style.left = `clamp(7px, ${percent}%, calc(100% - 7px))`;
+    flare.style.opacity = percent > 0 ? '1' : '0';
+  }
   if (percentText) percentText.innerText = percent + '%';
 
   if (!loadingFinished) {

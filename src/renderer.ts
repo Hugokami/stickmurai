@@ -266,25 +266,6 @@ export function draw() {
     }
   }
 
-  const isMobileDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-  if (!isMobileDevice && globals.graphicsSettings !== 'low') {
-    ctx.save();
-    ctx.translate(-globals.camera.x + globals.vw/2, -globals.camera.y + globals.vh/2);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
-    ctx.lineWidth = 2;
-    const startXGrid = Math.floor((globals.camera.x - globals.vw/2) / 150) * 150;
-    const startYGrid = Math.floor((globals.camera.y - globals.vh/2) / 150) * 150;
-    ctx.beginPath();
-    for(let x = startXGrid; x < globals.camera.x + globals.vw; x += 150) {
-      ctx.moveTo(x, startYGrid); ctx.lineTo(x, globals.camera.y + globals.vh);
-    }
-    for(let y = startYGrid; y < globals.camera.y + globals.vh; y += 150) {
-      ctx.moveTo(startXGrid, y); ctx.lineTo(globals.camera.x + globals.vw, y);
-    }
-    ctx.stroke();
-    ctx.restore();
-  }
-
   visibleEntities.length = 0;
   if (globals.player) {
     visibleEntities.push(globals.player);
@@ -1121,8 +1102,6 @@ export function draw() {
       ctx.fillRect(0, 0, globals.width, globals.height);
 
       // 2. Full-Screen Celestial Lightning Discharge Columns
-      ctx.strokeStyle = '#c084fc';
-      ctx.lineWidth = 3.5;
       const colCount = 5;
       for (let c = 0; c < colCount; c++) {
         const colX = (globals.width / (colCount + 1)) * (c + 1);
@@ -1135,9 +1114,11 @@ export function draw() {
           curX += Math.sin(c * 4 + s * 6 + progress * 15) * 26;
           ctx.lineTo(curX, segY);
         }
+        ctx.strokeStyle = `rgba(192, 132, 252, ${alpha})`;
+        ctx.lineWidth = 3.5;
         ctx.stroke();
 
-        ctx.strokeStyle = '#ffffff';
+        ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
@@ -1201,7 +1182,7 @@ export function draw() {
       const barW = Math.min(320, globals.width * 0.4);
       const barH = 14;
       const barX = (globals.width - barW) / 2;
-      const barY = 56;
+      const barY = Math.max(16, Math.min(56, globals.height * 0.08));
 
       // Background Card
       ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
@@ -1213,13 +1194,15 @@ export function draw() {
       ctx.stroke();
 
       // Title & Countdown Text
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
       ctx.font = "bold 12px 'Outfit', sans-serif";
       ctx.fillStyle = isRaijin ? '#fde047' : '#e0f2fe';
       const isJa = globals.currentLang === 'ja';
       const title = isRaijin
         ? (isJa ? '⚡ 神罰天雷・雷神壊滅' : "⚡ RAIJIN'S CATACLYSM")
         : (isJa ? '🌌 虚空断絶・幻影裂斬' : '🌌 VOID RUPTURE');
-      ctx.fillText(`${title} · ${globals.enhanceActiveTimer.toFixed(1)}s`, barX, barY - 6);
+      ctx.fillText(`${title} · ${globals.enhanceActiveTimer.toFixed(1)}s`, barX, barY - 4);
 
       // Gauge Track
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';

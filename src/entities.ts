@@ -490,6 +490,7 @@ export class Projectile {
     (this as any).colorTint = undefined;
     (this as any).isBloodScythe = undefined;
     (this as any).isHoming = undefined;
+    (this as any).hasReversed = undefined;
     (this as any).maxLife = 2.0;
     const speed = isEnemy ? 600 : (isEcho ? 2800 : 3000);
     this.vx = Math.cos(angle) * speed;
@@ -551,12 +552,20 @@ export class Projectile {
       });
     }
 
-    // Akakage Blood Scythe Boomerang trajectory logic
+    // Akakage Blood Scythe Boomerang trajectory and spin logic
     if (this.enhancedType === 'blood_scythe' && !this.isEnemy) {
-      const halfLife = (this as any).maxLife ? ((this as any).maxLife * 0.5) : 0.8;
+      // Rapid menacing spin
+      this.angle += dt * 20;
+
+      const halfLife = (this as any).maxLife ? ((this as any).maxLife * 0.45) : 0.72;
       if (this.life < halfLife) {
+        // Clear hit enemies once upon reversal so boomerang can strike again on return trip
+        if (!(this as any).hasReversed) {
+          (this as any).hasReversed = true;
+          this.hitEnemies.clear();
+        }
         const toPlayerAngle = Math.atan2(globals.player.y - this.y, globals.player.x - this.x);
-        const returnSpeed = 2000;
+        const returnSpeed = 1200;
         this.vx = Math.cos(toPlayerAngle) * returnSpeed;
         this.vy = Math.sin(toPlayerAngle) * returnSpeed;
         if (Math.hypot(globals.player.x - this.x, globals.player.y - this.y) < 45) {
@@ -660,6 +669,8 @@ export class Projectile {
             pColor = Math.random() > 0.5 ? '#fbbf24' : '#fef08a';
           } else if (this.enhancedType === 'zen_field') {
             pColor = Math.random() > 0.5 ? '#22d3ee' : '#e0f2fe';
+          } else if (this.enhancedType === 'blood_scythe') {
+            pColor = Math.random() > 0.5 ? '#ef4444' : '#b91c1c';
           }
         }
 
@@ -728,6 +739,59 @@ export class Projectile {
         ctx.fillStyle = '#ffffff';
         ctx.fill();
       } else {
+        if (this.enhancedType === 'blood_scythe') {
+          // Dedicated spinning dual-bladed blood scythe boomerang
+          const pulse = Math.sin(this.life * 28);
+          const scytheAlpha = Math.min(1, this.life * 4);
+          ctx.save();
+          ctx.globalAlpha = scytheAlpha;
+          
+          // Draw dual-curved menacing crimson scythe blades
+          for (let b = 0; b < 2; b++) {
+            ctx.save();
+            ctx.rotate(b * Math.PI);
+
+            // Crimson blade glow arc
+            ctx.beginPath();
+            ctx.arc(0, 0, 32, -Math.PI / 3, Math.PI / 2.5, false);
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            // Inner razor white-crimson cutting edge
+            ctx.beginPath();
+            ctx.arc(0, 0, 28, -Math.PI / 3.2, Math.PI / 2.6, false);
+            ctx.strokeStyle = '#fecaca';
+            ctx.lineWidth = 2.5;
+            ctx.stroke();
+
+            // Scythe curved staff spine
+            ctx.beginPath();
+            ctx.moveTo(0, 30);
+            ctx.lineTo(-8, -12);
+            ctx.strokeStyle = '#7f1d1d';
+            ctx.lineWidth = 4;
+            ctx.stroke();
+
+            ctx.restore();
+          }
+
+          // Central glowing blood vortex orb
+          ctx.beginPath();
+          ctx.arc(0, 0, 10 + pulse * 2, 0, Math.PI * 2);
+          ctx.fillStyle = '#dc2626';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, Math.PI * 2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+
+          ctx.restore();
+          return;
+        }
+
         // Dedicated polished Echo Slash rendering
         if (this.isEcho) {
           const echoFrames = (vfxAnims as any).projectiles?.echoSlash;

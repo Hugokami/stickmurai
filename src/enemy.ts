@@ -1309,7 +1309,12 @@ export class Enemy extends Entity {
       ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=this.isAimLocked?3:2;
       ctx.setLineDash(this.isAimLocked?[]:[10,8]);
       ctx.font="bold 12px Outfit,system-ui,sans-serif";ctx.textAlign='center';
-      ctx.fillText(ranged?'◇ RANGED':'▸ LUNGE',0,-this.meleeHitRadius-14);
+      ctx.save();
+      ctx.strokeStyle = '#050508';
+      ctx.lineWidth = 3;
+      ctx.strokeText(ranged ? '◇ RANGED' : '▸ LUNGE', 0, -this.meleeHitRadius - 14);
+      ctx.fillText(ranged ? '◇ RANGED' : '▸ LUNGE', 0, -this.meleeHitRadius - 14);
+      ctx.restore();
       // Area casts use the same radii as triggerCustomSpellCast.
       if(this.subType==='agis_colossus'||this.subType==='skeleton_warlord'){
         ctx.beginPath();ctx.arc(0,0,this.subType==='agis_colossus'?190:210,0,Math.PI*2);ctx.stroke();

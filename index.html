@@ -79,7 +79,7 @@
         </div>
       </div>
       <canvas id="gameCanvas"></canvas>
-      <div id="ui-layer">
+      <div id="ui-layer" style="display: none;">
         <div class="top-bars">
           <div id="hearts-container">
             <span class="heart active">❤️</span>
@@ -123,7 +123,7 @@
       </div>
       
       <!-- Mobile Controls -->
-      <div id="mobile-controls">
+      <div id="mobile-controls" style="display: none;">
         <div id="left-touch-zone"></div>
         <div id="joystick-base">
           <div id="joystick-knob"></div>
@@ -303,11 +303,12 @@
             <div class="menu-buttons">
               <button id="start-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); font-weight: bold; letter-spacing: 1px;">⚔️ STAGE MODE (CAMPAIGN)</button>
               <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">⚔️ Iaijutsu PvP (1v1)</button>
-              <div class="menu-grid-2x3">
+              <div class="menu-grid-2x4">
                 <button id="open-dojo-btn" class="menu-btn" style="border-color: #c084fc; color: #c084fc; box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);">🏯 Dojo</button>
                 <button id="open-upgrades-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">⚡ Upgrades</button>
                 <button id="open-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">📜 Grimoire</button>
                 <button id="open-chronicle-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛩️ Chronicle</button>
+                <button id="journey-open-btn" class="menu-btn" style="border-color: #f59e0b; color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);">🎯 Trials</button>
                 <button id="open-guide-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);"><span data-i18n="openGuideBtn">📖 Codex</span></button>
                 <button id="open-settings-btn" class="menu-btn" data-i18n="settings">⚙️ Settings</button>
               </div>

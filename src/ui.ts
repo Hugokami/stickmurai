@@ -331,6 +331,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   cachedOnPlayCallback = onPlayCallback;
   const uiLayer = document.getElementById('ui-layer');
   const mobileControls = document.getElementById('mobile-controls');
+  if (uiLayer) uiLayer.style.display = 'none';
+  if (mobileControls) mobileControls.style.display = 'none';
   const bgmVolumeSlider = document.getElementById('bgm-volume') as HTMLInputElement | null;
 
   // menu listeners
