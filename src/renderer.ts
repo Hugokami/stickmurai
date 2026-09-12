@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { vfxAnims } from './assets';
+import { bgLayers, bgImages, vfxAnims } from './assets';
 import { Entity } from './entities';
 import { reducedMotion } from './comfort';
 import { drawCombatHazards } from './combatPolish';
@@ -105,7 +105,10 @@ export function debouncedResize() {
 }
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  // 1. Permanent Radiant Daylight Sky Gradient
+  // 1. Permanent Solid Base & Daylight Sky Gradient (Guarantees zero black void / transparency gap)
+  ctx.fillStyle = '#38bdf8';
+  ctx.fillRect(0, 0, globals.width, globals.height);
+
   const skyGrad = ctx.createLinearGradient(0, 0, 0, globals.height * 0.72);
   skyGrad.addColorStop(0, '#38bdf8'); // Clear brilliant azure sky
   skyGrad.addColorStop(0.55, '#7dd3fc'); // Gentle sunlit sky blue
@@ -131,48 +134,45 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
   ctx.fill();
 
+  // 3. Guaranteed Lush Green Ground Fallback
   const groundTop = (globals.height * 0.56) | 0;
-  const camX = globals.camera.x * globals.gameZoom;
-
-  // 3. Layered Parallax Mountain Silhouettes (Serene Sumi-e Japanese peaks)
-  ctx.save();
-  // Distant Mountain Ridge (Soft Pastel Blue / Periwinkle)
-  ctx.fillStyle = 'rgba(165, 214, 248, 0.85)';
-  ctx.beginPath();
-  ctx.moveTo(0, groundTop);
-  for (let x = 0; x <= globals.width + 40; x += 30) {
-    const worldX = x + camX * 0.04;
-    const peak = Math.sin(worldX * 0.0035) * 55 + Math.cos(worldX * 0.008) * 35;
-    ctx.lineTo(x, groundTop - 75 - peak);
-  }
-  ctx.lineTo(globals.width, groundTop);
-  ctx.closePath();
-  ctx.fill();
-
-  // Midground Foothills (Lush Mint / Sage Green)
-  ctx.fillStyle = 'rgba(110, 180, 105, 0.9)';
-  ctx.beginPath();
-  ctx.moveTo(0, groundTop);
-  for (let x = 0; x <= globals.width + 40; x += 25) {
-    const worldX = x + camX * 0.12;
-    const hill = Math.cos(worldX * 0.006) * 32 + Math.sin(worldX * 0.015) * 18;
-    ctx.lineTo(x, groundTop - 35 - hill);
-  }
-  ctx.lineTo(globals.width, groundTop);
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-
-  // 4. Guaranteed Lush Green Ground with Clean Grass Highlight
   const groundGrad = ctx.createLinearGradient(0, groundTop, 0, globals.height);
   groundGrad.addColorStop(0, '#5a8f29');
   groundGrad.addColorStop(1, '#365314');
   ctx.fillStyle = groundGrad;
   ctx.fillRect(0, groundTop, globals.width, globals.height - groundTop);
 
-  // Crisp sunlit grass crest
-  ctx.fillStyle = '#86efac';
-  ctx.fillRect(0, groundTop - 1, globals.width, 3);
+  ctx.imageSmoothingEnabled = false;
+
+  // 4. Parallax Fantasy Background Layers (Original Artwork: Ruins, Torii, Cherry Trees, Statues & Grass)
+  bgLayers.forEach(layer => {
+    // Skip dark night sky layer in permanent bright day mode
+    if (layer.name === 'sky') {
+      return;
+    }
+
+    const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.save();
+      // Ensure all 1080p parallax layers align seamlessly across canvas height
+      const scale = (globals.height * 1.05) / img.naturalHeight;
+      const imgW = img.naturalWidth * scale;
+      const imgH = img.naturalHeight * scale;
+      
+      const offsetX = -(globals.camera.x * layer.speed * globals.gameZoom) % imgW;
+      let startX = offsetX > 0 ? offsetX - imgW : offsetX;
+      
+      // Subtle vertical parallax clamped to prevent any gaps
+      const maxNegativeY = -(imgH - globals.height);
+      const offsetY = Math.min(0, Math.max(maxNegativeY, (globals.height - imgH) * 0.5 - (globals.camera.y - 350) * 0.04 * layer.speed));
+      
+      // Tile horizontally only; each layer covers full vertical viewport
+      for(let x = startX; x < globals.width + imgW; x += imgW) {
+        ctx.drawImage(img, x, offsetY, imgW, imgH);
+      }
+      ctx.restore();
+    }
+  });
 }
 
 export function resetCanvasVisuals() {
@@ -181,7 +181,7 @@ export function resetCanvasVisuals() {
   if (!canvas || !ctx) return;
   ctx.save();
   ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
-  ctx.fillStyle = '#090a0f';
+  ctx.fillStyle = '#38bdf8';
   ctx.fillRect(0, 0, globals.width, globals.height);
   ctx.restore();
 }
