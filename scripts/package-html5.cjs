@@ -52,7 +52,7 @@ exclude_names = {'.ds_store', 'thumbs.db'}
 # Backgrounds and hero portraits are loose for instantaneous native rendering.
 # Stays strictly within itch.io's 1,000-file platform ceiling (~50 files total).
 allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin'}
-allowed_dirs = {'assets', 'audio', 'fonts', 'fantasy_bg'}
+allowed_dirs = {'assets', 'audio', 'fonts'}
 allowed_icons = {
     'release_v1.2-single_38.png',
     'release_v1.2-single_15.png',

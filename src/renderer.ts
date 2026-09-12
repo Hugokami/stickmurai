@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { bgLayers, bgImages, vfxAnims } from './assets';
+import { vfxAnims } from './assets';
 import { Entity } from './entities';
 import { reducedMotion } from './comfort';
 import { drawCombatHazards } from './combatPolish';
@@ -105,81 +105,74 @@ export function debouncedResize() {
 }
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  {
-    // 1. Permanent Radiant Daylight Sky Gradient
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, globals.height * 0.72);
-    skyGrad.addColorStop(0, '#38bdf8'); // Clear brilliant azure sky
-    skyGrad.addColorStop(0.55, '#7dd3fc'); // Gentle sunlit sky blue
-    skyGrad.addColorStop(1, '#bae6fd'); // Warm horizon haze
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, globals.width, globals.height);
+  // 1. Permanent Radiant Daylight Sky Gradient
+  const skyGrad = ctx.createLinearGradient(0, 0, 0, globals.height * 0.72);
+  skyGrad.addColorStop(0, '#38bdf8'); // Clear brilliant azure sky
+  skyGrad.addColorStop(0.55, '#7dd3fc'); // Gentle sunlit sky blue
+  skyGrad.addColorStop(1, '#bae6fd'); // Warm horizon haze
+  ctx.fillStyle = skyGrad;
+  ctx.fillRect(0, 0, globals.width, globals.height);
 
-    // 2. Sunlit Day Sun with Soft Halo
-    const sunX = (globals.width * 0.82) | 0;
-    const sunY = (globals.height * 0.18) | 0;
-    const sunRadius = 40;
-    const sunGlow = ctx.createRadialGradient(sunX, sunY, sunRadius * 0.4, sunX, sunY, sunRadius * 2.6);
-    sunGlow.addColorStop(0, 'rgba(255, 255, 240, 0.95)');
-    sunGlow.addColorStop(0.35, 'rgba(254, 240, 138, 0.4)');
-    sunGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
-    ctx.fillStyle = sunGlow;
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, sunRadius * 2.6, 0, Math.PI * 2);
-    ctx.fill();
+  // 2. Sunlit Day Sun with Soft Halo
+  const sunX = (globals.width * 0.82) | 0;
+  const sunY = (globals.height * 0.18) | 0;
+  const sunRadius = 40;
+  const sunGlow = ctx.createRadialGradient(sunX, sunY, sunRadius * 0.4, sunX, sunY, sunRadius * 2.6);
+  sunGlow.addColorStop(0, 'rgba(255, 255, 240, 0.95)');
+  sunGlow.addColorStop(0.35, 'rgba(254, 240, 138, 0.4)');
+  sunGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
+  ctx.fillStyle = sunGlow;
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, sunRadius * 2.6, 0, Math.PI * 2);
+  ctx.fill();
 
-    ctx.fillStyle = '#fffbeb';
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
-    ctx.fill();
+  ctx.fillStyle = '#fffbeb';
+  ctx.beginPath();
+  ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
+  ctx.fill();
 
-    // 3. Guaranteed Lush Green Ground Fallback (prevents black screen voids if assets take time to render)
-    const groundTop = (globals.height * 0.56) | 0;
-    const groundGrad = ctx.createLinearGradient(0, groundTop, 0, globals.height);
-    groundGrad.addColorStop(0, '#5a8f29');
-    groundGrad.addColorStop(1, '#365314');
-    ctx.fillStyle = groundGrad;
-    ctx.fillRect(0, groundTop, globals.width, globals.height - groundTop);
+  const groundTop = (globals.height * 0.56) | 0;
+  const camX = globals.camera.x * globals.gameZoom;
+
+  // 3. Layered Parallax Mountain Silhouettes (Serene Sumi-e Japanese peaks)
+  ctx.save();
+  // Distant Mountain Ridge (Soft Pastel Blue / Periwinkle)
+  ctx.fillStyle = 'rgba(165, 214, 248, 0.85)';
+  ctx.beginPath();
+  ctx.moveTo(0, groundTop);
+  for (let x = 0; x <= globals.width + 40; x += 30) {
+    const worldX = x + camX * 0.04;
+    const peak = Math.sin(worldX * 0.0035) * 55 + Math.cos(worldX * 0.008) * 35;
+    ctx.lineTo(x, groundTop - 75 - peak);
   }
-  ctx.imageSmoothingEnabled = false;
+  ctx.lineTo(globals.width, groundTop);
+  ctx.closePath();
+  ctx.fill();
 
-  const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-  bgLayers.forEach(layer => {
-    // Skip dark night sky layer in permanent bright day mode
-    if (layer.name === 'sky') {
-      return;
-    }
-    const isGroundLayer = layer.name === 'stones&grass' || layer.name === 'stones_grass';
-    const isTreesLayer = layer.name === 'hills&trees' || layer.name === 'hills_trees';
+  // Midground Foothills (Lush Mint / Sage Green)
+  ctx.fillStyle = 'rgba(110, 180, 105, 0.9)';
+  ctx.beginPath();
+  ctx.moveTo(0, groundTop);
+  for (let x = 0; x <= globals.width + 40; x += 25) {
+    const worldX = x + camX * 0.12;
+    const hill = Math.cos(worldX * 0.006) * 32 + Math.sin(worldX * 0.015) * 18;
+    ctx.lineTo(x, groundTop - 35 - hill);
+  }
+  ctx.lineTo(globals.width, groundTop);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
 
-    if (globals.graphicsSettings === 'low' && !isGroundLayer) {
-      return;
-    }
-    if (isTouch && !isTreesLayer && !isGroundLayer) {
-      return;
-    }
+  // 4. Guaranteed Lush Green Ground with Clean Grass Highlight
+  const groundGrad = ctx.createLinearGradient(0, groundTop, 0, globals.height);
+  groundGrad.addColorStop(0, '#5a8f29');
+  groundGrad.addColorStop(1, '#365314');
+  ctx.fillStyle = groundGrad;
+  ctx.fillRect(0, groundTop, globals.width, globals.height - groundTop);
 
-    const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
-    if (img && img.complete && img.naturalWidth > 0) {
-      ctx.save();
-      // Ensure all 1080p parallax layers align seamlessly across canvas height
-      const scale = (globals.height * 1.05) / img.naturalHeight;
-      const imgW = img.naturalWidth * scale;
-      const imgH = img.naturalHeight * scale;
-      
-      const offsetX = -(globals.camera.x * layer.speed * globals.gameZoom) % imgW;
-      let startX = offsetX > 0 ? offsetX - imgW : offsetX;
-      
-      // Subtle vertical parallax clamped to prevent any gaps
-      const maxNegativeY = -(imgH - globals.height);
-      const offsetY = Math.min(0, Math.max(maxNegativeY, (globals.height - imgH) * 0.5 - (globals.camera.y - 350) * 0.04 * layer.speed));
-      
-      // Tile horizontally only; each layer covers full vertical viewport
-      for(let x = startX; x < globals.width + imgW; x += imgW) {
-        ctx.drawImage(img, x, offsetY, imgW, imgH);
-      }
-      ctx.restore();
-    }
-  });
+  // Crisp sunlit grass crest
+  ctx.fillStyle = '#86efac';
+  ctx.fillRect(0, groundTop - 1, globals.width, 3);
 }
 
 export function resetCanvasVisuals() {
@@ -246,11 +239,6 @@ export function draw() {
     } else locator.hidden = true;
   }
 
-  // Lift the atmospheric high-quality background before gameplay is drawn.
-  if (globals.graphicsSettings !== 'low') {
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.16)';
-    ctx.fillRect(0, 0, globals.width, globals.height);
-  }
 
   ctx.save();
   ctx.scale(globals.gameZoom, globals.gameZoom);
