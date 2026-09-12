@@ -14,22 +14,32 @@ export class AdManager {
    * and uses their SDK. Otherwise, displays the custom premium Japanese Mock Ad overlay.
    */
   public static showRewardedAd(type: 'revive' | 'blessing', callbacks: AdCallbacks) {
-    // 1. Check for CrazyGames SDK
-    if (typeof window !== 'undefined' && (window as any).crazygames?.SDK?.ad) {
+    // 1. Check for CrazyGames SDK (supports both window.CrazyGames and window.crazygames)
+    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
+    if (cgSdk && cgSdk.ad && typeof cgSdk.ad.requestAd === 'function') {
       console.log(`[AdManager] Invoking CrazyGames SDK for: ${type}`);
       this.muteSounds();
-      (window as any).crazygames.SDK.ad.requestAd("rewarded", {
+      try {
+        if (cgSdk.game && typeof cgSdk.game.gameplayStop === 'function') cgSdk.game.gameplayStop();
+      } catch(e) {}
+      cgSdk.ad.requestAd("rewarded", {
         adStarted: () => {
           console.log("[AdManager] CrazyGames rewarded ad started.");
         },
         adFinished: () => {
           console.log("[AdManager] CrazyGames rewarded ad finished successfully.");
           this.unmuteSounds();
+          try {
+            if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
+          } catch(e) {}
           callbacks.onComplete();
         },
         adError: (error: any) => {
           console.warn("[AdManager] CrazyGames rewarded ad error:", error);
           this.unmuteSounds();
+          try {
+            if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
+          } catch(e) {}
           callbacks.onFailed(error?.toString() || "CrazyGames ad failed");
         }
       });
