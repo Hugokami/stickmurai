@@ -2,7 +2,7 @@ import { heroBalance, heroDescription, heroAwakeningSkill } from './balance';
 import { heroComparison, renderStageBriefing, permanentPreview } from './progressionQol';
 import { renderCodex } from './codex';
 import { completeJourneyStage, masteryBadge } from './journey';
-import { requestResume, handleBack, clearGameInputs } from './qol';
+import { requestResume, handleBack, clearGameInputs, showToast } from './qol';
 import { globals, getStageAffix, getAscendantRank } from './globals';
 import { safeStorage } from './storage';
 import { i18n, skillsData, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
@@ -815,7 +815,12 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
         },
         onFailed: (err) => {
           console.warn("[AdManager] Revive ad failed:", err);
-          alert(globals.currentLang === 'ja' ? '広告の読み込みに失敗しました。' : 'Failed to load ad. Please try again.');
+          const errStr = String(err || '');
+          if (errStr.includes('adsDisabledBasicLaunch') || errStr.includes('basic')) {
+            showToast(globals.currentLang === 'ja' ? 'ベーシックローンチ期間中は広告が無効化されています。' : 'Ads are disabled during CrazyGames Basic Launch.');
+          } else {
+            showToast(globals.currentLang === 'ja' ? '広告の準備ができていません。後ほどお試しください。' : 'Ad not available right now. Please try again later.');
+          }
         }
       });
     });
@@ -838,7 +843,13 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
         },
         onFailed: (err) => {
           console.warn("[AdManager] Blessing ad failed:", err);
-          alert(globals.currentLang === 'ja' ? '広告の読み込みに失敗しました。' : 'Failed to load ad.');
+          const errStr = String(err || '');
+          if (errStr.includes('adsDisabledBasicLaunch') || errStr.includes('basic')) {
+            showToast(globals.currentLang === 'ja' ? 'ベーシックローンチ期間中は広告が無効化されています。' : 'Ads are disabled during CrazyGames Basic Launch.');
+          } else {
+            showToast(globals.currentLang === 'ja' ? '広告の準備ができていません。後ほどお試しください。' : 'Ad not available right now. Please try again later.');
+          }
+          updateBlessingSelectionUI();
         }
       });
     });
@@ -860,7 +871,13 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
         },
         onFailed: (err) => {
           console.warn("[AdManager] Blessing ad failed:", err);
-          alert(globals.currentLang === 'ja' ? '広告の読み込みに失敗しました。' : 'Failed to load ad.');
+          const errStr = String(err || '');
+          if (errStr.includes('adsDisabledBasicLaunch') || errStr.includes('basic')) {
+            showToast(globals.currentLang === 'ja' ? 'ベーシックローンチ期間中は広告が無効化されています。' : 'Ads are disabled during CrazyGames Basic Launch.');
+          } else {
+            showToast(globals.currentLang === 'ja' ? '広告の準備ができていません。後ほどお試しください。' : 'Ad not available right now. Please try again later.');
+          }
+          updateBlessingSelectionUI();
         }
       });
     });

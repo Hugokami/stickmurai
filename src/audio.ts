@@ -1,4 +1,19 @@
 import { getSfxVolume } from './comfort';
+
+let isPortalMuted = false;
+try {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('muteAudio') === 'true') {
+      isPortalMuted = true;
+    }
+    const cg = (window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK;
+    if (cg?.game?.settings?.muteAudio === true) {
+      isPortalMuted = true;
+    }
+  }
+} catch (e) {}
+
 export const bgmAudio = new Audio();
 export const playlist = ['audio/Bushido_Storm_Intense_Battle_Mix.m4a'];
 
@@ -10,6 +25,10 @@ try {
   bgmAudio.preload = 'auto';
   bgmAudio.loop = true;
   bgmAudio.src = playlist[currentBgmIndex];
+  if (isPortalMuted) {
+    bgmAudio.muted = true;
+    bgmAudio.volume = 0;
+  }
   bgmAudio.load();
 } catch (e) {
   console.warn('Failed to load initial BGM:', e);
@@ -194,6 +213,7 @@ export function decodeAllSfx() {
 }
 
 export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
+  if (isPortalMuted) return;
   if (pool.length > 0) {
     const firstSound = pool[0];
     const src = firstSound.getAttribute('src') || firstSound.src;
@@ -258,6 +278,48 @@ export function playSlashSfx(volumeMult: number = 1.0) {
 
 let audioCtx: AudioContext | null = null;
 let compressor: DynamicsCompressorNode | null = null;
+let masterGain: GainNode | null = null;
+
+export function setPortalMuted(muted: boolean) {
+  isPortalMuted = !!muted;
+  if (masterGain && audioCtx) {
+    try {
+      const targetVal = isPortalMuted ? 0 : 1;
+      masterGain.gain.setValueAtTime(targetVal, audioCtx.currentTime);
+      masterGain.gain.value = targetVal;
+    } catch(e) {}
+  }
+  if (isPortalMuted) {
+    if (bgmAudio) {
+      bgmAudio.muted = true;
+      if (!bgmAudio.paused) {
+        bgmAudio.pause();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'running') {
+      audioCtx.suspend().catch(() => {});
+    }
+  } else {
+    if (bgmAudio) {
+      bgmAudio.muted = false;
+      const bgmVolumeSlider = typeof document !== 'undefined' ? document.getElementById('bgm-volume') as HTMLInputElement : null;
+      bgmAudio.volume = bgmVolumeSlider ? parseFloat(bgmVolumeSlider.value) : 0.5;
+      if (bgmStarted && bgmAudio.paused) {
+        bgmAudio.play().catch(() => {});
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+  }
+}
+
+export const getPortalMuted = () => isPortalMuted;
+
+if (typeof window !== 'undefined') {
+  (window as any).setPortalMuted = setPortalMuted;
+  (window as any).getPortalMuted = getPortalMuted;
+}
 
 export function getAudioContext(): AudioContext | null {
   if (!audioCtx) {
@@ -265,20 +327,27 @@ export function getAudioContext(): AudioContext | null {
       const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
       if (AudioCtxClass) {
         audioCtx = new AudioCtxClass();
+
+        masterGain = audioCtx.createGain();
+        const initVal = isPortalMuted ? 0 : 1;
+        masterGain.gain.setValueAtTime(initVal, audioCtx.currentTime);
+        masterGain.gain.value = initVal;
+        masterGain.connect(audioCtx.destination);
+
         compressor = audioCtx.createDynamicsCompressor();
         compressor.threshold.setValueAtTime(-24, audioCtx.currentTime);
         compressor.knee.setValueAtTime(30, audioCtx.currentTime);
         compressor.ratio.setValueAtTime(12, audioCtx.currentTime);
         compressor.attack.setValueAtTime(0.003, audioCtx.currentTime);
         compressor.release.setValueAtTime(0.25, audioCtx.currentTime);
-        compressor.connect(audioCtx.destination);
+        compressor.connect(masterGain);
       }
     } catch (e) {
       console.warn('Failed to initialize AudioContext:', e);
       return null;
     }
   }
-  if (audioCtx && audioCtx.state === 'suspended') {
+  if (audioCtx && audioCtx.state === 'suspended' && !isPortalMuted) {
     audioCtx.resume().catch(() => {});
   }
   return audioCtx;
@@ -695,6 +764,14 @@ export function playSynthesizedThunder() {
 }
 
 export function startBgm() {
+  if (isPortalMuted) {
+    if (bgmAudio) {
+      bgmAudio.muted = true;
+      bgmAudio.pause();
+    }
+    bgmStarted = false;
+    return;
+  }
   if (bgmStarted) return;
   bgmStarted = true;
   
@@ -1114,12 +1191,14 @@ if (typeof document !== 'undefined') {
         }
       } catch (e) {}
     } else {
-      try {
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume();
-        }
-      } catch (e) {}
-      startBgm();
+      if (!isPortalMuted) {
+        try {
+          if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+        } catch (e) {}
+        startBgm();
+      }
     }
   });
 }

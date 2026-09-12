@@ -98,6 +98,12 @@ if os.path.exists(portraits_dir):
             fp = os.path.join(portraits_dir, f)
             files_to_pack.append((fp, f'sprites/portraits/{f}'))
 
+# 5. Loader Character Sprite (referenced directly in index.html loading screen)
+loader_sprite = 'sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_0001.png'
+fp = os.path.join(dist_dir, loader_sprite)
+if os.path.exists(fp):
+    files_to_pack.append((fp, loader_sprite))
+
 count = len(files_to_pack)
 with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
     for abs_path, rel_path in files_to_pack:

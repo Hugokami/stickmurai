@@ -1,4 +1,5 @@
 import { bgmAudio } from './audio';
+import { globals } from './globals';
 
 export interface AdCallbacks {
   onComplete: () => void;
@@ -13,36 +14,63 @@ export class AdManager {
    * Automatically detects if the game is running on a partner portal (CrazyGames/Poki) 
    * and uses their SDK. Otherwise, displays the custom premium Japanese Mock Ad overlay.
    */
-  public static showRewardedAd(type: 'revive' | 'blessing', callbacks: AdCallbacks) {
+  public static async showRewardedAd(type: 'revive' | 'blessing', callbacks: AdCallbacks) {
     // 1. Check for CrazyGames SDK (supports both window.CrazyGames and window.crazygames)
     const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
     if (cgSdk && cgSdk.ad && typeof cgSdk.ad.requestAd === 'function') {
       console.log(`[AdManager] Invoking CrazyGames SDK for: ${type}`);
-      this.muteSounds();
+
+      // Ensure SDK is initialized
       try {
-        if (cgSdk.game && typeof cgSdk.game.gameplayStop === 'function') cgSdk.game.gameplayStop();
+        if (typeof cgSdk.init === 'function') {
+          await cgSdk.init().catch(() => {});
+        }
       } catch(e) {}
-      cgSdk.ad.requestAd("rewarded", {
+
+      const inGameplay = typeof globals !== 'undefined' && globals.gameState === 'playing';
+      if (inGameplay) {
+        try {
+          if (cgSdk.game && typeof cgSdk.game.gameplayStop === 'function') cgSdk.game.gameplayStop();
+        } catch(e) {}
+      }
+
+      let adDidStart = false;
+
+      const adCallbacks = {
         adStarted: () => {
+          adDidStart = true;
           console.log("[AdManager] CrazyGames rewarded ad started.");
+          this.muteSounds();
         },
         adFinished: () => {
           console.log("[AdManager] CrazyGames rewarded ad finished successfully.");
-          this.unmuteSounds();
-          try {
-            if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
-          } catch(e) {}
+          if (adDidStart) this.unmuteSounds();
+          if (inGameplay) {
+            try {
+              if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
+            } catch(e) {}
+          }
           callbacks.onComplete();
         },
         adError: (error: any) => {
           console.warn("[AdManager] CrazyGames rewarded ad error:", error);
-          this.unmuteSounds();
-          try {
-            if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
-          } catch(e) {}
-          callbacks.onFailed(error?.toString() || "CrazyGames ad failed");
+          if (adDidStart) this.unmuteSounds();
+          if (inGameplay) {
+            try {
+              if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
+            } catch(e) {}
+          }
+          const errCode = error?.code || error?.message || error?.toString() || "CrazyGames ad failed";
+          callbacks.onFailed(errCode);
         }
-      });
+      };
+
+      try {
+        cgSdk.ad.requestAd("rewarded", adCallbacks);
+      } catch (err: any) {
+        console.warn("[AdManager] CrazyGames requestAd exception:", err);
+        adCallbacks.adError(err);
+      }
       return;
     }
 

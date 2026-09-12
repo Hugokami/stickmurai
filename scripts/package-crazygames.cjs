@@ -96,6 +96,10 @@ bridge_script = """
     isCrazyMuted = !!muted;
     console.log('[CrazyGames] Audio mute state:', isCrazyMuted ? 'MUTED' : 'UNMUTED');
 
+    if (typeof window.setPortalMuted === 'function') {
+      try { window.setPortalMuted(isCrazyMuted); } catch(e) {}
+    }
+
     registeredAudios.forEach(function(a) {
       try {
         a.muted = isCrazyMuted;
@@ -259,9 +263,10 @@ bridge_script = """
           sdk.game.sdkGameLoadingStart();
         }
 
-        // Mute settings listener
-        if (sdk.game && sdk.game.onSettingsChanged) {
-          sdk.game.onSettingsChanged(function(settings) {
+        // Mute settings listener (SDK v3: addSettingsChangeListener)
+        if (sdk.game && typeof sdk.game.addSettingsChangeListener === 'function') {
+          sdk.game.addSettingsChangeListener(function(settings) {
+            console.log('[CrazyGames] Settings updated:', settings);
             if (settings && typeof settings.muteAudio === 'boolean') {
               applyCrazyMute(settings.muteAudio);
             }
@@ -355,11 +360,8 @@ bridge_script = """
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', pollSdk);
-  } else {
-    pollSdk();
-  }
+  // Start polling immediately so SDK initialization occurs as soon as the script evaluates
+  pollSdk();
 })();
 </script>
 """
@@ -377,7 +379,12 @@ with zipfile.ZipFile(src_zip, 'r') as zin, zipfile.ZipFile(target_zip, 'w', zipf
                 html_str,
                 flags=re.IGNORECASE | re.DOTALL
             )
-            if '</head>' in html_str:
+            # Inject SDK script and early bridge at the VERY TOP of <head> before any game module scripts
+            if '<head>' in html_str:
+                html_str = html_str.replace('<head>', '<head>\\n' + bridge_script, 1)
+            elif '<head ' in html_str:
+                html_str = re.sub(r'(<head[^>]*>)', r'\\1\\n' + bridge_script, html_str, count=1)
+            elif '</head>' in html_str:
                 html_str = html_str.replace('</head>', bridge_script + '\\n</head>')
             else:
                 html_str = bridge_script + html_str
