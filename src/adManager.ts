@@ -73,7 +73,7 @@ export class AdManager {
             callbacks.onComplete();
           },
           adError: (error: any) => {
-            console.warn("[AdManager] CrazyGames rewarded ad error, falling back to mock ad:", error);
+            console.warn("[AdManager] CrazyGames rewarded ad unavailable:", error);
             if (adDidStart) this.unmuteSounds();
             if (pausedByAd) {
               globals.gameState = 'playing';
@@ -81,17 +81,17 @@ export class AdManager {
                 if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
               } catch(e) {}
             }
-            // CRITICAL: On Basic Launch, adblock, or no-fill, CrazyGames disallows buttons with no effect.
-            // Show the fallback mock ad modal so the player can always view the simulated break and claim reward!
-            this.showMockAdModal(type, callbacks);
+            // CrazyGames owns ad UI. Basic Launch, QA, adblock, and no-fill can all call adError.
+            // Never replace that flow with a fake ad or grant reward on failure.
+            callbacks.onFailed(this.describeAdError(error));
           }
         };
 
         try {
           adModule.requestAd("rewarded", adCallbacks);
         } catch (err: any) {
-          console.warn("[AdManager] CrazyGames requestAd exception, falling back to mock ad:", err);
-          this.showMockAdModal(type, callbacks);
+          console.warn("[AdManager] CrazyGames requestAd exception:", err);
+          callbacks.onFailed(this.describeAdError(err));
         }
         return;
       }
@@ -138,11 +138,9 @@ export class AdManager {
     const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
     if (cgSdk) {
       try {
-        if (typeof cgSdk.init === 'function') {
-          await Promise.race([
-            cgSdk.init(),
-            new Promise(resolve => setTimeout(resolve, 2000))
-          ]);
+        if (typeof cgSdk.init === 'function' && !(window as any).__cgSdkInitialized) {
+          await cgSdk.init();
+          (window as any).__cgSdkInitialized = true;
         }
       } catch(e) {}
 
@@ -242,6 +240,12 @@ export class AdManager {
         try { bgmAudio.play().catch(() => {}); } catch(e) {}
       }
     }
+  }
+
+  private static describeAdError(error: any): string {
+    if (!error) return 'CrazyGames ad unavailable';
+    if (typeof error === 'string') return error;
+    return error.message || error.code || 'CrazyGames ad unavailable';
   }
 
   /**
