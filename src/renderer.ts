@@ -117,7 +117,7 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
 
   // 2. Parallax Fantasy Background Layers
   bgLayers.forEach(layer => {
-    if (layer.name === 'sky') {
+    if (layer.name === 'sky' || layer.name === 'ruins' || layer.name === 'ruins2' || layer.name === 'statue' || layer.name === 'ruins_bg') {
       return;
     }
     const isGroundLayer = layer.name === 'stones&grass' || layer.name === 'stones_grass';

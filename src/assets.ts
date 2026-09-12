@@ -1144,19 +1144,16 @@ export const propImages: HTMLImageElement[] = [];
 
 export const bgLayers = [
   { name: 'hills_trees', fallbackName: 'hills&trees', speed: 0.1 },
-  { name: 'ruins', speed: 0.2 },
-  { name: 'ruins2', speed: 0.3 },
-  { name: 'statue', speed: 0.4 },
   { name: 'stones_grass', fallbackName: 'stones&grass', speed: 0.6 }
 ];
 
 export const bgImages: Record<string, HTMLImageElement> = {};
 bgLayers.forEach(layer => {
   const img = new Image();
-  const src = `fantasy_bg/${layer.name}.png?v=3`;
+  const src = `fantasy_bg/${layer.name}.png`;
   img.onerror = () => {
     if ((layer as any).fallbackName) {
-      img.src = `fantasy_bg/${encodeURIComponent((layer as any).fallbackName + '.png')}?v=3`;
+      img.src = `fantasy_bg/${encodeURIComponent((layer as any).fallbackName + '.png')}`;
     }
   };
   queueAsset(img, src, 'bg', true);
