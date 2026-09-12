@@ -13,10 +13,23 @@ execSync('npm run package:html5', { cwd: rootDir, stdio: 'inherit' });
 console.log('\n--- Creating CrazyGames specialized release ---');
 
 const pythonScript = `
-import zipfile, os, re, sys
+import zipfile, os, re, sys, io, struct, subprocess
+from PIL import Image
 
 src_zip = sys.argv[1]
 target_zip = sys.argv[2]
+
+# 1x1 transparent PNG to replace unused backgrounds cleanly without 404
+img_1x1 = Image.new('RGBA', (1, 1), (0, 0, 0, 0))
+buf_1x1 = io.BytesIO()
+img_1x1.save(buf_1x1, format='PNG')
+bytes_1x1 = buf_1x1.getvalue()
+
+unused_bgs = {
+    'fantasy_bg/ruins.png', 'fantasy_bg/ruins2.png', 'fantasy_bg/statue.png', 
+    'fantasy_bg/sky.png', 'fantasy_bg/ruins_bg.png', 
+    'fantasy_bg/hills_trees.png', 'fantasy_bg/hills&trees.png'
+}
 
 bridge_script = """
 <!-- CrazyGames SDK v3 -->
@@ -420,9 +433,110 @@ bridge_script = """
 
 with zipfile.ZipFile(src_zip, 'r') as zin, zipfile.ZipFile(target_zip, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zout:
     for item in zin.infolist():
-        data = zin.read(item.filename)
+        fn = item.filename
         
-        if item.filename == 'index.html':
+        # 1. Remove unnecessary background layers outside assets.bin, keep ONLY full green grass
+        if fn.startswith('fantasy_bg/'):
+            basename = os.path.basename(fn)
+            if basename in ['ruins.png', 'ruins2.png', 'statue.png', 'sky.png', 'ruins_bg.png']:
+                continue # Completely omit unused backgrounds
+            elif basename in ['hills_trees.png', 'hills&trees.png']:
+                zout.writestr(item, bytes_1x1) # 1x1 transparent to avoid 404
+                continue
+            # stones_grass.png and stones&grass.png (full green grass) are kept as-is
+        
+        data = zin.read(fn)
+        
+        # 2. Optimize assets.bin: remove unused backgrounds and quantize 512x512 stick figures
+        if fn == 'assets.bin':
+            with io.BytesIO(data) as bf:
+                magic = bf.read(4)
+                f_count = struct.unpack('<I', bf.read(4))[0]
+                idx_len = struct.unpack('<I', bf.read(4))[0]
+                idx_bytes = bf.read(idx_len)
+                data_section = bf.read()
+                
+                offset = 0
+                entries = []
+                while offset < idx_len:
+                    plen = struct.unpack_from('<H', idx_bytes, offset)[0]
+                    offset += 2
+                    p = idx_bytes[offset:offset+plen].decode('utf-8')
+                    offset += plen
+                    doff, dlen = struct.unpack_from('<II', idx_bytes, offset)
+                    offset += 8
+                    entries.append((p, doff, dlen))
+                
+                new_data = []
+                new_entries = []
+                cur_off = 0
+                
+                for p, doff, dlen in entries:
+                    raw = data_section[doff:doff+dlen]
+                    if p in unused_bgs:
+                        raw = bytes_1x1
+                    elif 'Stick Figure Character Sprites 2D' in p and p.endswith('.png'):
+                        try:
+                            im = Image.open(io.BytesIO(raw))
+                            im_q = im.quantize(colors=256, method=Image.Quantize.FASTOCTREE)
+                            ob = io.BytesIO()
+                            im_q.save(ob, format='PNG', optimize=True)
+                            raw = ob.getvalue()
+                        except:
+                            pass
+                    
+                    new_data.append(raw)
+                    pb = p.encode('utf-8')
+                    new_entries.append((pb, cur_off, len(raw)))
+                    cur_off += len(raw)
+                
+                new_idx = bytearray()
+                for pb, off, l in new_entries:
+                    new_idx.extend(struct.pack('<H', len(pb)))
+                    new_idx.extend(pb)
+                    new_idx.extend(struct.pack('<II', off, l))
+                
+                new_bin = bytearray()
+                new_bin.extend(magic)
+                new_bin.extend(struct.pack('<I', len(new_entries)))
+                new_bin.extend(struct.pack('<I', len(new_idx)))
+                new_bin.extend(new_idx)
+                for chunk in new_data:
+                    new_bin.extend(chunk)
+                
+                data = bytes(new_bin)
+        
+        # 3. Compress BGM audio (80k aac) to save ~2.1 MB
+        elif fn.endswith('Bushido_Storm_Intense_Battle_Mix.m4a'):
+            tmp_in = os.path.join(os.path.dirname(target_zip), '_tmp_orig_bgm.m4a')
+            tmp_out = os.path.join(os.path.dirname(target_zip), '_tmp_opt_bgm.m4a')
+            try:
+                with open(tmp_in, 'wb') as tf:
+                    tf.write(data)
+                subprocess.run([
+                    'ffmpeg', '-y', '-i', tmp_in,
+                    '-c:a', 'aac', '-b:a', '80k',
+                    tmp_out
+                ], capture_output=True)
+                if os.path.exists(tmp_out) and os.path.getsize(tmp_out) > 0:
+                    with open(tmp_out, 'rb') as tf:
+                        data = tf.read()
+            finally:
+                if os.path.exists(tmp_in): os.unlink(tmp_in)
+                if os.path.exists(tmp_out): os.unlink(tmp_out)
+
+        # 4. Quantize loose loader stickman sprite
+        elif fn.endswith('sword_Idle_0001.png'):
+            try:
+                im = Image.open(io.BytesIO(data))
+                im_q = im.quantize(colors=256, method=Image.Quantize.FASTOCTREE)
+                ob = io.BytesIO()
+                im_q.save(ob, format='PNG', optimize=True)
+                data = ob.getvalue()
+            except:
+                pass
+        
+        elif item.filename == 'index.html':
             html_str = data.decode('utf-8')
             html_str = re.sub(r'<title>.*?</title>', '<title>Stickmurai</title>', html_str, flags=re.IGNORECASE)
             html_str = re.sub(
