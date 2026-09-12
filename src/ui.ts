@@ -2737,14 +2737,14 @@ export function populateAscensionUpgrades() {
           <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
             <span>${u.icon}</span> ${isJa ? u.nameJa : u.name}
           </span>
-          <span style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold;">
+          <span class="ascension-level-display" style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold;">
             ${isEndless ? `Rank ${curLevel} (∞)` : (isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`)}
           </span>
         </div>
-        <div style="font-family: monospace; font-size: 10px; color: #a855f7; letter-spacing: 1px;">
+        <div class="ascension-pips" style="font-family: monospace; font-size: 10px; color: #a855f7; letter-spacing: 1px;">
           ${pips}
         </div>
-        <div style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.3;">
+        <div class="ascension-level-info" style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.3;">
           <strong>${isJa ? '永続強化' : 'PERMANENT'}</strong> · ${isJa ? u.descJa : u.desc}
           ${permanentPreview(u.id, curLevel, u.max, isEndless)}
           <div>${isJa ? 'レベル' : 'Level'} ${curLevel} → ${isMax ? curLevel : curLevel + 1} · ${isJa?'上限':'Cap'} ${isEndless?'∞':u.max}</div>
@@ -2753,28 +2753,171 @@ export function populateAscensionUpgrades() {
           ${isMax ? `
             <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;">✓ MASTERED</button>
           ` : `
-            <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">
-              ${isJa ? `強化: ${cost.toLocaleString()} 🔮` : `UPGRADE: ${cost.toLocaleString()} 🔮`}
+            <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; touch-action: manipulation; user-select: none;">
+              <div>${isJa ? `強化: ${cost.toLocaleString()} 🔮` : `UPGRADE: ${cost.toLocaleString()} 🔮`}</div>
+              <div style="font-size: 8px; opacity: 0.75; font-weight: normal; letter-spacing: 0.3px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
             </button>
           `}
         </div>
       `;
 
-      const buyBtn = card.querySelector('.buy-ascension-btn');
+      const buyBtn = card.querySelector('.buy-ascension-btn') as HTMLElement;
       if (buyBtn && canAfford) {
-        bindDualListener(buyBtn as HTMLElement, () => {
-          if ((globals.magatama || 0) >= cost && (isEndless || curLevel < u.max)) {
-            if ((globals.campaignUpgrades as any)[u.id] !== curLevel && ((globals.campaignUpgrades as any)[u.id] || 0) !== curLevel) return;
-            globals.magatama -= cost;
-            window.dispatchEvent(new CustomEvent('qol-toast', { detail: `${isJa?u.nameJa:u.name} Lv. ${curLevel+1} · ${isJa?'残高':'Remaining'} ${globals.magatama.toLocaleString()} 🔮` }));
-            (globals.campaignUpgrades as any)[u.id] = curLevel + 1;
+        let isHolding = false;
+        let holdTimer: any = null;
+        let repeatTimer: any = null;
+        let currentInterval = 140;
+        let upgradesDone = 0;
+
+        const performOneUpgrade = (): boolean => {
+          const upgradesState = globals.campaignUpgrades || (globals.campaignUpgrades = {} as any);
+          const currentLvl = (upgradesState as any)[u.id] || 0;
+          const isEndlessUpgrade = (u as any).isEndless || u.max >= 999;
+          const isMaxUpgrade = !isEndlessUpgrade && currentLvl >= u.max;
+          if (isMaxUpgrade) return false;
+
+          const currentCost = u.baseCost + currentLvl * u.costMult;
+          if ((globals.magatama || 0) < currentCost) return false;
+
+          globals.magatama -= currentCost;
+          const nextLvl = currentLvl + 1;
+          (upgradesState as any)[u.id] = nextLvl;
+          upgradesDone++;
+
+          const pitch = 1.0 + Math.min(0.85, upgradesDone * 0.05);
+          playSynthesizedFusionUnlock(pitch);
+          if (upgradesDone === 1 || nextLvl % 5 === 0) {
+            playShrineBlessing(0.65);
+          }
+
+          const isNowMax = !isEndlessUpgrade && nextLvl >= u.max;
+          const nextCost = isNowMax ? 0 : u.baseCost + nextLvl * u.costMult;
+          const canAffordNext = !isNowMax && (globals.magatama || 0) >= nextCost;
+
+          // Treasury counter sync
+          const stageClearTreasury = document.getElementById('stage-clear-magatama');
+          if (stageClearTreasury) stageClearTreasury.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
+          const menuTreasury = document.getElementById('menu-upgrades-magatama-count');
+          if (menuTreasury) menuTreasury.textContent = (globals.magatama || 0).toLocaleString();
+          const dojoTreasury = document.getElementById('dojo-magatama-count');
+          if (dojoTreasury) dojoTreasury.textContent = (globals.magatama || 0).toLocaleString();
+          const hudTreasury = document.getElementById('hud-magatama-count');
+          if (hudTreasury) hudTreasury.textContent = (globals.magatama || 0).toLocaleString();
+
+          // In-place UI updates
+          const levelEl = card.querySelector('.ascension-level-display');
+          if (levelEl) {
+            levelEl.textContent = isEndlessUpgrade ? `Rank ${nextLvl} (∞)` : (isNowMax ? 'MAX' : `Lv. ${nextLvl}/${u.max}`);
+            levelEl.setAttribute('style', `font-family: 'Orbitron', monospace; font-size: 11px; color: ${isNowMax ? '#4ade80' : (isEndlessUpgrade ? '#fbbf24' : '#38bdf8')}; font-weight: bold;`);
+          }
+
+          const pipsEl = card.querySelector('.ascension-pips');
+          if (pipsEl && !isEndlessUpgrade) {
+            let pipsStr = '';
+            for (let i = 0; i < u.max; i++) {
+              pipsStr += i < nextLvl ? '● ' : '○ ';
+            }
+            pipsEl.textContent = pipsStr;
+          }
+
+          const infoEl = card.querySelector('.ascension-level-info');
+          if (infoEl) {
+            infoEl.innerHTML = `
+              <strong>${isJa ? '永続強化' : 'PERMANENT'}</strong> · ${isJa ? u.descJa : u.desc}
+              ${permanentPreview(u.id, nextLvl, u.max, isEndlessUpgrade)}
+              <div>${isJa ? 'レベル' : 'Level'} ${nextLvl} → ${isNowMax ? nextLvl : nextLvl + 1} · ${isJa?'上限':'Cap'} ${isEndlessUpgrade?'∞':u.max}</div>
+            `;
+          }
+
+          if (isNowMax) {
+            buyBtn.setAttribute('disabled', 'true');
+            buyBtn.className = 'menu-btn btn-card';
+            buyBtn.setAttribute('style', 'margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;');
+            buyBtn.innerHTML = '✓ MASTERED';
+            card.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+            return false;
+          } else {
+            buyBtn.innerHTML = `
+              <div>${isJa ? `強化: ${nextCost.toLocaleString()} 🔮` : `UPGRADE: ${nextCost.toLocaleString()} 🔮`}</div>
+              <div style="font-size: 8px; opacity: 0.75; font-weight: normal; letter-spacing: 0.3px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
+            `;
+            if (!canAffordNext) {
+              buyBtn.setAttribute('disabled', 'true');
+              buyBtn.style.cursor = 'not-allowed';
+              buyBtn.style.opacity = '0.6';
+              buyBtn.style.borderColor = '#475569';
+              buyBtn.style.color = '#64748b';
+              return false;
+            }
+          }
+
+          card.style.transform = 'scale(1.025)';
+          card.style.boxShadow = '0 0 16px rgba(251, 191, 36, 0.45)';
+          setTimeout(() => {
+            if (card) {
+              card.style.transform = 'scale(1.0)';
+              card.style.boxShadow = isEndlessUpgrade ? '0 0 12px rgba(251, 191, 36, 0.1)' : 'none';
+            }
+          }, 70);
+
+          return true;
+        };
+
+        const stopHold = () => {
+          if (!isHolding) return;
+          isHolding = false;
+          if (holdTimer) { clearTimeout(holdTimer); holdTimer = null; }
+          if (repeatTimer) { clearTimeout(repeatTimer); repeatTimer = null; }
+
+          if (upgradesDone > 0) {
             safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
             safeStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));
-            playSynthesizedFusionUnlock();
-            playShrineBlessing(0.8);
+            const finalLvl = ((globals.campaignUpgrades as any)[u.id]) || 0;
+            window.dispatchEvent(new CustomEvent('qol-toast', {
+              detail: `${isJa ? u.nameJa : u.name} Lv. ${finalLvl} (${upgradesDone > 1 ? `+${upgradesDone} ` : ''}▲) · ${isJa ? '残高' : 'Remaining'} ${globals.magatama.toLocaleString()} 🔮`
+            }));
             populateAscensionUpgrades();
           }
-        });
+        };
+
+        const scheduleRepeat = () => {
+          if (!isHolding) return;
+          repeatTimer = setTimeout(() => {
+            if (!isHolding) return;
+            const ok = performOneUpgrade();
+            if (ok) {
+              currentInterval = Math.max(48, Math.floor(currentInterval * 0.82));
+              scheduleRepeat();
+            } else {
+              stopHold();
+            }
+          }, currentInterval);
+        };
+
+        const startHold = (e: Event) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (isHolding) return;
+          isHolding = true;
+          upgradesDone = 0;
+          currentInterval = 140;
+
+          const ok = performOneUpgrade();
+          if (!ok) {
+            stopHold();
+            return;
+          }
+
+          holdTimer = setTimeout(() => {
+            if (!isHolding) return;
+            scheduleRepeat();
+          }, 260);
+        };
+
+        buyBtn.addEventListener('pointerdown', startHold);
+        buyBtn.addEventListener('pointerup', stopHold);
+        buyBtn.addEventListener('pointercancel', stopHold);
+        buyBtn.addEventListener('pointerleave', stopHold);
       }
 
       container.appendChild(card);

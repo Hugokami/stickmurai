@@ -206,14 +206,19 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
       try {
         const ctx = getAudioContext();
         if (ctx) {
-          const source = ctx.createBufferSource();
-          source.buffer = buffer;
-          const gainNode = ctx.createGain();
-          gainNode.gain.setValueAtTime(getSfxVolume() * 0.6 * volumeMult, ctx.currentTime);
-          source.connect(gainNode);
-          gainNode.connect(getSoundDestination(ctx));
-          source.start(0);
-          return; // Success, skip HTML5 Audio playback
+          if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+          if (ctx.state === 'running') {
+            const source = ctx.createBufferSource();
+            source.buffer = buffer;
+            const gainNode = ctx.createGain();
+            gainNode.gain.setValueAtTime(getSfxVolume() * 0.85 * volumeMult, ctx.currentTime);
+            source.connect(gainNode);
+            gainNode.connect(getSoundDestination(ctx));
+            source.start(0);
+            return; // Success, skip HTML5 Audio playback
+          }
         }
       } catch (e) {
         console.warn(`Web Audio play failed for ${relativeSrc}, falling back:`, e);
@@ -230,10 +235,85 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
     }
   }
   if (sound) {
-    sound.volume = getSfxVolume() * 0.6 * volumeMult;
+    sound.volume = getSfxVolume() * 0.85 * volumeMult;
     sound.currentTime = 0;
     sound.play().catch(() => {});
   }
+}
+
+let lastSlashSfxTime = 0;
+
+export function playSynthesizedSlash(volumeMult: number = 1.0) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+    const now = ctx.currentTime;
+    const baseVol = Math.max(0.001, getSfxVolume() * 0.85 * volumeMult);
+
+    // 1. Aerodynamic blade swoosh (bandpassed noise)
+    const bufferSize = Math.floor(ctx.sampleRate * 0.11);
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const noiseSource = ctx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(3600, now);
+    filter.frequency.exponentialRampToValueAtTime(650, now + 0.10);
+    filter.Q.setValueAtTime(2.2, now);
+
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(baseVol * 0.85, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.10);
+
+    noiseSource.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(getSoundDestination(ctx));
+
+    noiseSource.start(now);
+    noiseSource.stop(now + 0.11);
+
+    // 2. High-tensile steel blade slice ring (dual oscillators)
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const bladeGain = ctx.createGain();
+
+    osc1.type = 'triangle';
+    osc1.frequency.setValueAtTime(1850, now);
+    osc1.frequency.exponentialRampToValueAtTime(520, now + 0.08);
+
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(2700, now);
+    osc2.frequency.exponentialRampToValueAtTime(980, now + 0.07);
+
+    bladeGain.gain.setValueAtTime(baseVol * 0.55, now);
+    bladeGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+    osc1.connect(bladeGain);
+    osc2.connect(bladeGain);
+    bladeGain.connect(getSoundDestination(ctx));
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.08);
+    osc2.stop(now + 0.08);
+  } catch (e) {}
+}
+
+export function playSlashSfx(volumeMult: number = 1.0) {
+  const nowTime = performance.now();
+  if (nowTime - lastSlashSfxTime < 38) return;
+  lastSlashSfxTime = nowTime;
+
+  playSynthesizedSlash(volumeMult);
+  playSound(sfx.slash, volumeMult);
 }
 
 let audioCtx: AudioContext | null = null;
@@ -918,32 +998,35 @@ export function playSynthesizedSingingBowl() {
   } catch(e) {}
 }
 
-export function playSynthesizedFusionUnlock() {
+export function playSynthesizedFusionUnlock(pitchMult: number = 1.0) {
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const now = ctx.currentTime;
     const volume = Math.max(0.001, getSfxVolume() * 0.65);
 
-    // Fast celestial arpeggio: C5(523), E5(659), G5(784), B5(987), E6(1318)
-    const notes = [523.25, 659.25, 783.99, 987.77, 1318.51];
+    // Fast celestial arpeggio: C5(523), E5(659), G5(784), B5(987), E6(1318) scaled by pitchMult
+    const notes = [523.25, 659.25, 783.99, 987.77, 1318.51].map(f => f * pitchMult);
     notes.forEach((freq, idx) => {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
-      const noteTime = now + idx * 0.08;
+      const noteTime = now + idx * 0.065;
 
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(freq, noteTime);
 
       gain.gain.setValueAtTime(0.001, noteTime);
-      gain.gain.linearRampToValueAtTime(volume, noteTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 1.2);
+      gain.gain.linearRampToValueAtTime(volume, noteTime + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.001, noteTime + 0.9);
 
       osc.connect(gain);
       gain.connect(getSoundDestination(ctx));
 
       osc.start(noteTime);
-      osc.stop(noteTime + 1.25);
+      osc.stop(noteTime + 0.95);
     });
   } catch(e) {}
 }

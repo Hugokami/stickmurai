@@ -28,6 +28,7 @@ import { i18n, loaderTips, startBackgroundAssetLoading, loadCoreCombatAssetsNow 
 import {
   playSound,
   sfx,
+  playSlashSfx,
   playSynthesizedHit,
   playSynthesizedHurt,
   playSynthesizedParry,
@@ -1827,7 +1828,7 @@ export function triggerZanFinisher(onComplete: () => void) {
   // 1. Visceral Audio Cues
   playSynthesizedSingingBowl();
   playSynthesizedTempleBell();
-  playSound(sfx.slash);
+  playSlashSfx(1.4);
 
   // 2. High-Impact Screen Shake & Hit Stop
   globals.screenShake = Math.max(globals.screenShake, 45);
@@ -1961,7 +1962,7 @@ function triggerLightningDischarge(sx: number, sy: number, ex: number, ey: numbe
   
   globals.floatingTexts.push(FloatingText.acquire(ex, ey - 80, "LIGHTNING DISCHARGE!", "#fbbf24", 28));
   globals.screenShake += 20;
-  playSound(sfx.slash);
+  playSlashSfx(1.3);
   playSynthesizedThunder();
 
   // Hit all enemies near the path
@@ -1984,6 +1985,7 @@ function fireFullyChargedIaijutsu(angle: number) {
   globals.invertScreenTimer = 0.25;
 
   globals.screenShake = Math.max(globals.screenShake, 20 * 1.8);
+  playSlashSfx(1.35);
   
   if (globals.decoyInvisibilityTimer > 0) {
     executeMirrorStrike(angle, 12);
@@ -2172,7 +2174,7 @@ function executeSwiftCounter() {
 
   globals.player.setState('attack');
   globals.player.attackCooldown = globals.playerStats.attackCooldownBase;
-  playSound(sfx.slash);
+  playSlashSfx(1.2);
   
   const startX = globals.player.x;
   const startY = globals.player.y;
@@ -2251,7 +2253,7 @@ function executeThunderclapAndFlash() {
 
   globals.player.setState('attack');
   globals.player.attackCooldown = globals.playerStats.attackCooldownBase;
-  playSound(sfx.slash);
+  playSlashSfx(1.3);
   playSynthesizedThunder();
   
   const startX = globals.player.dashStartX;
@@ -2305,7 +2307,7 @@ function executeThunderclapAndFlash() {
 function executeRisingDragon() {
   globals.player.setState('attack');
   globals.player.attackCooldown = globals.playerStats.attackCooldownBase * 1.2;
-  playSound(sfx.slash);
+  playSlashSfx(1.25);
   playSynthesizedGravity();
   
   globals.player.yVelocity = -750;
@@ -2344,7 +2346,7 @@ function executeRisingDragon() {
 function executeMirrorStrike(angle: number, baseDmg: number) {
   globals.decoyInvisibilityTimer = 0; // break invisibility
   globals.screenShake += 15;
-  playSound(sfx.slash);
+  playSlashSfx(1.3);
   playSynthesizedPerfectParry();
   
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "👤 MIRROR STRIKE! 👤", "#aa66ff", 28));
@@ -2985,6 +2987,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   e.hp -= finalDmg;
   globals.runStats.damageDealt += finalDmg;
   e.hitFlash = 0.15;
+  playSlashSfx(0.95);
   
   const hitSparkCount = globals.graphicsSettings === 'low' ? 2 : 8;
   for(let i=0; i<hitSparkCount; i++) globals.particles.push(Particle.acquire(e.x, e.y, '#d0d4d8', 300, 0.3, 3));
@@ -4590,6 +4593,14 @@ function update(realDt: number) {
       c.update(realDt);
       const dx = globals.player.x - c.x;
       const dy = globals.player.y - c.y;
+
+      // Micro-feature: Magnetic Loot Vacuum at wave clear / shop phase
+      if ((globals.waveState === 'cleared' || globals.waveState === 'shop') && globals.player.state !== 'dead') {
+        const dist = Math.hypot(dx, dy) || 1;
+        c.x += (dx / dist) * 1500 * realDt;
+        c.y += (dy / dist) * 1500 * realDt;
+      }
+
       if (dx * dx + dy * dy < 1600 && globals.player.state !== 'dead') {
         c.life = 0; // consume
         if (c.type === 'exp') {
@@ -4828,7 +4839,7 @@ function update(realDt: number) {
       globals.slashes.push(Slash.acquire(airborneEnemy.x, airborneEnemy.y - (airborneEnemy as any).airborneZ, -Math.PI / 4, 2.2, false, '#38bdf8'));
 
       globals.screenShake = Math.max(globals.screenShake, 20);
-      playSound(sfx.slash);
+      playSlashSfx(1.25);
       addFlow(10);
       addCombo();
     }
@@ -4968,7 +4979,7 @@ function update(realDt: number) {
             }
 
             globals.player.setState('attack');
-            playSound(sfx.slash);
+            playSlashSfx(1.2);
             playSynthesizedPerfectParry();
 
             const parrySparkCount = globals.graphicsSettings === 'low' ? 10 : 30;
@@ -4999,7 +5010,7 @@ function update(realDt: number) {
             }
 
             globals.player.setState('attack');
-            playSound(sfx.slash);
+            playSlashSfx(1.15);
             playSynthesizedParry();
 
             const normalParrySparkCount = globals.graphicsSettings === 'low' ? 4 : 12;
@@ -5038,6 +5049,7 @@ function update(realDt: number) {
         const isFullyCharged = globals.player.chargeTimer >= 0.8;
         if (globals.comboSlashesCount === 2 && !isFullyCharged) {
           executeRisingDragon();
+          playSlashSfx(1.25);
           globals.comboSlashesCount = 0;
           globals.player.chargeTimer = 0;
           return;
@@ -5066,7 +5078,7 @@ function update(realDt: number) {
       }
 
       globals.player.setState('attack'); 
-      playSound(sfx.slash);
+      playSlashSfx(1.2);
       
       let currentAtkCooldown = globals.playerStats.attackCooldownBase;
       if (globals.flowState === 'awakened') currentAtkCooldown *= 0.5;
@@ -5183,7 +5195,7 @@ function update(realDt: number) {
           radius: 32,
           damage: sickleDmg
         });
-        playSound(sfx.slash, 0.5);
+        playSlashSfx(0.7);
       }
       const slashPct = globals.playerStats.slashBonusDmgPct || 0;
       if (slashPct) dmg *= 1 + slashPct;
@@ -5430,7 +5442,7 @@ function update(realDt: number) {
         });
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffcc00'));
         globals.screenShake += 15;
-        playSound(sfx.slash, 0.8);
+        playSlashSfx(1.3);
         playSynthesizedPerfectParry(); // Add high-frequency crunch sound feedback
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, "💥 COMBO FINISHER! 💥", "#ffcc00", 24));
       }
@@ -6627,7 +6639,7 @@ function initPvpGame() {
       if (globals.enemies[0]) {
         const opp = globals.enemies[0];
         opp.setState('attack');
-        playSound(sfx.slash);
+        playSlashSfx(0.9);
         
         // Spawn the hostile shockwave moving towards us!
         const direction = globals.player.x > opp.x ? 1 : -1;
@@ -6655,7 +6667,7 @@ function initPvpGame() {
       
       if (globals.enemies[0]) {
         globals.enemies[0].setState('attack');
-        playSound(sfx.slash);
+        playSlashSfx(0.9);
         
         const opp = globals.enemies[0];
         const sparkCount = msg.isPerfect ? 25 : 10;
@@ -6944,7 +6956,7 @@ function handlePvpCombatInput(dt: number, isAttackPressed: boolean, isAttackRele
       if (isAttackReleased && player.state === 'charge') {
         const chargeDuration = player.chargeTimer;
         player.setState('attack');
-        playSound(sfx.slash);
+        playSlashSfx(0.9);
         
         let speedMult = 1.0;
         if (chargeDuration >= 1.5) {
@@ -7231,7 +7243,7 @@ function runPvpStep(realDt: number) {
         if (isTargetLocal) {
           if (globals.player.pvpParryActiveTimer > 0) {
             // Deflected!
-            playSound(sfx.slash);
+            playSlashSfx(0.9);
             for (let j = 0; j < 15; j++) {
               const angle = Math.random() * Math.PI * 2;
               const speed = 200 + Math.random() * 400;
@@ -7310,7 +7322,7 @@ function runPvpStep(realDt: number) {
           const isPerfect = player.pvpParryActiveTimer >= 0.20; // within 50ms of activation
           player.pvpParryActiveTimer = 0;
           player.setState('attack');
-          playSound(sfx.slash);
+          playSlashSfx(0.9);
           if (isPerfect) {
             globals.invulnTimer = 2.0;
           }

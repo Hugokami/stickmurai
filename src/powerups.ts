@@ -8,6 +8,7 @@ import {
   playSynthesizedSingingBowl,
   playSynthesizedTempleBell,
   playSound,
+  playSlashSfx,
   sfx
 } from './audio';
 import { Slash, FloatingText, Shockwave, Particle, AnimatedEffect } from './entities';
@@ -525,7 +526,7 @@ const ultOptions = [
              // limit heavy canvas and sound context resources to prevent lag
              if (idx < maxVisuals) {
                if (idx % 2 === 0) {
-                 playSound(sfx.slash, 1.2);
+                 playSlashSfx(1.2);
                }
                
                // spawn 3 cut lines (including a horizontal sweep)
@@ -1072,7 +1073,7 @@ export function renderShopModal() {
         </button>
 
         <button class="shop-buy-btn" style="background: ${canAfford ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${canAfford ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; color: ${canAfford ? '#fbbf24' : '#64748b'}; border-radius: 4px; padding: 3px 8px; font-size: 10.5px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-family: 'Orbitron', monospace; white-space: nowrap; flex-shrink: 0;" ${canAfford ? '' : 'disabled'}>
-          ${slot.discountPct ? `<span style="text-decoration: line-through; opacity: 0.6; font-size: 8.5px; margin-right: 3px;">◆${slot.originalPrice}</span>` : ''}◆ ${slot.price}
+          ${slot.discountPct ? `<span style="text-decoration: line-through; opacity: 0.6; font-size: 8.5px; margin-right: 3px;">◆${slot.originalPrice}</span>` : ''}◆ ${slot.price} <span style="font-size: 8.5px; opacity: 0.7; margin-left: 3px; background: rgba(0,0,0,0.35); padding: 1px 4px; border-radius: 3px; font-family: monospace;">[${idx + 1}]</span>
         </button>
       </div>
     `;
@@ -1082,7 +1083,7 @@ export function renderShopModal() {
     if (freezeBtn) {
       bindDualListener(freezeBtn, () => {
         slot.isFrozen = !slot.isFrozen;
-        playSound(sfx.slash, 0.5);
+        playSlashSfx(0.6);
         renderShopModal();
       });
     }
@@ -1108,15 +1109,55 @@ export function renderShopModal() {
 
   const rationBtn = modal.querySelector('#shop-ration-btn') as HTMLElement;
   if (rationBtn) {
-    bindDualListener(rationBtn, () => {
-      if ((globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives) return;
+    let isHoldingRation = false;
+    let rationHoldTimer: any = null;
+    let rationRepeatTimer: any = null;
+
+    const buyOneRation = (): boolean => {
+      if ((globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives) return false;
       globals.stageCurrency -= 20;
       globals.lives++;
       callbacks.updateUI();
       playSound(sfx.magatamaPickup, 1.0);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "+1 ❤️", "#4ade80", 26));
       renderShopModal();
-    });
+      return globals.lives < globals.maxLives && (globals.stageCurrency || 0) >= 20;
+    };
+
+    const stopRationHold = () => {
+      if (!isHoldingRation) return;
+      isHoldingRation = false;
+      if (rationHoldTimer) { clearTimeout(rationHoldTimer); rationHoldTimer = null; }
+      if (rationRepeatTimer) { clearTimeout(rationRepeatTimer); rationRepeatTimer = null; }
+    };
+
+    const scheduleRationRepeat = () => {
+      if (!isHoldingRation) return;
+      rationRepeatTimer = setTimeout(() => {
+        if (!isHoldingRation) return;
+        const canContinue = buyOneRation();
+        if (canContinue) scheduleRationRepeat();
+        else stopRationHold();
+      }, 160);
+    };
+
+    const startRationHold = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isHoldingRation) return;
+      isHoldingRation = true;
+      const canContinue = buyOneRation();
+      if (!canContinue) { stopRationHold(); return; }
+      rationHoldTimer = setTimeout(() => {
+        if (!isHoldingRation) return;
+        scheduleRationRepeat();
+      }, 300);
+    };
+
+    rationBtn.addEventListener('pointerdown', startRationHold);
+    rationBtn.addEventListener('pointerup', stopRationHold);
+    rationBtn.addEventListener('pointercancel', stopRationHold);
+    rationBtn.addEventListener('pointerleave', stopRationHold);
   }
 
   const refreshBtn = modal.querySelector('#shop-refresh-btn') as HTMLElement;
@@ -1128,7 +1169,7 @@ export function renderShopModal() {
       globals.shopRefreshCount = (globals.shopRefreshCount || 0) + 1;
       currentShopInventory = rollShopInventory();
       callbacks.updateUI();
-      playSound(sfx.slash, 0.7);
+      playSlashSfx(0.8);
       renderShopModal();
     });
   }
@@ -1137,6 +1178,26 @@ export function renderShopModal() {
   if (closeBtn) {
     bindDualListener(closeBtn, () => {
       closeShop();
+    });
+  }
+
+  // Keyboard shortcut listener for rapid outposts ergonomics
+  if (!(window as any)._shopKeyHandlerBound) {
+    (window as any)._shopKeyHandlerBound = true;
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (!globals.shopOpen) return;
+      if (['1', '2', '3', '4'].includes(e.key)) {
+        const slotIdx = parseInt(e.key) - 1;
+        const buyBtns = document.querySelectorAll('.shop-buy-btn') as NodeListOf<HTMLButtonElement>;
+        if (buyBtns[slotIdx] && !buyBtns[slotIdx].disabled) {
+          buyBtns[slotIdx].click();
+        }
+      } else if (e.key === 'r' || e.key === 'R') {
+        const refreshBtn = document.getElementById('shop-refresh-btn') as HTMLButtonElement;
+        if (refreshBtn && !refreshBtn.disabled) {
+          refreshBtn.click();
+        }
+      }
     });
   }
 }

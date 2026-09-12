@@ -681,12 +681,14 @@ export const packedAssetMap = new Map<string, string>();
 let bundleInitPromise: Promise<boolean> | null = null;
 
 function normalizeAssetKey(p: string): string {
-  return p.split('?')[0].replace(/^\.\//, '').replace(/\\/g, '/');
+  return p.split('?')[0].replace(/^\.?\//, '').replace(/\\/g, '/');
 }
 
 export function lookupPackedAsset(src: string): string | undefined {
   const norm = normalizeAssetKey(src);
+  const normLower = norm.toLowerCase();
   let blobUrl = packedAssetMap.get(norm)
+    || packedAssetMap.get(normLower)
     || packedAssetMap.get(decodeURI(norm))
     || packedAssetMap.get(encodeURI(norm))
     || packedAssetMap.get(decodeURIComponent(norm))
@@ -696,6 +698,7 @@ export function lookupPackedAsset(src: string): string | undefined {
   if (!packedArrayBuffer) return undefined;
 
   const entry = packedIndex.get(norm)
+    || packedIndex.get(normLower)
     || packedIndex.get(decodeURI(norm))
     || packedIndex.get(encodeURI(norm))
     || packedIndex.get(decodeURIComponent(norm))
@@ -705,6 +708,7 @@ export function lookupPackedAsset(src: string): string | undefined {
     const blob = new Blob([new Uint8Array(packedArrayBuffer, entry.byteOffset, entry.byteLen)], { type: entry.mime });
     blobUrl = URL.createObjectURL(blob);
     packedAssetMap.set(norm, blobUrl);
+    packedAssetMap.set(normLower, blobUrl);
     packedAssetMap.set(encodeURI(norm), blobUrl);
     packedAssetMap.set(decodeURI(norm), blobUrl);
     return blobUrl;
@@ -720,8 +724,11 @@ export function ensurePackedAssets(): Promise<boolean> {
   if (bundleInitPromise) return bundleInitPromise;
   bundleInitPromise = (async () => {
     try {
-      const res = await fetch('./assets.bin');
-      if (!res.ok) return false;
+      let res = await fetch('./assets.bin').catch(() => null);
+      if (!res || !res.ok) {
+        res = await fetch('assets.bin').catch(() => null);
+      }
+      if (!res || !res.ok) return false;
       const ab = await res.arrayBuffer();
       const view = new DataView(ab);
       const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
@@ -750,6 +757,7 @@ export function ensurePackedAssets(): Promise<boolean> {
         };
         const norm = normalizeAssetKey(pathStr);
         packedIndex.set(norm, entry);
+        packedIndex.set(norm.toLowerCase(), entry);
         packedIndex.set(encodeURI(norm), entry);
         packedIndex.set(decodeURI(norm), entry);
       }
@@ -819,6 +827,8 @@ function startLoadingItem(item: QueuedAsset) {
     failedAssets.set(item.img, item);
     recordDiagnostic(`Image load failed after retries: ${item.folder || 'asset'}`);
     console.warn(`[Assets] Failed to load after 3 retries: ${item.src}`);
+    // Safe transparent 1x1 fallback to prevent canvas InvalidStateError or broken layout
+    item.img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
     onDone();
   };
 
