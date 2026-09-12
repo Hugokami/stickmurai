@@ -5,86 +5,60 @@ const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 const publicDir = path.join(rootDir, 'public');
 
-// Base directory for reading assets (use dist if available, else public)
+// Prefer source files from dist if built, otherwise public
 const sourceDir = fs.existsSync(distDir) ? distDir : publicDir;
 
-console.log('--- Packing game assets into assets.bin ---');
+console.log('--- Comprehensive Asset Packing into assets.bin ---');
 
 const filesToPack = new Set();
 
-// 1. All hero & enemy sprites
-const spriteFolders = [
-  'BossAgis',
-  'BossSkeleton',
-  'Enemy01',
-  'Enemy02',
-  'Enemy03',
-  'Enemy05',
-  'EnemyBarrel',
-  'EnemyOrc',
-  'EnemyToasterBot',
-  'EvilWizard',
-  'HeroAkakage',
-  'HeroLuneblade',
-  'HeroNightborne',
-  'HeroNinja',
-  'HeroSamurai',
-  'HeroSatyr',
-  'portraits'
-];
-
-for (const folder of spriteFolders) {
-  const dir = path.join(sourceDir, 'sprites', folder);
-  if (fs.existsSync(dir)) {
-    for (const f of fs.readdirSync(dir)) {
-      if (f.endsWith('.png') || f.endsWith('.svg')) {
-        filesToPack.add(`sprites/${folder}/${f}`);
+// 1. Pack EVERYTHING in sprites/
+const spritesDir = path.join(sourceDir, 'sprites');
+if (fs.existsSync(spritesDir)) {
+  function scanDir(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scanDir(full);
+      } else if (entry.name.endsWith('.png') || entry.name.endsWith('.svg')) {
+        const rel = path.relative(sourceDir, full).replace(/\\/g, '/');
+        filesToPack.add(rel);
       }
     }
   }
+  scanDir(spritesDir);
 }
 
-// 2. 8 loader frames
-for (let i = 1; i <= 8; i++) {
-  const rel = `sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_000${i}.png`;
-  if (fs.existsSync(path.join(sourceDir, rel))) {
-    filesToPack.add(rel);
-  }
-}
-
-// 3. Fantasy backgrounds
+// 2. Pack EVERYTHING in fantasy_bg/
 const bgDir = path.join(sourceDir, 'fantasy_bg');
 if (fs.existsSync(bgDir)) {
   for (const f of fs.readdirSync(bgDir)) {
-    if (f.endsWith('.png')) {
-      filesToPack.add(`fantasy_bg/${f}`);
+    if (f.endsWith('.png') || f.endsWith('.svg')) {
+      const rel = path.relative(sourceDir, path.join(bgDir, f)).replace(/\\/g, '/');
+      filesToPack.add(rel);
     }
   }
 }
 
-// 4. Icons
-for (const icon of [
-  'release_v1.2-single_38.png',
-  'release_v1.2-single_15.png',
-  'release_v1.2-single_77.png',
-  'release_v1.2-single_5.png',
-  'release_v1.2-single_88.png',
-  'release_v1.2-single_1.png'
-]) {
-  const rel = `icons/${icon}`;
-  if (fs.existsSync(path.join(sourceDir, rel))) {
-    filesToPack.add(rel);
+// 3. Pack EVERYTHING in icons/
+const iconDir = path.join(sourceDir, 'icons');
+if (fs.existsSync(iconDir)) {
+  for (const f of fs.readdirSync(iconDir)) {
+    if (f.endsWith('.png') || f.endsWith('.svg')) {
+      const rel = path.relative(sourceDir, path.join(iconDir, f)).replace(/\\/g, '/');
+      filesToPack.add(rel);
+    }
   }
 }
 
-// 5. Scan assets.ts for all referenced VFX animations
+// 4. Scan assets.ts for all referenced VFX animations
 const assetsCode = fs.readFileSync(path.join(rootDir, 'src/assets.ts'), 'utf8');
+
+// A. loadVfxFrames('pattern', count, start, pad)
 const vfxRegex = /loadVfxFrames\(\s*'([^']+)',\s*(\d+)(?:,\s*(\d+))?(?:,\s*(\d+))?/g;
 let match;
 while ((match = vfxRegex.exec(assetsCode)) !== null) {
   const pattern = match[1];
-  // Skip unused categories
-  if (pattern.includes('vfx/ui/')) continue;
   const count = parseInt(match[2], 10);
   const start = parseInt(match[3] || '1', 10);
   const pad = parseInt(match[4] || '0', 10);
@@ -94,57 +68,108 @@ while ((match = vfxRegex.exec(assetsCode)) !== null) {
     const rel = pattern.replace('{N}', numStr);
     if (fs.existsSync(path.join(sourceDir, rel))) {
       filesToPack.add(rel);
+    } else if (fs.existsSync(path.join(publicDir, rel))) {
+      filesToPack.add(rel);
     }
   }
 }
 
-const fileList = Array.from(filesToPack).sort();
-console.log(`Discovered ${fileList.length} required assets to bundle into binary archive.`);
-
-// Build Binary Archive
-// Header: "STIK" (4 bytes) + fileCount (uint32, 4 bytes) + indexByteLength (uint32, 4 bytes)
-// Index: For each file:
-//   pathLength (uint16) + path (UTF-8 bytes) + dataOffset (uint32) + dataLength (uint32)
-// Data: Concatenated raw file bytes
-
-const encoder = new TextEncoder();
-const indexParts = [];
-const dataBuffers = [];
-let currentOffset = 0;
-
-for (const rel of fileList) {
-  const full = path.join(sourceDir, rel);
-  const fileBuf = fs.readFileSync(full);
-  const pathBytes = encoder.encode(rel);
-
-  const entryHeader = Buffer.alloc(2 + pathBytes.length + 4 + 4);
-  entryHeader.writeUInt16LE(pathBytes.length, 0);
-  Buffer.from(pathBytes).copy(entryHeader, 2);
-  entryHeader.writeUInt32LE(currentOffset, 2 + pathBytes.length);
-  entryHeader.writeUInt32LE(fileBuf.length, 2 + pathBytes.length + 4);
-
-  indexParts.push(entryHeader);
-  dataBuffers.push(fileBuf);
-  currentOffset += fileBuf.length;
+// B. Any explicit vfx string literals in assets.ts or powerups.ts
+const explicitVfxRegex = /'((?:vfx|sprites)\/[^']+\.(?:png|svg))'/g;
+while ((match = explicitVfxRegex.exec(assetsCode)) !== null) {
+  const rel = match[1];
+  if (fs.existsSync(path.join(sourceDir, rel))) {
+    filesToPack.add(rel);
+  } else if (fs.existsSync(path.join(publicDir, rel))) {
+    filesToPack.add(rel);
+  }
 }
 
-const indexBuffer = Buffer.concat(indexParts);
-const dataBuffer = Buffer.concat(dataBuffers);
+console.log(`Discovered ${filesToPack.size} total required game assets to bundle into assets.bin.`);
 
-const mainHeader = Buffer.alloc(12);
-mainHeader.write('STIK', 0, 4, 'ascii');
-mainHeader.writeUInt32LE(fileList.length, 4);
-mainHeader.writeUInt32LE(indexBuffer.length, 8);
+// Binary packaging:
+// Header:
+// 4 bytes: Magic 'STIK'
+// 4 bytes: uint32 fileCount
+// 4 bytes: uint32 indexByteLength
+// Index table:
+// For each file:
+//   2 bytes: uint16 pathLength
+//   pathLength bytes: utf-8 path
+//   4 bytes: uint32 dataOffset
+//   4 bytes: uint32 dataLength
+// Data section:
+//   concatenated file bytes
 
-const finalArchive = Buffer.concat([mainHeader, indexBuffer, dataBuffer]);
+const filesArray = Array.from(filesToPack).sort();
+const fileBuffers = [];
+const indexEntries = [];
 
-// Write to public/assets.bin and dist/assets.bin (if dist exists)
-fs.writeFileSync(path.join(publicDir, 'assets.bin'), finalArchive);
-console.log(`Wrote ${path.join(publicDir, 'assets.bin')} (${(finalArchive.length / (1024 * 1024)).toFixed(2)} MB)`);
+let currentOffset = 0;
+for (const rel of filesArray) {
+  let full = path.join(sourceDir, rel);
+  if (!fs.existsSync(full)) {
+    full = path.join(publicDir, rel);
+  }
+  const buf = fs.readFileSync(full);
+  fileBuffers.push(buf);
+
+  const pathBuf = Buffer.from(rel, 'utf8');
+  indexEntries.push({
+    pathBuf,
+    offset: currentOffset,
+    length: buf.length
+  });
+  currentOffset += buf.length;
+}
+
+// Calculate index length
+let indexLength = 0;
+for (const entry of indexEntries) {
+  indexLength += 2 + entry.pathBuf.length + 4 + 4;
+}
+
+const headerBuf = Buffer.alloc(12);
+headerBuf.write('STIK', 0, 4, 'ascii');
+headerBuf.writeUInt32LE(filesArray.length, 4);
+headerBuf.writeUInt32LE(indexLength, 8);
+
+const indexBuf = Buffer.alloc(indexLength);
+let idxPos = 0;
+for (const entry of indexEntries) {
+  indexBuf.writeUInt16LE(entry.pathBuf.length, idxPos);
+  idxPos += 2;
+  entry.pathBuf.copy(indexBuf, idxPos);
+  idxPos += entry.pathBuf.length;
+  indexBuf.writeUInt32LE(entry.offset, idxPos);
+  idxPos += 4;
+  indexBuf.writeUInt32LE(entry.length, idxPos);
+  idxPos += 4;
+}
+
+const totalBundleSize = 12 + indexLength + currentOffset;
+console.log(`Creating bundle with total size: ${(totalBundleSize / (1024 * 1024)).toFixed(2)} MB`);
+
+const outDist = path.join(distDir, 'assets.bin');
+const outPublic = path.join(publicDir, 'assets.bin');
+
+const writeStream = (targetPath) => {
+  const ws = fs.createWriteStream(targetPath);
+  ws.write(headerBuf);
+  ws.write(indexBuf);
+  for (const b of fileBuffers) {
+    ws.write(b);
+  }
+  ws.end();
+};
+
+if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+writeStream(outPublic);
+console.log(`Wrote ${outPublic} (${(totalBundleSize / (1024 * 1024)).toFixed(2)} MB)`);
 
 if (fs.existsSync(distDir)) {
-  fs.writeFileSync(path.join(distDir, 'assets.bin'), finalArchive);
-  console.log(`Wrote ${path.join(distDir, 'assets.bin')} (${(finalArchive.length / (1024 * 1024)).toFixed(2)} MB)`);
+  writeStream(outDist);
+  console.log(`Wrote ${outDist} (${(totalBundleSize / (1024 * 1024)).toFixed(2)} MB)`);
 }
 
-console.log('Asset packing complete!\n');
+console.log('Comprehensive asset packing complete!');

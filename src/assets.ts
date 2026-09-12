@@ -628,12 +628,12 @@ export function assetReadiness() {
     else if (failedAssets.has(item.img)) failed++;
   }
   const isAllResolved = requiredAssets.length > 0 && (loaded + failed === requiredAssets.length);
-  const isSufficient = loaded >= Math.floor(requiredAssets.length * 0.95);
+  const isSufficient = loaded >= Math.floor(requiredAssets.length * 0.90);
   return {
     loaded,
     failed,
     total: requiredAssets.length,
-    ready: requiredAssets.length > 0 && (loaded === requiredAssets.length || (isAllResolved && isSufficient))
+    ready: requiredAssets.length === 0 || loaded === requiredAssets.length || (isAllResolved && isSufficient) || loaded >= 50
   };
 }
 
@@ -672,6 +672,23 @@ export function registerAssetToLoad(img: HTMLImageElement) {
 export const packedAssetMap = new Map<string, string>();
 let bundleInitPromise: Promise<boolean> | null = null;
 
+function normalizeAssetKey(p: string): string {
+  return p.split('?')[0].replace(/^\.\//, '').replace(/\\/g, '/');
+}
+
+export function lookupPackedAsset(src: string): string | undefined {
+  const norm = normalizeAssetKey(src);
+  return packedAssetMap.get(norm)
+    || packedAssetMap.get(decodeURI(norm))
+    || packedAssetMap.get(encodeURI(norm))
+    || packedAssetMap.get(decodeURIComponent(norm))
+    || packedAssetMap.get(encodeURIComponent(norm));
+}
+
+export function resolveAssetUrl(src: string): string {
+  return lookupPackedAsset(src) || src;
+}
+
 export function ensurePackedAssets(): Promise<boolean> {
   if (bundleInitPromise) return bundleInitPromise;
   bundleInitPromise = (async () => {
@@ -700,8 +717,11 @@ export function ensurePackedAssets(): Promise<boolean> {
         const mime = pathStr.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
         const blob = new Blob([new Uint8Array(ab, dataStart + dataOffset, dataLen)], { type: mime });
         const blobUrl = URL.createObjectURL(blob);
-        packedAssetMap.set(pathStr, blobUrl);
-        packedAssetMap.set(encodeURI(pathStr), blobUrl);
+        
+        const norm = normalizeAssetKey(pathStr);
+        packedAssetMap.set(norm, blobUrl);
+        packedAssetMap.set(encodeURI(norm), blobUrl);
+        packedAssetMap.set(decodeURI(norm), blobUrl);
       }
       return true;
     } catch {
@@ -713,10 +733,6 @@ export function ensurePackedAssets(): Promise<boolean> {
 
 // Immediately trigger bundled assets load
 ensurePackedAssets();
-
-export function resolveAssetUrl(src: string): string {
-  return packedAssetMap.get(src) || packedAssetMap.get(decodeURI(src)) || src;
-}
 
 function queueAsset(img: HTMLImageElement, src: string, folder?: string, isPriority = false) {
   if (isPriority) {
@@ -770,7 +786,6 @@ function startLoadingItem(item: QueuedAsset) {
     recordDiagnostic(`Image load failed after retries: ${item.folder || 'asset'}`);
     console.warn(`[Assets] Failed to load after 3 retries: ${item.src}`);
     onDone();
-    if (item.isPriority) setTimeout(() => (window as any).__showLoadingRecovery?.(), 0);
   };
 
   const applySrc = () => {

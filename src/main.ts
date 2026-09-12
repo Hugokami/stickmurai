@@ -816,7 +816,12 @@ export function advanceToNextWave() {
 callbacks.advanceToNextWave = advanceToNextWave;
 
 function initGame() {
-  if (!assetReadiness().ready) { showLoadingRecovery(); return; }
+  const loader = document.getElementById('loader-screen');
+  if (loader) {
+    loader.classList.add('hidden');
+    loader.style.display = 'none';
+  }
+  loadingFinished = true;
   stopSpawner();
   startOrResumeGameLoop();
   clearGameInputs();
