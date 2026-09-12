@@ -48,7 +48,6 @@ import {
   playEnergyBeam,
   playTeleportSfx,
   playAffixAlert,
-  playPrimalZap,
   getConsecutiveParries,
   playSynthesizedSheathe
 } from './audio';
@@ -1889,8 +1888,6 @@ function distToSegment(px: number, py: number, x1: number, y1: number, x2: numbe
 function triggerVortexShatter(x: number, y: number) {
   globals.shockwaves.push(new Shockwave(x, y, '#a855f7', 200));
   globals.screenShake += 15;
-  playSound(sfx.slash);
-  playSynthesizedGravity();
   globals.floatingTexts.push(FloatingText.acquire(x, y - 50, "VORTEX SHATTER!", "#a855f7", 26));
 
   // Pull in enemies
@@ -2665,7 +2662,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.slashes.push(Slash.acquire(e.x, e.y, -Math.PI / 2, 2.2, false, '#38bdf8'));
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#38bdf8'));
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, t('aerialLaunchedText') || "LAUNCHED! 🌪️", "neon-#38bdf8", 30));
-    playSound(sfx.slash);
     addFlow(8);
     addCombo();
     return;
@@ -2775,7 +2771,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       globals.satyrEarthshakerCD = 5;
       globals.screenShake = Math.max(globals.screenShake, 18);
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#10b981', 200));
-      playPrimalZap(0.9);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "EARTHSHAKER TREMOR! 🌿", "#10b981", 28));
       
       // Stagger and damage nearby enemies (capped to max 4 targets to preserve 60 FPS)
@@ -2805,7 +2800,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
         globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, infBlast, 0.55, 2.2));
       }
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "INFERNAL DETONATION! 💥🔥", "#ea580c", 26));
-      playSynthesizedFirewheel();
       
       let fireHits = 0;
       for (let i = 0; i < globals.enemies.length && fireHits < 5; i++) {
@@ -2852,7 +2846,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
         globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, warpFx, 0.5, 2.2));
       }
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "VOID COLLAPSE! 🌌", "#c084fc", 26));
-      playSynthesizedGravity();
 
       let voidHits = 0;
       for (let i = 0; i < globals.enemies.length && voidHits < 5; i++) {
@@ -2883,9 +2876,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
         }
       }, 180);
     }
-
-    playSynthesizedAwaken();
-    playSound(sfx.slash);
 
     for (let i = 0; i < 20; i++) {
       const spd = 300 + Math.random() * 400;
@@ -3009,8 +2999,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
 }
 
 function triggerShatterAoE(x: number, y: number) {
-  playSound(sfx.slash, 0.4);
-  playSynthesizedParry();
   globals.shockwaves.push(new Shockwave(x, y, '#00ffff'));
   
   const sparkCount = globals.graphicsSettings === 'low' ? 6 : 20;
@@ -4459,10 +4447,13 @@ function update(realDt: number) {
 
   if (globals.fullScreenSkillTimer > 0) {
     globals.fullScreenSkillTimer -= realDt;
-    if (globals.fullScreenSkillTimer <= 0) {
+    if (globals.fullScreenSkillTimer <= 0 || isNaN(globals.fullScreenSkillTimer)) {
       globals.fullScreenSkillTimer = 0;
       globals.fullScreenSkillEffect = 'none';
     }
+  } else {
+    globals.fullScreenSkillTimer = 0;
+    globals.fullScreenSkillEffect = 'none';
   }
 
   // Zen Field Ultimate Ticking
@@ -4572,7 +4563,6 @@ function update(realDt: number) {
         if (dx * dx + dy * dy < radiusSum * radiusSum) {
           exploded = true;
           hitEnemy(e, 1);
-          playSound(sfx.slash, 0.15);
           for (let k = 0; k < 4; k++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = 100 + Math.random() * 150;
@@ -4643,7 +4633,6 @@ function update(realDt: number) {
       if (currentTick > dome.ticks && currentTick <= 6) {
         dome.ticks = currentTick;
         const radius = 180;
-        playSound(sfx.slash, 0.2);
         
         const sliceAngle = Math.random() * Math.PI * 2;
         const offsetDist = (Math.random() - 0.5) * 80;
@@ -5462,7 +5451,6 @@ function update(realDt: number) {
                 globals.player
               ));
               globals.projectiles.push(Projectile.acquire(currentX, currentY, currentAngle, false, echoDmg, false, true));
-              playSound(sfx.slash, 0.4);
               for (let ep = 0; ep < 5; ep++) {
                 globals.particles.push(Particle.acquire(
                   currentX + Math.cos(currentAngle) * (20 + ep * 15),
