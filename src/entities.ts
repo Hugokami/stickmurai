@@ -487,6 +487,10 @@ export class Projectile {
     this.hitEnemies.clear();
     this.life = 2.0;
     this.shooter = undefined;
+    (this as any).colorTint = undefined;
+    (this as any).isBloodScythe = undefined;
+    (this as any).isHoming = undefined;
+    (this as any).maxLife = 2.0;
     const speed = isEnemy ? 600 : (isEcho ? 2800 : 3000);
     this.vx = Math.cos(angle) * speed;
     this.vy = Math.sin(angle) * speed;
@@ -545,6 +549,20 @@ export class Projectile {
           }
         }
       });
+    }
+
+    // Akakage Blood Scythe Boomerang trajectory logic
+    if (this.enhancedType === 'blood_scythe' && !this.isEnemy) {
+      const halfLife = (this as any).maxLife ? ((this as any).maxLife * 0.5) : 0.8;
+      if (this.life < halfLife) {
+        const toPlayerAngle = Math.atan2(globals.player.y - this.y, globals.player.x - this.x);
+        const returnSpeed = 2000;
+        this.vx = Math.cos(toPlayerAngle) * returnSpeed;
+        this.vy = Math.sin(toPlayerAngle) * returnSpeed;
+        if (Math.hypot(globals.player.x - this.x, globals.player.y - this.y) < 45) {
+          this.life = 0;
+        }
+      }
     }
 
     // Shield (Wind Aegis) pulling and bullet deflection logic
@@ -1024,6 +1042,7 @@ export class Slash {
     this.colorTint = colorTint;
     this.isCircular = isCircular;
     this.owner = owner;
+    (this as any).isEcho = false;
     this.life = 0.35; this.maxLife = 0.35;
     
     if (owner) {
@@ -1368,9 +1387,13 @@ export class AnimatedEffect {
       const frameIdx = Math.floor(progress * this.frames.length);
       const img = this.frames[frameIdx];
       if (img && img.complete && img.naturalWidth > 0) {
+        ctx.save();
+        const fadeAlpha = Math.max(0, Math.min(1, (1 - progress) * 2));
+        ctx.globalAlpha = fadeAlpha;
         ctx.rotate(this.rotation);
         ctx.scale(this.scale, this.scale);
         ctx.drawImage(img, -img.width / 2, -img.height / 2);
+        ctx.restore();
       }
     }
     ctx.restore();

@@ -428,6 +428,7 @@ export function applyHeroSignatureUltimate() {
       globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#34d399', 200 + Math.random() * 200, 0.5, 3.5, Math.random() * Math.PI * 2));
     }
   } else if (hero === 'akakage') {
+    (globals as any).akakageAwakeningExtensionTotal = 0;
     globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ef4444'));
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, isJa ? '血の阿修羅！ 🩸' : 'BLOOD ASURA FRENZY! 🩸', 'neon-#ef4444', 56));
     const bloodFx = (vfxAnims as any).combat?.bloodSplatter;
@@ -805,19 +806,21 @@ function rollSingleShopSlot(): ShopSlot {
   };
 }
 
-export function rollShopInventory(): ShopSlot[] {
-  if (currentShopInventory.length === 4) {
-    return currentShopInventory.map(slot => (slot.isFrozen ? slot : rollSingleShopSlot()));
-  }
-  const slots: ShopSlot[] = [];
-  for (let i = 0; i < 4; i++) {
+export function rollShopInventory(isNewWave = false): ShopSlot[] {
+  // Always preserve locked slots across rerolls and waves
+  const preservedSlots = currentShopInventory.filter(slot => slot && slot.isFrozen);
+  const slots: ShopSlot[] = [...preservedSlots];
+  while (slots.length < 4) {
     slots.push(rollSingleShopSlot());
+  }
+  if (isNewWave) {
+    globals.shopRefreshCount = 0;
   }
   return slots;
 }
 
-export function refreshShop() {
-  currentShopInventory = rollShopInventory();
+export function refreshShop(isNewWave = false) {
+  currentShopInventory = rollShopInventory(isNewWave);
   renderShopModal();
 }
 
@@ -826,7 +829,7 @@ export function openShop() {
   globals.gameState = 'paused';
   globals.shopOpen = true;
   if (currentShopInventory.length === 0) {
-    currentShopInventory = rollShopInventory();
+    currentShopInventory = rollShopInventory(true);
   }
   renderShopModal();
 }

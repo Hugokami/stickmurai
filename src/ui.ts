@@ -1430,15 +1430,31 @@ export function updateCooldownsUI() {
       const p = Math.round((globals.enhanceActiveTimer / globals.playerStats.enhanceDuration) * 100);
       const text = globals.enhanceActiveTimer.toFixed(1) + 's';
       
+      let activeColor = '#ff6600';
+      let activeBg = 'rgba(255, 102, 0, 0.35)';
+      if (globals.selectedSkill === 'gravity') {
+        activeColor = '#c084fc';
+        activeBg = 'rgba(192, 132, 252, 0.45)';
+      } else if (globals.selectedSkill === 'decoy_illusion') {
+        activeColor = '#38bdf8';
+        activeBg = 'rgba(56, 189, 248, 0.45)';
+      } else if (globals.selectedSkill === 'shield') {
+        activeColor = '#00ffff';
+        activeBg = 'rgba(0, 255, 255, 0.35)';
+      } else if (globals.selectedSkill === 'parry_master') {
+        activeColor = '#ffd700';
+        activeBg = 'rgba(255, 215, 0, 0.4)';
+      }
+
       if (p !== lastEnhanceOverlayHeight) {
         enhanceCooldownOverlay.style.height = `${p}%`;
-        enhanceCooldownOverlay.style.background = 'rgba(255, 102, 0, 0.35)';
+        enhanceCooldownOverlay.style.background = activeBg;
         lastEnhanceOverlayHeight = p;
       }
       if (text !== lastEnhanceTextContent) {
         enhanceCooldownText.textContent = text;
-        enhanceCooldownText.style.color = '#ff6600';
-        enhanceCooldownText.style.textShadow = '0 0 8px #ff6600';
+        enhanceCooldownText.style.color = activeColor;
+        enhanceCooldownText.style.textShadow = `0 0 8px ${activeColor}`;
         lastEnhanceTextContent = text;
       }
       

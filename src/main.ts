@@ -48,7 +48,6 @@ import {
   playEnergyBeam,
   playTeleportSfx,
   playAffixAlert,
-  playMagatamaPickup,
   playPrimalZap,
   getConsecutiveParries,
   playSynthesizedSheathe
@@ -1080,7 +1079,11 @@ function initGame() {
   }
   
   const eMax = globals.selectedSkill === 'enhance' ? 12.0 : (globals.selectedSkill === 'shield' ? 10.0 : (globals.selectedSkill === 'dash' ? 0.9 : (globals.selectedSkill === 'firewheel' ? 11.0 : (globals.selectedSkill === 'gravity' ? 9.0 : (globals.selectedSkill === 'parry_master' ? 9.0 : (globals.selectedSkill === 'decoy_illusion' ? 12.0 : 14.0))))));
-  const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 4.5 : (globals.selectedSkill === 'dash' ? 0.45 : (globals.selectedSkill === 'firewheel' ? 6.0 : (globals.selectedSkill === 'gravity' ? 4.5 : (globals.selectedSkill === 'parry_master' ? 4.0 : (globals.selectedSkill === 'decoy_illusion' ? 5.0 : 3.5))))));
+  const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 4.5 : (globals.selectedSkill === 'dash' ? 0.45 : (globals.selectedSkill === 'firewheel' ? 6.0 : (globals.selectedSkill === 'gravity' ? 7.0 : (globals.selectedSkill === 'parry_master' ? 4.0 : (globals.selectedSkill === 'decoy_illusion' ? 6.0 : 3.5))))));
+  globals.fullScreenSkillEffect = 'none';
+  globals.fullScreenSkillTimer = 0;
+  (globals as any).akakageAwakeningExtensionTotal = 0;
+  (globals as any).akakageScytheCooldown = 0;
   globals.playerStats = { 
     slashBonusDmgPct: 0,
     iaijutsuBonusDmg: 0,
@@ -2702,7 +2705,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     const execMag = Math.round((isBoss ? 15 : 3) * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
     globals.magatama = (globals.magatama || 0) + execMag;
     safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-    playMagatamaPickup(0.65);
     globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🔮`, '#c084fc', 22));
 
     // Nightborne Sovereign execution passive: Soul Siphon restores +1 Heart and siphons +35 extra Magatama
@@ -2710,7 +2712,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       globals.lives = Math.min(globals.maxLives, globals.lives + 1);
       globals.magatama = (globals.magatama || 0) + 35;
       safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-      playMagatamaPickup(1.0);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "+1 ❤️ SOUL SIPHON! (+35 🔮)", "#c084fc", 26));
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
     }
@@ -2813,12 +2814,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
 
     // Execution Stance Synergy 2: Frost Stance — Ice Shrapnel Shatter & Deep Freeze
     if (globals.frostStanceActive) {
-      const iceSpike = (vfxAnims as any).frostKnight?.vfx3;
-      if (iceSpike && iceSpike.length > 0) {
-        globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, iceSpike, 0.5, 2.0));
-      }
+      triggerShatterAoE(e.x, e.y);
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 75, "FROST SHATTER! ❄️", "#38bdf8", 26));
-      playSynthesizedAwaken();
 
       let frostHits = 0;
       for (let i = 0; i < globals.enemies.length && frostHits < 5; i++) {
@@ -2902,7 +2899,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.hitStop = 0;
     globals.floatingTexts.push(FloatingText.acquire(e.x + (Math.random()-0.5)*40, e.y - 45, `CRITICAL SHING! 💥 -${finalDmg}`, '#fde047', 30));
     globals.shockwaves.push(new Shockwave(e.x, e.y, '#fde047'));
-    playSynthesizedClash();
 
     if (typeof (e as any).addPostureDamage === 'function') {
       (e as any).addPostureDamage(35);
@@ -2924,13 +2920,22 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     }
 
     if (globals.selectedHero === 'akakage' && globals.hasHeroAwakening('akakage')) {
-      const slashDmg = getCurrentSlashDamage();
-      const scytheAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
-      const scytheDmg = Math.round(finalDmg * 1.1 + slashDmg * 1.5);
-      const scythe = Projectile.acquire(globals.player.x, globals.player.y, scytheAngle, false, scytheDmg, false, true, 'blood_scythe');
-      (scythe as any).colorTint = '#ef4444';
-      globals.projectiles.push(scythe);
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, `🩸 BLOOD ASURA SCYTHE -${scytheDmg}!`, "#ef4444", 22));
+      const now = performance.now();
+      const lastSpawn = (globals as any).akakageScytheCooldown || 0;
+      const activeScythes = globals.projectiles.filter(p => p.enhancedType === 'blood_scythe' && p.life > 0).length;
+      if (activeScythes < 2 && now - lastSpawn >= 400) {
+        (globals as any).akakageScytheCooldown = now;
+        const slashDmg = getCurrentSlashDamage();
+        const scytheAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
+        const scytheDmg = Math.min(45 + Math.round(slashDmg * 0.8), Math.round(finalDmg * 0.5 + slashDmg * 0.7));
+        const scythe = Projectile.acquire(globals.player.x, globals.player.y, scytheAngle, false, scytheDmg, false, true, 'blood_scythe');
+        (scythe as any).colorTint = '#ef4444';
+        (scythe as any).pierceCount = 0;
+        (scythe as any).maxLife = 1.6;
+        scythe.life = 1.6;
+        globals.projectiles.push(scythe);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, `🩸 SCYTHE -${scytheDmg}!`, "#ef4444", 22));
+      }
     }
 
     if (globals.arterialGushActive) {
@@ -3048,8 +3053,14 @@ function killEnemy(e: Enemy) {
   checkVampireHeal(e);
 
   if (globals.flowState === 'awakened' && globals.selectedHero === 'akakage') {
-    globals.flow = Math.min(globals.playerStats.flowMax, globals.flow + 15);
-    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "+15 FLOW FRENZY! 🩸", "#ef4444", 20));
+    (globals as any).akakageAwakeningExtensionTotal = (globals as any).akakageAwakeningExtensionTotal || 0;
+    if ((globals as any).akakageAwakeningExtensionTotal < 3.5) {
+      const extSec = Math.min(0.7, 3.5 - (globals as any).akakageAwakeningExtensionTotal);
+      (globals as any).akakageAwakeningExtensionTotal += extSec;
+      const addedFlow = (globals.playerStats.flowMax / 6.0) * extSec;
+      globals.flow = Math.min(globals.playerStats.flowMax, globals.flow + addedFlow);
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, `+${extSec.toFixed(1)}s FLOW! 🩸`, "#ef4444", 20));
+    }
   }
 
   if (e.subType === 'barrel_bomber') {
@@ -3135,7 +3146,7 @@ function killEnemy(e: Enemy) {
           delay: 0.75,
           run: () => {
             if (globals.gameState === 'playing' || globals.gameState === 'paused') {
-              refreshShop();
+              refreshShop(true);
               openShop();
             }
           }
@@ -3180,7 +3191,6 @@ function killEnemy(e: Enemy) {
   globals.magatama = (globals.magatama || 0) + earnedMagatama;
   safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
   if (isBossEnemy || Math.random() < 0.35) {
-    playMagatamaPickup(0.45);
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `+${earnedMagatama} 🔮`, '#c084fc', isBossEnemy ? 26 : 18));
   }
 
@@ -3398,7 +3408,7 @@ function update(realDt: number) {
             delay: 0.5,
             run: () => {
               if (globals.gameState === 'playing' || globals.gameState === 'paused') {
-                refreshShop();
+                refreshShop(true);
                 openShop();
               }
             }
@@ -3899,11 +3909,17 @@ function update(realDt: number) {
         playSynthesizedThunder();
         globals.enhanceActiveTimer = 7.0;
         globals.raijinCataclysmTimer = 7.0;
+        globals.fullScreenSkillEffect = 'raijin_cataclysm';
+        globals.fullScreenSkillTimer = 0.45;
         globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
         globals.screenShake = Math.max(globals.screenShake, 45);
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '神罰天雷・雷神壊滅！ ⚡' : 'RAIJIN CATACLYSM! ⚡', 'neon-#a855f7', 36));
 
         // Celestial lightning strikes down at player location
+        const raijinBurst = (vfxAnims as any).skills?.raijinBurst;
+        if (raijinBurst && raijinBurst.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y - 30, raijinBurst, 0.45, 3.2));
+        }
         const starfallFx = (vfxAnims as any).custom?.starfall;
         if (starfallFx && starfallFx.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y - 120, starfallFx, 0.45, 3.5));
@@ -3963,6 +3979,8 @@ function update(realDt: number) {
         playSynthesizedPerfectParry();
         globals.enhanceActiveTimer = 6.0;
         globals.voidRuptureTimer = 6.0;
+        globals.fullScreenSkillEffect = 'void_rupture';
+        globals.fullScreenSkillTimer = 0.45;
         globals.enhanceCooldown = globals.playerStats.enhanceCooldownMax;
         globals.screenShake = Math.max(globals.screenShake, 30);
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '虚空断絶・幻影裂斬！ 🌌' : 'VOID RUPTURE! 🌌', 'neon-#38bdf8', 34));
@@ -4000,6 +4018,10 @@ function update(realDt: number) {
         globals.invulnTimer = 0.5;
 
         // Phantom warp at destination
+        const voidBurst = (vfxAnims as any).skills?.voidBurst;
+        if (voidBurst && voidBurst.length > 0) {
+          globals.animatedEffects.push(new AnimatedEffect(endX, endY, voidBurst, 0.45, 2.8));
+        }
         const pWarpFx = (vfxAnims as any).skills?.phantomWarp;
         if (pWarpFx && pWarpFx.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(endX, endY, pWarpFx, 0.45, 2.6));
@@ -4423,6 +4445,14 @@ function update(realDt: number) {
   globals.timeSlowFactor = 1.0;
   globals.targetTimeSlowFactor = 1.0;
   if (globals.satyrEarthshakerCD > 0) globals.satyrEarthshakerCD -= realDt;
+
+  if (globals.fullScreenSkillTimer > 0) {
+    globals.fullScreenSkillTimer -= realDt;
+    if (globals.fullScreenSkillTimer <= 0) {
+      globals.fullScreenSkillTimer = 0;
+      globals.fullScreenSkillEffect = 'none';
+    }
+  }
 
   // Zen Field Ultimate Ticking
   if (globals.zenFieldActiveTimer > 0) {
@@ -5256,9 +5286,16 @@ function update(realDt: number) {
           globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 2.2 + slashDmg * 2.5), true, false, 'dragon_fury'));
           globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f59e0b'));
         } else if (currentHero === 'akakage') {
-          const scythe = Projectile.acquire(globals.player.x, globals.player.y, angle, false, Math.round(dmg * 1.8 + slashDmg * 1.8), false, true, 'blood_scythe');
-          (scythe as any).colorTint = '#ef4444';
-          globals.projectiles.push(scythe);
+          const activeScythes = globals.projectiles.filter(p => p.enhancedType === 'blood_scythe' && p.life > 0).length;
+          if (activeScythes < 2) {
+            const scytheDmg = Math.min(50 + Math.round(slashDmg * 0.9), Math.round(dmg * 1.0 + slashDmg * 0.8));
+            const scythe = Projectile.acquire(globals.player.x, globals.player.y, angle, false, scytheDmg, false, true, 'blood_scythe');
+            (scythe as any).colorTint = '#ef4444';
+            (scythe as any).pierceCount = 0;
+            (scythe as any).maxLife = 1.6;
+            scythe.life = 1.6;
+            globals.projectiles.push(scythe);
+          }
         } else if (currentHero === 'satyr') {
           globals.shockwaves.push(new Shockwave(globals.player.x + Math.cos(angle) * 60, globals.player.y + Math.sin(angle) * 60, '#10b981'));
           globals.enemies.forEach(en => {
@@ -5901,6 +5938,12 @@ function update(realDt: number) {
           } else {
             hitEnemy(e, proj.damage);
             proj.hitEnemies.add(e);
+            if (proj.enhancedType === 'blood_scythe') {
+              (proj as any).pierceCount = ((proj as any).pierceCount || 0) + 1;
+              if ((proj as any).pierceCount >= 4) {
+                proj.life = 0;
+              }
+            }
             
             if (proj.enhancedType) {
               const dx = e.x - proj.x;

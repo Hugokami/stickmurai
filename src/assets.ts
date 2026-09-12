@@ -1149,12 +1149,14 @@ export const vfxAnims = {
     firewheel: loadVfxFrames('vfx/skills/firewheel/frame_{N}.png', 7, 1, 2, true),
     windAegis: loadVfxFrames('vfx/skills/wind_aegis/frame_{N}.png', 18, 1, 2, false),
     voidWarp: loadVfxFrames('vfx/skills/void_warp/frame_{N}.png', 12, 1, 2, false),
+    voidBurst: loadVfxFrames('vfx/skills/void_burst/frame{N}.png', 12, 0, 4, false),
     gravitySingularity: loadVfxFrames('vfx/skills/gravity_singularity/frame_{N}.png', 32, 0, 2, false),
     phantomWarp: loadVfxFrames('vfx/skills/phantom_warp/frame_{N}.png', 13, 0, 2, false),
     decoySmoke: loadVfxFrames('vfx/skills/decoy_smoke/frame_{N}.png', 12, 1, 2, false),
     lightningBurst: loadVfxFrames('vfx/skills/lightning_burst/frame_{N}.png', 8, 1, 2, false),
     lightningBurstViolet: loadVfxFrames('vfx/lightning/burst_violet/frame_{N}.png', 9, 0, 2, false),
-    lightningStrike: loadVfxFrames('vfx/skills/lightning_strike/frame_{N}.png', 7, 1, 2, false)
+    lightningStrike: loadVfxFrames('vfx/skills/lightning_strike/frame_{N}.png', 7, 1, 2, false),
+    raijinBurst: loadVfxFrames('vfx/skills/raijin_burst/frame{N}.png', 8, 0, 4, false)
   },
   projectiles: {
     iaijutsuWave: loadVfxFrames('vfx/projectiles/iaijutsu_wave/frame_{N}.png', 4, 0, 2, true),

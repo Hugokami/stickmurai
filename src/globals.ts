@@ -79,6 +79,8 @@ export const globals = {
   vampireKills: 0,
   voidRuptureTimer: 0,
   raijinCataclysmTimer: 0,
+  fullScreenSkillEffect: 'none' as 'none' | 'raijin_cataclysm' | 'void_rupture',
+  fullScreenSkillTimer: 0,
 
   runStats: {
     kills: 0,

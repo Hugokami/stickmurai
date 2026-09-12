@@ -183,6 +183,8 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
 }
 
 export function resetCanvasVisuals() {
+  globals.fullScreenSkillEffect = 'none';
+  globals.fullScreenSkillTimer = 0;
   if (!canvas || !ctx) return;
   ctx.save();
   ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
@@ -621,6 +623,39 @@ export function draw() {
         ctx.arc(px, py, r, auraTime, auraTime + Math.PI * 2);
         ctx.stroke();
         ctx.restore();
+      }
+
+      if (globals.enhanceActiveTimer > 0) {
+        const isRaijin = globals.selectedSkill === 'gravity';
+        const isVoid = globals.selectedSkill === 'decoy_illusion';
+        if (isRaijin || isVoid) {
+          ctx.save();
+          const maxDur = globals.playerStats?.enhanceDuration || (isRaijin ? 7.0 : 6.0);
+          const frac = Math.max(0, Math.min(1, globals.enhanceActiveTimer / maxDur));
+          const ringColor = isRaijin ? '#c084fc' : '#38bdf8';
+          const ringGlow = isRaijin ? 'rgba(251, 191, 36, 0.4)' : 'rgba(56, 189, 248, 0.4)';
+          
+          ctx.beginPath();
+          ctx.arc(px, py, 38, 0, Math.PI * 2);
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+          ctx.lineWidth = 3;
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(px, py, 38, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac);
+          ctx.strokeStyle = ringColor;
+          ctx.lineWidth = 4;
+          ctx.stroke();
+
+          const glyphAng = auraTime * 3;
+          ctx.fillStyle = ringGlow;
+          ctx.beginPath();
+          ctx.arc(px + Math.cos(glyphAng) * 38, py + Math.sin(glyphAng) * 38, 3.5, 0, Math.PI * 2);
+          ctx.arc(px + Math.cos(glyphAng + Math.PI) * 38, py + Math.sin(glyphAng + Math.PI) * 38, 3.5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.restore();
+        }
       }
 
       if (globals.gameMode === 'zen' && globals.timeSlowDuration > 0) {
@@ -1071,6 +1106,139 @@ export function draw() {
   if (!reducedMotion() && globals.graphicsSettings === 'low' && globals.invertScreenTimer > 0) {
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.fillRect(0, 0, globals.width, globals.height);
+  }
+
+  // Full-Screen Immediate Activation Visuals for Raijin's Cataclysm & Void Rupture
+  if (globals.fullScreenSkillTimer > 0 && globals.fullScreenSkillEffect !== 'none') {
+    ctx.save();
+    ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+    const progress = Math.max(0, Math.min(1, 1 - (globals.fullScreenSkillTimer / 0.45)));
+    const alpha = Math.sin((1 - progress) * Math.PI);
+
+    if (globals.fullScreenSkillEffect === 'raijin_cataclysm') {
+      // 1. Ambient Celestial Golden-Violet Flash
+      ctx.fillStyle = `rgba(251, 191, 36, ${alpha * 0.25})`;
+      ctx.fillRect(0, 0, globals.width, globals.height);
+
+      // 2. Full-Screen Celestial Lightning Discharge Columns
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 3.5;
+      const colCount = 5;
+      for (let c = 0; c < colCount; c++) {
+        const colX = (globals.width / (colCount + 1)) * (c + 1);
+        ctx.beginPath();
+        ctx.moveTo(colX, 0);
+        const segs = 7;
+        let curX = colX;
+        for (let s = 1; s <= segs; s++) {
+          const segY = (globals.height / segs) * s;
+          curX += Math.sin(c * 4 + s * 6 + progress * 15) * 26;
+          ctx.lineTo(curX, segY);
+        }
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      // 3. Screen Edge Plasma Glow (Vignette)
+      const borderGrad = ctx.createRadialGradient(
+        globals.width / 2, globals.height / 2, Math.min(globals.width, globals.height) * 0.35,
+        globals.width / 2, globals.height / 2, Math.max(globals.width, globals.height) * 0.75
+      );
+      borderGrad.addColorStop(0, 'rgba(192, 132, 252, 0)');
+      borderGrad.addColorStop(1, `rgba(168, 85, 247, ${alpha * 0.35})`);
+      ctx.fillStyle = borderGrad;
+      ctx.fillRect(0, 0, globals.width, globals.height);
+
+    } else if (globals.fullScreenSkillEffect === 'void_rupture') {
+      // 1. Ambient Deep Void Cyan Flash
+      ctx.fillStyle = `rgba(56, 189, 248, ${alpha * 0.22})`;
+      ctx.fillRect(0, 0, globals.width, globals.height);
+
+      // 2. Full-Screen Dimensional Fracture Razor Cuts
+      const cuts = [-0.32, 0.28, -0.15];
+      cuts.forEach((ang, idx) => {
+        ctx.save();
+        ctx.translate(globals.width / 2, globals.height * (0.3 + idx * 0.2));
+        ctx.rotate(ang);
+        ctx.beginPath();
+        ctx.moveTo(-globals.width, 0);
+        ctx.lineTo(globals.width, 0);
+        ctx.strokeStyle = idx % 2 === 0 ? `rgba(56, 189, 248, ${alpha * 0.85})` : `rgba(192, 132, 252, ${alpha * 0.85})`;
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+        ctx.restore();
+      });
+
+      // 3. Deep Space Void Vignette
+      const voidVignette = ctx.createRadialGradient(
+        globals.width / 2, globals.height / 2, Math.min(globals.width, globals.height) * 0.3,
+        globals.width / 2, globals.height / 2, Math.max(globals.width, globals.height) * 0.75
+      );
+      voidVignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+      voidVignette.addColorStop(1, `rgba(30, 27, 75, ${alpha * 0.45})`);
+      ctx.fillStyle = voidVignette;
+      ctx.fillRect(0, 0, globals.width, globals.height);
+    }
+    ctx.restore();
+  }
+
+  // High-Visibility Active Skill Duration HUD Banner
+  if (globals.enhanceActiveTimer > 0 && globals.gameState === 'playing') {
+    const isRaijin = globals.selectedSkill === 'gravity';
+    const isVoid = globals.selectedSkill === 'decoy_illusion';
+    if (isRaijin || isVoid) {
+      ctx.save();
+      ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+      const maxDur = globals.playerStats?.enhanceDuration || (isRaijin ? 7.0 : 6.0);
+      const frac = Math.max(0, Math.min(1, globals.enhanceActiveTimer / maxDur));
+      const barW = Math.min(320, globals.width * 0.4);
+      const barH = 14;
+      const barX = (globals.width - barW) / 2;
+      const barY = 56;
+
+      // Background Card
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.strokeStyle = isRaijin ? '#c084fc' : '#38bdf8';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(barX - 12, barY - 20, barW + 24, barH + 28, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      // Title & Countdown Text
+      ctx.font = "bold 12px 'Outfit', sans-serif";
+      ctx.fillStyle = isRaijin ? '#fde047' : '#e0f2fe';
+      const isJa = globals.currentLang === 'ja';
+      const title = isRaijin
+        ? (isJa ? '⚡ 神罰天雷・雷神壊滅' : "⚡ RAIJIN'S CATACLYSM")
+        : (isJa ? '🌌 虚空断絶・幻影裂斬' : '🌌 VOID RUPTURE');
+      ctx.fillText(`${title} · ${globals.enhanceActiveTimer.toFixed(1)}s`, barX, barY - 6);
+
+      // Gauge Track
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.fillRect(barX, barY, barW, barH);
+
+      // Gauge Fill
+      const grad = ctx.createLinearGradient(barX, barY, barX + barW * frac, barY);
+      if (isRaijin) {
+        grad.addColorStop(0, '#a855f7');
+        grad.addColorStop(1, '#fbbf24');
+      } else {
+        grad.addColorStop(0, '#6366f1');
+        grad.addColorStop(1, '#38bdf8');
+      }
+      ctx.fillStyle = grad;
+      ctx.fillRect(barX, barY, barW * frac, barH);
+
+      ctx.restore();
+    }
   }
 
   if (globals.playerStats.reapersMarkLevel && globals.playerStats.reapersMarkLevel > 0 && globals.player && globals.player.state !== 'dead') {

@@ -102,8 +102,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '紅蓮の大虐殺',
     cost: 240000,
     icon: '🩸',
-    descEn: 'Crits spawn spinning blood scythe boomerangs through targets. Slaying enemies during Flow Awakening extends its duration by +1.5s per kill.',
-    descJa: '会心時に回転する血の大鎌が敵を貫通往復。覚醒中に敵を討伐すると覚醒時間が1体につき+1.5秒延長される。'
+    descEn: 'Crits spawn spinning blood scythe boomerangs (max 2 active, 0.4s cooldown, 4 pierces). Kills during Flow Awakening extend duration by +0.7s (max +3.5s).',
+    descJa: '会心時に血の大鎌を射出（最大2枚・0.4秒CD・最大4体貫通）。覚醒中の討伐で覚醒時間を+0.7秒延長（最大+3.5秒まで）。'
   }
 };
 
