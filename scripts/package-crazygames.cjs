@@ -7,10 +7,8 @@ const releaseDir = path.join(rootDir, 'release');
 const html5Zip = path.join(releaseDir, 'stickmurai-html5.zip');
 const crazyZip = path.join(releaseDir, 'stickmurai-crazygames.zip');
 
-if (!fs.existsSync(html5Zip)) {
-  console.log('Building base HTML5 release first...');
-  execSync('npm run package:html5', { cwd: rootDir, stdio: 'inherit' });
-}
+console.log('Building base HTML5 release first...');
+execSync('npm run package:html5', { cwd: rootDir, stdio: 'inherit' });
 
 console.log('\n--- Creating CrazyGames specialized release ---');
 
