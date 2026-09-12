@@ -23,11 +23,12 @@ export class AdManager {
     if (cgSdk) {
       // Ensure SDK is initialized before touching any module getters
       try {
-        if (typeof cgSdk.init === 'function') {
+        if (typeof cgSdk.init === 'function' && !(window as any).__cgSdkInitialized) {
           await Promise.race([
             cgSdk.init(),
             new Promise(resolve => setTimeout(resolve, 2000))
           ]);
+          (window as any).__cgSdkInitialized = true;
         }
       } catch(e) {
         console.warn("[AdManager] CrazyGames SDK init error:", e);

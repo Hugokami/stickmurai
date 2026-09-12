@@ -462,6 +462,13 @@ const tempPy = path.join(releaseDir, '_cg_zip.py');
 fs.writeFileSync(tempPy, pythonScript, 'utf8');
 try {
   execSync(`python "${tempPy}" "${html5Zip}" "${crazyZip}"`, { cwd: rootDir, stdio: 'inherit' });
+
+  // Also extract to a folder for CrazyGames (they accept folder upload, not just zip)
+  const cgFolder = path.join(releaseDir, 'crazygames');
+  if (fs.existsSync(cgFolder)) fs.rmSync(cgFolder, { recursive: true, force: true });
+  fs.mkdirSync(cgFolder, { recursive: true });
+  execSync(`python -c "import zipfile,sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "${crazyZip}" "${cgFolder}"`, { cwd: rootDir, stdio: 'inherit' });
+  console.log(`CrazyGames folder created: ${cgFolder}`);
 } finally {
   if (fs.existsSync(tempPy)) fs.unlinkSync(tempPy);
 }

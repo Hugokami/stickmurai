@@ -48,7 +48,8 @@ import {
   playTeleportSfx,
   playAffixAlert,
   getConsecutiveParries,
-  playSynthesizedSheathe
+  playSynthesizedSheathe,
+  setPortalMuted
 } from './audio';
 import {
   Afterimage,
@@ -687,6 +688,37 @@ function startApp() {
     }
 
     startLoaderStickmanAnimation();
+
+    // Initialize CrazyGames SDK v3 early during loading screen
+    try {
+      const cgSdk = (window as any).CrazyGames?.SDK;
+      if (cgSdk && typeof cgSdk.init === 'function') {
+        cgSdk.init().then(() => {
+          console.log('[CrazyGames] SDK v3 initialized in main.ts');
+          // Notify loading started
+          try { cgSdk.game?.loadingStart?.(); } catch(e) {}
+          // Apply initial mute settings
+          try {
+            if (cgSdk.game?.settings?.muteAudio === true) {
+              setPortalMuted(true);
+            }
+            // Listen for future mute changes
+            if (typeof cgSdk.game?.addSettingsChangeListener === 'function') {
+              cgSdk.game.addSettingsChangeListener((settings: any) => {
+                if (settings && typeof settings.muteAudio === 'boolean') {
+                  setPortalMuted(settings.muteAudio);
+                }
+              });
+            }
+          } catch(e) {}
+          // Store init flag so adManager doesn't re-init
+          (window as any).__cgSdkInitialized = true;
+        }).catch((err: any) => {
+          console.warn('[CrazyGames] SDK init error:', err);
+        });
+      }
+    } catch(e) {}
+
     startBackgroundAssetLoading();
     setTimeout(updateLoaderProgress, 0);
     // Offer recovery for stalled requests; elapsed time never unlocks play.
@@ -842,6 +874,13 @@ function initGame() {
     loader.style.display = 'none';
   }
   loadingFinished = true;
+
+  // Notify CrazyGames SDK that loading is complete
+  try {
+    const cgSdk = (window as any).CrazyGames?.SDK;
+    if (cgSdk?.game?.loadingStop) cgSdk.game.loadingStop();
+  } catch(e) {}
+
   stopSpawner();
   startOrResumeGameLoop();
   clearGameInputs();
