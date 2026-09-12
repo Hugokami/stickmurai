@@ -312,8 +312,9 @@ export function playSlashSfx(volumeMult: number = 1.0) {
   if (nowTime - lastSlashSfxTime < 38) return;
   lastSlashSfxTime = nowTime;
 
+  // Procedural swoosh is the sole slash sound source. The WAV pool could overlap
+  // under rapid input and made one player slash sound like dozens.
   playSynthesizedSlash(volumeMult);
-  playSound(sfx.slash, volumeMult);
 }
 
 let audioCtx: AudioContext | null = null;

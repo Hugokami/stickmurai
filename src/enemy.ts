@@ -3,7 +3,7 @@ import { BOSS_BASE_HP, campaignHpMultiplier } from './balance';
 import { callbacks } from './callbacks';
 import { Entity, Particle, FloatingText, Projectile, AnimatedEffect, Shockwave } from './entities';
 import { Player } from './player';
-import { playSound, sfx, playSynthesizedThunder, playEnergyBeam, playTeleportSfx, playExplosionSfx, playSynthesizedClash } from './audio';
+import { playSynthesizedThunder, playEnergyBeam, playTeleportSfx, playExplosionSfx, playSynthesizedClash } from './audio';
 import { vfxAnims, loadEnemyAssetsNow } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 import { isBoss } from './combatPolish';
@@ -764,7 +764,7 @@ export class Enemy extends Entity {
         this.burstShotTimer = 0;
 
         if (this.subType !== 'musketeer' && this.subType !== 'pyromancer' && this.subType !== 'astromancer' && this.subType !== 'necromancer' && this.subType !== 'toaster_bot') {
-          playSound(sfx.enemySlash, 0.3);
+
         }
 
         // Trigger custom spells
@@ -799,7 +799,7 @@ export class Enemy extends Entity {
             (proj1 as any).shooter = this;
             globals.projectiles.push(proj1);
             this.burstShotsFired = 1;
-            playSound(sfx.enemySlash, 0.25);
+
           }
           // Second shot fires 0.18s later in rapid succession!
           else if (this.burstShotsFired === 1 && this.burstShotTimer >= 0.18) {
@@ -808,7 +808,7 @@ export class Enemy extends Entity {
             globals.projectiles.push(proj2);
             this.burstShotsFired = 2;
             this.attackLanded = true;
-            playSound(sfx.enemySlash, 0.25);
+
           }
         }
       }
@@ -861,7 +861,7 @@ export class Enemy extends Entity {
           (p2 as any).shooter = this; (p2 as any).colorTint = '#38bdf8';
           globals.projectiles.push(p1, p2);
           this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.3);
+
         }
       } else if (this.subType === 'shadow_sniper') {
         if (!this.attackLanded && this.stateTime >= 0.08) {
@@ -871,7 +871,6 @@ export class Enemy extends Entity {
           p.vy = Math.sin(this.targetAngle) * 1600;
           globals.projectiles.push(p);
           this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.35);
         }
       } else if (this.subType === 'corrupted_shaman') {
         if (!this.attackLanded && this.stateTime >= 0.12) {
@@ -879,7 +878,7 @@ export class Enemy extends Entity {
           (p as any).shooter = this; (p as any).colorTint = '#10b981';
           globals.projectiles.push(p);
           this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.3);
+
         }
       } else if (this.subType === 'oni_boss') {
         const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
@@ -891,7 +890,6 @@ export class Enemy extends Entity {
           globals.projectiles.push(p1, p2);
           globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444'));
           this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.4);
         } else if (!this.attackLanded) {
           const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
           if (dxHit*dxHit + dyHit*dyHit < this.meleeHitRadius * this.meleeHitRadius) {
@@ -908,7 +906,6 @@ export class Enemy extends Entity {
             globals.projectiles.push(p);
           }
           this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.4);
         } else if (!this.attackLanded) {
           const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
           if (dxHit*dxHit + dyHit*dyHit < this.meleeHitRadius * this.meleeHitRadius) {
@@ -925,7 +922,6 @@ export class Enemy extends Entity {
           globals.shockwaves.push(new Shockwave(this.x, this.y, '#00ffff'));
           globals.screenShake = Math.max(globals.screenShake, 18);
           this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.4);
         } else if (!this.attackLanded) {
           const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
           if (dxHit*dxHit + dyHit*dyHit < this.meleeHitRadius * this.meleeHitRadius) {
@@ -942,7 +938,6 @@ export class Enemy extends Entity {
             globals.projectiles.push(p);
           }
           this.attackLanded = true;
-          playSound(sfx.enemySlash, 0.4);
         } else if (!this.attackLanded) {
           const dxHit = this.target.x - this.x; const dyHit = this.target.y - this.y;
           if (dxHit*dxHit + dyHit*dyHit < this.meleeHitRadius * this.meleeHitRadius) {
@@ -1264,7 +1259,7 @@ export class Enemy extends Entity {
       if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));
       if (bossDust?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossDust, 0.55, 2.2));
       globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "WARLORD CLEAVE! 💀", "#ef4444", 28));
-      playSound(sfx.enemySlash, 0.5);
+
 
       const pdx = globals.player.x - this.x;
       const pdy = globals.player.y - this.y;
