@@ -107,50 +107,15 @@ export function debouncedResize() {
 export function drawBackground(ctx: CanvasRenderingContext2D) {
   const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
   
-  // 1. Permanent Solid Base & Daylight Sky Gradient (Guarantees zero black void / transparency gap)
-  ctx.fillStyle = isKamisori ? '#e5e5e5' : '#38bdf8';
+  // 1. Lush Green Grass Base (Guarantees zero black void, zero transparency gaps, zero screen darkening)
+  ctx.fillStyle = isKamisori ? '#e5e5e5' : '#527c2f';
   ctx.fillRect(0, 0, globals.width, globals.height);
-
-  if (!isKamisori) {
-    const skyGrad = ctx.createLinearGradient(0, 0, 0, globals.height * 0.72);
-    skyGrad.addColorStop(0, '#38bdf8'); // Clear brilliant azure sky
-    skyGrad.addColorStop(0.55, '#7dd3fc'); // Gentle sunlit sky blue
-    skyGrad.addColorStop(1, '#bae6fd'); // Warm horizon haze
-    ctx.fillStyle = skyGrad;
-    ctx.fillRect(0, 0, globals.width, globals.height);
-
-    // Sunlit Day Sun with Soft Halo
-    const sunX = (globals.width * 0.82) | 0;
-    const sunY = (globals.height * 0.18) | 0;
-    const sunRadius = 40;
-    const sunGlow = ctx.createRadialGradient(sunX, sunY, sunRadius * 0.4, sunX, sunY, sunRadius * 2.6);
-    sunGlow.addColorStop(0, 'rgba(255, 255, 240, 0.95)');
-    sunGlow.addColorStop(0.35, 'rgba(254, 240, 138, 0.4)');
-    sunGlow.addColorStop(1, 'rgba(254, 240, 138, 0)');
-    ctx.fillStyle = sunGlow;
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, sunRadius * 2.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.fillStyle = '#fffbeb';
-    ctx.beginPath();
-    ctx.arc(sunX, sunY, sunRadius, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Guaranteed Lush Green Ground Fallback
-    const groundTop = (globals.height * 0.56) | 0;
-    const groundGrad = ctx.createLinearGradient(0, groundTop, 0, globals.height);
-    groundGrad.addColorStop(0, '#5a8f29');
-    groundGrad.addColorStop(1, '#365314');
-    ctx.fillStyle = groundGrad;
-    ctx.fillRect(0, groundTop, globals.width, globals.height - groundTop);
-  }
 
   ctx.imageSmoothingEnabled = false;
 
   const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-  // 2. Parallax Fantasy Background Layers (Ruins, Torii, Cherry Trees, Statues & Grass)
+  // 2. Parallax Fantasy Background Layers
   bgLayers.forEach(layer => {
     if (layer.name === 'sky') {
       return;
@@ -172,20 +137,32 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
         ctx.globalAlpha = 0.25;
       }
       
-      // Ensure all 1080p parallax layers align seamlessly across canvas height
-      const scale = (globals.height * 1.05) / img.naturalHeight;
+      const bufferFactor = 1.15;
+      const scale = (globals.height * bufferFactor) / img.naturalHeight;
       const imgW = img.naturalWidth * scale;
       const imgH = img.naturalHeight * scale;
       
       const offsetX = -(globals.camera.x * layer.speed * globals.gameZoom) % imgW;
       let startX = offsetX > 0 ? offsetX - imgW : offsetX;
       
-      const maxNegativeY = -(imgH - globals.height);
-      const offsetY = Math.min(0, Math.max(maxNegativeY, (globals.height - imgH) * 0.5 - (globals.camera.y - 350) * 0.04 * layer.speed));
+      const midY = (globals.height - imgH) / 2;
+      const speedY = isGroundLayer ? layer.speed : 0.3;
+      const offsetY = midY - (globals.camera.y * speedY * globals.gameZoom);
       
-      // Tile horizontally only; each layer covers full vertical viewport
-      for (let x = startX; x < globals.width + imgW; x += imgW) {
-        ctx.drawImage(img, x, offsetY, imgW, imgH);
+      if (isGroundLayer) {
+        // Tiled across entire arena in both X and Y: covers the whole field with grass
+        const offsetYMod = offsetY % imgH;
+        let startY = offsetYMod > 0 ? offsetYMod - imgH : offsetYMod;
+        for (let x = startX; x < globals.width + imgW; x += imgW) {
+          for (let y = startY; y < globals.height + imgH; y += imgH) {
+            ctx.drawImage(img, x, y, imgW, imgH);
+          }
+        }
+      } else {
+        // Decorative layers: tile horizontally only, single vertical position
+        for (let x = startX; x < globals.width + imgW; x += imgW) {
+          ctx.drawImage(img, x, offsetY, imgW, imgH);
+        }
       }
       ctx.restore();
     }
@@ -198,7 +175,7 @@ export function resetCanvasVisuals() {
   if (!canvas || !ctx) return;
   ctx.save();
   ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
-  ctx.fillStyle = '#38bdf8';
+  ctx.fillStyle = '#527c2f';
   ctx.fillRect(0, 0, globals.width, globals.height);
   ctx.restore();
 }
