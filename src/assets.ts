@@ -669,6 +669,14 @@ export function registerAssetToLoad(img: HTMLImageElement) {
   }
 }
 
+interface PackedAssetEntry {
+  byteOffset: number;
+  byteLen: number;
+  mime: string;
+}
+
+let packedArrayBuffer: ArrayBuffer | null = null;
+const packedIndex = new Map<string, PackedAssetEntry>();
 export const packedAssetMap = new Map<string, string>();
 let bundleInitPromise: Promise<boolean> | null = null;
 
@@ -678,11 +686,30 @@ function normalizeAssetKey(p: string): string {
 
 export function lookupPackedAsset(src: string): string | undefined {
   const norm = normalizeAssetKey(src);
-  return packedAssetMap.get(norm)
+  let blobUrl = packedAssetMap.get(norm)
     || packedAssetMap.get(decodeURI(norm))
     || packedAssetMap.get(encodeURI(norm))
     || packedAssetMap.get(decodeURIComponent(norm))
     || packedAssetMap.get(encodeURIComponent(norm));
+  if (blobUrl) return blobUrl;
+
+  if (!packedArrayBuffer) return undefined;
+
+  const entry = packedIndex.get(norm)
+    || packedIndex.get(decodeURI(norm))
+    || packedIndex.get(encodeURI(norm))
+    || packedIndex.get(decodeURIComponent(norm))
+    || packedIndex.get(encodeURIComponent(norm));
+
+  if (entry) {
+    const blob = new Blob([new Uint8Array(packedArrayBuffer, entry.byteOffset, entry.byteLen)], { type: entry.mime });
+    blobUrl = URL.createObjectURL(blob);
+    packedAssetMap.set(norm, blobUrl);
+    packedAssetMap.set(encodeURI(norm), blobUrl);
+    packedAssetMap.set(decodeURI(norm), blobUrl);
+    return blobUrl;
+  }
+  return undefined;
 }
 
 export function resolveAssetUrl(src: string): string {
@@ -699,6 +726,7 @@ export function ensurePackedAssets(): Promise<boolean> {
       const view = new DataView(ab);
       const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
       if (magic !== 'STIK') return false;
+      packedArrayBuffer = ab;
       const fileCount = view.getUint32(4, true);
       const indexLen = view.getUint32(8, true);
       const dataStart = 12 + indexLen;
@@ -715,13 +743,15 @@ export function ensurePackedAssets(): Promise<boolean> {
         const dataLen = view.getUint32(offset, true);
         offset += 4;
         const mime = pathStr.endsWith('.svg') ? 'image/svg+xml' : 'image/png';
-        const blob = new Blob([new Uint8Array(ab, dataStart + dataOffset, dataLen)], { type: mime });
-        const blobUrl = URL.createObjectURL(blob);
-        
+        const entry: PackedAssetEntry = {
+          byteOffset: dataStart + dataOffset,
+          byteLen: dataLen,
+          mime
+        };
         const norm = normalizeAssetKey(pathStr);
-        packedAssetMap.set(norm, blobUrl);
-        packedAssetMap.set(encodeURI(norm), blobUrl);
-        packedAssetMap.set(decodeURI(norm), blobUrl);
+        packedIndex.set(norm, entry);
+        packedIndex.set(encodeURI(norm), entry);
+        packedIndex.set(decodeURI(norm), entry);
       }
       return true;
     } catch {
@@ -759,7 +789,11 @@ function startLoadingItem(item: QueuedAsset) {
     } else {
       pumpBackgroundQueue();
     }
-    window.dispatchEvent(new Event('qol-assets'));
+    const loader = typeof document !== 'undefined' ? document.getElementById('loader-screen') : null;
+    const isLoaderActive = loader && loader.style.display !== 'none' && !loader.classList.contains('hidden');
+    if (isLoaderActive) {
+      window.dispatchEvent(new Event('qol-assets'));
+    }
   };
 
   item.img.onload = () => {
@@ -812,6 +846,10 @@ export function pumpPriorityQueue() {
 
 function pumpBackgroundQueue() {
   if (!isBackgroundLoadingActive) return;
+  // Never burn CPU/GPU texture bandwidth while player is fighting or clearing waves
+  if (globals.gameState === 'playing' || globals.gameState === 'wave_clear') {
+    return;
+  }
   while (activeLoads.size < MAX_CONCURRENT_BACKGROUND && backgroundQueue.length > 0) {
     const item = backgroundQueue.shift()!;
     startLoadingItem(item);

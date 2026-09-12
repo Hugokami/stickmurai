@@ -4005,3 +4005,56 @@ html.qol-left #ult-buttons-wrap {
   100% { transform: scale(1.08); }
 }
 
+/* Shop Modal Responsive & Non-overlapping Layout */
+.shop-modal-box {
+  max-width: 1060px !important;
+  width: min(1060px, 96vw) !important;
+  max-height: 94vh !important;
+  box-sizing: border-box !important;
+}
+
+.shop-content-layout {
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#shop-items-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.shop-power-card {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  cursor: pointer;
+}
+
+.shop-power-card:hover {
+  transform: translateY(-3px) scale(1.02);
+}
+
+@media (max-width: 880px) {
+  .shop-content-layout {
+    grid-template-columns: 1fr;
+  }
+  #shop-items-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 500px) {
+  #shop-items-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+

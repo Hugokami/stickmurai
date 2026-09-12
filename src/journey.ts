@@ -5,6 +5,7 @@ import { bindQolButton, clearGameInputs, showToast } from './qol';
 import { isPractice } from './runtimeQol';
 import { addClear, contractPassed, emptyHero, masteryRank, parseJourney, signatureProgress, type Contract } from './journeyCore';
 import './journey.css';
+import { resolveAssetUrl } from './assets';
 import { bossStatus } from './combatPolish';
 
 const KEY='stickmurai_journey';
@@ -60,7 +61,7 @@ function render(){
   for(const [name,needed] of [['gold',0],['cyan',3],['violet',10]] as const){const b=btn(`${name}${needed?` · ${needed} clears`:''}`,()=>{data.accent=name;persist();applyAccent();render();});b.disabled=total<needed;cosmetics.append(b);}
   for(const hero of heroList){
     const record=data.heroes[hero.id]||emptyHero(),rank=masteryRank(hero.id,record),goal=signatureProgress(hero.id,record);
-    const el=card(hero.nameEn);const portrait=document.createElement('img');portrait.src=hero.image;portrait.alt=hero.nameEn;portrait.className='journey-portrait';el.prepend(portrait);
+    const el=card(hero.nameEn);const portrait=document.createElement('img');portrait.src=resolveAssetUrl(hero.image);portrait.alt=hero.nameEn;portrait.className='journey-portrait';el.prepend(portrait);
     line(el,`${['Unranked','Initiate','Adept','Legend'][rank]} ${'◆'.repeat(rank)}`);
     line(el,`Initiate: ${Math.min(3,record.clears)}/3 clears · Adept: ${goal.label} ${Math.min(goal.target,goal.value)}/${goal.target}`);
     line(el,`Legend: ${Math.min(10,record.bosses)}/10 bosses + ${Math.min(3,record.flawless)}/3 no-hit clears, after Adept`);

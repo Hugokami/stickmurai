@@ -876,38 +876,38 @@ export function renderShopModal() {
       : '⚠️ BATTLEFIELD INTEL: Standard Vanguard Patrol. Soul shard drop yields maximized.';
 
   modal.innerHTML = `
-    <div class="menu-box" style="max-width: 860px; width: min(860px, 96vw); max-height: 92vh; padding: 20px; border-color: #fbbf24; box-shadow: 0 0 35px rgba(251, 191, 36, 0.35); overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
+    <div class="menu-box shop-modal-box" style="max-width: 1060px; width: min(1060px, 96vw); max-height: 94vh; padding: 16px 20px; border-color: #fbbf24; box-shadow: 0 0 35px rgba(251, 191, 36, 0.35); overflow-y: auto; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;">
       
       <!-- Header -->
-      <div style="position: sticky; top: -20px; background: #0c101c; z-index: 10; margin: -20px -20px 0 -20px; padding: 14px 20px 10px 20px; border-bottom: 1px solid rgba(251, 191, 36, 0.3); display: flex; justify-content: space-between; align-items: center; width: calc(100% + 40px); box-sizing: border-box;">
+      <div style="position: sticky; top: -16px; background: #0c101c; z-index: 10; margin: -16px -20px 0 -20px; padding: 12px 20px 10px 20px; border-bottom: 1px solid rgba(251, 191, 36, 0.3); display: flex; justify-content: space-between; align-items: center; width: calc(100% + 40px); box-sizing: border-box;">
         <div>
-          <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(18px, 2.8vh, 24px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ WAR REQUISITION: OUTPOST ARMORY</h2>
+          <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(16px, 2.5vh, 22px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ WAR REQUISITION: OUTPOST ARMORY</h2>
           <div style="font-size: 11px; color: #94a3b8; font-family: 'Space Mono', monospace; margin-top: 2px;">
             Stage ${stageNum} Battlefield Requisition Hub
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="font-family: 'Orbitron', monospace; font-size: 16px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 14px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4);">
+          <div style="font-family: 'Orbitron', monospace; font-size: 15px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 14px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4);">
             ◆ <span id="modal-currency-count">${globals.stageCurrency || 0}</span>
           </div>
         </div>
       </div>
 
       <!-- Threat Radar -->
-      <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 8px 12px; font-family: 'Space Mono', monospace; font-size: 11px; color: #fca5a5; display: flex; align-items: center; gap: 8px;">
+      <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 8px; padding: 7px 12px; font-family: 'Space Mono', monospace; font-size: 10.5px; color: #fca5a5; display: flex; align-items: center; gap: 8px;">
         <span>${radarText}</span>
       </div>
 
       <!-- Body: 2 Columns on Desktop, Stacked on Mobile -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; width: 100%;">
+      <div class="shop-content-layout" style="display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 14px; width: 100%; align-items: start; box-sizing: border-box;">
         
         <!-- Left Column: Shinobi Stat Sheet & Synergies -->
-        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px;">
-          <div style="font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: bold; color: #38bdf8; letter-spacing: 1px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 6px;">
+        <div style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; box-sizing: border-box;">
+          <div style="font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: bold; color: #38bdf8; letter-spacing: 1px; border-bottom: 1px solid rgba(56, 189, 248, 0.25); padding-bottom: 5px;">
             📊 SHINOBI STAT SHEET
           </div>
           
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 11px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 10px;">
             <div style="color: #94a3b8;">Health: <b style="color: #ef4444;">${globals.lives}/${globals.maxLives} ❤️</b></div>
             <div style="color: #94a3b8;">Level: <b style="color: #ffd700;">LVL ${globals.level}</b></div>
             <div style="color: #94a3b8;">Slash DMG: <b style="color: #4ade80;">+${Math.round((globals.playerStats.slashBonusDmgPct || 0) * 100)}%</b></div>
@@ -921,23 +921,23 @@ export function renderShopModal() {
           </div>
 
           <!-- Active Synergies -->
-          <div style="font-family: 'Orbitron', sans-serif; font-size: 11px; font-weight: bold; color: #a855f7; letter-spacing: 1px; margin-top: 4px; border-bottom: 1px solid rgba(168, 85, 247, 0.25); padding-bottom: 4px;">
+          <div style="font-family: 'Orbitron', sans-serif; font-size: 10.5px; font-weight: bold; color: #a855f7; letter-spacing: 1px; margin-top: 2px; border-bottom: 1px solid rgba(168, 85, 247, 0.25); padding-bottom: 4px;">
             🌀 ACTIVE DISCIPLINES
           </div>
-          <div style="display: flex; flex-direction: column; gap: 6px; font-size: 10.5px;">
+          <div style="display: flex; flex-direction: column; gap: 5px; font-size: 10px;">
             ${(Object.keys(SYNERGY_INFO) as SynergyType[]).map(synKey => {
               const count = activeSyn[synKey] || 0;
               const info = SYNERGY_INFO[synKey];
               const is2Active = count >= 2;
               const is4Active = count >= 4;
-              const statusText = is4Active ? info.desc4 : (is2Active ? info.desc2 : 'Inactive (Need 2)');
+              const statusText = is4Active ? info.desc4 : (is2Active ? info.desc2 : 'Inactive');
               const activeColor = is2Active ? info.color : '#64748b';
               return `
-                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 6px; border-left: 3px solid ${activeColor};">
+                <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 3px 6px; border-radius: 5px; border-left: 3px solid ${activeColor};">
                   <div>
                     <span style="color: ${activeColor}; font-weight: bold;">${info.icon} ${info.label} (${count})</span>
                   </div>
-                  <div style="font-size: 9.5px; color: ${is2Active ? '#e2e8f0' : '#64748b'};">
+                  <div style="font-size: 9px; color: ${is2Active ? '#e2e8f0' : '#64748b'};">
                     ${statusText}
                   </div>
                 </div>
@@ -946,13 +946,13 @@ export function renderShopModal() {
           </div>
 
           <!-- Emergency Field Ration -->
-          <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%;">
-            <button id="shop-ration-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
-              <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #f87171;">
-                <span style="font-size: 13px;">❤️</span>
-                <span>Field Ration (+1 Heart)</span>
+          <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%;">
+            <button id="shop-ration-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: #f87171;">
+                <span style="font-size: 12px;">❤️</span>
+                <span>Field Ration (+1 HP)</span>
               </div>
-              <div style="font-family: 'Orbitron', monospace; font-size: 11px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.4); white-space: nowrap;">
+              <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.4); white-space: nowrap;">
                 ${globals.lives >= globals.maxLives ? 'MAX HP' : '◆ 20'}
               </div>
             </button>
@@ -960,20 +960,20 @@ export function renderShopModal() {
         </div>
 
         <!-- Right Column: 4 Shop Requisition Cards -->
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <div id="shop-items-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; width: 100%;">
+        <div style="display: flex; flex-direction: column; gap: 10px; min-width: 0; width: 100%; box-sizing: border-box;">
+          <div id="shop-items-grid" style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; box-sizing: border-box;">
           </div>
           
           <!-- Bottom Action Buttons -->
-          <div style="display: flex; gap: 12px; width: 100%; justify-content: space-between; align-items: center; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px; flex-wrap: wrap;">
-            <div style="font-size: 11px; color: #94a3b8; font-family: 'Space Mono', monospace; display: flex; align-items: center; gap: 6px;">
+          <div style="display: flex; gap: 10px; width: 100%; justify-content: space-between; align-items: center; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 8px; flex-wrap: wrap;">
+            <div style="font-size: 10.5px; color: #94a3b8; font-family: 'Space Mono', monospace; display: flex; align-items: center; gap: 6px;">
               <span>❄️ Frozen cards stay locked through rerolls</span>
             </div>
-            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-left: auto;">
-              <button id="shop-refresh-btn" class="menu-btn btn-compact" style="border-color: #38bdf8; color: #38bdf8; min-height: 38px; height: 38px; width: auto; max-width: none; min-width: 140px; padding: 0 16px; font-size: 12px; white-space: nowrap; flex-shrink: 0;">
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-left: auto;">
+              <button id="shop-refresh-btn" class="menu-btn btn-compact" style="border-color: #38bdf8; color: #38bdf8; min-height: 34px; height: 34px; width: auto; max-width: none; min-width: 130px; padding: 0 14px; font-size: 11.5px; white-space: nowrap; flex-shrink: 0;">
                 🔄 Reroll Unlocked (${costLabel})
               </button>
-              <button id="shop-close-btn" class="menu-btn exit-btn btn-compact" style="min-height: 38px; height: 38px; width: auto; max-width: none; min-width: 100px; padding: 0 16px; font-size: 12px; white-space: nowrap; flex-shrink: 0;">
+              <button id="shop-close-btn" class="menu-btn exit-btn btn-compact" style="min-height: 34px; height: 34px; width: auto; max-width: none; min-width: 90px; padding: 0 14px; font-size: 11.5px; white-space: nowrap; flex-shrink: 0;">
                 ✕ Resume Battle
               </button>
             </div>
@@ -991,42 +991,47 @@ export function renderShopModal() {
     const isFrozen = !!slot.isFrozen;
     const synInfo = SYNERGY_INFO[slot.synergy] || SYNERGY_INFO.element;
 
-    card.className = 'power-card';
+    card.className = 'shop-power-card';
     card.style.cssText = `
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
       border-color: ${isFrozen ? '#38bdf8' : qColor};
       background: linear-gradient(135deg, ${isFrozen ? 'rgba(8, 47, 73, 0.95)' : 'rgba(15, 23, 42, 0.95)'}, rgba(10, 10, 15, 0.95));
-      box-shadow: 0 0 16px ${isFrozen ? 'rgba(56, 189, 248, 0.4)' : qColor + '33'};
-      padding: 12px 10px;
+      box-shadow: 0 0 12px ${isFrozen ? 'rgba(56, 189, 248, 0.35)' : qColor + '22'};
+      padding: 10px 8px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      min-height: 155px;
+      min-height: 145px;
       position: relative;
       border-radius: 8px;
-      border-width: 2px;
+      border-width: 1.5px;
       border-style: solid;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
+      overflow: hidden;
     `;
 
     card.innerHTML = `
       <div>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 4px;">
-          <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-            <span style="font-size: 9px; font-weight: 900; letter-spacing: 0.5px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 6px; border-radius: 6px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 3px;">
+          <div style="display: flex; align-items: center; gap: 3px; flex-wrap: wrap;">
+            <span style="font-size: 8.5px; font-weight: 900; letter-spacing: 0.5px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 5px; border-radius: 5px;">
               ${slot.quality}
             </span>
             ${slot.power.isUnique ? `
-              <span style="font-size: 8.5px; font-weight: 900; color: #fbbf24; background: rgba(251, 191, 36, 0.2); border: 1px solid #fbbf24; padding: 1px 5px; border-radius: 5px; letter-spacing: 0.4px;">
+              <span style="font-size: 8px; font-weight: 900; color: #fbbf24; background: rgba(251, 191, 36, 0.2); border: 1px solid #fbbf24; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.3px;">
                 ⚡ UNIQUE
               </span>
             ` : ''}
             ${slot.power.skill && slot.power.skill === globals.selectedSkill ? `
-              <span style="font-size: 8.5px; font-weight: 900; color: #38bdf8; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; padding: 1px 5px; border-radius: 5px;">
-                ⚡ SKILL SYNERGY
+              <span style="font-size: 8px; font-weight: 900; color: #38bdf8; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; padding: 1px 4px; border-radius: 4px;">
+                ⚡ SYNERGY
               </span>
             ` : ''}
           </div>
-          <span style="font-size: 9px; font-weight: bold; color: ${synInfo.color}; background: rgba(0,0,0,0.5); padding: 1px 6px; border-radius: 6px;">
+          <span style="font-size: 8.5px; font-weight: bold; color: ${synInfo.color}; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 5px;">
             ${synInfo.icon} ${synInfo.label}
           </span>
         </div>
@@ -1034,40 +1039,40 @@ export function renderShopModal() {
         ${(() => {
           let badges = '';
           if (slot.discountPct) {
-            badges += `<div style="display: inline-block; background: #ef4444; color: #ffffff; font-size: 9px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">🔥 -${slot.discountPct}% SALE</div>`;
+            badges += `<div style="display: inline-block; background: #ef4444; color: #ffffff; font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">🔥 -${slot.discountPct}% SALE</div>`;
           }
           const name = slot.power.nameKey;
           if (!globals.activeFusions.has('plasma_tempest') && (name.includes('Fire') || name.includes('Thunder') || name.includes('Feather'))) {
-            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">⚡ COMBO: PLASMA</div>`;
+            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">⚡ PLASMA</div>`;
           } else if (!globals.activeFusions.has('singularity_cleave') && (name.includes('Cataclysm') || name.includes('Lethal') || name.includes('Giant') || name.includes('Void'))) {
-            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">🌌 COMBO: SINGULARITY</div>`;
+            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">🌌 SINGULARITY</div>`;
           } else if (!globals.activeFusions.has('hundred_phantoms') && (name.includes('Rupture') || name.includes('Clones') || name.includes('Cursed'))) {
-            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">👥 COMBO: PHANTOMS</div>`;
+            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">👥 PHANTOMS</div>`;
           } else if (!globals.activeFusions.has('kamaitachi') && (name.includes('Wind') || name.includes('Gale') || name.includes('Deflect') || name.includes('Echo'))) {
-            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px; margin-right: 4px;">🌪️ COMBO: KAMAITACHI</div>`;
+            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">🌪️ KAMAITACHI</div>`;
           }
           const curSyn = activeSyn[slot.synergy] || 0;
           if (curSyn === 1 || curSyn === 3) {
-            badges += `<div style="display: inline-block; background: rgba(34, 197, 94, 0.25); color: #bbf7d0; border: 1px solid #22c55e; font-size: 8.5px; font-weight: 900; padding: 1px 6px; border-radius: 4px; margin-bottom: 4px;">🔥 SYNERGY UNLOCK (${curSyn + 1})</div>`;
+            badges += `<div style="display: inline-block; background: rgba(34, 197, 94, 0.25); color: #bbf7d0; border: 1px solid #22c55e; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px;">🔥 UNLOCK (${curSyn + 1})</div>`;
           }
           return badges;
         })()}
 
-        <h3 style="font-size: 12.5px; margin: 0 0 4px 0; color: #f8fafc; font-family: 'Shojumaru', sans-serif;">
+        <h3 style="font-size: 11.5px; margin: 0 0 3px 0; color: #f8fafc; font-family: 'Shojumaru', sans-serif; word-break: break-word;">
           ${t(slot.power.nameKey)}
         </h3>
-        <p style="font-size: 10px; color: #cbd5e1; margin: 0; line-height: 1.35; font-family: 'Space Mono', monospace;">
+        <p style="font-size: 9.5px; color: #cbd5e1; margin: 0; line-height: 1.35; font-family: 'Space Mono', monospace;">
           ${t(slot.power.descKey)}
         </p>
       </div>
 
-      <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-        <button class="shop-freeze-btn" style="background: ${isFrozen ? '#0284c7' : 'rgba(0,0,0,0.5)'}; border: 1px solid ${isFrozen ? '#38bdf8' : 'rgba(255,255,255,0.2)'}; color: ${isFrozen ? '#ffffff' : '#94a3b8'}; border-radius: 4px; padding: 2px 6px; font-size: 9.5px; cursor: pointer; display: flex; align-items: center; gap: 2px;">
-          ${isFrozen ? '❄️ FROZEN' : '🔒 LOCK'}
+      <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+        <button class="shop-freeze-btn" style="background: ${isFrozen ? '#0284c7' : 'rgba(0,0,0,0.5)'}; border: 1px solid ${isFrozen ? '#38bdf8' : 'rgba(255,255,255,0.2)'}; color: ${isFrozen ? '#ffffff' : '#94a3b8'}; border-radius: 4px; padding: 2px 5px; font-size: 9px; cursor: pointer; display: flex; align-items: center; gap: 2px; white-space: nowrap; flex-shrink: 0;">
+          ${isFrozen ? '❄️ LOCKED' : '🔒 LOCK'}
         </button>
 
-        <button class="shop-buy-btn" style="background: ${canAfford ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${canAfford ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; color: ${canAfford ? '#fbbf24' : '#64748b'}; border-radius: 4px; padding: 3px 10px; font-size: 11px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-family: 'Orbitron', monospace;" ${canAfford ? '' : 'disabled'}>
-          ${slot.discountPct ? `<span style="text-decoration: line-through; opacity: 0.6; font-size: 9px; margin-right: 4px;">◆${slot.originalPrice}</span>` : ''}◆ ${slot.price}
+        <button class="shop-buy-btn" style="background: ${canAfford ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${canAfford ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; color: ${canAfford ? '#fbbf24' : '#64748b'}; border-radius: 4px; padding: 3px 8px; font-size: 10.5px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-family: 'Orbitron', monospace; white-space: nowrap; flex-shrink: 0;" ${canAfford ? '' : 'disabled'}>
+          ${slot.discountPct ? `<span style="text-decoration: line-through; opacity: 0.6; font-size: 8.5px; margin-right: 3px;">◆${slot.originalPrice}</span>` : ''}◆ ${slot.price}
         </button>
       </div>
     `;

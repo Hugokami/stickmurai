@@ -48,10 +48,11 @@ exclude_exts = {'.unitypackage', '.map'}
 exclude_names = {'.ds_store', 'thumbs.db'}
 
 # HTML5 standalone package whitelist
-# Sprites, VFX, and backgrounds are cleanly packed inside assets.bin (6.4 MB)
-# to stay well within itch.io's strict 1,000-file platform limit.
+# Sprites and VFX are cleanly packed inside assets.bin (lazy on-demand texture loading)
+# Backgrounds and hero portraits are loose for instantaneous native rendering.
+# Stays strictly within itch.io's 1,000-file platform ceiling (~50 files total).
 allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin'}
-allowed_dirs = {'assets', 'audio', 'fonts'}
+allowed_dirs = {'assets', 'audio', 'fonts', 'fantasy_bg'}
 allowed_icons = {
     'release_v1.2-single_38.png',
     'release_v1.2-single_15.png',
@@ -69,7 +70,7 @@ for rf in allowed_root_files:
     if os.path.exists(fp):
         files_to_pack.append((fp, rf))
 
-# 2. Allowed subdirectories (assets, audio, fonts)
+# 2. Allowed subdirectories (assets, audio, fonts, fantasy_bg)
 for ad in allowed_dirs:
     sdir = os.path.join(dist_dir, ad)
     if os.path.exists(sdir):
@@ -88,6 +89,14 @@ if os.path.exists(icons_dir):
         fp = os.path.join(icons_dir, icon)
         if os.path.exists(fp):
             files_to_pack.append((fp, f'icons/{icon}'))
+
+# 4. Hero Portraits (guaranteed loose for 100% reliable zero-delay Dojo hero displays)
+portraits_dir = os.path.join(dist_dir, 'sprites', 'portraits')
+if os.path.exists(portraits_dir):
+    for f in os.listdir(portraits_dir):
+        if f.endswith('.png'):
+            fp = os.path.join(portraits_dir, f)
+            files_to_pack.append((fp, f'sprites/portraits/{f}'))
 
 count = len(files_to_pack)
 with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zf:

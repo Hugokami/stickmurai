@@ -5,7 +5,7 @@ import { completeJourneyStage, masteryBadge } from './journey';
 import { requestResume, handleBack, clearGameInputs } from './qol';
 import { globals, getStageAffix, getAscendantRank } from './globals';
 import { safeStorage } from './storage';
-import { i18n, skillsData, preloadStageEnemyAssets, loadHeroAssets } from './assets';
+import { i18n, skillsData, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
 import { bgmAudio, pauseBgm } from './audio';
 import { callbacks } from './callbacks';
 import { pvpManager } from './pvpIaijutsuManager';
@@ -2338,9 +2338,10 @@ export function populateDojoHeroGrid() {
     card.style.boxShadow = isEquipped ? '0 0 20px rgba(192, 132, 252, 0.4)' : 'none';
 
     // Hero portrait container with elegant dark dojo alcove podium & SVG fallback
+    const heroImgUrl = resolveAssetUrl(hero.image);
     const portraitHtml = `
       <div class="hero-portrait-wrap" style="width: 100%; height: 96px; min-height: 96px; flex: 0 0 96px; flex-shrink: 0; background: radial-gradient(circle at 50% 65%, rgba(192,132,252,0.22) 0%, rgba(15,23,42,0.92) 75%); border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(192,132,252,0.28); margin-bottom: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.4);">
-        <img src="${hero.image}" alt="${hero.nameEn}" style="width: 76px; height: 76px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23c084fc\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
+        <img src="${heroImgUrl}" alt="${hero.nameEn}" style="width: 76px; height: 76px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23c084fc\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
       </div>
     `;
 
