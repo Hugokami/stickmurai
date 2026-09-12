@@ -25,4 +25,6 @@ dist-ssr
 
 .vercel
 graphify-out/
+release/
+*.zip
 

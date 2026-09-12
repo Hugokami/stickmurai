@@ -2101,7 +2101,7 @@ export const HEROES_DATA = [
     nameJa: '霧の浪人 (クラシック)',
     titleEn: 'Ronin of the Mist',
     titleJa: '疾風怒濤の流浪剣士',
-    image: '/sprites/portraits/portrait_ronin.png?v=clean2',
+    image: 'sprites/portraits/portrait_ronin.png?v=clean2',
   },
   {
     id: 'luneblade',
@@ -2109,7 +2109,7 @@ export const HEROES_DATA = [
     nameJa: '月影の剣聖（ルーンブレイド）',
     titleEn: 'Axion Swordsman',
     titleJa: '星海を切り裂く双刃の英傑',
-    image: '/sprites/portraits/portrait_luneblade.png?v=clean2',
+    image: 'sprites/portraits/portrait_luneblade.png?v=clean2',
   },
   {
     id: 'ninja',
@@ -2117,7 +2117,7 @@ export const HEROES_DATA = [
     nameJa: '闇夜の忍（シャドウ・シノビ）',
     titleEn: 'Silent Assassin',
     titleJa: '影を纏いし暗殺の達人',
-    image: '/sprites/portraits/portrait_ninja.png?v=clean2',
+    image: 'sprites/portraits/portrait_ninja.png?v=clean2',
   },
   {
     id: 'samurai',
@@ -2125,7 +2125,7 @@ export const HEROES_DATA = [
     nameJa: '極意の侍（グランドマスター）',
     titleEn: 'Kensei of the Blade',
     titleJa: '一騎当千の剣聖武士',
-    image: '/sprites/portraits/portrait_samurai.png?v=clean2',
+    image: 'sprites/portraits/portrait_samurai.png?v=clean2',
   },
   {
     id: 'nightborne',
@@ -2133,7 +2133,7 @@ export const HEROES_DATA = [
     nameJa: '常世の覇王（ナイトボーン）',
     titleEn: 'Abyssal Lord',
     titleJa: '冥府の深淵より現れし覇王',
-    image: '/sprites/portraits/portrait_nightborne.png?v=clean2',
+    image: 'sprites/portraits/portrait_nightborne.png?v=clean2',
   },
   {
     id: 'satyr',
@@ -2141,7 +2141,7 @@ export const HEROES_DATA = [
     nameJa: '原始の森神（サテュロス）',
     titleEn: 'Apex Nature Titan',
     titleJa: '深林を支配せし森羅の主',
-    image: '/sprites/portraits/portrait_satyr.png?v=clean2',
+    image: 'sprites/portraits/portrait_satyr.png?v=clean2',
   },
   {
     id: 'akakage',
@@ -2149,7 +2149,7 @@ export const HEROES_DATA = [
     nameJa: '紅影・クリムゾン・レヴナント',
     titleEn: 'Crimson Revenant',
     titleJa: '紅蓮の亡影',
-    image: '/sprites/portraits/portrait_akakage.png?v=akakage1',
+    image: 'sprites/portraits/portrait_akakage.png?v=akakage1',
   }
 ].map(hero => {
   const stats = heroBalance(hero.id);
