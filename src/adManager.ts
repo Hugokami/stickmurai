@@ -1,4 +1,4 @@
-import { bgmAudio } from './audio';
+import { bgmAudio, setPortalMuted, getPortalMuted } from './audio';
 import { globals } from './globals';
 
 export interface AdCallbacks {
@@ -8,6 +8,9 @@ export interface AdCallbacks {
 
 export class AdManager {
   private static originalVolume: number = 0.5;
+  private static wasPortalMutedBeforeAd: boolean = false;
+  private static lastMidrollTime: number = 0;
+  private static readonly MIDROLL_COOLDOWN_MS = 60000;
 
   /**
    * Triggers a rewarded ad flow.
@@ -17,61 +20,80 @@ export class AdManager {
   public static async showRewardedAd(type: 'revive' | 'blessing', callbacks: AdCallbacks) {
     // 1. Check for CrazyGames SDK (supports both window.CrazyGames and window.crazygames)
     const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
-    if (cgSdk && cgSdk.ad && typeof cgSdk.ad.requestAd === 'function') {
-      console.log(`[AdManager] Invoking CrazyGames SDK for: ${type}`);
-
-      // Ensure SDK is initialized
+    if (cgSdk) {
+      // Ensure SDK is initialized before touching any module getters
       try {
         if (typeof cgSdk.init === 'function') {
-          await cgSdk.init().catch(() => {});
+          await Promise.race([
+            cgSdk.init(),
+            new Promise(resolve => setTimeout(resolve, 2000))
+          ]);
         }
-      } catch(e) {}
-
-      const inGameplay = typeof globals !== 'undefined' && globals.gameState === 'playing';
-      if (inGameplay) {
-        try {
-          if (cgSdk.game && typeof cgSdk.game.gameplayStop === 'function') cgSdk.game.gameplayStop();
-        } catch(e) {}
+      } catch(e) {
+        console.warn("[AdManager] CrazyGames SDK init error:", e);
       }
 
-      let adDidStart = false;
-
-      const adCallbacks = {
-        adStarted: () => {
-          adDidStart = true;
-          console.log("[AdManager] CrazyGames rewarded ad started.");
-          this.muteSounds();
-        },
-        adFinished: () => {
-          console.log("[AdManager] CrazyGames rewarded ad finished successfully.");
-          if (adDidStart) this.unmuteSounds();
-          if (inGameplay) {
-            try {
-              if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
-            } catch(e) {}
-          }
-          callbacks.onComplete();
-        },
-        adError: (error: any) => {
-          console.warn("[AdManager] CrazyGames rewarded ad error:", error);
-          if (adDidStart) this.unmuteSounds();
-          if (inGameplay) {
-            try {
-              if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
-            } catch(e) {}
-          }
-          const errCode = error?.code || error?.message || error?.toString() || "CrazyGames ad failed";
-          callbacks.onFailed(errCode);
-        }
-      };
-
+      let adModule: any = null;
       try {
-        cgSdk.ad.requestAd("rewarded", adCallbacks);
-      } catch (err: any) {
-        console.warn("[AdManager] CrazyGames requestAd exception:", err);
-        adCallbacks.adError(err);
+        adModule = cgSdk.ad;
+      } catch (e) {
+        adModule = null;
       }
-      return;
+
+      if (adModule && typeof adModule.requestAd === 'function') {
+        console.log(`[AdManager] Invoking CrazyGames SDK for: ${type}`);
+
+        const inGameplay = typeof globals !== 'undefined' && globals.gameState === 'playing';
+        let pausedByAd = false;
+        let adDidStart = false;
+
+        const adCallbacks = {
+          adStarted: () => {
+            adDidStart = true;
+            console.log("[AdManager] CrazyGames rewarded ad started.");
+            this.muteSounds();
+            if (inGameplay) {
+              pausedByAd = true;
+              globals.gameState = 'paused';
+              try {
+                if (cgSdk.game && typeof cgSdk.game.gameplayStop === 'function') cgSdk.game.gameplayStop();
+              } catch(e) {}
+            }
+          },
+          adFinished: () => {
+            console.log("[AdManager] CrazyGames rewarded ad finished successfully.");
+            if (adDidStart) this.unmuteSounds();
+            if (pausedByAd) {
+              globals.gameState = 'playing';
+              try {
+                if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
+              } catch(e) {}
+            }
+            callbacks.onComplete();
+          },
+          adError: (error: any) => {
+            console.warn("[AdManager] CrazyGames rewarded ad error, falling back to mock ad:", error);
+            if (adDidStart) this.unmuteSounds();
+            if (pausedByAd) {
+              globals.gameState = 'playing';
+              try {
+                if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
+              } catch(e) {}
+            }
+            // CRITICAL: On Basic Launch, adblock, or no-fill, CrazyGames disallows buttons with no effect.
+            // Show the fallback mock ad modal so the player can always view the simulated break and claim reward!
+            this.showMockAdModal(type, callbacks);
+          }
+        };
+
+        try {
+          adModule.requestAd("rewarded", adCallbacks);
+        } catch (err: any) {
+          console.warn("[AdManager] CrazyGames requestAd exception, falling back to mock ad:", err);
+          this.showMockAdModal(type, callbacks);
+        }
+        return;
+      }
     }
 
     // 2. Check for Poki SDK
@@ -86,12 +108,12 @@ export class AdManager {
           callbacks.onComplete();
         } else {
           console.warn("[AdManager] Poki rewarded ad skipped/failed.");
-          callbacks.onFailed("Poki ad skipped");
+          this.showMockAdModal(type, callbacks);
         }
       }).catch((err: any) => {
         this.unmuteSounds();
-        console.warn("[AdManager] Poki rewarded ad error:", err);
-        callbacks.onFailed(err?.toString() || "Poki ad error");
+        console.warn("[AdManager] Poki rewarded ad error, falling back to mock ad:", err);
+        this.showMockAdModal(type, callbacks);
       });
       return;
     }
@@ -102,21 +124,122 @@ export class AdManager {
   }
 
   /**
-   * Mute game background music during ads.
+   * Triggers a midgame (interstitial) ad flow.
+   * Can happen between levels, on restart after death, etc.
+   */
+  public static async showMidrollAd(onFinished?: () => void) {
+    const now = Date.now();
+    if (now - this.lastMidrollTime < this.MIDROLL_COOLDOWN_MS) {
+      if (onFinished) onFinished();
+      return;
+    }
+
+    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
+    if (cgSdk) {
+      try {
+        if (typeof cgSdk.init === 'function') {
+          await Promise.race([
+            cgSdk.init(),
+            new Promise(resolve => setTimeout(resolve, 2000))
+          ]);
+        }
+      } catch(e) {}
+
+      let adModule: any = null;
+      try { adModule = cgSdk.ad; } catch(e) {}
+      if (adModule && typeof adModule.requestAd === 'function') {
+        this.lastMidrollTime = now;
+        const inGameplay = typeof globals !== 'undefined' && globals.gameState === 'playing';
+        let pausedByAd = false;
+        let adDidStart = false;
+
+        const adCallbacks = {
+          adStarted: () => {
+            adDidStart = true;
+            console.log("[AdManager] CrazyGames midgame ad started");
+            this.muteSounds();
+            if (inGameplay) {
+              pausedByAd = true;
+              globals.gameState = 'paused';
+              try { if (cgSdk.game?.gameplayStop) cgSdk.game.gameplayStop(); } catch(e) {}
+            }
+          },
+          adFinished: () => {
+            console.log("[AdManager] CrazyGames midgame ad finished");
+            if (adDidStart) this.unmuteSounds();
+            if (pausedByAd) {
+              globals.gameState = 'playing';
+              try { if (cgSdk.game?.gameplayStart) cgSdk.game.gameplayStart(); } catch(e) {}
+            }
+            if (onFinished) onFinished();
+          },
+          adError: (err: any) => {
+            console.warn("[AdManager] CrazyGames midgame ad error:", err);
+            if (adDidStart) this.unmuteSounds();
+            if (pausedByAd) {
+              globals.gameState = 'playing';
+              try { if (cgSdk.game?.gameplayStart) cgSdk.game.gameplayStart(); } catch(e) {}
+            }
+            if (onFinished) onFinished();
+          }
+        };
+
+        try {
+          adModule.requestAd('midgame', adCallbacks);
+          return;
+        } catch(e) {
+          console.warn('[AdManager] Midgame requestAd error:', e);
+        }
+      }
+    }
+
+    if (onFinished) onFinished();
+  }
+
+  /**
+   * Adblock detection using CrazyGames SDK v3
+   */
+  public static async hasAdblock(): Promise<boolean> {
+    try {
+      const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
+      if (cgSdk?.ad && typeof cgSdk.ad.hasAdblock === 'function') {
+        return await cgSdk.ad.hasAdblock();
+      }
+    } catch(e) {}
+    return false;
+  }
+
+  /**
+   * Mute game background music and Web Audio during ads.
    */
   private static muteSounds() {
+    this.wasPortalMutedBeforeAd = typeof getPortalMuted === 'function' ? getPortalMuted() : false;
     if (bgmAudio) {
       this.originalVolume = bgmAudio.volume;
       bgmAudio.volume = 0;
+      bgmAudio.muted = true;
+      if (!bgmAudio.paused) {
+        try { bgmAudio.pause(); } catch(e) {}
+      }
+    }
+    if (typeof setPortalMuted === 'function') {
+      try { setPortalMuted(true); } catch(e) {}
     }
   }
 
   /**
-   * Restore game background music after ads.
+   * Restore game background music and Web Audio after ads.
    */
   private static unmuteSounds() {
+    if (!this.wasPortalMutedBeforeAd && typeof setPortalMuted === 'function') {
+      try { setPortalMuted(false); } catch(e) {}
+    }
     if (bgmAudio) {
+      bgmAudio.muted = this.wasPortalMutedBeforeAd;
       bgmAudio.volume = this.originalVolume;
+      if (!this.wasPortalMutedBeforeAd && bgmAudio.paused) {
+        try { bgmAudio.play().catch(() => {}); } catch(e) {}
+      }
     }
   }
 

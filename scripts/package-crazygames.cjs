@@ -29,20 +29,29 @@ bridge_script = """
   var registeredAudios = new Set();
   var registeredAudioContexts = new Set();
 
+  // Parse early mute query params (?muteAudio=true or ?mute=true)
+  try {
+    var searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('muteAudio') === 'true' || searchParams.get('mute') === 'true') {
+      isCrazyMuted = true;
+    }
+  } catch(e) {}
+
   // 1. Comprehensive Audio Muting Engine (HTML5 Audio + Web Audio API)
   var OrigAudio = window.Audio;
   if (OrigAudio) {
-    window.Audio = function() {
-      var a = new OrigAudio(...arguments);
-      registeredAudios.add(a);
-      if (isCrazyMuted) {
-        a.muted = true;
-        a._savedVol = a.volume;
-        a.volume = 0;
+    window.Audio = new Proxy(OrigAudio, {
+      construct: function(target, args) {
+        var a = new target(...args);
+        registeredAudios.add(a);
+        if (isCrazyMuted) {
+          a.muted = true;
+          a._savedVol = a.volume;
+          a.volume = 0;
+        }
+        return a;
       }
-      return a;
-    };
-    window.Audio.prototype = OrigAudio.prototype;
+    });
   }
 
   if (window.HTMLAudioElement && HTMLAudioElement.prototype) {
@@ -53,6 +62,7 @@ bridge_script = """
         this.muted = true;
         if (this._savedVol === undefined) this._savedVol = this.volume;
         this.volume = 0;
+        return Promise.resolve();
       }
       return origAudioPlay.apply(this, arguments);
     };
@@ -60,12 +70,13 @@ bridge_script = """
 
   var OrigAudioContext = window.AudioContext || window.webkitAudioContext;
   if (OrigAudioContext) {
-    var PatchedAudioContext = function() {
-      var ctx = new OrigAudioContext(...arguments);
-      registeredAudioContexts.add(ctx);
-      return ctx;
-    };
-    PatchedAudioContext.prototype = OrigAudioContext.prototype;
+    var PatchedAudioContext = new Proxy(OrigAudioContext, {
+      construct: function(target, args) {
+        var ctx = new target(...args);
+        registeredAudioContexts.add(ctx);
+        return ctx;
+      }
+    });
     window.AudioContext = PatchedAudioContext;
     if (window.webkitAudioContext) window.webkitAudioContext = PatchedAudioContext;
   }
@@ -94,6 +105,7 @@ bridge_script = """
 
   function applyCrazyMute(muted) {
     isCrazyMuted = !!muted;
+    window._isCrazyMuted = isCrazyMuted;
     console.log('[CrazyGames] Audio mute state:', isCrazyMuted ? 'MUTED' : 'UNMUTED');
 
     if (typeof window.setPortalMuted === 'function') {
@@ -106,6 +118,7 @@ bridge_script = """
         if (isCrazyMuted) {
           if (a._savedVol === undefined) a._savedVol = a.volume;
           a.volume = 0;
+          if (!a.paused) a.pause();
         } else if (a._savedVol !== undefined) {
           a.volume = a._savedVol;
           delete a._savedVol;
@@ -119,6 +132,7 @@ bridge_script = """
         if (isCrazyMuted) {
           if (a._savedVol === undefined) a._savedVol = a.volume;
           a.volume = 0;
+          if (!a.paused) a.pause();
         } else if (a._savedVol !== undefined) {
           a.volume = a._savedVol;
           delete a._savedVol;
@@ -142,6 +156,19 @@ bridge_script = """
     });
   }
 
+  window.getPortalMuted = function() { return isCrazyMuted; };
+
+  // Direct postMessage listener for instant response from parent frame
+  window.addEventListener('message', function(event) {
+    var data = event.data;
+    if (!data) return;
+    if (data.type === 'audioChanged' || data.type === 'muteAudioChanged') {
+      if (typeof data.muteAudio === 'boolean') {
+        applyCrazyMute(data.muteAudio);
+      }
+    }
+  });
+
   // 2. Data Module Storage Bridge (syncs safeStorage & localStorage to CrazyGames cloud)
   var origSetItem = Storage.prototype.setItem;
   var origGetItem = Storage.prototype.getItem;
@@ -151,8 +178,10 @@ bridge_script = """
     origSetItem.call(this, key, value);
     try {
       var s = (window.CrazyGames && window.CrazyGames.SDK) || (window.crazygames && window.crazygames.SDK);
-      if (this === window.localStorage && s && s.data && typeof s.data.setItem === 'function') {
-        s.data.setItem(key, String(value));
+      var dataMod = null;
+      try { dataMod = s && s.data; } catch(e) {}
+      if (this === window.localStorage && dataMod && typeof dataMod.setItem === 'function') {
+        dataMod.setItem(key, String(value));
       }
     } catch(e) {}
   };
@@ -160,8 +189,10 @@ bridge_script = """
   Storage.prototype.getItem = function(key) {
     try {
       var s = (window.CrazyGames && window.CrazyGames.SDK) || (window.crazygames && window.crazygames.SDK);
-      if (this === window.localStorage && s && s.data && typeof s.data.getItem === 'function') {
-        var cloudVal = s.data.getItem(key);
+      var dataMod = null;
+      try { dataMod = s && s.data; } catch(e) {}
+      if (this === window.localStorage && dataMod && typeof dataMod.getItem === 'function') {
+        var cloudVal = dataMod.getItem(key);
         if (cloudVal !== null && cloudVal !== undefined) {
           return cloudVal;
         }
@@ -174,8 +205,10 @@ bridge_script = """
     origRemoveItem.call(this, key);
     try {
       var s = (window.CrazyGames && window.CrazyGames.SDK) || (window.crazygames && window.crazygames.SDK);
-      if (this === window.localStorage && s && s.data && typeof s.data.removeItem === 'function') {
-        s.data.removeItem(key);
+      var dataMod = null;
+      try { dataMod = s && s.data; } catch(e) {}
+      if (this === window.localStorage && dataMod && typeof dataMod.removeItem === 'function') {
+        dataMod.removeItem(key);
       }
     } catch(e) {}
   };
@@ -193,9 +226,14 @@ bridge_script = """
     var s = (window.CrazyGames && window.CrazyGames.SDK) || (window.crazygames && window.crazygames.SDK);
     if (document.hidden) {
       applyCrazyMute(true);
-      if (s && s.game && s.game.gameplayStop) s.game.gameplayStop();
+      try {
+        if (s && s.game && s.game.gameplayStop) s.game.gameplayStop();
+      } catch(e) {}
     } else {
-      var portalMuted = s && s.game && s.game.settings && s.game.settings.muteAudio === true;
+      var portalMuted = false;
+      try {
+        portalMuted = s && s.game && s.game.settings && s.game.settings.muteAudio === true;
+      } catch(e) {}
       if (!portalMuted) {
         applyCrazyMute(false);
       }
@@ -209,16 +247,18 @@ bridge_script = """
   function triggerMidgameAd(callback) {
     var now = Date.now();
     var s = (window.CrazyGames && window.CrazyGames.SDK) || (window.crazygames && window.crazygames.SDK);
-    if (!s || !s.ad || typeof s.ad.requestAd !== 'function' || (now - lastMidgameTime < MIN_MIDGAME_INTERVAL)) {
+    var adMod = null;
+    try { adMod = s && s.ad; } catch(e) {}
+    if (!s || !adMod || typeof adMod.requestAd !== 'function' || (now - lastMidgameTime < MIN_MIDGAME_INTERVAL)) {
       if (callback) callback();
       return;
     }
     lastMidgameTime = now;
     console.log('[CrazyGames] Requesting midgame ad...');
     applyCrazyMute(true);
-    if (s.game && s.game.gameplayStop) s.game.gameplayStop();
+    try { if (s.game && s.game.gameplayStop) s.game.gameplayStop(); } catch(e) {}
 
-    s.ad.requestAd('midgame', {
+    adMod.requestAd('midgame', {
       adStarted: function() {
         console.log('[CrazyGames] Midgame ad started');
         applyCrazyMute(true);
@@ -226,13 +266,13 @@ bridge_script = """
       adFinished: function() {
         console.log('[CrazyGames] Midgame ad finished');
         applyCrazyMute(false);
-        if (s.game && s.game.gameplayStart) s.game.gameplayStart();
+        try { if (s.game && s.game.gameplayStart) s.game.gameplayStart(); } catch(e) {}
         if (callback) callback();
       },
       adError: function(err) {
         console.warn('[CrazyGames] Midgame ad error:', err);
         applyCrazyMute(false);
-        if (s.game && s.game.gameplayStart) s.game.gameplayStart();
+        try { if (s.game && s.game.gameplayStart) s.game.gameplayStart(); } catch(e) {}
         if (callback) callback();
       }
     });
@@ -257,23 +297,29 @@ bridge_script = """
         console.log('[CrazyGames] SDK v3 initialized successfully.');
 
         // Loading start
-        if (sdk.game && sdk.game.loadingStart) {
-          sdk.game.loadingStart();
-        } else if (sdk.game && sdk.game.sdkGameLoadingStart) {
-          sdk.game.sdkGameLoadingStart();
-        }
+        try {
+          if (sdk.game && sdk.game.loadingStart) {
+            sdk.game.loadingStart();
+          } else if (sdk.game && sdk.game.sdkGameLoadingStart) {
+            sdk.game.sdkGameLoadingStart();
+          }
+        } catch(e) {}
 
         // Mute settings listener (SDK v3: addSettingsChangeListener)
-        if (sdk.game && typeof sdk.game.addSettingsChangeListener === 'function') {
-          sdk.game.addSettingsChangeListener(function(settings) {
-            console.log('[CrazyGames] Settings updated:', settings);
-            if (settings && typeof settings.muteAudio === 'boolean') {
-              applyCrazyMute(settings.muteAudio);
+        try {
+          if (sdk.game && typeof sdk.game.addSettingsChangeListener === 'function') {
+            sdk.game.addSettingsChangeListener(function(settings) {
+              console.log('[CrazyGames] Settings updated via listener:', settings);
+              if (settings && typeof settings.muteAudio === 'boolean') {
+                applyCrazyMute(settings.muteAudio);
+              }
+            });
+            if (sdk.game.settings && typeof sdk.game.settings.muteAudio === 'boolean') {
+              applyCrazyMute(sdk.game.settings.muteAudio);
             }
-          });
-        }
-        if (sdk.game && sdk.game.settings && typeof sdk.game.settings.muteAudio === 'boolean') {
-          applyCrazyMute(sdk.game.settings.muteAudio);
+          }
+        } catch(e) {
+          console.warn('[CrazyGames] Failed to register settings listener:', e);
         }
 
         // Loader screen observer -> loadingStop()
@@ -281,11 +327,13 @@ bridge_script = """
         if (loader) {
           var loaderObserver = new MutationObserver(function() {
             if (loader.style.display === 'none' || loader.classList.contains('hidden')) {
-              if (sdk.game && sdk.game.loadingStop) {
-                sdk.game.loadingStop();
-              } else if (sdk.game && sdk.game.sdkGameLoadingStop) {
-                sdk.game.sdkGameLoadingStop();
-              }
+              try {
+                if (sdk.game && sdk.game.loadingStop) {
+                  sdk.game.loadingStop();
+                } else if (sdk.game && sdk.game.sdkGameLoadingStop) {
+                  sdk.game.sdkGameLoadingStop();
+                }
+              } catch(e) {}
               loaderObserver.disconnect();
             }
           });
@@ -297,7 +345,7 @@ bridge_script = """
           var btn = document.getElementById(btnId);
           if (btn) {
             btn.addEventListener('click', function() {
-              if (sdk.game && sdk.game.gameplayStart) sdk.game.gameplayStart();
+              try { if (sdk.game && sdk.game.gameplayStart) sdk.game.gameplayStart(); } catch(e) {}
             });
           }
         });
@@ -306,11 +354,13 @@ bridge_script = """
         var pauseScreen = document.getElementById('pause-screen');
         if (pauseScreen) {
           new MutationObserver(function() {
-            if (pauseScreen.style.display !== 'none') {
-              if (sdk.game && sdk.game.gameplayStop) sdk.game.gameplayStop();
-            } else {
-              if (sdk.game && sdk.game.gameplayStart) sdk.game.gameplayStart();
-            }
+            try {
+              if (pauseScreen.style.display !== 'none') {
+                if (sdk.game && sdk.game.gameplayStop) sdk.game.gameplayStop();
+              } else {
+                if (sdk.game && sdk.game.gameplayStart) sdk.game.gameplayStart();
+              }
+            } catch(e) {}
           }).observe(pauseScreen, { attributes: true, attributeFilter: ['style'] });
         }
 
@@ -318,9 +368,11 @@ bridge_script = """
         var gameOverScreen = document.getElementById('game-over');
         if (gameOverScreen) {
           new MutationObserver(function() {
-            if (gameOverScreen.style.display !== 'none') {
-              if (sdk.game && sdk.game.gameplayStop) sdk.game.gameplayStop();
-            }
+            try {
+              if (gameOverScreen.style.display !== 'none') {
+                if (sdk.game && sdk.game.gameplayStop) sdk.game.gameplayStop();
+              }
+            } catch(e) {}
           }).observe(gameOverScreen, { attributes: true, attributeFilter: ['style'] });
         }
 
@@ -336,10 +388,12 @@ bridge_script = """
         var stageClearModal = document.getElementById('stage-clear-modal');
         if (stageClearModal) {
           new MutationObserver(function() {
-            if (stageClearModal.style.display !== 'none') {
-              if (sdk.game && sdk.game.happytime) sdk.game.happytime();
-              triggerMidgameAd();
-            }
+            try {
+              if (stageClearModal.style.display !== 'none') {
+                if (sdk.game && sdk.game.happytime) sdk.game.happytime();
+                triggerMidgameAd();
+              }
+            } catch(e) {}
           }).observe(stageClearModal, { attributes: true, attributeFilter: ['style'] });
         }
 
@@ -360,11 +414,9 @@ bridge_script = """
     }
   }
 
-  // Start polling immediately so SDK initialization occurs as soon as the script evaluates
   pollSdk();
 })();
-</script>
-"""
+</script>"""
 
 with zipfile.ZipFile(src_zip, 'r') as zin, zipfile.ZipFile(target_zip, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zout:
     for item in zin.infolist():

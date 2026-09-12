@@ -9,7 +9,11 @@ export function setPracticeStorage(enabled: boolean) { temporary = enabled ? new
 
 function getCrazyData(): any {
   if (typeof window !== 'undefined') {
-    return (window as any).CrazyGames?.SDK?.data || (window as any).crazygames?.SDK?.data || null;
+    try {
+      return (window as any).CrazyGames?.SDK?.data || (window as any).crazygames?.SDK?.data || null;
+    } catch {
+      return null;
+    }
   }
   return null;
 }

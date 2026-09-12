@@ -4,15 +4,41 @@ let isPortalMuted = false;
 try {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('muteAudio') === 'true') {
+    if (params.get('muteAudio') === 'true' || params.get('mute') === 'true') {
       isPortalMuted = true;
     }
-    const cg = (window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK;
-    if (cg?.game?.settings?.muteAudio === true) {
+    if ((window as any)._isCrazyMuted === true || (window as any).getPortalMuted?.() === true) {
       isPortalMuted = true;
     }
   }
 } catch (e) {}
+
+if (typeof window !== 'undefined') {
+  const initCgAudioListener = async () => {
+    try {
+      const s = (window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK;
+      if (s) {
+        if (typeof s.init === 'function') {
+          await s.init().catch(() => {});
+        }
+        let g: any = null;
+        try { g = s.game; } catch(e) {}
+        if (g && typeof g.addSettingsChangeListener === 'function') {
+          g.addSettingsChangeListener((settings: any) => {
+            console.log('[CrazyGames Audio] settingsChangeListener:', settings);
+            if (settings && typeof settings.muteAudio === 'boolean') {
+              setPortalMuted(settings.muteAudio);
+            }
+          });
+          if (g.settings && typeof g.settings.muteAudio === 'boolean') {
+            setPortalMuted(g.settings.muteAudio);
+          }
+        }
+      }
+    } catch(e) {}
+  };
+  initCgAudioListener();
+}
 
 export const bgmAudio = new Audio();
 export const playlist = ['audio/Bushido_Storm_Intense_Battle_Mix.m4a'];
@@ -268,6 +294,7 @@ export function playSynthesizedSlash(_volumeMult: number = 1.0) {
 }
 
 export function playSlashSfx(volumeMult: number = 1.0) {
+  if (isPortalMuted) return;
   const nowTime = performance.now();
   if (nowTime - lastSlashSfxTime < 50) return;
   lastSlashSfxTime = nowTime;
@@ -280,8 +307,13 @@ let audioCtx: AudioContext | null = null;
 let compressor: DynamicsCompressorNode | null = null;
 let masterGain: GainNode | null = null;
 
+let silentGain: GainNode | null = null;
+
 export function setPortalMuted(muted: boolean) {
   isPortalMuted = !!muted;
+  if (typeof window !== 'undefined') {
+    (window as any)._isCrazyMuted = isPortalMuted;
+  }
   if (masterGain && audioCtx) {
     try {
       const targetVal = isPortalMuted ? 0 : 1;
@@ -292,6 +324,7 @@ export function setPortalMuted(muted: boolean) {
   if (isPortalMuted) {
     if (bgmAudio) {
       bgmAudio.muted = true;
+      bgmAudio.volume = 0;
       if (!bgmAudio.paused) {
         bgmAudio.pause();
       }
@@ -347,17 +380,41 @@ export function getAudioContext(): AudioContext | null {
       return null;
     }
   }
-  if (audioCtx && audioCtx.state === 'suspended' && !isPortalMuted) {
-    audioCtx.resume().catch(() => {});
+  if (audioCtx) {
+    if (isPortalMuted) {
+      if (masterGain) {
+        try {
+          masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+          masterGain.gain.value = 0;
+        } catch (e) {}
+      }
+      if (audioCtx.state === 'running') {
+        audioCtx.suspend().catch(() => {});
+      }
+    } else if (audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
   }
   return audioCtx;
 }
 
 export function getSoundDestination(ctx: AudioContext): AudioNode {
-  return compressor || ctx.destination;
+  if (isPortalMuted) {
+    if (!silentGain && ctx) {
+      try {
+        silentGain = ctx.createGain();
+        silentGain.gain.setValueAtTime(0, ctx.currentTime);
+        silentGain.gain.value = 0;
+        silentGain.connect(ctx.destination);
+      } catch (e) {}
+    }
+    return silentGain || masterGain || ctx.destination;
+  }
+  return compressor || masterGain || ctx.destination;
 }
 
 export const resumeAudioContext = () => {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (ctx && ctx.state === 'suspended') {
@@ -366,7 +423,7 @@ export const resumeAudioContext = () => {
     decodeAllSfx();
   } catch (e) {}
   startBgm();
-  };
+};
 
 let lastParryTime = 0;
 let lastPerfectParryTime = 0;
@@ -402,6 +459,7 @@ export function getConsecutiveParries(): number {
 }
 
 export function playSynthesizedParry() {
+  if (isPortalMuted) return;
   try {
     triggerHapticFeedback(15);
     const nowTime = performance.now();
@@ -451,6 +509,7 @@ export function playSynthesizedParry() {
 }
 
 export function playSynthesizedSheathe() {
+  if (isPortalMuted) return;
   try {
     triggerHapticFeedback(20);
     const ctx = getAudioContext();
@@ -489,6 +548,7 @@ export function playSynthesizedSheathe() {
 }
 
 export function playSynthesizedClash() {
+  if (isPortalMuted) return;
   try {
     triggerHapticFeedback(25);
     const ctx = getAudioContext();
@@ -526,6 +586,7 @@ export function playSynthesizedClash() {
 }
 
 export function playSynthesizedPerfectParry() {
+  if (isPortalMuted) return;
   try {
     triggerHapticFeedback([35, 45, 35]);
     const nowTime = performance.now();
@@ -580,6 +641,7 @@ export function playSynthesizedPerfectParry() {
 }
 
 export function playSynthesizedDodge() {
+  if (isPortalMuted) return;
   try {
     const nowTime = performance.now();
     if (nowTime - lastDodgeTime < 100) return;
@@ -610,6 +672,7 @@ export function playSynthesizedDodge() {
 }
 
 export function playSynthesizedEnhance() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -642,6 +705,7 @@ export function playSynthesizedEnhance() {
 }
 
 export function playSynthesizedLevelUp() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -669,6 +733,7 @@ export function playSynthesizedLevelUp() {
 }
 
 export function playSynthesizedAwaken() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -706,6 +771,7 @@ bgmAudio.addEventListener('ended', () => {
 });
 
 export function playSynthesizedThunder() {
+  if (isPortalMuted) return;
   try {
     const nowTime = performance.now();
     if (nowTime - lastThunderTime < 150) return;
@@ -804,6 +870,7 @@ export function pauseBgm() {
 }
 
 export function playSynthesizedFirewheel() {
+  if (isPortalMuted) return;
   try {
     const nowTime = performance.now();
     if (nowTime - lastFirewheelTime < 120) return;
@@ -840,6 +907,7 @@ export function playSynthesizedFirewheel() {
 }
 
 export function playSynthesizedGravity() {
+  if (isPortalMuted) return;
   try {
     const nowTime = performance.now();
     if (nowTime - lastGravityTime < 120) return;
@@ -892,6 +960,7 @@ export function playSynthesizedGravity() {
 }
 
 export function playSynthesizedCharge() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -923,6 +992,7 @@ export function playSynthesizedCharge() {
 }
 
 export function playSynthesizedTempleBell() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -957,6 +1027,7 @@ export function playSynthesizedTempleBell() {
 }
 
 export function playSynthesizedSingingBowl() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -992,6 +1063,7 @@ export function playSynthesizedSingingBowl() {
 }
 
 export function playSynthesizedFusionUnlock(pitchMult: number = 1.0) {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -1025,6 +1097,7 @@ export function playSynthesizedFusionUnlock(pitchMult: number = 1.0) {
 }
 
 export function playSynthesizedShakuhachi() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -1067,6 +1140,7 @@ export function playSynthesizedShakuhachi() {
 }
 
 export function playSynthesizedCampfireCrackle() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -1102,6 +1176,7 @@ export function playSynthesizedCampfireCrackle() {
 }
 
 export function playSynthesizedSealShatter() {
+  if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
