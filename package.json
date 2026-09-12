@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build && node scripts/pack-assets.cjs",
     "package:html5": "node scripts/package-html5.cjs",
+    "package:crazygames": "node scripts/package-crazygames.cjs",
     "preview": "vite preview",
     "build:android": "npm run build && powershell -Command \"if (Test-Path android/app/src/main/assets) { Remove-Item -Recurse -Force android/app/src/main/assets } ; New-Item -ItemType Directory -Path android/app/src/main/assets ; Copy-Item -Path dist/* -Destination android/app/src/main/assets -Recurse -Force\"",
     "build:apk:debug": "npm run build:android && powershell -Command \"cd android ; .\\gradlew assembleDebug\"",
