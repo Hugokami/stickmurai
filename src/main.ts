@@ -3136,7 +3136,7 @@ function killEnemy(e: Enemy) {
 
     if (isWaveComplete) {
       if (!isFinalWave) {
-        // Wave cleared! Transition to Shop between waves (inspired by Lament Recon: Tacet Crisis)
+        // Wave cleared! Transition to Battlefield Requisition Shop between waves
         globals.waveState = 'shop';
         playSynthesizedTempleBell();
         const isJa = globals.currentLang === 'ja';

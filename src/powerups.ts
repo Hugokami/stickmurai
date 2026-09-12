@@ -870,10 +870,10 @@ export function renderShopModal() {
   const activeSyn = getActiveSynergies();
   const stageNum = globals.currentStage || 1;
   const radarText = stageNum % 5 === 0
-    ? '⚠️ TACET THREAT: Boss Anomaly Detected! Armor-break & heavy burst damage advised.'
+    ? '⚠️ BATTLEFIELD INTEL: Boss Anomaly Detected! Armor-break & heavy burst damage advised.'
     : stageNum % 3 === 0
-      ? '⚠️ TACET THREAT: Fast Skirmishers & Aerial Units Inbound! High mobility recommended.'
-      : '⚠️ TACET THREAT: Standard Grunt Patrol. Soul shard drop yields maximized.';
+      ? '⚠️ BATTLEFIELD INTEL: Fast Skirmishers & Aerial Units Inbound! High mobility recommended.'
+      : '⚠️ BATTLEFIELD INTEL: Standard Vanguard Patrol. Soul shard drop yields maximized.';
 
   modal.innerHTML = `
     <div class="menu-box" style="max-width: 860px; width: min(860px, 96vw); max-height: 92vh; padding: 20px; border-color: #fbbf24; box-shadow: 0 0 35px rgba(251, 191, 36, 0.35); overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
@@ -881,7 +881,7 @@ export function renderShopModal() {
       <!-- Header -->
       <div style="position: sticky; top: -20px; background: #0c101c; z-index: 10; margin: -20px -20px 0 -20px; padding: 14px 20px 10px 20px; border-bottom: 1px solid rgba(251, 191, 36, 0.3); display: flex; justify-content: space-between; align-items: center; width: calc(100% + 40px); box-sizing: border-box;">
         <div>
-          <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(18px, 2.8vh, 24px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ REQUISITION: TACET CRISIS</h2>
+          <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(18px, 2.8vh, 24px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ WAR REQUISITION: OUTPOST ARMORY</h2>
           <div style="font-size: 11px; color: #94a3b8; font-family: 'Space Mono', monospace; margin-top: 2px;">
             Stage ${stageNum} Battlefield Requisition Hub
           </div>
