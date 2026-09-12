@@ -864,6 +864,8 @@ function initGame() {
     if (comboDisp) comboDisp.style.display = isSurvival ? 'block' : 'none';
     const objDisp = document.getElementById('objective-display');
     if (objDisp) objDisp.style.display = 'none';
+    const tracker = document.getElementById('hud-mission-tracker');
+    if (tracker) tracker.style.display = isSurvival ? 'flex' : 'none';
 
     // Show mobile controls wrapper but adjust for PvP mode
     const mobileCtrl = document.getElementById('mobile-controls');
@@ -3598,7 +3600,7 @@ function update(realDt: number) {
             target: 6,
             current: 0,
             timeRemaining: 18,
-            description: globals.currentLang === 'ja' ? '18秒以内に敵を6体撃破せよ' : 'Slay 6 enemies in 18s'
+            description: globals.currentLang === 'ja' ? '敵を6体撃破' : 'Slay 6 Enemies'
           };
         } else if (roll < 0.60) {
           globals.activeBounty = {
@@ -3606,7 +3608,7 @@ function update(realDt: number) {
             target: 2,
             current: 0,
             timeRemaining: 22,
-            description: globals.currentLang === 'ja' ? '22秒以内に飛び道具を2回弾き返せ' : 'Deflect 2 projectiles in 22s'
+            description: globals.currentLang === 'ja' ? '飛び道具を2回反射' : 'Deflect 2 Projectiles'
           };
         } else if (roll < 0.80) {
           globals.activeBounty = {
@@ -3614,7 +3616,7 @@ function update(realDt: number) {
             target: 2,
             current: 0,
             timeRemaining: 20,
-            description: globals.currentLang === 'ja' ? '20秒以内に受け流しを2回成功させよ' : 'Parry 2 attacks in 20s'
+            description: globals.currentLang === 'ja' ? '攻撃を2回受け流し' : 'Parry 2 Attacks'
           };
         } else {
           globals.activeBounty = {
@@ -3622,7 +3624,7 @@ function update(realDt: number) {
             target: 25,
             current: globals.combo,
             timeRemaining: 16,
-            description: globals.currentLang === 'ja' ? '16秒以内に25連撃に到達せよ' : 'Reach 25 combo in 16s'
+            description: globals.currentLang === 'ja' ? '25連撃に到達' : 'Reach 25 Combo'
           };
         }
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, "NEW BOUNTY!", "#fbbf24", 26));

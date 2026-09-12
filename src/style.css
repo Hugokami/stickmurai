@@ -308,24 +308,34 @@ canvas.inverted {
 
 /* HUD Text displays */
 #score-display {
-  color: white;
-  font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;
-  font-size: clamp(16px, 2.5vw, 22px);
-  margin-top: 16px;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
-  letter-spacing: 1px;
+  color: #cbd5e1;
+  font-family: 'Orbitron', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 6px;
+  margin-left: 6px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  letter-spacing: 0.8px;
+  background: rgba(10, 10, 15, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  padding: 2px 8px;
+  width: fit-content;
+  pointer-events: none;
 }
 
 #combo-display {
   color: #ff3366;
   font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;
-  font-size: clamp(20px, 3.5vw, 32px);
+  font-size: clamp(18px, 3vw, 26px);
   font-weight: bold;
   margin-top: 6px;
+  margin-left: 6px;
   text-shadow: 0 0 12px rgba(255, 51, 102, 0.8), 0 0 24px rgba(255, 51, 102, 0.4);
   opacity: 0;
   transform: rotate(-3deg) scale(0.9);
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  pointer-events: none;
 }
 
 .combo-active {
@@ -3401,25 +3411,82 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
 }
 
-/* Time Mode and Level Mode Styling */
+/* Top Center Mission, Wave & Bounty Tracker */
+#hud-mission-tracker {
+  position: absolute;
+  top: max(8px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  pointer-events: none;
+  z-index: 15;
+  max-width: min(440px, 60vw);
+  text-align: center;
+}
+
 #objective-display {
   color: #ffd700;
-  font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;
-  font-size: clamp(13px, 1.8vw, 16px);
-  margin-top: 10px;
-  margin-left: 6px;
-  align-self: flex-start;
-  width: fit-content;
-  max-width: 90%;
-  background: rgba(10, 10, 15, 0.88);
-  border: 1px solid rgba(255, 215, 0, 0.45);
-  border-radius: 6px;
-  padding: 6px 14px;
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.95);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
-  letter-spacing: 0.8px;
-  display: inline-block;
+  font-family: 'Orbitron', 'Outfit', sans-serif;
+  font-size: clamp(10px, 1.2vw, 11.5px);
+  font-weight: 700;
+  line-height: 1.2;
+  background: rgba(10, 12, 18, 0.75);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  padding: 3px 12px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  letter-spacing: 0.6px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  margin: 0 !important;
+  align-self: center;
   box-sizing: border-box;
+}
+
+#bounty-display {
+  color: #fbbf24;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1.2;
+  background: rgba(251, 191, 36, 0.14);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  border-radius: 10px;
+  padding: 2px 10px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  margin: 0 !important;
+  align-self: center;
+  box-sizing: border-box;
+}
+
+#shop-ration-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4) !important;
+  transform: translateY(-1px);
+}
+#shop-ration-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
 }
 
 .time-opt-btn.active, .lvl-opt-btn.active {

@@ -26,8 +26,10 @@ button.qol-btn:focus-visible { outline:3px solid #6ee7e0; outline-offset:2px; }
 #qol-practice-bar { position:fixed; left:50%; top:max(8px,env(safe-area-inset-top)); transform:translateX(-50%); z-index:9000; display:flex; align-items:center; gap:8px; background:#111c; padding:5px 8px; border-radius:6px; color:#fff1ce; font:12px Outfit,system-ui,sans-serif; }
 html[data-qol-size=large] .overlay .menu-box p,html[data-qol-size=large] .overlay .menu-box label,html[data-qol-size=large] .overlay .menu-box select { font-size:16px!important; line-height:1.4!important; }
 html[data-qol-size=large] .hero-card { font-size:15px!important; }
-html[data-qol-size=large] #score-display,html[data-qol-size=large] #combo-display,html[data-qol-size=large] #objective-display { font-size:18px!important; }
-html[data-qol-size=small] #score-display,html[data-qol-size=small] #combo-display,html[data-qol-size=small] #objective-display { font-size:13px!important; }
+html[data-qol-size=large] #score-display,html[data-qol-size=large] #combo-display { font-size:16px!important; }
+html[data-qol-size=large] #objective-display,html[data-qol-size=large] #bounty-display { font-size:12px!important; }
+html[data-qol-size=small] #score-display,html[data-qol-size=small] #combo-display { font-size:11px!important; }
+html[data-qol-size=small] #objective-display,html[data-qol-size=small] #bounty-display { font-size:10px!important; }
 @media(max-height:500px){ .qol-box{padding:10px 14px}.qol-row{padding:6px 0}.qol-box h2{font-size:18px}.qol-box p{margin:7px 0} #qol-layout .qol-box{max-width:400px} }
 /* Motion preference affects cosmetic overlays, never the battlefield artwork. */
 .reduced-motion #manga-cutin,

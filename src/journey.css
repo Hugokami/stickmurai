@@ -7,7 +7,7 @@
 .journey-card select{width:100%;padding:10px;background:#10131d;color:#fff;border:1px solid #78839a;border-radius:6px;font:inherit}
 .journey-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.journey-card .qol-btn{margin:4px 4px 4px 0;white-space:normal;min-height:44px}.journey-card .qol-btn:disabled{opacity:.45;cursor:not-allowed}
 .journey-portrait{display:block;width:96px;height:96px;min-height:96px;object-fit:contain;image-rendering:pixelated;flex:0 0 96px;background:transparent}
-#journey-objective{font:600 12px Outfit,system-ui,sans-serif;color:var(--journey-accent,#ffd700);max-width:min(480px,65vw);margin:6px 12px;pointer-events:none;text-shadow:0 1px 3px #000}
+#journey-objective{font:600 9.5px 'Outfit',system-ui,sans-serif;color:#94a3b8;background:rgba(10,12,18,0.65);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:1px 8px;margin:0!important;pointer-events:none;text-shadow:0 1px 2px #000;max-width:min(380px,60vw);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;align-self:center}
 #journey-objective[hidden]{display:none}
 #journey-open{border-color:var(--journey-accent,#ffd700);color:var(--journey-accent,#ffd700)}
 .journey-badge{color:var(--journey-accent,#ffd700);font:700 12px Outfit,system-ui,sans-serif;flex-shrink:0}.journey-badge:empty{display:none}

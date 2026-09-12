@@ -879,7 +879,7 @@ export function renderShopModal() {
     <div class="menu-box" style="max-width: 860px; width: min(860px, 96vw); max-height: 92vh; padding: 20px; border-color: #fbbf24; box-shadow: 0 0 35px rgba(251, 191, 36, 0.35); overflow-y: auto; display: flex; flex-direction: column; gap: 14px;">
       
       <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(251, 191, 36, 0.3); padding-bottom: 10px;">
+      <div style="position: sticky; top: -20px; background: #0c101c; z-index: 10; margin: -20px -20px 0 -20px; padding: 14px 20px 10px 20px; border-bottom: 1px solid rgba(251, 191, 36, 0.3); display: flex; justify-content: space-between; align-items: center; width: calc(100% + 40px); box-sizing: border-box;">
         <div>
           <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(18px, 2.8vh, 24px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ REQUISITION: TACET CRISIS</h2>
           <div style="font-size: 11px; color: #94a3b8; font-family: 'Space Mono', monospace; margin-top: 2px;">
@@ -946,12 +946,15 @@ export function renderShopModal() {
           </div>
 
           <!-- Emergency Field Ration -->
-          <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center;">
-            <div style="font-size: 11px; color: #f87171; font-weight: bold;">
-              ❤️ Field Ration (+1 Heart)
-            </div>
-            <button id="shop-ration-btn" class="menu-btn btn-compact" style="border-color: #ef4444; color: #ef4444; min-height: 28px; height: 28px; padding: 2px 10px; font-size: 11px;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
-              ◆ 20
+          <div style="margin-top: auto; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%;">
+            <button id="shop-ration-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 7px 12px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: #f87171;">
+                <span style="font-size: 13px;">❤️</span>
+                <span>Field Ration (+1 Heart)</span>
+              </div>
+              <div style="font-family: 'Orbitron', monospace; font-size: 11px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 3px 8px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.4); white-space: nowrap;">
+                ${globals.lives >= globals.maxLives ? 'MAX HP' : '◆ 20'}
+              </div>
             </button>
           </div>
         </div>

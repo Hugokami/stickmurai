@@ -46,6 +46,7 @@ let lastLives = 5;
 let btnEnhanceElement: HTMLElement | null = null;
 let btnDashElement: HTMLElement | null = null;
 let objectiveDisplayElement: HTMLElement | null = null;
+let bountyDisplayElement: HTMLElement | null = null;
 let levelDisplayElement: HTMLElement | null = null;
 let lastRenderedLevel = -1;
 
@@ -54,6 +55,8 @@ let lastExpWidth = -1;
 let lastMaxFlowClass = false;
 let lastObjectiveDisplay = '';
 let lastObjectiveText = '';
+let lastBountyDisplay = '';
+let lastBountyText = '';
 let lastBtnUltReady = false;
 let lastBtnDashReady = false;
 let lastBtnEnhanceReady = false;
@@ -322,6 +325,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   btnEnhanceElement = document.getElementById('btn-enhance');
   btnDashElement = document.getElementById('btn-dash');
   objectiveDisplayElement = document.getElementById('objective-display');
+  bountyDisplayElement = document.getElementById('bounty-display');
   levelDisplayElement = document.getElementById('level-display');
 
   const mainMenu = document.getElementById('main-menu');
@@ -1673,21 +1677,7 @@ export function updateUI() {
   const objDisplay = objectiveDisplayElement || (objectiveDisplayElement = document.getElementById('objective-display'));
   if (objDisplay) {
     if (globals.gameState === 'playing') {
-      if (globals.activeBounty) {
-        if (lastObjectiveDisplay !== 'block') {
-          objDisplay.style.display = 'block';
-          lastObjectiveDisplay = 'block';
-        }
-        const b = globals.activeBounty;
-        const remaining = Math.ceil(b.timeRemaining);
-        const text = `📜 BOUNTY [${remaining}s]: ${b.description} (${b.current}/${b.target})`;
-        if (text !== lastObjectiveText) {
-          objDisplay.textContent = text;
-          objDisplay.style.borderColor = 'rgba(251, 191, 36, 0.6)';
-          objDisplay.style.color = '#fbbf24';
-          lastObjectiveText = text;
-        }
-      } else if (globals.timerLimit !== 'endless') {
+      if (globals.timerLimit !== 'endless') {
         if (lastObjectiveDisplay !== 'block') {
           objDisplay.style.display = 'block';
           lastObjectiveDisplay = 'block';
@@ -1700,8 +1690,8 @@ export function updateUI() {
           : `TIME: ${mins}:${secsStr}`;
         if (text !== lastObjectiveText) {
           objDisplay.textContent = text;
-          objDisplay.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-          objDisplay.style.color = 'inherit';
+          objDisplay.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          objDisplay.style.color = '#f1f5f9';
           lastObjectiveText = text;
         }
       } else if (globals.gameMode === 'level') {
@@ -1712,8 +1702,8 @@ export function updateUI() {
         const text = `GOAL: LVL ${globals.levelModeTarget}`;
         if (text !== lastObjectiveText) {
           objDisplay.textContent = text;
-          objDisplay.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-          objDisplay.style.color = 'inherit';
+          objDisplay.style.borderColor = 'rgba(255, 255, 255, 0.2)';
+          objDisplay.style.color = '#f1f5f9';
           lastObjectiveText = text;
         }
       } else if (globals.gameMode === 'classic') {
@@ -1732,7 +1722,7 @@ export function updateUI() {
           const bossStageData = getStageData(stage);
           const rawName = isJa ? (bossStageData.nameJa || bossStageData.name) : bossStageData.name;
           const cleanName = rawName.replace(/^ステージ\s*\d+:\s*|^STAGE\s*\d+:\s*/i, '');
-          text = isJa ? `ステージ ${stage} · 最終波：${cleanName}` : `STAGE ${stage} · FINAL WAVE: ${cleanName}`;
+          text = isJa ? `ステージ ${stage} · 最終波：${cleanName}` : `STAGE ${stage} · FINAL: ${cleanName}`;
         } else {
           const waveKills = Math.min(globals.waveEnemiesTotal || 1, globals.waveEnemiesKilled || 0);
           const waveTot = globals.waveEnemiesTotal || 1;
@@ -1742,7 +1732,7 @@ export function updateUI() {
         }
         if (text !== lastObjectiveText) {
           objDisplay.textContent = text;
-          objDisplay.style.borderColor = (isBoss && isFinalWave) ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255, 215, 0, 0.4)';
+          objDisplay.style.borderColor = (isBoss && isFinalWave) ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255, 215, 0, 0.35)';
           objDisplay.style.color = (isBoss && isFinalWave) ? '#ef4444' : '#ffd700';
           lastObjectiveText = text;
         }
@@ -1756,6 +1746,31 @@ export function updateUI() {
       if (lastObjectiveDisplay !== 'none') {
         objDisplay.style.display = 'none';
         lastObjectiveDisplay = 'none';
+      }
+    }
+  }
+
+  const bntDisplay = bountyDisplayElement || (bountyDisplayElement = document.getElementById('bounty-display'));
+  if (bntDisplay) {
+    if (globals.gameState === 'playing' && globals.activeBounty) {
+      const b = globals.activeBounty;
+      const remaining = Math.ceil(b.timeRemaining);
+      const isDone = b.current >= b.target;
+      const bText = `🎯 ${b.description} (${b.current}/${b.target}) · ${remaining}s`;
+      if (lastBountyDisplay !== 'block') {
+        bntDisplay.style.display = 'block';
+        lastBountyDisplay = 'block';
+      }
+      if (bText !== lastBountyText) {
+        bntDisplay.textContent = bText;
+        bntDisplay.style.borderColor = isDone ? 'rgba(74, 222, 128, 0.6)' : 'rgba(251, 191, 36, 0.45)';
+        bntDisplay.style.color = isDone ? '#4ade80' : '#fbbf24';
+        lastBountyText = bText;
+      }
+    } else {
+      if (lastBountyDisplay !== 'none') {
+        bntDisplay.style.display = 'none';
+        lastBountyDisplay = 'none';
       }
     }
   }

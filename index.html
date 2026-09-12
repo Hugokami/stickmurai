@@ -108,7 +108,10 @@
         <div id="magatama-display" style="position: absolute; top: max(16px, env(safe-area-inset-top)); right: max(75px, calc(env(safe-area-inset-right) + 65px)); font-family: 'Orbitron', monospace; font-size: 13px; color: #c084fc; font-weight: bold; background: rgba(0,0,0,0.55); padding: 5px 12px; border-radius: 14px; border: 1px solid rgba(192, 132, 252, 0.4); display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(192, 132, 252, 0.2); pointer-events: auto;">
           <span style="font-size: 14px;">🔮</span><span id="hud-magatama-count">0</span>
         </div>
-        <div id="objective-display" style="display: none;"></div>
+        <div id="hud-mission-tracker">
+          <div id="objective-display" style="display: none;"></div>
+          <div id="bounty-display" style="display: none;"></div>
+        </div>
         <div id="combo-display">x1 Combo</div>
         <button id="pause-btn">⏸</button>
         <!-- Boss Encounter Warning Banner -->
