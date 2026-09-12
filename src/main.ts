@@ -815,6 +815,27 @@ export function advanceToNextWave() {
 }
 callbacks.advanceToNextWave = advanceToNextWave;
 
+/** Reset temporary combat state whenever a new stage/run begins. */
+export function resetStageTransientState() {
+  globals.flow = 0;
+  globals.flowState = 'normal';
+  globals.ultCooldown = 0;
+  globals.enhanceActiveTimer = 0;
+  globals.enhanceCooldown = 0;
+  globals.zenFieldActiveTimer = 0;
+  globals.zenFieldTickTimer = 0;
+  globals.roninResolveCooldown = 0;
+  globals.invulnTimer = 0;
+  globals.calamityTimer = 0;
+  globals.calamityEvent = 'none';
+  globals.mobileUltJustPressed = false;
+  globals.mobileDashJustPressed = false;
+  if (globals.player) {
+    globals.player.dashCooldown = 0;
+    globals.player.attackCooldown = 0;
+  }
+}
+
 function initGame() {
   const loader = document.getElementById('loader-screen');
   if (loader) {
@@ -2424,18 +2445,6 @@ function triggerVictory() {
           <span style="color:#8899a6; font-size:11px; display:block;">${t('statsMaxCombo')}</span>
           <strong style="color:#ffcc00; font-size:18px;">x${globals.runStats.maxCombo}</strong>
         </div>
-        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #00ffaa;">
-          <span style="color:#8899a6; font-size:11px; display:block;">${t('statsParries')}</span>
-          <strong style="color:#00ffaa; font-size:18px;">${globals.runStats.parries}</strong>
-        </div>
-        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #ffd700;">
-          <span style="color:#8899a6; font-size:11px; display:block;">${t('statsPerfectParries')}</span>
-          <strong style="color:#ffd700; font-size:18px;">${globals.runStats.perfectParries}</strong>
-        </div>
-        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #00ffff;">
-          <span style="color:#8899a6; font-size:11px; display:block;">${t('statsPerfectDodges')}</span>
-          <strong style="color:#00ffff; font-size:18px;">${globals.runStats.perfectDodges}</strong>
-        </div>
         <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #ff5500;">
           <span style="color:#8899a6; font-size:11px; display:block;">${t('statsDamage')}</span>
           <strong style="color:#ff5500; font-size:18px;">${globals.runStats.damageDealt}</strong>
@@ -2510,18 +2519,6 @@ function triggerGameOver(showTimeLimitExceeded = false) {
         <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #ffcc00;">
           <span style="color:#8899a6; font-size:11px; display:block;">${t('statsMaxCombo')}</span>
           <strong style="color:#ffcc00; font-size:18px;">x${globals.runStats.maxCombo}</strong>
-        </div>
-        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #00ffaa;">
-          <span style="color:#8899a6; font-size:11px; display:block;">${t('statsParries')}</span>
-          <strong style="color:#00ffaa; font-size:18px;">${globals.runStats.parries}</strong>
-        </div>
-        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #ffd700;">
-          <span style="color:#8899a6; font-size:11px; display:block;">${t('statsPerfectParries')}</span>
-          <strong style="color:#ffd700; font-size:18px;">${globals.runStats.perfectParries}</strong>
-        </div>
-        <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #00ffff;">
-          <span style="color:#8899a6; font-size:11px; display:block;">${t('statsPerfectDodges')}</span>
-          <strong style="color:#00ffff; font-size:18px;">${globals.runStats.perfectDodges}</strong>
         </div>
         <div style="background:rgba(255,255,255,0.05); padding:8px 12px; border-radius:6px; border-left:3px solid #ff5500;">
           <span style="color:#8899a6; font-size:11px; display:block;">${t('statsDamage')}</span>

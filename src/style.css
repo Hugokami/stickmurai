@@ -600,10 +600,14 @@ canvas.inverted {
 
 .menu-grid-2x2 .menu-btn, .menu-grid-2x3 .menu-btn, .menu-grid-2x4 .menu-btn {
   max-width: 100%;
-  padding: 6px 6px !important;
-  font-size: 11px !important;
-  min-height: 34px !important;
-  height: 34px !important;
+  min-width: 0;
+  padding: 6px 4px !important;
+  font-size: clamp(9px, 1.35vw, 11px) !important;
+  min-height: 38px !important;
+  height: auto !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.15;
 }
 
 /* Shine Reflection Sweep Effect */

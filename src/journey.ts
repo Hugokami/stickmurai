@@ -74,11 +74,9 @@ export function initJourney(start:()=>void,heroes:typeof heroList){
   const box=document.createElement('div');box.className='journey-box';panel.append(box);
   const header=document.createElement('header');const heading=document.createElement('h2');heading.textContent='Trials & Mastery';header.append(heading,btn('Close ✕',close));box.append(header);
   body=document.createElement('div');body.className='journey-grid';box.append(body);document.body.append(panel);
-  const openBtn = document.getElementById('journey-open-btn') || btn('Trials & Mastery', open);
-  openBtn.id = 'journey-open';
-  if (!document.getElementById('journey-open-btn')) {
-    document.querySelector('#main-menu .menu-buttons')?.append(openBtn);
-  } else {
+  const openBtn = document.getElementById('journey-open-btn');
+  if (openBtn) {
+    openBtn.id = 'journey-open';
     openBtn.addEventListener('click', open);
   }
   detail=document.createElement('div');detail.id='journey-objective';detail.hidden=true;document.getElementById('objective-display')?.after(detail);

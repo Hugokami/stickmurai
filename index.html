@@ -203,7 +203,7 @@
         <div class="menu-box game-over-box" style="max-width: 480px; width: min(480px, 92vw); max-height: 92vh; padding: clamp(14px, 3vh, 22px); display: flex; flex-direction: column; justify-content: space-between; overflow: hidden; border-color: #ef4444; box-shadow: 0 0 40px rgba(239, 68, 68, 0.35);">
           <div>
             <h2 id="game-over-title" class="death-title" data-i18n="death" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ef4444; font-size: clamp(22px, 5vh, 32px); margin: 0 0 6px 0; text-shadow: 0 0 25px rgba(239, 68, 68, 0.7); letter-spacing: 2px;">DEATH</h2>
-            <div id="stats-summary" style="margin: 8px 0; color: #cbd8d6; text-align: left; font-size: 13px; line-height: 1.5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 14px; border-radius: 8px; background: rgba(0, 0, 0, 0.55); font-family: 'Space Mono', monospace;"></div>
+            <div id="stats-summary" hidden></div>
           </div>
           <!-- Honor Revive Button -->
           <button id="ad-revive-btn" class="menu-btn" style="border-color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25); display: none; margin-bottom: 8px; color: #ffd700; height: 38px; min-height: 38px;">⚡ HONOR REVIVE</button>
@@ -305,13 +305,14 @@
             <h1 class="game-title" data-i18n="title">SUPER<br>SAMURAI<br>STICKY</h1>
             <div class="menu-buttons">
               <button id="start-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); font-weight: bold; letter-spacing: 1px;">⚔️ STAGE MODE (CAMPAIGN)</button>
-              <button id="pvp-mode-btn" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">⚔️ Iaijutsu PvP (1v1)</button>
+              <!-- PvP removed from the campaign menu -->
+              <button id="pvp-mode-btn" style="display:none" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">⚔️ Iaijutsu PvP (1v1)</button>
               <div class="menu-grid-2x4">
                 <button id="open-dojo-btn" class="menu-btn" style="border-color: #c084fc; color: #c084fc; box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);">🏯 Dojo</button>
                 <button id="open-upgrades-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">⚡ Upgrades</button>
                 <button id="open-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">📜 Grimoire</button>
                 <button id="open-chronicle-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛩️ Chronicle</button>
-                <button id="journey-open-btn" class="menu-btn" style="border-color: #f59e0b; color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);">🎯 Trials</button>
+                <button id="journey-open-btn" style="display:none" class="menu-btn" style="border-color: #f59e0b; color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);">🎯 Trials</button>
                 <button id="open-guide-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);"><span data-i18n="openGuideBtn">📖 Codex</span></button>
                 <button id="open-settings-btn" class="menu-btn" data-i18n="settings">⚙️ Settings</button>
               </div>

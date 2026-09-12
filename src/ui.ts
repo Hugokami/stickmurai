@@ -396,6 +396,14 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       globals.dayNightPhase = 'dawn';
       globals.calamityEvent = 'none';
       globals.calamityTimer = 0;
+      globals.flow = 0;
+      globals.flowState = 'normal';
+      globals.ultCooldown = 0;
+      globals.enhanceActiveTimer = 0;
+      globals.enhanceCooldown = 0;
+      globals.zenFieldActiveTimer = 0;
+      globals.zenFieldTickTimer = 0;
+      globals.roninResolveCooldown = 0;
       if (cachedOnPlayCallback) cachedOnPlayCallback();
     });
   }
@@ -407,6 +415,14 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       globals.dayNightPhase = 'dawn';
       globals.calamityEvent = 'none';
       globals.calamityTimer = 0;
+      globals.flow = 0;
+      globals.flowState = 'normal';
+      globals.ultCooldown = 0;
+      globals.enhanceActiveTimer = 0;
+      globals.enhanceCooldown = 0;
+      globals.zenFieldActiveTimer = 0;
+      globals.zenFieldTickTimer = 0;
+      globals.roninResolveCooldown = 0;
       if (cachedOnPlayCallback) cachedOnPlayCallback();
     });
   }
