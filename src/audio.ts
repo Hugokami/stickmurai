@@ -838,7 +838,8 @@ export function startBgm() {
     bgmStarted = false;
     return;
   }
-  if (bgmStarted && !bgmAudio.paused) return;
+  if (bgmStarted) return;
+  bgmStarted = true;
   
   const bgmVolumeSlider = typeof document !== 'undefined' ? document.getElementById('bgm-volume') as HTMLInputElement : null;
   if (bgmVolumeSlider) {
@@ -851,21 +852,14 @@ export function startBgm() {
     if (!bgmAudio.src) {
       bgmAudio.src = playlist[currentBgmIndex];
     }
+    bgmAudio.load();
   } catch (e) {
-    console.warn('Failed BGM src setup:', e);
+    console.warn('Failed BGM load call:', e);
   }
-
-  const playPromise = bgmAudio.play();
-  if (playPromise !== undefined) {
-    playPromise
-      .then(() => {
-        bgmStarted = true;
-      })
-      .catch(err => {
-        console.warn('BGM play awaiting user gesture or media decode:', err);
-        bgmStarted = false;
-      });
-  }
+  bgmAudio.play().catch(err => {
+    console.warn('BGM play failed:', err);
+    bgmStarted = false;
+  });
 }
 
 export function pauseBgm() {

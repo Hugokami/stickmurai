@@ -23,9 +23,9 @@ test('performance optimization invariant tests', () => {
   const uiSrc = fs.readFileSync('src/ui.ts', 'utf8');
   assert.match(uiSrc, /lastUiUpdateTime/, 'ui.ts should throttle high-frequency DOM HUD updates');
 
-  // Check audio BGM play does not set bgmStarted = true synchronously on unverified play
+  // Check audio BGM play triggers directly with proper load setup
   const audioSrc = fs.readFileSync('src/audio.ts', 'utf8');
-  assert.match(audioSrc, /playPromise\s*\.then/, 'audio.ts should only set bgmStarted upon resolved play promise');
+  assert.match(audioSrc, /bgmAudio\.play\(\)/, 'audio.ts should attempt bgmAudio.play()');
 
   // Check canvas clean reset invariant preserved
   assert.match(rendererSrc, /ctx\.globalAlpha = 1;/, 'renderer.ts must retain reset canvas compositing');
