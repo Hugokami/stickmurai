@@ -105,10 +105,8 @@ export function debouncedResize() {
 }
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  const isKamisori = (globals.flowState === 'awakened') || (globals.flowState === 'storm_god') || (globals.zenFieldActiveTimer > 0);
-  
-  // 1. Lush Green Grass Base (Guarantees zero black void, zero transparency gaps, zero screen darkening)
-  ctx.fillStyle = isKamisori ? '#e5e5e5' : '#527c2f';
+  // ponytail: pure grass background. No bleaching or alpha fading during flow states.
+  ctx.fillStyle = '#527c2f';
   ctx.fillRect(0, 0, globals.width, globals.height);
 
   ctx.imageSmoothingEnabled = false;
@@ -133,9 +131,6 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
     const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.save();
-      if (isKamisori) {
-        ctx.globalAlpha = 0.25;
-      }
       
       const bufferFactor = 1.15;
       const scale = (globals.height * bufferFactor) / img.naturalHeight;
