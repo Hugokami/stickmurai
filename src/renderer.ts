@@ -1032,10 +1032,12 @@ export function draw() {
     const py = (globals.player.y - globals.camera.y) * globals.gameZoom + globals.height/2;
     
     ctx.beginPath();
+    // Deterministic angle & distance offsets calculated per line index to avoid calling Math.random() in 60fps render loop
+    const baseRadius = Math.min(globals.width, globals.height) * 0.35;
     for (let i = 0; i < 40; i++) {
-      const angle = (i / 40) * Math.PI * 2 + Math.random() * 0.15;
-      const distStart = Math.min(globals.width, globals.height) * 0.35 + Math.random() * 150;
-      const distEnd = distStart + 200 + Math.random() * 100;
+      const angle = (i / 40) * Math.PI * 2 + ((i * 17) % 15) * 0.01;
+      const distStart = baseRadius + ((i * 37) % 150);
+      const distEnd = distStart + 200 + ((i * 53) % 100);
       ctx.moveTo(px + Math.cos(angle) * distStart, py + Math.sin(angle) * distStart);
       ctx.lineTo(px + Math.cos(angle) * distEnd, py + Math.sin(angle) * distEnd);
     }

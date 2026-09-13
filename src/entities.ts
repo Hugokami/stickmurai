@@ -270,6 +270,14 @@ export class Particle {
   life!: number; maxLife!: number; color!: string; size!: number;
   gravity!: number; friction!: number;
 
+  static getMaxParticles(): number {
+    const isLow = globals.graphicsSettings === 'low';
+    const isRedMotion = typeof window !== 'undefined' && (window as any).stickmuraiReducedMotion === true;
+    if (isRedMotion) return 15;
+    if (isLow) return 25;
+    return isMobile ? 60 : 120;
+  }
+
   constructor(x: number, y: number, color: string, speed: number, life: number, size: number = 3, angle?: number, gravity = 0, friction = 0.95) {
     this.init(x, y, color, speed, life, size, angle, gravity, friction);
   }
@@ -285,6 +293,15 @@ export class Particle {
   }
 
   static acquire(x: number, y: number, color: string, speed: number, life: number, size: number = 3, angle?: number, gravity = 0, friction = 0.95): Particle {
+    const maxParticles = Particle.getMaxParticles();
+    if (globals.particles && globals.particles.length >= maxParticles) {
+      // Re-cycle oldest particle to preserve frame performance
+      const oldest = globals.particles.shift();
+      if (oldest) {
+        oldest.init(x, y, color, speed, life, size, angle, gravity, friction);
+        return oldest;
+      }
+    }
     const p = particlePool.pop();
     if (p) {
       p.init(x, y, color, speed, life, size, angle, gravity, friction);

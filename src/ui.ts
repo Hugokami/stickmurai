@@ -1664,9 +1664,17 @@ export function updateCooldownsUI() {
 
 let lastRenderedScore = -1;
 let lastRenderedMaxLives = -1;
+let lastUiUpdateTime = 0;
 
-export function updateUI() {
+export function updateUI(force = false) {
   if (!flowMeterFill || !expMeterFill || !scoreDisplay || !flowMeterContainer) return;
+
+  const now = performance.now();
+  // Throttle high-frequency UI updates to ~15 FPS unless forced (e.g. state change, level up, damage)
+  if (!force && (now - lastUiUpdateTime) < 66) {
+    return;
+  }
+  lastUiUpdateTime = now;
   
   const lvlEl = levelDisplayElement || (levelDisplayElement = document.getElementById('level-display'));
   if (lvlEl && globals.level !== lastRenderedLevel) {

@@ -1679,8 +1679,9 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       let chained = 0;
       for (const other of globals.enemies) {
         if (other !== enemy && other.state !== 'dead' && chained < 4) {
-          const d = Math.hypot(other.x - enemy.x, other.y - enemy.y);
-          if (d < 350) {
+          const dx = other.x - enemy.x;
+          const dy = other.y - enemy.y;
+          if (dx * dx + dy * dy < 350 * 350) {
             const chainDmg = Math.round(30 + slashDmg * 2.0);
             const chainPosture = Math.round(20 + slashDmg * 0.5);
             hitEnemy(other, chainDmg);
@@ -6229,7 +6230,8 @@ let isLoopActive = false;
 function loop(time: number) {
   try {
     if (globals.gameState === 'playing') recordFrameTime(time - lastTime);
-    const dt = Math.min((time - lastTime) / 1000, 0.1);
+    // Frame-time governor: clamp to max 0.05s (20 FPS minimum step) to prevent huge physics/collision simulation leaps
+    const dt = Math.min((time - lastTime) / 1000, 0.05);
     lastTime = time;
     update(dt);
     draw();
