@@ -98,6 +98,7 @@ h1, h2, h3, .bar-label, .death-title, .game-title {
   width: 100% !important;
   height: 100% !important;
   display: block;
+  background-color: #527c2f;
 }
 
 #vignette-overlay {

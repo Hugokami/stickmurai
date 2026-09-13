@@ -2,7 +2,16 @@
   "cleanUrls": true,
   "headers": [
     {
-      "source": "/(sprites|fantasy_bg|audio|assets)/:path*",
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/(sprites|audio|assets)/:path*",
       "headers": [
         {
           "key": "Cache-Control",

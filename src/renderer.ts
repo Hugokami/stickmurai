@@ -111,22 +111,10 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
 
   ctx.imageSmoothingEnabled = false;
 
-  const isTouch = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-
   // 2. Parallax Fantasy Background Layers
   bgLayers.forEach(layer => {
-    if (layer.name === 'sky' || layer.name === 'ruins' || layer.name === 'ruins2' || layer.name === 'statue' || layer.name === 'ruins_bg') {
-      return;
-    }
     const isGroundLayer = layer.name === 'stones&grass' || layer.name === 'stones_grass';
-    const isTreesLayer = layer.name === 'hills&trees' || layer.name === 'hills_trees';
-
-    if (globals.graphicsSettings === 'low' && !isGroundLayer) {
-      return;
-    }
-    if (isTouch && !isTreesLayer && !isGroundLayer) {
-      return;
-    }
+    if (!isGroundLayer) return;
 
     const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
     if (img && img.complete && img.naturalWidth > 0) {
