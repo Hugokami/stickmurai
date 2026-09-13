@@ -1143,7 +1143,7 @@ export const anims = {
 export const propImages: HTMLImageElement[] = [];
 
 export const bgLayers = [
-  { name: 'hills_trees', fallbackName: 'hills&trees', speed: 0.1 },
+  // Grass-only field. Scenic tree layers caused PC-only dark compositing.
   { name: 'stones_grass', fallbackName: 'stones&grass', speed: 0.6 }
 ];
 
