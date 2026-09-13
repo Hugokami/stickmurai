@@ -183,6 +183,12 @@ export function draw() {
   const targetRiposte = (globals.riposteTimer > 0) ? 1 : 0;
   riposteVisualScale += (targetRiposte - riposteVisualScale) * Math.min(1, 12 * dt);
 
+  // Reset every frame before clear/background. Effects can change alpha/composite state;
+  // leaking that state makes clearRect ineffective and accumulates a green/dark veil.
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.filter = 'none';
+  ctx.setLineDash([]);
   ctx.clearRect(0, 0, globals.width, globals.height);
   drawBackground(ctx);
 
