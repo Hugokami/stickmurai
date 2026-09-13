@@ -105,51 +105,38 @@ export function debouncedResize() {
 }
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  // ponytail: pure grass background. No bleaching or alpha fading during flow states.
+  // 1. Guaranteed Lush Green Base (zero black void, zero gaps)
   ctx.fillStyle = '#527c2f';
   ctx.fillRect(0, 0, globals.width, globals.height);
 
   ctx.imageSmoothingEnabled = false;
 
-  // 2. Parallax Fantasy Background Layers
-  bgLayers.forEach(layer => {
-    const isGroundLayer = layer.name === 'stones&grass' || layer.name === 'stones_grass';
-    if (!isGroundLayer) return;
-
-    const img = bgImages[layer.name] || ((layer as any).fallbackName && bgImages[(layer as any).fallbackName]);
+  // 2. Ground Layer: Tile full grass & stone slabs across entire arena in both X and Y
+  const groundLayer = bgLayers.find(l => l.name === 'stones_grass' || l.name === 'stones&grass');
+  if (groundLayer) {
+    const img = bgImages[groundLayer.name] || ((groundLayer as any).fallbackName && bgImages[(groundLayer as any).fallbackName]);
     if (img && img.complete && img.naturalWidth > 0) {
       ctx.save();
-      
       const bufferFactor = 1.15;
       const scale = (globals.height * bufferFactor) / img.naturalHeight;
       const imgW = img.naturalWidth * scale;
       const imgH = img.naturalHeight * scale;
       
-      const offsetX = -(globals.camera.x * layer.speed * globals.gameZoom) % imgW;
+      const offsetX = -(globals.camera.x * groundLayer.speed * globals.gameZoom) % imgW;
       let startX = offsetX > 0 ? offsetX - imgW : offsetX;
       
       const midY = (globals.height - imgH) / 2;
-      const speedY = isGroundLayer ? layer.speed : 0.3;
-      const offsetY = midY - (globals.camera.y * speedY * globals.gameZoom);
-      
-      if (isGroundLayer) {
-        // Tiled across entire arena in both X and Y: covers the whole field with grass
-        const offsetYMod = offsetY % imgH;
-        let startY = offsetYMod > 0 ? offsetYMod - imgH : offsetYMod;
-        for (let x = startX; x < globals.width + imgW; x += imgW) {
-          for (let y = startY; y < globals.height + imgH; y += imgH) {
-            ctx.drawImage(img, x, y, imgW, imgH);
-          }
-        }
-      } else {
-        // Decorative layers: tile horizontally only, single vertical position
-        for (let x = startX; x < globals.width + imgW; x += imgW) {
-          ctx.drawImage(img, x, offsetY, imgW, imgH);
+      const offsetY = midY - (globals.camera.y * groundLayer.speed * globals.gameZoom);
+      const offsetYMod = offsetY % imgH;
+      let startY = offsetYMod > 0 ? offsetYMod - imgH : offsetYMod;
+      for (let x = startX; x < globals.width + imgW; x += imgW) {
+        for (let y = startY; y < globals.height + imgH; y += imgH) {
+          ctx.drawImage(img, x, y, imgW, imgH);
         }
       }
       ctx.restore();
     }
-  });
+  }
 }
 
 export function resetCanvasVisuals() {

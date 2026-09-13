@@ -1143,20 +1143,20 @@ export const anims = {
 export const propImages: HTMLImageElement[] = [];
 
 export const bgLayers = [
-  // Grass-only field. Scenic tree layers caused PC-only dark compositing.
+  // Sole battlefield terrain: detailed grass, moss, and stone ruins
   { name: 'stones_grass', fallbackName: 'stones&grass', speed: 0.6 }
 ];
 
 export const bgImages: Record<string, HTMLImageElement> = {};
 bgLayers.forEach(layer => {
   const img = new Image();
-  const src = `fantasy_bg/${layer.name}.png`;
+  const baseSrc = `./fantasy_bg/${layer.name}.png`;
   img.onerror = () => {
-    if ((layer as any).fallbackName) {
-      img.src = `fantasy_bg/${encodeURIComponent((layer as any).fallbackName + '.png')}`;
+    if ((layer as any).fallbackName && !img.src.includes(encodeURIComponent((layer as any).fallbackName))) {
+      img.src = `./fantasy_bg/${encodeURIComponent((layer as any).fallbackName + '.png')}`;
     }
   };
-  queueAsset(img, src, 'bg', true);
+  img.src = baseSrc;
   bgImages[layer.name] = img;
   if ((layer as any).fallbackName) {
     bgImages[(layer as any).fallbackName] = img;
