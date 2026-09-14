@@ -1534,19 +1534,28 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   }
 
   if (globals.player.state === 'dash' || globals.flowState === 'awakened') { 
-      globals.runStats.perfectDodges++;
-      playSynthesizedDodge();
+        globals.runStats.perfectDodges++;
+        playSynthesizedDodge();
     
-      // Bushido Rally: Perfect dodge restores Ghost Heart
-      if (globals.ghostHeartTimer > 0) {
-        globals.lives = Math.min(globals.maxLives, globals.lives + 1);
-        globals.ghostHeartTimer = 0;
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, globals.currentLang === 'ja' ? '見切り回避再生！ ❤️ +1' : 'PERFECT DODGE RALLY! ❤️ +1', '#f97316', 30));
-        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f97316'));
-        updateUI();
-      }
+        // Bushido Rally: Perfect dodge restores Ghost Heart
+        if (globals.ghostHeartTimer > 0) {
+          globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+          globals.ghostHeartTimer = 0;
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, globals.currentLang === 'ja' ? '見切り回避再生！ ❤️ +1' : 'PERFECT DODGE RALLY! ❤️ +1', '#f97316', 30));
+          globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f97316'));
+          updateUI();
+        }
     
-      globals.screenShake = 30; 
+        // Tempo Mastery: Gain a tempo stack on perfect dodge
+        if (globals.tempoMasteryLevel > 0) {
+          globals.tempoStacks = Math.min(5, (globals.tempoStacks || 0) + 1);
+          if (globals.tempoStacks === 5) {
+            globals.tempoFlowTimer = 8.0;
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? 'テンポ流！' : 'TEMPO FLOW!', '#0ea5e9', 28));
+          }
+        }
+    
+        globals.screenShake = 30;
       addFlow(6.0);
       addCombo();
       addCombo();
@@ -3670,16 +3679,33 @@ function update(realDt: number) {
     }
 
     // Bushido Rally Ghost Heart Decay
-    if (globals.ghostHeartTimer > 0) {
-      globals.ghostHeartTimer -= realDt;
-      if (globals.ghostHeartTimer <= 0) {
-        globals.ghostHeartTimer = 0;
-        globals.ghostHeartSlashes = 0;
-        updateUI();
-      }
-    }
+        if (globals.ghostHeartTimer > 0) {
+          globals.ghostHeartTimer -= realDt;
+          if (globals.ghostHeartTimer <= 0) {
+            globals.ghostHeartTimer = 0;
+            globals.ghostHeartSlashes = 0;
+            updateUI();
+          }
+        }
 
-    // Plasma Tempest Trails Update
+        // Tempo Mastery: Tempo Flow timer decay and stack decay
+        if (globals.tempoMasteryLevel > 0) {
+          if ((globals.tempoFlowTimer || 0) > 0) {
+            globals.tempoFlowTimer -= realDt;
+            if (globals.tempoFlowTimer <= 0) {
+              globals.tempoFlowTimer = 0;
+              globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, t('tempoFlowEnd'), '#64748b', 22));
+            }
+          } else if ((globals.tempoStacks || 0) > 0) {
+            // Decay stacks when not in Tempo Flow and not getting perfect inputs
+            globals.tempoStacks -= realDt * 1.25;
+            if (globals.tempoStacks < 0.5) {
+              globals.tempoStacks = 0;
+            }
+          }
+        }
+
+        // Plasma Tempest Trails Update
     for (let i = globals.plasmaTrails.length - 1; i >= 0; i--) {
       const pt = globals.plasmaTrails[i];
       pt.life -= realDt;
@@ -5001,9 +5027,18 @@ function update(realDt: number) {
               globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, globals.currentLang === 'ja' ? '見切り再生！ ❤️ +1' : 'PERFECT PARRY RALLY! ❤️ +1', '#ffd700', 32));
               globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
               updateUI();
-            }
+                          }
 
-            // Perfect Parry Magatama Bounty (boosted by Fortune & Blood Surge)
+                          // Tempo Mastery: Gain a tempo stack on perfect parry
+                          if (globals.tempoMasteryLevel > 0) {
+                            globals.tempoStacks = Math.min(5, (globals.tempoStacks || 0) + 1);
+                            if (globals.tempoStacks === 5) {
+                              globals.tempoFlowTimer = 8.0;
+                              globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, t('tempoFlowReady'), '#0ea5e9', 28));
+                            }
+                          }
+
+                          // Perfect Parry Magatama Bounty (boosted by Fortune & Blood Surge)
             const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : 1;
             const parryMag = Math.round(2 * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
             globals.magatama = (globals.magatama || 0) + parryMag;
@@ -5191,12 +5226,19 @@ function update(realDt: number) {
       }
 
       let currentAtkCooldown = globals.playerStats.attackCooldownBase;
-      if (globals.flowState === 'awakened') currentAtkCooldown *= 0.5;
+            if (globals.flowState === 'awakened') currentAtkCooldown *= 0.5;
       
-      if (globals.tempoMasteryLevel > 0) {
-        const speedBonus = Math.min(0.20, globals.combo * 0.02 * globals.tempoMasteryLevel);
-        currentAtkCooldown *= (1 - speedBonus);
-      }
+            // Tempo Mastery: Tempo Flow state (+40% attack speed, armor ignore)
+            if (globals.tempoMasteryLevel > 0) {
+              if ((globals.tempoFlowTimer || 0) > 0) {
+                currentAtkCooldown *= 0.6; // 40% faster attacks
+                // Also make slashes ignore armor (handled in hitEnemy)
+              } else if (globals.combo > 0) {
+                // Legacy combo-based speed bonus (diminishing returns)
+                const speedBonus = Math.min(0.15, globals.combo * 0.015);
+                currentAtkCooldown *= (1 - speedBonus);
+              }
+            }
       if (attackPower >= 1.7) {
         currentAtkCooldown = Math.min(0.22, currentAtkCooldown * 0.65);
       }

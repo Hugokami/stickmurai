@@ -74,7 +74,7 @@ export const powerUps: PowerUp[] = [
   { nameKey: "puStoutHeartName", descKey: "puStoutHeartDesc", apply: () => { globals.maxLives = Math.min(10, Math.max(globals.maxLives + 1, 7)); globals.lives = Math.min(globals.maxLives, globals.lives + 1); } },
   { nameKey: "puPetalArmorName", descKey: "puPetalArmorDesc", isUnique: true, apply: () => { globals.petalArmorLevel = 1; if (!globals.petalArmorActive && globals.petalArmorCooldown <= 0) globals.petalArmorActive = true; } },
   { nameKey: "puEchoSlashName", descKey: "puEchoSlashDesc", isUnique: true, apply: () => { globals.echoLevel = 1; } },
-  { nameKey: "puTempoMasteryName", descKey: "puTempoMasteryDesc", isUnique: true, apply: () => { globals.tempoMasteryLevel = 1; } },
+  { nameKey: "puTempoMasteryName", descKey: "puTempoMasteryDesc", isUnique: true, apply: () => { globals.tempoMasteryLevel = 1; globals.tempoStacks = 0; } },
   { nameKey: "puFrostName", descKey: "puFrostDesc", isUnique: true, apply: () => { globals.frostStanceActive = true; } },
   { nameKey: "puVoidName", descKey: "puVoidDesc", isUnique: true, apply: () => { globals.voidStanceActive = true; } },
   { skill: "dash", nameKey: "puFlowingCounterName", descKey: "puFlowingCounterDesc", isUnique: true, apply: () => { globals.flowingCounterActive = true; } },
