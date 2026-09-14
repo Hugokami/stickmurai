@@ -2,8 +2,8 @@ import { heroBalance } from './balance';
 import './style.css';
 
 function skillDamage(base:number, ratio:number, target?:Enemy):number {
-  // A basic slash is roughly one damage; skills should feel like deliberate multi-slash bursts.
-  const slashPower = 20 * (1 + (globals.playerStats?.slashBonusDmgPct || 0));
+  const currentSlash = getCurrentSlashDamage();
+  const slashPower = Math.max(20, currentSlash * 8);
   const boss = target && ['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(target.subType);
   return Math.max(1, Math.round((base + slashPower * ratio) * (boss ? 0.75 : 1)));
 }
@@ -1658,7 +1658,8 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     });
 
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, parryLabel, sparkColor, 22));
-    hitEnemy(enemy, 3); // deal 3 damage on parry riposte!
+    const riposteDmg = Math.max(5, Math.round(getCurrentSlashDamage() * 1.5));
+    hitEnemy(enemy, riposteDmg); // deal scaled damage on parry riposte!
     triggerFlowingCounterReset();
 
     if (globals.raijinSplitterActive) {
@@ -1817,7 +1818,7 @@ export function triggerStormGodLightning(x: number, y: number) {
     const dx = e.x - x;
     const dy = e.y - y;
     if (dx * dx + dy * dy < radius * radius) {
-      hitEnemy(e, 6);
+      hitEnemy(e, Math.max(12, Math.round(getCurrentSlashDamage() * 2.5)));
       e.stunTimer = Math.max(e.stunTimer || 0, 3.0); // 3.0s stun
       hitEnemies.push(e);
       const hitSparks = lowGraphics ? 1 : 3;
@@ -1840,7 +1841,7 @@ export function triggerStormGodLightning(x: number, y: number) {
   for (const nextEnemy of otherEnemies) {
     if (chainCount >= maxChains) break;
     
-    hitEnemy(nextEnemy, 2);
+    hitEnemy(nextEnemy, Math.max(5, Math.round(getCurrentSlashDamage() * 0.9)));
     nextEnemy.stunTimer = Math.max(nextEnemy.stunTimer || 0, 2.0);
     
     const ex = nextEnemy.x;
@@ -1972,7 +1973,7 @@ function triggerVortexShatter(x: number, y: number) {
     if (distSq < 350 * 350) {
       e.x = x;
       e.y = y;
-      hitEnemy(e, 8);
+      hitEnemy(e, Math.max(12, Math.round(getCurrentSlashDamage() * 2.2)));
       e.stunTimer = Math.max(e.stunTimer || 0, 1.0);
       // Spark particles
       for (let i = 0; i < 4; i++) {
@@ -2014,7 +2015,7 @@ function triggerLightningDischarge(sx: number, sy: number, ex: number, ey: numbe
     if (e.state === 'dead') return;
     const d = distToSegment(e.x, e.y, sx, sy, ex, ey);
     if (d < 250) {
-      hitEnemy(e, 10);
+      hitEnemy(e, Math.max(16, Math.round(getCurrentSlashDamage() * 2.8)));
       e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
       for (let j = 0; j < 8; j++) {
         globals.particles.push(Particle.acquire(e.x, e.y, '#fbbf24', 300, 0.4, 2.5));
@@ -2034,59 +2035,60 @@ function fireFullyChargedIaijutsu(angle: number) {
     executeMirrorStrike(angle, 12);
   } else {
     let enhancedType = '';
+    const slashDmg = getCurrentSlashDamage();
     const iaiBonus = globals.playerStats?.iaijutsuBonusDmg || 0;
-    let projDmg = skillDamage(8, 1.3) + iaiBonus;
+    let projDmg = Math.max(12, Math.round(slashDmg * 3.0)) + iaiBonus;
     let txtColor = '#00ffff';
     let txtLabel = t('iaijutsuText');
     
     if (globals.flowState === 'awakened') {
       enhancedType = 'shadow_awakening';
-      projDmg = skillDamage(15, 1.6) + iaiBonus;
+      projDmg = Math.max(18, Math.round(slashDmg * 4.0)) + iaiBonus;
       txtColor = '#aa66ff';
       txtLabel = "🔥 SHADOW IAIJUTSU! 🔥";
     } else if (globals.flowState === 'storm_god') {
       enhancedType = 'storm_god';
-      projDmg = skillDamage(16, 1.7) + iaiBonus;
+      projDmg = Math.max(20, Math.round(slashDmg * 4.2)) + iaiBonus;
       txtColor = '#fbbf24';
       txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
     } else if (globals.zenFieldActiveTimer > 0 && globals.flowState !== 'omnislash') {
       enhancedType = 'zen_field';
-      projDmg = skillDamage(15, 1.6) + iaiBonus;
+      projDmg = Math.max(18, Math.round(slashDmg * 4.0)) + iaiBonus;
       txtColor = '#22d3ee';
       txtLabel = "🌀 CHRONO IAIJUTSU! 🌀";
     } else if (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'dragon';
-      projDmg = skillDamage(20, 2.0) + iaiBonus;
+      projDmg = Math.max(24, Math.round(slashDmg * 4.5)) + iaiBonus;
       txtColor = '#ff4400';
       txtLabel = "🔥 DRAGON IAIJUTSU! 🔥";
     } else if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'shield';
-      projDmg = skillDamage(5, 1.2) + iaiBonus;
+      projDmg = Math.max(14, Math.round(slashDmg * 3.2)) + iaiBonus;
       txtColor = '#00ffc8';
       txtLabel = "🌀 TORNADO IAIJUTSU! 🌀";
     } else if (globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'firewheel';
-      projDmg = skillDamage(6, 1.3) + iaiBonus;
+      projDmg = Math.max(15, Math.round(slashDmg * 3.4)) + iaiBonus;
       txtColor = '#ff8800';
       txtLabel = "🔥 INFERNO IAIJUTSU! 🔥";
     } else if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'gravity';
-      projDmg = skillDamage(7, 1.4) + iaiBonus;
+      projDmg = Math.max(16, Math.round(slashDmg * 3.6)) + iaiBonus;
       txtColor = '#c084fc';
       txtLabel = "🌌 GRAVITY IAIJUTSU! 🌌";
     } else if (globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'parry';
-      projDmg = skillDamage(6, 1.3) + iaiBonus;
+      projDmg = Math.max(15, Math.round(slashDmg * 3.5)) + iaiBonus;
       txtColor = '#ffd700';
       txtLabel = "🛡️ PARRY IAIJUTSU! 🛡️";
     } else if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'decoy';
-      projDmg = skillDamage(7, 1.5) + iaiBonus;
+      projDmg = Math.max(18, Math.round(slashDmg * 3.8)) + iaiBonus;
       txtColor = '#a855f7';
       txtLabel = "👤 DECOY IAIJUTSU! 👤";
     } else if (globals.selectedSkill === 'dash' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'storm_god';
-      projDmg = skillDamage(7, 1.4) + iaiBonus;
+      projDmg = Math.max(16, Math.round(slashDmg * 3.5)) + iaiBonus;
       txtColor = '#fbbf24';
       txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
     }
@@ -2249,11 +2251,13 @@ function executeSwiftCounter() {
   }
   
   // Damage enemies along the line
+  const slashDmg = getCurrentSlashDamage();
+  const counterDmg = Math.max(4, Math.round(slashDmg * 1.2));
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const dist = distToSegment(e.x, e.y, startX, startY, globals.player.x, globals.player.y);
     if (dist < 100) {
-      hitEnemy(e, 3);
+      hitEnemy(e, counterDmg);
       for (let j = 0; j < 3; j++) {
         globals.particles.push(Particle.acquire(e.x, e.y, '#ffb7c5', 200, 0.4, 2));
       }
@@ -2327,11 +2331,12 @@ function executeThunderclapAndFlash() {
 
   // Hit path enemies
   let firstHit: Enemy | null = null;
+  const thunderDmg = Math.max(8, Math.round(getCurrentSlashDamage() * 2.0));
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const dist = distToSegment(e.x, e.y, startX, startY, endX, endY);
     if (dist < 180) {
-      hitEnemy(e, 6);
+      hitEnemy(e, thunderDmg);
       e.stunTimer = Math.max(e.stunTimer || 0, 1.5);
       if (!firstHit) firstHit = e;
       
@@ -2364,13 +2369,14 @@ function executeRisingDragon() {
   globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, angle, 1.8, true, '#00ffc8', false, globals.player));
   globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#00ffc8'));
   
+  const dragonDmg = Math.max(6, Math.round(getCurrentSlashDamage() * 1.6));
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const dx = e.x - globals.player.x;
     const dy = e.y - globals.player.y;
     const dist = Math.hypot(dx, dy);
     if (dist < 160) {
-      hitEnemy(e, 4);
+      hitEnemy(e, dragonDmg);
       e.yVelocity = -750;
       e.stunTimer = Math.max(e.stunTimer || 0, 0.85);
       
@@ -4215,7 +4221,7 @@ function update(realDt: number) {
           const dy = e.y - globals.player.y;
           const distSq = dx * dx + dy * dy;
           if (distSq < 250 * 250) {
-            hitEnemy(e, 14 + 4 * (globals.playerStats.shieldPulseLevel || 0));
+            hitEnemy(e, Math.max(14, Math.round(getCurrentSlashDamage() * 1.8)) + 4 * (globals.playerStats.shieldPulseLevel || 0));
             // pull enemies slightly toward player center
             if (distSq > 100) {
               const dist = Math.sqrt(distSq);
@@ -4323,7 +4329,7 @@ function update(realDt: number) {
           const dx = other.x - globals.player.x;
           const dy = other.y - globals.player.y;
           if (dx * dx + dy * dy < burstRadiusSq) {
-            hitEnemy(other, 25 + 5 * (globals.playerStats.firewheelBlazeLevel || 0));
+            hitEnemy(other, Math.max(25, Math.round(getCurrentSlashDamage() * 2.5)) + 5 * (globals.playerStats.firewheelBlazeLevel || 0));
             other.burnTimer = 6.0;
             other.burnBonusDmg = (globals.playerStats.firewheelBlazeLevel || 0) + 3;
             const pushAngle = Math.atan2(dy, dx);
@@ -4550,7 +4556,7 @@ function update(realDt: number) {
           e.vx = Math.cos(pushAngle) * 800;
           e.vy = Math.sin(pushAngle) * 800;
           e.stunTimer = Math.max(e.stunTimer || 0, 0.6);
-          hitEnemy(e, 6);
+          hitEnemy(e, Math.max(8, Math.round(getCurrentSlashDamage() * 1.6)));
         }
       });
     }
@@ -5024,7 +5030,7 @@ function update(realDt: number) {
               nearby.forEach((other, idx) => {
                 if (idx < 6) {
                   asuraHits++;
-                  hitEnemy(other, 12);
+                  hitEnemy(other, Math.max(16, Math.round(getCurrentSlashDamage() * 2.8)));
                   globals.shockwaves.push(new Shockwave(other.x, other.y, '#ef4444'));
                 }
               });
@@ -5051,7 +5057,7 @@ function update(realDt: number) {
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(45);
             }
-            hitEnemy(e, 3);
+            hitEnemy(e, Math.max(6, Math.round(getCurrentSlashDamage() * 1.5)));
             if (globals.activeBounty && globals.activeBounty.type === 'parry') {
               globals.activeBounty.current++;
             }
@@ -5081,7 +5087,7 @@ function update(realDt: number) {
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(25);
             }
-            hitEnemy(e, 2);
+            hitEnemy(e, Math.max(4, Math.round(getCurrentSlashDamage() * 1.0)));
             if (globals.activeBounty && globals.activeBounty.type === 'parry') {
               globals.activeBounty.current++;
             }

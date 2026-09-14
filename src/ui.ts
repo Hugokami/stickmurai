@@ -517,6 +517,37 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   bindDualListener(document.getElementById('close-guide-btn'), closeGuideModal);
   bindDualListener(document.getElementById('close-guide-btn-bottom'), closeGuideModal);
 
+  // Codex category filter tabs
+  const codexTabBtns = document.querySelectorAll<HTMLButtonElement>('.codex-tab-btn');
+  const codexCards = document.querySelectorAll<HTMLElement>('#codex-cards-container .guide-card');
+  codexTabBtns.forEach(btn => {
+    bindDualListener(btn, () => {
+      const targetTab = btn.getAttribute('data-tab') || 'all';
+      codexTabBtns.forEach(b => {
+        b.classList.toggle('active', b === btn);
+        if (b === btn) {
+          b.style.background = 'rgba(56, 189, 248, 0.25)';
+          b.style.borderColor = '#38bdf8';
+          b.style.color = '#38bdf8';
+          b.style.fontWeight = 'bold';
+        } else {
+          b.style.background = 'rgba(0,0,0,0.4)';
+          b.style.borderColor = 'rgba(255,255,255,0.15)';
+          b.style.color = '#cbd5e1';
+          b.style.fontWeight = 'normal';
+        }
+      });
+      codexCards.forEach(card => {
+        const section = card.getAttribute('data-section');
+        if (targetTab === 'all' || section === targetTab) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+
   bindDualListener(document.getElementById('pause-settings-btn'), () => {
     if (pauseScreen) pauseScreen.style.display = 'none';
     if (settingsScreen) settingsScreen.style.display = 'flex';
