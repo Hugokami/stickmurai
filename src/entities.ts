@@ -1343,25 +1343,47 @@ export class Slash {
       ctx.lineWidth = Math.max(1.0, 2.0 * easeInQuad * safeMult);
       ctx.stroke();
 
-      // 5. Optional sprite sheet overlay if loaded and valid (exclude Akakage due to blank frames)
+      // 5. Hero-specific slash effect animation sprite overlay, carefully centered along the attack vector
       const slashes = (vfxAnims as any).heroSlashes;
       let frames: HTMLImageElement[] | null = null;
-      if (slashes && heroKey !== 'heroakakage') {
-        if (heroKey === 'heronightborne' && slashes.nightborne) frames = slashes.nightborne;
-        else if (heroKey === 'herosamurai' && slashes.samurai) frames = slashes.samurai;
-        else if (heroKey === 'herosatyr' && slashes.satyr) frames = slashes.satyr;
-        else if (heroKey === 'heroluneblade' && slashes.luneblade) frames = slashes.luneblade;
-        else if (heroKey === 'heroninja' && slashes.ninja) frames = slashes.ninja;
-        else if (slashes.ronin) frames = slashes.ronin;
+      let isAkakage = false;
+      if (slashes) {
+        if (heroKey === 'heroakakage' || heroKey === 'akakage') {
+          frames = slashes.akakage;
+          isAkakage = true;
+        } else if (heroKey === 'heronightborne' && slashes.nightborne) {
+          frames = slashes.nightborne;
+        } else if (heroKey === 'herosamurai' && slashes.samurai) {
+          frames = slashes.samurai;
+        } else if (heroKey === 'herosatyr' && slashes.satyr) {
+          frames = slashes.satyr;
+        } else if (heroKey === 'heroluneblade' && slashes.luneblade) {
+          frames = slashes.luneblade;
+        } else if (heroKey === 'heroninja' && slashes.ninja) {
+          frames = slashes.ninja;
+        } else if (heroKey === 'herodragon' && slashes.dragon) {
+          frames = slashes.dragon;
+        } else if (slashes.ronin) {
+          frames = slashes.ronin;
+        }
       }
       if (frames && frames.length > 0) {
         const frameIdx = Math.min(frames.length - 1, Math.floor(progress * frames.length));
         const img = frames[frameIdx];
         if (img && img.complete && img.naturalWidth > 0) {
-          const sScale = Math.min(4.8, 3.8 * safeMult);
           ctx.save();
           ctx.globalAlpha = Math.min(1.0, easeInQuad * 1.15);
-          ctx.drawImage(img, (-img.width / 2 * sScale) | 0, (-img.height / 2 * sScale) | 0, (img.width * sScale) | 0, (img.height * sScale) | 0);
+          if (isAkakage) {
+            ctx.rotate(-1.761); // Center Akakage blood crescent forward
+            const sScale = Math.min(4.4, (midRadius / 37.1));
+            ctx.scale(sScale, sScale);
+            ctx.drawImage(img, -64, -64);
+          } else {
+            ctx.rotate(2.039); // Center standard hero slash arc forward
+            const sScale = Math.min(4.5, (midRadius / 29.7));
+            ctx.scale(sScale, sScale);
+            ctx.drawImage(img, -64, -64);
+          }
           ctx.restore();
         }
       }

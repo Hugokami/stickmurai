@@ -65,10 +65,10 @@ export const powerUps: PowerUp[] = [
   { skill: "decoy_illusion", nameKey: "puRupturePhantomLegionName", descKey: "puRupturePhantomLegionDesc", apply: () => globals.playerStats.rupturePhantomLegionLevel = (globals.playerStats.rupturePhantomLegionLevel || 0) + 1 },
   { skill: "decoy_illusion", nameKey: "puRupturePhaseStrikeName", descKey: "puRupturePhaseStrikeDesc", isUnique: true, apply: () => { globals.rupturePhaseStrikeActive = true; } },
   
-  { nameKey: "puChargeSpeedName", descKey: "puChargeSpeedDesc", apply: () => { globals.playerStats.iaijutsuChargeSpeed += 0.4; globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 25; } },
-  { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => { globals.playerStats.deflectedDmg += 4; } },
-  { nameKey: "puVampireName", descKey: "puVampireDesc", apply: () => { globals.playerStats.vampireChance += 0.12; } },
-  { nameKey: "puDimensionalName", descKey: "puDimensionalDesc", apply: () => { globals.playerStats.iaijutsuRangeMult += 0.45; globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.15; } },
+  { nameKey: "puChargeSpeedName", descKey: "puChargeSpeedDesc", isUnique: true, apply: () => { globals.playerStats.iaijutsuChargeSpeed += 0.4; globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + 25; } },
+  { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", isUnique: true, apply: () => { globals.playerStats.deflectedDmg += 4; } },
+  { nameKey: "puVampireName", descKey: "puVampireDesc", isUnique: true, apply: () => { globals.playerStats.vampireChance += 0.12; } },
+  { nameKey: "puDimensionalName", descKey: "puDimensionalDesc", isUnique: true, apply: () => { globals.playerStats.iaijutsuRangeMult += 0.45; globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.15; } },
   { nameKey: "puFireName", descKey: "puFireDesc", isUnique: true, apply: () => globals.playerStats.fireStanceLevel = 1 },
   { nameKey: "puClonesName", descKey: "puClonesDesc", isUnique: true, apply: () => globals.playerStats.shadowClonesLevel = 1 },
   { nameKey: "puStoutHeartName", descKey: "puStoutHeartDesc", apply: () => { globals.maxLives = Math.min(10, Math.max(globals.maxLives + 1, 7)); globals.lives = Math.min(globals.maxLives, globals.lives + 1); } },
@@ -663,7 +663,9 @@ export function triggerSpecificUltimate(type: 'shadow' | 'omni' | 'storm' | 'zen
   if (type === 'shadow') {
     // Flow stays full so the 6-second drain in main.ts can run to completion
     globals.flow = globals.playerStats.flowMax;
-    playSynthesizedSingingBowl();
+    if (globals.selectedHero !== 'akakage') {
+      playSynthesizedSingingBowl();
+    }
     ultOptions[0].apply();
   } else if (type === 'omni') {
     globals.flow = 0;
@@ -759,10 +761,10 @@ export function getQualityPrice(q: 'common' | 'rare' | 'epic' | 'legendary'): nu
   }
 }
 
-function rollSingleShopSlot(): ShopSlot {
+function rollSingleShopSlot(existingSlots: ShopSlot[] = []): ShopSlot {
   const available = powerUps.filter(p => {
     if (p.isCorrupted) return false;
-    if (p.isUnique && globals.chosenPowerUps.includes(p.nameKey)) return false;
+    if (p.isUnique && (globals.chosenPowerUps.includes(p.nameKey) || existingSlots.some(s => s?.power?.nameKey === p.nameKey))) return false;
     if (p.nameKey === 'puRaijinSplitterName' && globals.raijinSplitterActive) return false;
     if (p.nameKey === 'puArterialGushName' && globals.arterialGushActive) return false;
     if (p.nameKey === 'puSonicBreakName' && globals.sonicBreakthroughActive) return false;
@@ -813,7 +815,7 @@ export function rollShopInventory(isNewWave = false): ShopSlot[] {
   const preservedSlots = currentShopInventory.filter(slot => slot && slot.isFrozen);
   const slots: ShopSlot[] = [...preservedSlots];
   while (slots.length < 4) {
-    slots.push(rollSingleShopSlot());
+    slots.push(rollSingleShopSlot(slots));
   }
   if (isNewWave) {
     globals.shopRefreshCount = 0;

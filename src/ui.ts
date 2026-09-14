@@ -41,6 +41,7 @@ let lastAttackOverlayHeight = -1;
 let lastUltOverlayHeight = -1;
 let lastUltTextContent = '';
 let lastLives = 5;
+let lastGhostHeartActive = false;
 
 // Additional DOM element caches to prevent querySelector / getElementById thrashing
 let btnEnhanceElement: HTMLElement | null = null;
@@ -87,8 +88,8 @@ export const ASCENSION_UPGRADES = [
     nameJa: '刃の研鑽',
     icon: '🗡️',
     max: 10,
-    desc: '+1% Slash Damage per level',
-    descJa: '通常斬撃ダメージ+0.5',
+    desc: '+0.5 Flat DMG & +1% Slash DMG per level',
+    descJa: '基礎斬撃+0.5 & 斬撃倍率+1%/Lv',
     baseCost: 100,
     costMult: 100,
   },
@@ -144,8 +145,8 @@ export const ASCENSION_UPGRADES = [
     icon: '✨',
     max: 999,
     isEndless: true,
-    desc: '+0.5% Slash Damage per rank (Uncapped)',
-    descJa: '通常斬撃ダメージ+0.25 (上限なし)',
+    desc: '+0.2 Flat DMG & +0.5% Slash DMG per rank (Uncapped)',
+    descJa: '基礎斬撃+0.2 & 斬撃倍率+0.5%/Rank (上限なし)',
     baseCost: 400,
     costMult: 150,
   },
@@ -1816,7 +1817,8 @@ export function updateUI(force = false) {
     }
   }
   
-  if (globals.lives !== lastLives || globals.maxLives !== lastRenderedMaxLives) {
+  const ghostActive = (globals.ghostHeartTimer || 0) > 0;
+  if (globals.lives !== lastLives || globals.maxLives !== lastRenderedMaxLives || ghostActive !== lastGhostHeartActive) {
     const heartsHost = document.getElementById('hearts-container');
     if (heartsHost && globals.maxLives > heartsHost.querySelectorAll('.heart').length) {
       for (let i = heartsHost.querySelectorAll('.heart').length; i < globals.maxLives; i++) {
@@ -1831,11 +1833,21 @@ export function updateUI(force = false) {
         } else {
           (h as HTMLElement).style.display = '';
         }
+        const isGhost = ghostActive && i === globals.lives;
         if (i < globals.lives) {
           h.classList.add('active');
           h.classList.remove('damaged');
+          h.classList.remove('ghost');
+          h.textContent = '❤️';
+        } else if (isGhost) {
+          h.classList.remove('active');
+          h.classList.remove('damaged');
+          h.classList.add('ghost');
+          h.textContent = '🧡';
         } else {
           h.classList.remove('active');
+          h.classList.remove('ghost');
+          h.textContent = '❤️';
           if (i < lastLives) {
             h.classList.add('damaged');
           }
@@ -1844,6 +1856,7 @@ export function updateUI(force = false) {
     }
     lastLives = globals.lives;
     lastRenderedMaxLives = globals.maxLives;
+    lastGhostHeartActive = ghostActive;
   }
 
   updateCooldownsUI();

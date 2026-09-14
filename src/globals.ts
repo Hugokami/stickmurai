@@ -93,6 +93,7 @@ export const globals = {
   },
 
   playerStats: { 
+    slashFlatDmg: 0,
     slashBonusDmgPct: 0,
     iaijutsuBonusDmg: 0,
     slashSizeMult: 1.0, 
@@ -318,6 +319,8 @@ export const globals = {
   activeHermit: null as any,
   shadowDoppelganger: null as any,
   consecutiveParries: 0,
+  ghostHeartTimer: 0,
+  ghostHeartSlashes: 0,
   lowHpSurviveTimer: 0,
   shogunDefeatedAtDawn: false,
   bladeClashVictories: 0,

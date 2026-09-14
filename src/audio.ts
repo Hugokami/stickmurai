@@ -238,7 +238,7 @@ export function decodeAllSfx() {
   sfxFiles.forEach(src => decodeIfContextReady(src));
 }
 
-export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
+export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0, pitchMult: number = 1.0) {
   if (isPortalMuted) return;
   if (pool.length > 0) {
     const firstSound = pool[0];
@@ -258,6 +258,9 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
           if (ctx.state === 'running') {
             const source = ctx.createBufferSource();
             source.buffer = buffer;
+            if (pitchMult !== 1.0) {
+              source.playbackRate.setValueAtTime(pitchMult, ctx.currentTime);
+            }
             const gainNode = ctx.createGain();
             gainNode.gain.setValueAtTime(getSfxVolume() * 0.85 * volumeMult, ctx.currentTime);
             source.connect(gainNode);
@@ -282,6 +285,11 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0) {
   }
   if (sound) {
     sound.volume = getSfxVolume() * 0.85 * volumeMult;
+    if (pitchMult !== 1.0) {
+      sound.playbackRate = pitchMult;
+    } else if (sound.playbackRate !== 1.0) {
+      sound.playbackRate = 1.0;
+    }
     sound.currentTime = 0;
     sound.play().catch(() => {});
   }
@@ -293,14 +301,14 @@ export function playSynthesizedSlash(_volumeMult: number = 1.0) {
   // Intentionally no-op: synthetic oscillator swoop sounded like a blunt hit effect.
 }
 
-export function playSlashSfx(volumeMult: number = 1.0) {
+export function playSlashSfx(volumeMult: number = 1.0, pitchMult: number = 1.0) {
   if (isPortalMuted) return;
   const nowTime = performance.now();
   if (nowTime - lastSlashSfxTime < 50) return;
   lastSlashSfxTime = nowTime;
 
   // Restore the real sword slash sound effect (audio/slash.wav)
-  playSound(sfx.slash, volumeMult);
+  playSound(sfx.slash, volumeMult, pitchMult);
 }
 
 let audioCtx: AudioContext | null = null;

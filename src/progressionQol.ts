@@ -72,6 +72,6 @@ export function permanentPreview(id: string, level: number, max: number, endless
  const effects:Record<string,[string,number,string]>={slashDamage:['Bonus slash damage',1,'%'],iaijutsuPower:['Bonus Iaijutsu damage',1,''],maxLives:['Extra hearts',1,''],dashCooldown:['Dash cooldown reduction',.08,'s'],spiritResonance:['Bonus flow gain',15,'%'],infiniteSharpness:['Bonus slash damage',.5,'%'],infiniteFlow:['Bonus flow gain',1,'%'],infiniteFortune:['Bonus Magatama',2,'%'],infiniteRiposte:['Bonus posture damage',1,'']};
  const effect=effects[id];
  if(!effect)return '';
- return `<div>${effect[0]}: ${num(level*effect[1])}${effect[2]} → ${num(next*effect[1])}${effect[2]}${id==='dashCooldown'?' (cooldown floor 0.4s)':''}${id==='iaijutsuPower'?` · Range: +${level*8}% → +${next*8}%`:''}</div>`;
+ return `<div>${effect[0]}: ${num(level*effect[1])}${effect[2]} → ${num(next*effect[1])}${effect[2]}${id==='slashDamage'?` · Flat: +${num(level*0.5)} → +${num(next*0.5)}`:''}${id==='infiniteSharpness'?` · Flat: +${num(level*0.2)} → +${num(next*0.2)}`:''}${id==='dashCooldown'?' (cooldown floor 0.4s)':''}${id==='iaijutsuPower'?` · Range: +${level*8}% → +${next*8}%`:''}</div>`;
 }
 

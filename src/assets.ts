@@ -1241,7 +1241,7 @@ export const vfxAnims = {
     samurai: loadVfxFrames('vfx/slashes/slash_samurai/frame_{N}.png', 9, 1, 2, true),
     nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, true),
     satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, true),
-    akakage: loadVfxFrames('vfx/slashes/slash_akakage/frame_{N}.png', 30, 1, 2, true),
+    akakage: loadVfxFrames('vfx/slashes/slash_akakage/frame_{N}.png', 15, 1, 2, true),
     dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, true),
   },
   impacts: {

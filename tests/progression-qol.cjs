@@ -21,6 +21,8 @@ test('upgrade projections show actual cooldown and clamp without mutating live s
 test('permanent dash upgrade reports seconds and maximum rank stops increasing',()=>{
  assert.match(permanentPreview('dashCooldown',4,5,false),/0.32s → 0.4s/);
  assert.match(permanentPreview('slashDamage',10,10,false),/10% → 10%/);
+ assert.match(permanentPreview('slashDamage',10,10,false),/Flat: \+5 → \+5/);
+ assert.match(permanentPreview('infiniteSharpness',5,999,true),/Flat: \+1 → \+1.2/);
 });
 test('hero comparison uses implemented Satyr modifiers',()=>{
  const html=heroComparison('satyr');

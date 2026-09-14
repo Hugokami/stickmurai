@@ -9,7 +9,7 @@ function skillDamage(base:number, ratio:number, target?:Enemy):number {
 }
 
 export function getCurrentSlashDamage(): number {
-  const baseDmg = 1.0 + (globals.playerStats?.reapersMarkLevel || 0) * 2 + (globals.flowState === 'awakened' ? 2.5 : 0) + (globals.playerStats?.enhanceBonusDmg || 0);
+  const baseDmg = 1.0 + (globals.playerStats?.slashFlatDmg || 0) + (globals.playerStats?.reapersMarkLevel || 0) * 2 + (globals.flowState === 'awakened' ? 2.5 : 0) + (globals.playerStats?.enhanceBonusDmg || 0);
   const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
   const comboMult = 1.0 + Math.min(1.5, (globals.combo || 0) * 0.015);
   return Math.max(1, baseDmg * slashPct * comboMult);
@@ -1161,6 +1161,7 @@ function initGame() {
   (globals as any).akakageAwakeningExtensionTotal = 0;
   (globals as any).akakageScytheCooldown = 0;
   globals.playerStats = { 
+    slashFlatDmg: 0,
     slashBonusDmgPct: 0,
     iaijutsuBonusDmg: 0,
     slashSizeMult: 1.0, 
@@ -1259,6 +1260,7 @@ function initGame() {
     const infFortune = cu.infiniteFortune ?? 0;
     const infRiposte = cu.infiniteRiposte ?? 0;
 
+    globals.playerStats.slashFlatDmg = (globals.playerStats.slashFlatDmg || 0) + slashLvl * 0.5 + infSharpness * 0.2;
     globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + slashLvl * 0.01 + infSharpness * 0.005;
     globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + iaijutsuLvl * 1;
     globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + iaijutsuLvl * 0.08;
@@ -1778,6 +1780,10 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       globals.lives -= damageAmount;
       globals.invulnTimer = 0.5;
       globals.screenShake = 20;
+      if (globals.lives > 0) {
+        globals.ghostHeartTimer = 3.2;
+        globals.ghostHeartSlashes = 0;
+      }
     }
     
     const flashOverlay = document.getElementById('flash-overlay')!;
@@ -3035,6 +3041,19 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   
   const hitSparkCount = globals.graphicsSettings === 'low' ? 2 : 8;
   for(let i=0; i<hitSparkCount; i++) globals.particles.push(Particle.acquire(e.x, e.y, '#d0d4d8', 300, 0.3, 3));
+
+  // Bushido Rally: Landing 5 quick slashes restores Ghost Heart
+  if (globals.ghostHeartTimer > 0) {
+    globals.ghostHeartSlashes++;
+    if (globals.ghostHeartSlashes >= 5) {
+      globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+      globals.ghostHeartTimer = 0;
+      globals.ghostHeartSlashes = 0;
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, globals.currentLang === 'ja' ? '武士の気迫再生！ ❤️ +1' : 'BUSHIDO RALLY! ❤️ +1', '#f97316', 30));
+      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f97316'));
+      updateUI();
+    }
+  }
   
   if (e.hp <= 0) {
     if (globals.gameMode === 'pvp' && pvpManager.subMode === 'insane_survival' && pvpManager.role === 'host') {
@@ -3569,6 +3588,16 @@ function update(realDt: number) {
       }
     } else {
       globals.lowHpSurviveTimer = 0;
+    }
+
+    // Bushido Rally Ghost Heart Decay
+    if (globals.ghostHeartTimer > 0) {
+      globals.ghostHeartTimer -= realDt;
+      if (globals.ghostHeartTimer <= 0) {
+        globals.ghostHeartTimer = 0;
+        globals.ghostHeartSlashes = 0;
+        updateUI();
+      }
     }
 
     // Plasma Tempest Trails Update
@@ -4935,6 +4964,16 @@ function update(realDt: number) {
             globals.runStats.parries++;
             globals.consecutiveParries++;
 
+            // Bushido Rally: Landing 1 perfect parry restores Ghost Heart
+            if (globals.ghostHeartTimer > 0) {
+              globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+              globals.ghostHeartTimer = 0;
+              globals.ghostHeartSlashes = 0;
+              globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, globals.currentLang === 'ja' ? '見切り再生！ ❤️ +1' : 'PERFECT PARRY RALLY! ❤️ +1', '#ffd700', 32));
+              globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+              updateUI();
+            }
+
             // Perfect Parry Magatama Bounty (boosted by Fortune & Blood Surge)
             const bloodSurgeMult = globals.activeStageAffix?.id === 'blood_surge' ? 2 : 1;
             const parryMag = Math.round(2 * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
@@ -5115,8 +5154,12 @@ function update(realDt: number) {
       }
 
       globals.player.setState('attack');
-      // One slash sound per player-triggered basic slash; never on enemy hit.
-      playSlashSfx(1.2);
+      // Dynamic pitch crescendo on slash; silenced during Akakage Blood Asura awakening per user request
+      if (globals.selectedHero === 'akakage' && globals.flowState === 'awakened') {
+        // Suppress noisy rapid slash SFX during Akakage Blood Asura awakening
+      } else {
+        playSlashSfx(1.2, Math.min(1.45, 1.0 + (globals.combo || 0) * 0.015));
+      }
 
       let currentAtkCooldown = globals.playerStats.attackCooldownBase;
       if (globals.flowState === 'awakened') currentAtkCooldown *= 0.5;
@@ -5162,7 +5205,9 @@ function update(realDt: number) {
       globals.player.vx = Math.cos(angle) * lungePower; globals.player.vy = Math.sin(angle) * lungePower; globals.screenShake += 3 * attackPower;
 
       let size = globals.playerStats.slashSizeMult * attackPower;
-      let dmg = attackPower >= 1.7 ? 4 : 1;
+      const flatBonus = globals.playerStats?.slashFlatDmg || 0;
+      let dmg = attackPower >= 1.7 ? (4 + flatBonus * 1.5) : (1 + flatBonus);
+      dmg = Math.round(dmg * (1.0 + (globals.playerStats?.slashBonusDmgPct || 0)));
       let isEnhanced = attackPower >= 1.7;
       let isRiposteStrike = false;
 
@@ -5699,6 +5744,13 @@ function update(realDt: number) {
             hitEnemy(en, cleaveDmg);
           }
         });
+      }
+
+      // Whiff recovery lag: empty air penalizes cooldown; landed hits confirm snappy cancel
+      if (enemyHitCount === 0 && attackPower < 1.7) {
+        globals.player.attackCooldown = Math.max(globals.player.attackCooldown, 0.28);
+      } else if (enemyHitCount > 0) {
+        globals.player.attackCooldown = Math.min(globals.player.attackCooldown, 0.16);
       }
 
       if (globals.bladeEchoesActive && globals.flowState === 'awakened') {
