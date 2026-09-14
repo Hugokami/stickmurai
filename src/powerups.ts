@@ -851,6 +851,7 @@ export function closeShop() {
 
 export function renderShopModal() {
   let modal = document.getElementById('shop-modal');
+  const prevScrollTop = modal?.querySelector('.shop-modal-box')?.scrollTop ?? 0;
   if (!modal) {
     modal = document.createElement('div');
     modal.id = 'shop-modal';
@@ -1201,6 +1202,12 @@ export function renderShopModal() {
         }
       }
     });
+  }
+
+  // Restore scroll position after purchase/lock/refresh re-render
+  const newBox = modal.querySelector('.shop-modal-box') as HTMLElement;
+  if (newBox && prevScrollTop > 0) {
+    newBox.scrollTop = prevScrollTop;
   }
 }
 
