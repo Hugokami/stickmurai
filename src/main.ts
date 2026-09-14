@@ -1534,14 +1534,24 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   }
 
   if (globals.player.state === 'dash' || globals.flowState === 'awakened') { 
-    globals.runStats.perfectDodges++;
-    playSynthesizedDodge();
-    globals.screenShake = 30; 
-    addFlow(6.0);
-    addCombo();
-    addCombo();
+      globals.runStats.perfectDodges++;
+      playSynthesizedDodge();
+    
+      // Bushido Rally: Perfect dodge restores Ghost Heart
+      if (globals.ghostHeartTimer > 0) {
+        globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+        globals.ghostHeartTimer = 0;
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, globals.currentLang === 'ja' ? '見切り回避再生！ ❤️ +1' : 'PERFECT DODGE RALLY! ❤️ +1', '#f97316', 30));
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f97316'));
+        updateUI();
+      }
+    
+      globals.screenShake = 30; 
+      addFlow(6.0);
+      addCombo();
+      addCombo();
 
-    globals.invulnTimer = 1.3;
+      globals.invulnTimer = 1.3;
     
     const speedlines = document.getElementById('speedlines-overlay');
     if (speedlines) {
@@ -3122,20 +3132,9 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   const hitSparkCount = globals.graphicsSettings === 'low' ? 2 : 8;
   for(let i=0; i<hitSparkCount; i++) globals.particles.push(Particle.acquire(e.x, e.y, '#d0d4d8', 300, 0.3, 3));
 
-  // Bushido Rally: Landing 5 quick slashes restores Ghost Heart
-  if (globals.ghostHeartTimer > 0) {
-    globals.ghostHeartSlashes++;
-    if (globals.ghostHeartSlashes >= 5) {
-      globals.lives = Math.min(globals.maxLives, globals.lives + 1);
-      globals.ghostHeartTimer = 0;
-      globals.ghostHeartSlashes = 0;
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, globals.currentLang === 'ja' ? '武士の気迫再生！ ❤️ +1' : 'BUSHIDO RALLY! ❤️ +1', '#f97316', 30));
-      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f97316'));
-      updateUI();
-    }
-  }
-  
-  if (e.hp <= 0) {
+  // Bushido Rally can only be restored via perfect parry or perfect dodge
+
+    if (e.hp <= 0) {
     if (globals.gameMode === 'pvp' && pvpManager.subMode === 'insane_survival' && pvpManager.role === 'host') {
       if (killedByClient) {
         globals.p2Kills++;

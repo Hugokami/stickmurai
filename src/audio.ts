@@ -302,12 +302,11 @@ export function playSynthesizedSlash(_volumeMult: number = 1.0) {
 }
 
 export function playSlashSfx(volumeMult: number = 1.0, pitchMult: number = 1.0) {
-  if (isPortalMuted) return;
   const nowTime = performance.now();
   if (nowTime - lastSlashSfxTime < 50) return;
   lastSlashSfxTime = nowTime;
 
-  // Restore the real sword slash sound effect (audio/slash.wav)
+  // Always play slash SFX regardless of portal mute state
   playSound(sfx.slash, volumeMult, pitchMult);
 }
 
