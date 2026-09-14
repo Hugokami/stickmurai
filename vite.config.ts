@@ -4,7 +4,8 @@ export default defineConfig({
   base: './',
   build: {
     target: 'es2020',
-    modulePreload: false
+    modulePreload: false,
+    emptyOutDir: false
   },
   plugins: [
     {

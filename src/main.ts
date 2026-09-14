@@ -2710,9 +2710,9 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     (e as any).posture = 0;
     const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
     if (isBoss) {
-      // Boss execution: ~22% max HP (min 30, capped at 150), stun boss for 2.5s
-      finalDmg = Math.min(150, Math.max(30, Math.round((e.maxHp || 100) * 0.22)));
-      e.stunTimer = 2.5;
+      // Boss execution: ~15% max HP (min 50, capped at 260), stun boss for 2.0s
+      finalDmg = Math.min(260, Math.max(50, Math.round((e.maxHp || 100) * 0.15)));
+      e.stunTimer = 2.0;
       e.knockbackTimer = 0.45;
       const kbAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
       e.knockbackVx = Math.cos(kbAngle) * 900;
@@ -2797,7 +2797,10 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       });
       if (highestHpEnemy) {
         const slashDmg = getCurrentSlashDamage();
-        const rendDmg = Math.max(Math.round(75 + slashDmg * 5.0), Math.round((e.maxHp || 100) * 0.5));
+        const targetIsBoss = (highestHpEnemy as any).subType === 'oni_boss' || (highestHpEnemy as any).subType === 'shogun_boss' || (highestHpEnemy as any).subType === 'agis_colossus' || (highestHpEnemy as any).subType === 'skeleton_warlord' || (highestHpEnemy as any).isBoss;
+        const rendDmg = targetIsBoss 
+          ? Math.min(Math.round(((highestHpEnemy as any).maxHp || 100) * 0.10), Math.round(75 + slashDmg * 3.0))
+          : Math.max(Math.round(75 + slashDmg * 5.0), Math.round((e.maxHp || 100) * 0.5));
         hitEnemy(highestHpEnemy, rendDmg);
         globals.shockwaves.push(new Shockwave((highestHpEnemy as any).x, (highestHpEnemy as any).y, '#ef4444'));
         globals.floatingTexts.push(FloatingText.acquire((highestHpEnemy as any).x, (highestHpEnemy as any).y - 80, `💀 SOUL REND -${rendDmg}!`, "#ef4444", 26));
@@ -2984,7 +2987,9 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
         globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, bloodFx, 0.35, 2.0));
       }
       const missingHp = Math.max(0, e.maxHp - e.hp);
-      const bleedDmg = Math.max(12, Math.round(missingHp * 0.20)) + Math.round(slashDmg * 1.25);
+      const isBossTarget = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
+      const bleedPct = isBossTarget ? 0.06 : 0.20;
+      const bleedDmg = Math.max(12, Math.round(missingHp * bleedPct)) + Math.round(slashDmg * 1.25);
       hitEnemy(e, bleedDmg);
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `🩸 -${bleedDmg} GUSH`, "#dc2626", 18));
     }
@@ -3016,6 +3021,13 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 30, "DEFLECTED! 🎯", "#f97316", 20));
   }
   
+  // Boss damage clamp: prevent any single-hit burst from deleting more than 12% of boss max HP
+  const isBossEntity = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
+  if (isBossEntity) {
+    const maxBossSingleHit = Math.max(70, Math.round((e.maxHp || 100) * 0.12));
+    finalDmg = Math.min(finalDmg, maxBossSingleHit);
+  }
+
   e.hp -= finalDmg;
   globals.runStats.damageDealt += finalDmg;
   e.hitFlash = 0.15;

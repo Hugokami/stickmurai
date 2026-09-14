@@ -4,15 +4,15 @@ const fs=require('node:fs');
 const {stripTypeScriptTypes}=require('node:module');
 const code=stripTypeScriptTypes(fs.readFileSync('src/balance.ts','utf8')).replace(/export /g,'');
 const {HERO_BALANCE,BOSS_BASE_HP,campaignHpMultiplier,heroBalance,heroDescription}=new Function(code+';return {HERO_BALANCE,BOSS_BASE_HP,campaignHpMultiplier,heroBalance,heroDescription};')();
-test('boss bases fall by 25% and scaling growth is exactly halved',()=>{
- const oldBases={oni_boss:200,agis_colossus:340,skeleton_warlord:300,shogun_boss:260};
- for(const [id,hp] of Object.entries(oldBases))assert.equal(BOSS_BASE_HP[id],hp*.75);
+test('boss bases are robustly buffed and scale properly with late-game power',()=>{
+ const expectedBases={oni_boss:600,agis_colossus:950,skeleton_warlord:850,shogun_boss:800};
+ for(const [id,hp] of Object.entries(expectedBases))assert.equal(BOSS_BASE_HP[id],hp);
  for(const stage of [1,5,10,15,20,50,100]){
-  assert.ok(Math.abs((campaignHpMultiplier(stage,true)/1.5-1)-((stage-1)*.22/2))<1e-10);
+  assert.ok(Math.abs((campaignHpMultiplier(stage,true)/1.5-1)-((stage-1)*.25))<1e-10);
   assert.equal(campaignHpMultiplier(stage,false),1.5*(1+(stage-1)*.16));
  }
- assert.equal(Math.round(BOSS_BASE_HP.oni_boss*campaignHpMultiplier(5,true)),324);
- assert.equal(Math.round(BOSS_BASE_HP.agis_colossus*campaignHpMultiplier(10,true)),761);
+ assert.equal(Math.round(BOSS_BASE_HP.oni_boss*campaignHpMultiplier(5,true)),1800);
+ assert.equal(Math.round(BOSS_BASE_HP.agis_colossus*campaignHpMultiplier(10,true)),4631);
 });
 test('hero prices keep a rising baseline attack budget and capped crit',()=>{
  let previous=0;

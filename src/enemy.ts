@@ -285,158 +285,158 @@ export class Enemy extends Entity {
   configureSubType() {
     if (this.subType === 'brawler') {
       this.type = 'enemy01';
-      this.lungeSpeed = 950; this.chargeTimeMax = 1.6; this.lungeDuration = 0.5;
-      this.scaleMult = 1; this.hp = this.maxHp = 14; this.expValue = 1;
-      this.colorTint = 'none';
-      this.speed = 260;
-      this.maxPosture = 120;
-    } else if (this.subType === 'samurai') {
-      this.type = 'enemy02';
-      this.lungeSpeed = 900; this.chargeTimeMax = 1.8; this.lungeDuration = 0.6;
-      this.scaleMult = 1.1; this.hp = this.maxHp = 18; this.expValue = 1;
-      this.colorTint = 'none';
-      this.speed = 260;
-      this.maxPosture = 140;
-    } else if (this.subType === 'ronin') {
-      this.type = 'enemy03';
-      this.lungeSpeed = 1000; this.chargeTimeMax = 1.8; this.lungeDuration = 0.7;
-      this.scaleMult = 1.2; this.hp = this.maxHp = 22; this.expValue = 2;
-      this.colorTint = 'none';
-      this.speed = 260;
-      this.maxPosture = 160;
-    } else if (this.subType === 'berserker') {
-      this.type = 'enemy02';
-      this.lungeSpeed = 1300; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
-      this.scaleMult = 1.3; this.hp = this.maxHp = 26; this.expValue = 3;
-      this.colorTint = 'none';
-      this.speed = 320;
-      this.maxPosture = 200;
-    } else if (this.subType === 'crimson_berserker') {
-      this.type = 'enemy02';
-      this.lungeSpeed = 1400; this.chargeTimeMax = 1.2; this.lungeDuration = 0.6;
-      this.scaleMult = 1.4; this.hp = this.maxHp = 45; this.expValue = 6;
-      this.colorTint = '#ef4444';
-      this.speed = 340;
-      this.maxPosture = 320;
-    } else if (this.subType === 'giant') {
-      this.type = 'enemy03';
-      this.lungeSpeed = 650; this.chargeTimeMax = 2.4; this.lungeDuration = 0.8;
-      this.scaleMult = 2; this.hp = this.maxHp = 42; this.expValue = 4;
-      this.colorTint = 'none';
-      this.speed = 150;
-      this.maxPosture = 280;
-    } else if (this.subType === 'assassin') {
-      this.type = 'enemy01';
-      this.lungeSpeed = 1500; this.chargeTimeMax = 1.0; this.lungeDuration = 0.4;
-      this.scaleMult = 0.8; this.hp = this.maxHp = 12; this.expValue = 2;
-      this.colorTint = 'none';
-      this.speed = 360;
-      this.maxPosture = 100;
-    } else if (this.subType === 'musketeer') {
-      this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.3; this.lungeDuration = 0.55; // Double-shot projectile
-      this.scaleMult = 2.0; this.hp = this.maxHp = 15; this.expValue = 2;
-      this.colorTint = 'none';
-      this.speed = 180;
-      this.maxPosture = 110;
-    } else if (this.subType === 'shadow_sniper') {
-      this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.45;
-      this.scaleMult = 2.0; this.hp = this.maxHp = 24; this.expValue = 4;
-      this.colorTint = '#881337';
-      this.speed = 200;
-      this.maxPosture = 180;
-    } else if (this.subType === 'tengu_sorcerer') {
-      this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.1; this.lungeDuration = 0.55;
-      this.scaleMult = 2.1; this.hp = this.maxHp = 32; this.expValue = 5;
-      this.colorTint = '#38bdf8';
-      this.speed = 240;
-      this.maxPosture = 220;
-    } else if (this.subType === 'corrupted_shaman') {
-      this.type = 'evil_wizard';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.3; this.lungeDuration = 0.6;
-      this.scaleMult = 2.2; this.hp = this.maxHp = 40; this.expValue = 7;
-      this.colorTint = '#059669';
-      this.speed = 170;
-      this.maxPosture = 260;
-    } else if (this.subType === 'pyromancer') {
-      this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.3; this.lungeDuration = 0.55;
-      this.scaleMult = 2.0; this.hp = this.maxHp = 20; this.expValue = 4;
-      this.colorTint = '#ff4400';
-      this.speed = 160;
-      this.maxPosture = 150;
-    } else if (this.subType === 'glacial_sentinel') {
-      this.type = 'enemy02';
-      this.lungeSpeed = 850; this.chargeTimeMax = 2.0; this.lungeDuration = 0.7;
-      this.scaleMult = 1.7; this.hp = this.maxHp = 34; this.expValue = 5;
-      this.colorTint = '#60a5fa';
-      this.speed = 190;
-      this.maxPosture = 260;
-    } else if (this.subType === 'astromancer') {
-      this.type = 'enemy01';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.5;
-      this.scaleMult = 2.1; this.hp = this.maxHp = 22; this.expValue = 5;
-      this.colorTint = '#f43f5e';
-      this.speed = 210;
-      this.maxPosture = 160;
-    } else if (this.subType === 'necromancer') {
-      this.type = 'enemy05';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.4; this.lungeDuration = 0.6;
-      this.scaleMult = 2.1; this.hp = this.maxHp = 42; this.expValue = 8;
-      this.colorTint = '#a855f7';
-      this.speed = 150;
-      this.maxPosture = 240;
-    } else if (this.subType === 'oni_boss') {
-      this.type = 'skeleton';
-      this.lungeSpeed = 1000; this.chargeTimeMax = 1.9; this.lungeDuration = 0.8;
-      this.scaleMult = 2.5; this.hp = this.maxHp = BOSS_BASE_HP.oni_boss; this.expValue = 15;
+      this.lungeSpeed = 1000; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
+      this.scaleMult = 1; this.hp = this.maxHp = 32; this.expValue = 1;
       this.colorTint = 'none';
       this.speed = 270;
-      this.maxPosture = 850;
+      this.maxPosture = 180;
+    } else if (this.subType === 'samurai') {
+      this.type = 'enemy02';
+      this.lungeSpeed = 980; this.chargeTimeMax = 1.4; this.lungeDuration = 0.55;
+      this.scaleMult = 1.1; this.hp = this.maxHp = 42; this.expValue = 1;
+      this.colorTint = 'none';
+      this.speed = 270;
+      this.maxPosture = 210;
+    } else if (this.subType === 'ronin') {
+      this.type = 'enemy03';
+      this.lungeSpeed = 1080; this.chargeTimeMax = 1.4; this.lungeDuration = 0.6;
+      this.scaleMult = 1.2; this.hp = this.maxHp = 52; this.expValue = 2;
+      this.colorTint = 'none';
+      this.speed = 270;
+      this.maxPosture = 240;
+    } else if (this.subType === 'berserker') {
+      this.type = 'enemy02';
+      this.lungeSpeed = 1350; this.chargeTimeMax = 1.1; this.lungeDuration = 0.5;
+      this.scaleMult = 1.3; this.hp = this.maxHp = 68; this.expValue = 3;
+      this.colorTint = 'none';
+      this.speed = 330;
+      this.maxPosture = 280;
+    } else if (this.subType === 'crimson_berserker') {
+      this.type = 'enemy02';
+      this.lungeSpeed = 1450; this.chargeTimeMax = 1.0; this.lungeDuration = 0.55;
+      this.scaleMult = 1.4; this.hp = this.maxHp = 110; this.expValue = 6;
+      this.colorTint = '#ef4444';
+      this.speed = 350;
+      this.maxPosture = 420;
+    } else if (this.subType === 'giant') {
+      this.type = 'enemy03';
+      this.lungeSpeed = 720; this.chargeTimeMax = 1.8; this.lungeDuration = 0.75;
+      this.scaleMult = 2; this.hp = this.maxHp = 125; this.expValue = 4;
+      this.colorTint = 'none';
+      this.speed = 165;
+      this.maxPosture = 420;
+    } else if (this.subType === 'assassin') {
+      this.type = 'enemy01';
+      this.lungeSpeed = 1550; this.chargeTimeMax = 0.85; this.lungeDuration = 0.38;
+      this.scaleMult = 0.8; this.hp = this.maxHp = 28; this.expValue = 2;
+      this.colorTint = 'none';
+      this.speed = 370;
+      this.maxPosture = 140;
+    } else if (this.subType === 'musketeer') {
+      this.type = 'enemy05';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.15; this.lungeDuration = 0.5; // Double-shot projectile
+      this.scaleMult = 2.0; this.hp = this.maxHp = 38; this.expValue = 2;
+      this.colorTint = 'none';
+      this.speed = 190;
+      this.maxPosture = 160;
+    } else if (this.subType === 'shadow_sniper') {
+      this.type = 'enemy05';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.05; this.lungeDuration = 0.42;
+      this.scaleMult = 2.0; this.hp = this.maxHp = 54; this.expValue = 4;
+      this.colorTint = '#881337';
+      this.speed = 210;
+      this.maxPosture = 250;
+    } else if (this.subType === 'tengu_sorcerer') {
+      this.type = 'enemy01';
+      this.lungeSpeed = 0; this.chargeTimeMax = 0.95; this.lungeDuration = 0.5;
+      this.scaleMult = 2.1; this.hp = this.maxHp = 70; this.expValue = 5;
+      this.colorTint = '#38bdf8';
+      this.speed = 250;
+      this.maxPosture = 300;
+    } else if (this.subType === 'corrupted_shaman') {
+      this.type = 'evil_wizard';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.15; this.lungeDuration = 0.55;
+      this.scaleMult = 2.2; this.hp = this.maxHp = 88; this.expValue = 7;
+      this.colorTint = '#059669';
+      this.speed = 180;
+      this.maxPosture = 350;
+    } else if (this.subType === 'pyromancer') {
+      this.type = 'enemy01';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.15; this.lungeDuration = 0.5;
+      this.scaleMult = 2.0; this.hp = this.maxHp = 48; this.expValue = 4;
+      this.colorTint = '#ff4400';
+      this.speed = 175;
+      this.maxPosture = 220;
+    } else if (this.subType === 'glacial_sentinel') {
+      this.type = 'enemy02';
+      this.lungeSpeed = 880; this.chargeTimeMax = 1.6; this.lungeDuration = 0.65;
+      this.scaleMult = 1.7; this.hp = this.maxHp = 80; this.expValue = 5;
+      this.colorTint = '#60a5fa';
+      this.speed = 200;
+      this.maxPosture = 340;
+    } else if (this.subType === 'astromancer') {
+      this.type = 'enemy01';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.05; this.lungeDuration = 0.45;
+      this.scaleMult = 2.1; this.hp = this.maxHp = 52; this.expValue = 5;
+      this.colorTint = '#f43f5e';
+      this.speed = 220;
+      this.maxPosture = 230;
+    } else if (this.subType === 'necromancer') {
+      this.type = 'enemy05';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.25; this.lungeDuration = 0.55;
+      this.scaleMult = 2.1; this.hp = this.maxHp = 92; this.expValue = 8;
+      this.colorTint = '#a855f7';
+      this.speed = 160;
+      this.maxPosture = 340;
+    } else if (this.subType === 'oni_boss') {
+      this.type = 'skeleton';
+      this.lungeSpeed = 1150; this.chargeTimeMax = 1.6; this.lungeDuration = 0.75;
+      this.scaleMult = 2.5; this.hp = this.maxHp = BOSS_BASE_HP.oni_boss; this.expValue = 25;
+      this.colorTint = 'none';
+      this.speed = 290;
+      this.maxPosture = 1800;
     } else if (this.subType === 'barrel_bomber') {
       this.type = 'enemy_barrel';
-      this.lungeSpeed = 1000; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
-      this.scaleMult = 1.1; this.hp = this.maxHp = 14; this.expValue = 2;
+      this.lungeSpeed = 1050; this.chargeTimeMax = 1.15; this.lungeDuration = 0.45;
+      this.scaleMult = 1.1; this.hp = this.maxHp = 32; this.expValue = 2;
       this.colorTint = 'none';
-      this.speed = 340;
-      this.maxPosture = 90;
+      this.speed = 350;
+      this.maxPosture = 130;
     } else if (this.subType === 'orc_brute') {
       this.type = 'enemy_orc';
-      this.lungeSpeed = 800; this.chargeTimeMax = 1.8; this.lungeDuration = 0.65;
-      this.scaleMult = 1.2; this.hp = this.maxHp = 38; this.expValue = 4;
+      this.lungeSpeed = 850; this.chargeTimeMax = 1.5; this.lungeDuration = 0.6;
+      this.scaleMult = 1.2; this.hp = this.maxHp = 90; this.expValue = 4;
       this.colorTint = 'none';
-      this.speed = 220;
-      this.maxPosture = 250;
+      this.speed = 230;
+      this.maxPosture = 350;
     } else if (this.subType === 'agis_colossus') {
       this.type = 'boss_agis';
-      this.lungeSpeed = 700; this.chargeTimeMax = 2.2; this.lungeDuration = 0.8;
-      this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.agis_colossus; this.expValue = 30;
+      this.lungeSpeed = 800; this.chargeTimeMax = 1.8; this.lungeDuration = 0.75;
+      this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.agis_colossus; this.expValue = 45;
       this.colorTint = 'none';
-      this.speed = 190;
-      this.maxPosture = 1100;
+      this.speed = 210;
+      this.maxPosture = 2400;
     } else if (this.subType === 'skeleton_warlord') {
       this.type = 'boss_skeleton';
-      this.lungeSpeed = 900; this.chargeTimeMax = 2.0; this.lungeDuration = 0.75;
-      this.scaleMult = 2.2; this.hp = this.maxHp = BOSS_BASE_HP.skeleton_warlord; this.expValue = 35;
+      this.lungeSpeed = 1000; this.chargeTimeMax = 1.7; this.lungeDuration = 0.7;
+      this.scaleMult = 2.2; this.hp = this.maxHp = BOSS_BASE_HP.skeleton_warlord; this.expValue = 50;
       this.colorTint = 'none';
-      this.speed = 220;
-      this.maxPosture = 950;
+      this.speed = 240;
+      this.maxPosture = 2200;
     } else if (this.subType === 'toaster_bot') {
       this.type = 'toaster_bot';
-      this.lungeSpeed = 0; this.chargeTimeMax = 1.2; this.lungeDuration = 0.6;
-      this.scaleMult = 1.4; this.hp = this.maxHp = 26; this.expValue = 3;
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.05; this.lungeDuration = 0.55;
+      this.scaleMult = 1.4; this.hp = this.maxHp = 58; this.expValue = 3;
       this.colorTint = 'none';
-      this.speed = 190;
-      this.maxPosture = 130;
+      this.speed = 200;
+      this.maxPosture = 190;
     } else { // shogun_boss
       this.type = 'evil_wizard';
-      this.lungeSpeed = 1350; this.chargeTimeMax = 1.7; this.lungeDuration = 0.6;
-      this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.shogun_boss; this.expValue = 20;
+      this.lungeSpeed = 1450; this.chargeTimeMax = 1.45; this.lungeDuration = 0.55;
+      this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.shogun_boss; this.expValue = 35;
       this.colorTint = 'none';
-      this.speed = 280;
-      this.maxPosture = 900;
+      this.speed = 300;
+      this.maxPosture = 2000;
     }
 
     // Apply scaling modifiers
@@ -1225,7 +1225,7 @@ export class Enemy extends Entity {
     } else if (this.subType === 'agis_colossus') {
       // Colossus Seismic Shockwave + Tri-Orb Plasma Spray
       globals.screenShake = Math.max(globals.screenShake, 24);
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8', 220));
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8', 240));
       const bossImpact = (vfxAnims as any).boss?.slamImpact;
       const bossDust = (vfxAnims as any).boss?.slamDust;
       if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));
@@ -1246,25 +1246,97 @@ export class Enemy extends Entity {
       // Heavy ground tremor damaging player if in range
       const pdx = globals.player.x - this.x;
       const pdy = globals.player.y - this.y;
-      if (pdx * pdx + pdy * pdy < 190 * 190 && globals.player.state !== 'dead') {
+      if (pdx * pdx + pdy * pdy < 200 * 200 && globals.player.state !== 'dead') {
         callbacks.checkPlayerHit(this, 2);
       }
+
+      // Secondary delayed seismic aftershock!
+      globals.delayedActions.push({
+        delay: 0.25,
+        run: () => {
+          if (this.state !== 'dead') {
+            globals.shockwaves.push(new Shockwave(this.x, this.y, '#0284c7', 300));
+            const afterDx = globals.player.x - this.x;
+            const afterDy = globals.player.y - this.y;
+            if (afterDx * afterDx + afterDy * afterDy < 280 * 280 && globals.player.state !== 'dead') {
+              callbacks.checkPlayerHit(this, 1);
+            }
+          }
+        }
+      });
       this.attackLanded = true;
     } else if (this.subType === 'skeleton_warlord') {
-      // Skeleton Warlord Ground-Splitting Cleave Tremor
+      // Skeleton Warlord Ground-Splitting Cleave Tremor + Radial Bone Shards
       globals.screenShake = Math.max(globals.screenShake, 24);
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444', 220));
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444', 240));
       const bossImpact = (vfxAnims as any).boss?.slamImpact;
       const bossDust = (vfxAnims as any).boss?.slamDust;
       if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));
       if (bossDust?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossDust, 0.55, 2.2));
       globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "WARLORD CLEAVE! 💀", "#ef4444", 28));
 
+      const pdx = globals.player.x - this.x;
+      const pdy = globals.player.y - this.y;
+      if (pdx * pdx + pdy * pdy < 220 * 220 && globals.player.state !== 'dead') {
+        callbacks.checkPlayerHit(this, 2);
+      }
+
+      // Enraged bone storm flurry (6 radial shards)
+      for (let i = 0; i < 6; i++) {
+        const shardAng = this.targetAngle + (i * Math.PI / 3);
+        const proj = Projectile.acquire(this.x, this.y, shardAng, true);
+        (proj as any).shooter = this;
+        (proj as any).colorTint = '#f87171';
+        proj.vx = Math.cos(shardAng) * 950;
+        proj.vy = Math.sin(shardAng) * 950;
+        globals.projectiles.push(proj);
+      }
+      this.attackLanded = true;
+    } else if (this.subType === 'oni_boss') {
+      // Oni Boss Hellfire Eruption + Magma Waves
+      globals.screenShake = Math.max(globals.screenShake, 24);
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#dc2626', 220));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "ONI HELLFIRE SLAM! 👹", "#ef4444", 30));
+      playSynthesizedThunder();
 
       const pdx = globals.player.x - this.x;
       const pdy = globals.player.y - this.y;
-      if (pdx * pdx + pdy * pdy < 210 * 210 && globals.player.state !== 'dead') {
+      if (pdx * pdx + pdy * pdy < 200 * 200 && globals.player.state !== 'dead') {
         callbacks.checkPlayerHit(this, 2);
+      }
+
+      // 3 radiating magma projectiles
+      const baseAng = this.targetAngle;
+      for (const offset of [-0.32, 0, 0.32]) {
+        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true);
+        (proj as any).shooter = this;
+        (proj as any).colorTint = '#ef4444';
+        proj.vx = Math.cos(baseAng + offset) * 1050;
+        proj.vy = Math.sin(baseAng + offset) * 1050;
+        globals.projectiles.push(proj);
+      }
+      this.attackLanded = true;
+    } else if (this.subType === 'shogun_boss') {
+      // Shogun Boss Void Blast + Fan of 5 Shadow Kunai
+      globals.screenShake = Math.max(globals.screenShake, 22);
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#9333ea', 200));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "SHADOW VOID FLURRY! 🥷", "#a855f7", 30));
+
+      const pdx = globals.player.x - this.x;
+      const pdy = globals.player.y - this.y;
+      if (pdx * pdx + pdy * pdy < 180 * 180 && globals.player.state !== 'dead') {
+        callbacks.checkPlayerHit(this, 2);
+      }
+
+      // 5-blade fan projectile barrage
+      const baseAng = this.targetAngle;
+      for (const offset of [-0.44, -0.22, 0, 0.22, 0.44]) {
+        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true);
+        (proj as any).shooter = this;
+        (proj as any).colorTint = '#a855f7';
+        proj.vx = Math.cos(baseAng + offset) * 1200;
+        proj.vy = Math.sin(baseAng + offset) * 1200;
+        globals.projectiles.push(proj);
       }
       this.attackLanded = true;
     }
@@ -1297,35 +1369,103 @@ export class Enemy extends Entity {
     }
 
     if (this.state === 'charge') {
-      ctx.save();ctx.translate(rx,effectiveRy);
-      const p=Math.min(1,this.stateTime/this.chargeTimeMax);
-      const ranged=this.isRanged();
-      const color=ranged?'#67e8f9':'#fbbf24';
-      ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=this.isAimLocked?3:2;
-      ctx.setLineDash(this.isAimLocked?[]:[10,8]);
-      ctx.font="bold 12px Outfit,system-ui,sans-serif";ctx.textAlign='center';
+      ctx.save(); ctx.translate(rx, effectiveRy);
+      const p = Math.min(1, this.stateTime / this.chargeTimeMax);
+      const ranged = this.isRanged();
+      const isLocked = this.isAimLocked;
+      const color = isLocked ? '#ef4444' : (ranged ? '#06b6d4' : '#fbbf24');
+      
+      ctx.font = "bold 13px Outfit,system-ui,sans-serif";
+      ctx.textAlign = 'center';
       ctx.save();
       ctx.strokeStyle = '#050508';
-      ctx.lineWidth = 3;
-      ctx.strokeText(ranged ? '◇ RANGED' : '▸ LUNGE', 0, -this.meleeHitRadius - 14);
-      ctx.fillText(ranged ? '◇ RANGED' : '▸ LUNGE', 0, -this.meleeHitRadius - 14);
+      ctx.lineWidth = 3.5;
+      const label = isLocked 
+        ? (ranged ? '⚠️ LOCKED ON!' : '⚠️ STRIKE IMMINENT!') 
+        : (ranged ? '◇ TARGETING' : '▸ CHARGING');
+      ctx.strokeText(label, 0, -this.meleeHitRadius - 16);
+      ctx.fillStyle = color;
+      ctx.fillText(label, 0, -this.meleeHitRadius - 16);
       ctx.restore();
-      // Area casts use the same radii as triggerCustomSpellCast.
-      if(this.subType==='agis_colossus'||this.subType==='skeleton_warlord'){
-        ctx.beginPath();ctx.arc(0,0,this.subType==='agis_colossus'?190:210,0,Math.PI*2);ctx.stroke();
+
+      // Boss ground area telegraphs
+      if (this.subType === 'oni_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' || this.subType === 'shogun_boss') {
+        const aRadius = this.subType === 'skeleton_warlord' ? 220 : (this.subType === 'shogun_boss' ? 180 : 200);
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = isLocked ? 3.5 : 2;
+        ctx.setLineDash(isLocked ? [] : [10, 8]);
+        ctx.beginPath();
+        ctx.arc(0, 0, aRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.16)' : 'rgba(251, 191, 36, 0.08)';
+        ctx.fill();
+        // Inner expanding charge ring
+        ctx.beginPath();
+        ctx.arc(0, 0, aRadius * p, 0, Math.PI * 2);
+        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(251, 191, 36, 0.14)';
+        ctx.fill();
+        ctx.restore();
       }
+
       ctx.rotate(this.targetAngle);
-      if(ranged){
+      if (ranged) {
         const rangeLine = this.subType === 'shadow_sniper' ? 1250 : 950;
-        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(rangeLine,0);ctx.stroke();
-        ctx.beginPath();ctx.moveTo(rangeLine,-9);ctx.lineTo(rangeLine+9,0);ctx.lineTo(rangeLine,9);ctx.lineTo(rangeLine-9,0);ctx.closePath();ctx.stroke();
-      }else{
-        const travel=this.lungeSpeed*this.lungeDuration*.5;
-        const radius=this.meleeHitRadius;
-        // Swept circle: its radius is also used by the melee damage check.
-        ctx.beginPath();ctx.arc(travel,0,radius,-Math.PI/2,Math.PI/2);ctx.arc(0,0,radius,Math.PI/2,Math.PI*1.5);ctx.closePath();
-        ctx.globalAlpha=.06+p*.08;ctx.fill();ctx.globalAlpha=1;ctx.stroke();
-        ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(travel,0);ctx.stroke();
+        // Wide translucent danger laser corridor
+        ctx.save();
+        ctx.lineWidth = isLocked ? 18 : 12;
+        ctx.strokeStyle = isLocked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(6, 182, 212, 0.18)';
+        ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(rangeLine, 0); ctx.stroke();
+        // Core laser beam
+        ctx.lineWidth = isLocked ? 3.5 : 2;
+        ctx.strokeStyle = color;
+        ctx.setLineDash(isLocked ? [] : [12, 8]);
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(rangeLine, 0); ctx.stroke();
+        // Crosshair reticle at target end
+        const reticlePulse = 8 + Math.sin(performance.now() * 0.02) * 2;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(rangeLine, -reticlePulse); ctx.lineTo(rangeLine + reticlePulse, 0);
+        ctx.lineTo(rangeLine, reticlePulse); ctx.lineTo(rangeLine - reticlePulse, 0);
+        ctx.closePath();
+        ctx.fillStyle = color; ctx.fill(); ctx.stroke();
+        ctx.restore();
+      } else {
+        const travel = this.lungeSpeed * this.lungeDuration * 0.5;
+        const radius = this.meleeHitRadius;
+        // Full attack range boundary
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = isLocked ? 3.5 : 2.5;
+        ctx.setLineDash(isLocked ? [] : [10, 6]);
+        ctx.beginPath();
+        ctx.arc(travel, 0, radius, -Math.PI / 2, Math.PI / 2);
+        ctx.arc(0, 0, radius, Math.PI / 2, Math.PI * 1.5);
+        ctx.closePath();
+        ctx.fillStyle = isLocked ? `rgba(239, 68, 68, ${0.18 + p * 0.22})` : `rgba(251, 191, 36, ${0.12 + p * 0.15})`;
+        ctx.fill();
+        ctx.stroke();
+
+        // Dynamic inner charge progress meter filling toward impact
+        const activeTravel = travel * p;
+        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.32)' : 'rgba(251, 191, 36, 0.22)';
+        ctx.beginPath();
+        ctx.arc(activeTravel, 0, radius * 0.65, -Math.PI / 2, Math.PI / 2);
+        ctx.arc(0, 0, radius * 0.65, Math.PI / 2, Math.PI * 1.5);
+        ctx.closePath();
+        ctx.fill();
+
+        // Directional attack vector line & arrowhead
+        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(travel, 0); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(travel + 10, 0);
+        ctx.lineTo(travel - 6, -8);
+        ctx.lineTo(travel - 6, 8);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.restore();
       }
       ctx.restore();
     }
