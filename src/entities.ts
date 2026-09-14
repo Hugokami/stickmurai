@@ -1373,16 +1373,20 @@ export class Slash {
         if (img && img.complete && img.naturalWidth > 0) {
           ctx.save();
           ctx.globalAlpha = Math.min(1.0, easeInQuad * 1.15);
-          if (isAkakage) {
+          if (heroKey === 'herosatyr' || heroKey === 'herosamurai' || globals.selectedHero === 'satyr' || globals.selectedHero === 'samurai') {
+            // Revert back only Primal Satyr Sovereign and Grandmaster Samurai to exact previous version
+            const sScale = Math.min(4.8, 3.8 * safeMult);
+            ctx.drawImage(img, (-img.width / 2 * sScale) | 0, (-img.height / 2 * sScale) | 0, (img.width * sScale) | 0, (img.height * sScale) | 0);
+          } else if (isAkakage) {
             ctx.rotate(-1.761); // Center Akakage blood crescent forward
             const sScale = Math.min(4.4, (midRadius / 37.1));
             ctx.scale(sScale, sScale);
             ctx.drawImage(img, -64, -64);
           } else {
-            ctx.rotate(2.039); // Center standard hero slash arc forward
-            const sScale = Math.min(4.5, (midRadius / 29.7));
-            ctx.scale(sScale, sScale);
-            ctx.drawImage(img, -64, -64);
+            // Nightborne Sovereign, Shadow Shinobi, Luneblade Ascendent, Classic Ronin: rotate about 45 degrees
+            const sScale = Math.min(4.8, 3.8 * safeMult);
+            ctx.rotate(Math.PI / 4);
+            ctx.drawImage(img, (-img.width / 2 * sScale) | 0, (-img.height / 2 * sScale) | 0, (img.width * sScale) | 0, (img.height * sScale) | 0);
           }
           ctx.restore();
         }

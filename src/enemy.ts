@@ -1356,6 +1356,12 @@ export class Enemy extends Entity {
       globals.shockwaves.push(new Shockwave(this.x, this.y, '#ff003c', bossEntity ? 200 : 130));
       globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 75, bossEntity ? "BOSS POSTURE BROKEN! 💀" : "STANCE BROKEN!", "#ff003c", bossEntity ? 26 : 22));
       playSynthesizedClash();
+
+      // Grim Harvest: award spectral soul on posture break
+      if (globals.grimHarvestActive && (globals.grimHarvestSouls || 0) < 3) {
+        globals.grimHarvestSouls = Math.min(3, (globals.grimHarvestSouls || 0) + 1);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, `👻 SOUL (${globals.grimHarvestSouls}/3)`, "#c084fc", 20));
+      }
     }
   }
 

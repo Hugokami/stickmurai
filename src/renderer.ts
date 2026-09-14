@@ -657,45 +657,30 @@ export function draw() {
         ctx.restore();
       }
 
-      // Grim Harvest: Render orbital spectral death scythes
-      if (globals.grimHarvestActive && (globals.grimHarvestScytheCount || 0) > 0) {
-        const scCount = Math.min(4, globals.grimHarvestScytheCount || 2);
-        const orbitR = 90;
+      // Grim Harvest: Render floating spectral souls behind player
+      if (globals.grimHarvestActive && (globals.grimHarvestSouls || 0) > 0) {
+        const soulCount = Math.min(3, globals.grimHarvestSouls || 0);
+        const time = performance.now() * 0.003;
+        const behindDir = (globals.player.dir ?? 1) === 1 ? Math.PI : 0;
         ctx.save();
-        for (let i = 0; i < scCount; i++) {
-          const sAngle = (globals.grimHarvestAngle || 0) + (i * Math.PI * 2) / scCount;
-          const sx = (px + Math.cos(sAngle) * orbitR) | 0;
-          const sy = (py + Math.sin(sAngle) * orbitR) | 0;
+        for (let i = 0; i < soulCount; i++) {
+          const spread = (i - (soulCount - 1) / 2) * 0.45;
+          const dist = 38 + Math.sin(time + i * 1.5) * 4;
+          const soulAngle = behindDir + spread + Math.cos(time + i) * 0.12;
+          const sx = (px + Math.cos(soulAngle) * dist) | 0;
+          const sy = (py - 12 + Math.sin(soulAngle) * dist * 0.35 + Math.sin(time * 2 + i) * 3) | 0;
 
-          // Menacing curved spectral scythe blade
-          ctx.save();
-          ctx.translate(sx, sy);
-          ctx.rotate(sAngle + Math.PI / 2);
-          
-          // Scythe outer crescent arc
+          // Glowing spectral wisp
           ctx.beginPath();
-          ctx.arc(0, 0, 18, -Math.PI / 3, Math.PI / 2, false);
-          ctx.strokeStyle = '#c084fc';
-          ctx.lineWidth = 4;
-          ctx.lineCap = 'round';
-          ctx.stroke();
+          ctx.arc(sx, sy, 4.5, 0, Math.PI * 2);
+          ctx.fillStyle = i === 2 ? '#f43f5e' : '#c084fc';
+          ctx.fill();
 
-          // Inner blade edge
           ctx.beginPath();
-          ctx.arc(0, 0, 14, -Math.PI / 3, Math.PI / 2, false);
-          ctx.strokeStyle = '#f43f5e';
-          ctx.lineWidth = 2;
+          ctx.arc(sx, sy, 7.5, 0, Math.PI * 2);
+          ctx.strokeStyle = i === 2 ? 'rgba(244, 63, 94, 0.45)' : 'rgba(192, 132, 252, 0.45)';
+          ctx.lineWidth = 1.5;
           ctx.stroke();
-
-          // Scythe staff / hilt
-          ctx.beginPath();
-          ctx.moveTo(0, 18);
-          ctx.lineTo(-6, -14);
-          ctx.strokeStyle = '#3b0764';
-          ctx.lineWidth = 3;
-          ctx.stroke();
-
-          ctx.restore();
         }
         ctx.restore();
       }

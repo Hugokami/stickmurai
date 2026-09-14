@@ -135,7 +135,7 @@ export const powerUps: PowerUp[] = [
     isUnique: true,
     apply: () => {
       globals.grimHarvestActive = true;
-      globals.grimHarvestScytheCount = 2; // immediately manifests 2 orbiting spectral death scythes!
+      globals.grimHarvestSouls = 0;
     }
   },
 

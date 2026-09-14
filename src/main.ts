@@ -2031,6 +2031,10 @@ function fireFullyChargedIaijutsu(angle: number) {
 
   globals.screenShake = Math.max(globals.screenShake, 20 * 1.8);
   
+  if (globals.grimHarvestActive && (globals.grimHarvestSouls || 0) >= 3) {
+    executeSpectralSoulCleave(angle);
+  }
+
   if (globals.decoyInvisibilityTimer > 0) {
     executeMirrorStrike(angle, 12);
   } else {
@@ -2386,6 +2390,86 @@ function executeRisingDragon() {
       
       for (let i = 0; i < 6; i++) {
         globals.particles.push(Particle.acquire(e.x, e.y, '#00ffc8', 250, 0.4, 2));
+      }
+    }
+  });
+}
+
+function executeSpectralSoulCleave(angle: number) {
+  if (!globals.grimHarvestActive || (globals.grimHarvestSouls || 0) < 3) return;
+  globals.grimHarvestSouls = 0;
+
+  playSynthesizedThunder();
+  playSlashSfx(1.45);
+  globals.screenShake = Math.max(globals.screenShake, 26);
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 85, "💀 SPECTRAL SOUL CLEAVE! 💀", "neon-#c084fc", 32));
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
+
+  // Wide 270 deg death crescent
+  globals.slashes.push(Slash.acquire(
+    globals.player.x + Math.cos(angle) * 60,
+    globals.player.y + Math.sin(angle) * 60,
+    angle,
+    globals.playerStats.slashSizeMult * 2.5,
+    true,
+    '#c084fc',
+    false,
+    globals.player
+  ));
+
+  const slashDmg = getCurrentSlashDamage();
+  const cleaveDmg = Math.max(25, Math.round(slashDmg * 3.2));
+  const cleaveRange = 320;
+
+  globals.enemies.forEach(en => {
+    if (en.state === 'dead') return;
+    const dx = en.x - globals.player.x;
+    const dy = en.y - globals.player.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist < cleaveRange) {
+      const enAngle = Math.atan2(dy, dx);
+      let diff = Math.abs(enAngle - angle);
+      if (diff > Math.PI) diff = Math.PI * 2 - diff;
+      if (diff <= (3 * Math.PI / 4)) {
+        const isBossMob = ['oni_boss', 'shogun_boss', 'agis_colossus', 'skeleton_warlord'].includes(en.subType) || (en as any).isBoss;
+        if (isBossMob) {
+          // Boss: 8% max HP carve (safe under 12% cap) + slash scaling + 1.2s stun
+          const bossCarve = Math.min(Math.round((en.maxHp || 1000) * 0.08), Math.round(cleaveDmg * 1.5));
+          hitEnemy(en, Math.max(cleaveDmg, bossCarve));
+          en.stunTimer = Math.max(en.stunTimer || 0, 1.2);
+          if (typeof (en as any).addPostureDamage === 'function') {
+            (en as any).addPostureDamage(45);
+          }
+        } else {
+          // Non-boss: if HP <= 30% max HP, instant execution; otherwise 320% damage
+          const hpPct = en.hp / (en.maxHp || 1);
+          if (hpPct <= 0.30) {
+            globals.floatingTexts.push(FloatingText.acquire(en.x, en.y - 65, "☠️ EXECUTED!", "#f43f5e", 24));
+            hitEnemy(en, en.hp + 50);
+          } else {
+            hitEnemy(en, cleaveDmg);
+            en.stunTimer = Math.max(en.stunTimer || 0, 0.8);
+            if (typeof (en as any).addPostureDamage === 'function') {
+              (en as any).addPostureDamage(30);
+            }
+          }
+        }
+        for (let p = 0; p < 4; p++) {
+          globals.particles.push(Particle.acquire(en.x, en.y, '#c084fc', 180, 0.3, 2.5));
+        }
+      }
+    }
+  });
+
+  // Annihilate enemy projectiles in 320px radius
+  globals.projectiles.forEach(proj => {
+    if (proj.isEnemy && proj.life > 0) {
+      const d = Math.hypot(proj.x - globals.player.x, proj.y - globals.player.y);
+      if (d < cleaveRange) {
+        proj.life = 0;
+        for (let k = 0; k < 4; k++) {
+          globals.particles.push(Particle.acquire(proj.x, proj.y, '#c084fc', 140, 0.25, 2.0));
+        }
       }
     }
   });
@@ -2798,24 +2882,14 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       }
     }
 
-    if (globals.grimHarvestActive) {
-      let highestHpEnemy: Enemy | null = null;
-      let maxHp = 0;
-      globals.enemies.forEach(en => {
-        if (en !== e && en.state !== 'dead' && en.hp > maxHp) {
-          maxHp = en.hp;
-          highestHpEnemy = en;
-        }
-      });
-      if (highestHpEnemy) {
-        const slashDmg = getCurrentSlashDamage();
-        const targetIsBoss = (highestHpEnemy as any).subType === 'oni_boss' || (highestHpEnemy as any).subType === 'shogun_boss' || (highestHpEnemy as any).subType === 'agis_colossus' || (highestHpEnemy as any).subType === 'skeleton_warlord' || (highestHpEnemy as any).isBoss;
-        const rendDmg = targetIsBoss 
-          ? Math.min(Math.round(((highestHpEnemy as any).maxHp || 100) * 0.10), Math.round(75 + slashDmg * 3.0))
-          : Math.max(Math.round(75 + slashDmg * 5.0), Math.round((e.maxHp || 100) * 0.5));
-        hitEnemy(highestHpEnemy, rendDmg);
-        globals.shockwaves.push(new Shockwave((highestHpEnemy as any).x, (highestHpEnemy as any).y, '#ef4444'));
-        globals.floatingTexts.push(FloatingText.acquire((highestHpEnemy as any).x, (highestHpEnemy as any).y - 80, `💀 SOUL REND -${rendDmg}!`, "#ef4444", 26));
+    if (globals.grimHarvestActive && (globals.grimHarvestSouls || 0) < 3) {
+      globals.grimHarvestSouls = Math.min(3, (globals.grimHarvestSouls || 0) + 1);
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, `👻 SOUL (${globals.grimHarvestSouls}/3)`, "#c084fc", 20));
+      for (let i = 0; i < 5; i++) {
+        globals.particles.push(Particle.acquire(e.x, e.y, '#c084fc', 140, 0.35, 2.2));
+      }
+      if (globals.grimHarvestSouls === 3) {
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 85, "💀 SPECTRAL CLEAVE READY!", "neon-#c084fc", 26));
       }
     }
 
@@ -3769,57 +3843,7 @@ function update(realDt: number) {
     }
   }
 
-  // Grim Harvest: Orbital Spectral Death Scythes
-  if (globals.grimHarvestActive && (globals.grimHarvestScytheCount || 0) > 0) {
-    globals.grimHarvestAngle = (globals.grimHarvestAngle || 0) + realDt * 4.2;
-    const scytheCount = Math.min(4, globals.grimHarvestScytheCount || 2);
-    const orbitRadius = 90;
-    const slashDmg = getCurrentSlashDamage();
-    const scytheDmg = Math.round(40 + slashDmg * 1.8);
-
-    for (let i = 0; i < scytheCount; i++) {
-      const angle = globals.grimHarvestAngle + (i * Math.PI * 2) / scytheCount;
-      const sx = globals.player.x + Math.cos(angle) * orbitRadius;
-      const sy = globals.player.y + Math.sin(angle) * orbitRadius;
-
-      // Particle aura tracing the sickle arc
-      if (Math.random() < 0.4 && globals.particles.length < 350) {
-        globals.particles.push(Particle.acquire(sx, sy, '#c084fc', 25, 0.2, 3.0, angle + Math.PI / 2));
-        globals.particles.push(Particle.acquire(sx, sy, '#ef4444', 18, 0.15, 2.2, angle));
-      }
-
-      // Slice through nearby enemies
-      for (const en of globals.enemies) {
-        if (en.state !== 'dead') {
-          const d = Math.hypot(en.x - sx, en.y - sy);
-          if (d < 50) {
-            const now = performance.now();
-            if (!(en as any).lastGrimHit || now - (en as any).lastGrimHit > 320) {
-              (en as any).lastGrimHit = now;
-              hitEnemy(en, scytheDmg);
-              if (typeof (en as any).addPostureDamage === 'function') {
-                (en as any).addPostureDamage(25);
-              }
-              globals.slashes.push(Slash.acquire(en.x, en.y, angle + Math.PI/2, 1.2, false, '#c084fc'));
-            }
-          }
-        }
-      }
-
-      // Slice down incoming enemy projectiles!
-      for (const proj of globals.projectiles) {
-        if (proj.isEnemy && proj.life > 0) {
-          const d = Math.hypot(proj.x - sx, proj.y - sy);
-          if (d < 55) {
-            proj.life = 0;
-            for (let k = 0; k < 5; k++) {
-              globals.particles.push(Particle.acquire(proj.x, proj.y, '#c084fc', 160, 0.25, 2.5));
-            }
-          }
-        }
-      }
-    }
-  }
+  // Grim Harvest passive orbit removed in favor of Spectral Soul Cleave combo execution
   
   if (globals.enhanceActiveTimer <= 0 && globals.enhanceCooldown > 0) globals.enhanceCooldown -= realDt;
   if (globals.keys[globals.keyMaps.skill] || globals.mobileEnhanceJustPressed) {
@@ -5437,6 +5461,11 @@ function update(realDt: number) {
             globals.projectiles.push(Projectile.acquire(echoX, echoY, echoAngle, false, echoDamage, false, true));
           }
         });
+      }
+
+      // Grim Harvest: Spectral Soul Cleave on 3rd combo strike
+      if (globals.grimHarvestActive && (globals.grimHarvestSouls || 0) >= 3 && attackPower < 1.7 && globals.comboSlashesCount >= 3) {
+        executeSpectralSoulCleave(angle);
       }
 
       // Grandmaster Samurai passive: Kensei 360-degree cross-cleave on every 3rd strike
