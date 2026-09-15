@@ -547,7 +547,7 @@ export class Player extends Entity {
             if (!globals.raijinHitEnemies.has(e)) {
               globals.raijinHitEnemies.add(e);
               const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
-              const dmg = Math.max(12, Math.round(12 + slashDmg * 1.5 + 3 * (globals.playerStats.dashDamageLevel || 0)));
+              const dmg = Math.max(16, Math.round(16 + slashDmg * 1.8 + 4 * (globals.playerStats.dashDamageLevel || 0)));
               const stunDur = 0.5 + 0.15 * (globals.playerStats.dashDamageLevel || 0);
               callbacks.hitEnemy(e, dmg);
               e.stunTimer = stunDur;
@@ -564,7 +564,7 @@ export class Player extends Entity {
       if (globals.rupturePhaseStrikeActive && !(this as any).rupturePhaseHit) {
         (this as any).rupturePhaseHit = true;
         const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 25;
-        const warpDmg = Math.round(45 + slashDmg * 2.0);
+        const warpDmg = Math.max(50, Math.round(55 + slashDmg * 2.6));
         globals.slashes.push(Slash.acquire(this.x, this.y, 0, 1.8, true, '#38bdf8'));
         globals.slashes.push(Slash.acquire(this.x, this.y, Math.PI / 2, 1.8, true, '#c084fc'));
         globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8'));

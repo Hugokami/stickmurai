@@ -1,11 +1,12 @@
 import { heroBalance } from './balance';
 import './style.css';
 
-function skillDamage(base:number, ratio:number, target?:Enemy):number {
+function skillDamage(base: number, ratio: number, target?: Enemy): number {
   const currentSlash = getCurrentSlashDamage();
-  const slashPower = Math.max(20, currentSlash * 8);
+  const flat = Math.max(6, Math.round(base * 4.0));
+  const slashPower = currentSlash * ratio * 4.5;
   const boss = target && ['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(target.subType);
-  return Math.max(1, Math.round((base + slashPower * ratio) * (boss ? 0.75 : 1)));
+  return Math.max(1, Math.round((flat + slashPower) * (boss ? 0.85 : 1)));
 }
 
 export function getCurrentSlashDamage(): number {
@@ -1502,7 +1503,8 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
 
   if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
     if (globals.playerStats.shieldBlastLevel && globals.playerStats.shieldBlastLevel > 0 && enemy && enemy.state !== 'dead') {
-      const thornDmg = 8 * globals.playerStats.shieldBlastLevel;
+      const slashDmg = getCurrentSlashDamage();
+      const thornDmg = Math.round(16 + slashDmg * 1.5 + 8 * globals.playerStats.shieldBlastLevel);
       hitEnemy(enemy, thornDmg);
       const pushAngle = Math.atan2(enemy.y - globals.player.y, enemy.x - globals.player.x);
       enemy.vx = Math.cos(pushAngle) * 1200;
@@ -1678,12 +1680,12 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     });
 
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, parryLabel, sparkColor, 22));
-    const riposteDmg = Math.max(5, Math.round(getCurrentSlashDamage() * 1.5));
+    const slashDmg = getCurrentSlashDamage();
+    const riposteDmg = Math.max(10, Math.round(14 + slashDmg * 1.8));
     hitEnemy(enemy, riposteDmg); // deal scaled damage on parry riposte!
     triggerFlowingCounterReset();
 
     if (globals.raijinSplitterActive) {
-      const slashDmg = getCurrentSlashDamage();
       const boltDmg = Math.round(45 + slashDmg * 3.5);
       const boltPosture = Math.round(35 + slashDmg * 0.8);
       const boltFx = (vfxAnims as any).skills?.lightningStrike;
@@ -1838,7 +1840,7 @@ export function triggerStormGodLightning(x: number, y: number) {
     const dx = e.x - x;
     const dy = e.y - y;
     if (dx * dx + dy * dy < radius * radius) {
-      hitEnemy(e, Math.max(12, Math.round(getCurrentSlashDamage() * 2.5)));
+      hitEnemy(e, Math.max(16, Math.round(18 + getCurrentSlashDamage() * 2.8)));
       e.stunTimer = Math.max(e.stunTimer || 0, 3.0); // 3.0s stun
       hitEnemies.push(e);
       const hitSparks = lowGraphics ? 1 : 3;
@@ -1861,7 +1863,7 @@ export function triggerStormGodLightning(x: number, y: number) {
   for (const nextEnemy of otherEnemies) {
     if (chainCount >= maxChains) break;
     
-    hitEnemy(nextEnemy, Math.max(5, Math.round(getCurrentSlashDamage() * 0.9)));
+    hitEnemy(nextEnemy, Math.max(8, Math.round(10 + getCurrentSlashDamage() * 1.3)));
     nextEnemy.stunTimer = Math.max(nextEnemy.stunTimer || 0, 2.0);
     
     const ex = nextEnemy.x;
@@ -2056,7 +2058,8 @@ function fireFullyChargedIaijutsu(angle: number) {
   }
 
   if (globals.decoyInvisibilityTimer > 0) {
-    executeMirrorStrike(angle, 12);
+    const slashDmg = getCurrentSlashDamage();
+    executeMirrorStrike(angle, Math.max(20, Math.round(25 + slashDmg * 3.5)));
   } else {
     let enhancedType = '';
     const slashDmg = getCurrentSlashDamage();
@@ -3986,7 +3989,8 @@ function update(realDt: number) {
 
         // Apply Lightning Chain upgrade
         if (globals.playerStats.dashThunderLevel) {
-          const chainDmg = 2 * globals.playerStats.dashThunderLevel;
+          const slashDmg = getCurrentSlashDamage();
+          const chainDmg = Math.round(12 + slashDmg * 1.2 + 4 * globals.playerStats.dashThunderLevel);
           const chainTargets = globals.enemies
             .filter(e => e.state !== 'dead')
             .map(e => ({ enemy: e, dist: Math.hypot(e.x - globals.player.x, e.y - globals.player.y) }))
@@ -4081,7 +4085,7 @@ function update(realDt: number) {
         const thunderclapLvl = globals.playerStats.cataclysmThunderclapLevel || 0;
         const blastRadius = 550 * (1 + 0.45 * thunderclapLvl);
         const slashDmg = getCurrentSlashDamage();
-        const cataclysmDmg = Math.round((90 + 25 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 10.0);
+        const cataclysmDmg = Math.round((140 + 35 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 12.5);
         const cataclysmPosture = Math.round(120 + 40 * thunderclapLvl + slashDmg * 3.0);
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
@@ -4164,8 +4168,8 @@ function update(realDt: number) {
         const severanceLvl = globals.playerStats.ruptureSeveranceLevel || 0;
         const hitWidth = 160 * (1 + 0.6 * severanceLvl);
         const slashDmg = getCurrentSlashDamage();
-        const ruptureDmg = Math.round(80 + slashDmg * 8.0);
-        const rupturePosture = Math.round(60 + slashDmg * 2.0);
+        const ruptureDmg = Math.round(110 + slashDmg * 9.5);
+        const rupturePosture = Math.round(75 + slashDmg * 2.5);
         globals.enemies.forEach(e => {
           if (e.state === 'dead') return;
           const ex = e.x, ey = e.y;
@@ -4271,7 +4275,8 @@ function update(realDt: number) {
           const dy = e.y - globals.player.y;
           const distSq = dx * dx + dy * dy;
           if (distSq < 250 * 250) {
-            hitEnemy(e, Math.max(14, Math.round(getCurrentSlashDamage() * 1.8)) + 4 * (globals.playerStats.shieldPulseLevel || 0));
+            const slashDmg = getCurrentSlashDamage();
+            hitEnemy(e, Math.max(18, Math.round(18 + slashDmg * 2.2 + 6 * (globals.playerStats.shieldPulseLevel || 0))));
             // pull enemies slightly toward player center
             if (distSq > 100) {
               const dist = Math.sqrt(distSq);
@@ -4340,7 +4345,8 @@ function update(realDt: number) {
             }
             
             if (globals.playerStats.firewheelEchoLevel && globals.playerStats.firewheelEchoLevel > 0) {
-              const echoDmg = globals.playerStats.firewheelEchoLevel * 3;
+              const slashDmg = getCurrentSlashDamage();
+              const echoDmg = Math.round(10 + slashDmg * 0.75 + (globals.playerStats.firewheelEchoLevel || 0) * 4);
               let echoTargetsCount = 0;
               for (let idx = 0; idx < globals.enemies.length; idx++) {
                 const other = globals.enemies[idx];
@@ -5089,7 +5095,7 @@ function update(realDt: number) {
               nearby.forEach((other, idx) => {
                 if (idx < 6) {
                   asuraHits++;
-                  hitEnemy(other, Math.max(16, Math.round(getCurrentSlashDamage() * 2.8)));
+                  hitEnemy(other, Math.max(20, Math.round(22 + getCurrentSlashDamage() * 3.2)));
                   globals.shockwaves.push(new Shockwave(other.x, other.y, '#ef4444'));
                 }
               });
@@ -5116,7 +5122,7 @@ function update(realDt: number) {
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(45);
             }
-            hitEnemy(e, Math.max(6, Math.round(getCurrentSlashDamage() * 1.5)));
+            hitEnemy(e, Math.max(10, Math.round(12 + getCurrentSlashDamage() * 1.8)));
             if (globals.activeBounty && globals.activeBounty.type === 'parry') {
               globals.activeBounty.current++;
             }
@@ -5285,8 +5291,9 @@ function update(realDt: number) {
 
       const isDragonFuryActive = globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0;
       if (isDragonFuryActive) {
+        const slashDmg = getCurrentSlashDamage();
         size *= globals.playerStats.enhanceSizeMult;
-        dmg += globals.playerStats.enhanceBonusDmg;
+        dmg += Math.round(14 + slashDmg * 0.85 + (globals.playerStats.enhanceBonusDmg || 1) * 3);
         isEnhanced = true;
       }
 
@@ -5300,7 +5307,8 @@ function update(realDt: number) {
 
       if (attackPower < 1.7 && globals.riposteTimer > 0) {
         globals.riposteTimer = 0; // consume
-        dmg *= 2.0;
+        const slashDmg = getCurrentSlashDamage();
+        dmg = Math.round(dmg * 2.2 + 14 + slashDmg * 1.4);
         size *= 2.0;
         isEnhanced = true;
         isRiposteStrike = true;
@@ -5375,7 +5383,7 @@ function update(realDt: number) {
         const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, bladeCount);
         targets.forEach(t => {
           globals.slashes.push(Slash.acquire(t.x, t.y, Math.random() * Math.PI * 2, 1.4, false, 'rgba(56, 189, 248, ALPHA)'));
-          hitEnemy(t, Math.round(dmg * 1.35 + 15 + slashDmg * 0.8));
+          hitEnemy(t, Math.round(dmg * 1.4 + 20 + slashDmg * 1.2));
           for (let i = 0; i < 4; i++) {
             globals.particles.push(Particle.acquire(t.x, t.y, '#38bdf8', 150, 0.3, 2.0));
           }
@@ -5390,7 +5398,7 @@ function update(realDt: number) {
         const chainMult = 1.0 + superconductorLvl * 0.5;
         const targets = globals.enemies.filter(en => en.state !== 'dead').slice(0, maxTargets);
         targets.forEach(t => {
-          hitEnemy(t, Math.round(((30 + 12 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 2.5) * chainMult));
+          hitEnemy(t, Math.round(((40 + 15 * (globals.playerStats.gravityDamageLevel || 0)) + slashDmg * 3.2) * chainMult));
           t.stunTimer = Math.max(t.stunTimer || 0, 0.4);
           const vBurst = (vfxAnims as any).skills?.lightningBurstViolet;
           if (vBurst && vBurst.length > 0) {

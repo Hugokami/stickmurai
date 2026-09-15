@@ -361,7 +361,7 @@ export function omnislashHitDmg(hitIndex: number, isFinalBlast = false): number 
   const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
   const base = isFinalBlast ? 24 : 14;
   const iaiBonus = globals.playerStats?.iaijutsuBonusDmg || 0;
-  const enhanceBonus = (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) ? (globals.playerStats?.enhanceBonusDmg || 1) * 2 : 0;
+  const enhanceBonus = (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) ? Math.round(15 + slashDmg * 0.6 + (globals.playerStats?.enhanceBonusDmg || 1) * 3) : 0;
   const comboBonus = Math.min(0.6, (globals.combo || 0) * 0.01 + hitIndex * 0.02);
   const dmg = Math.round((base + slashDmg * (isFinalBlast ? 2.5 : 1.8)) * (1 + comboBonus) + iaiBonus + enhanceBonus);
   return Math.max(isFinalBlast ? 16 : 6, dmg);

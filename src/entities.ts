@@ -1622,10 +1622,12 @@ export class Decoy extends Entity {
       const dy = e.y - this.y;
       const distSq = dx * dx + dy * dy;
       if (distSq < 32400) {
+        const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 4;
+        const atkDmg = Math.max(10, Math.round(12 + slashDmg * 1.0));
         if (callbacks.hitEnemy) {
-          callbacks.hitEnemy(e, 8);
+          callbacks.hitEnemy(e, atkDmg);
         } else {
-          e.hp -= 8;
+          e.hp -= atkDmg;
           e.hitFlash = 0.15;
           if (e.hp <= 0) e.setState('dead');
         }
@@ -1662,10 +1664,12 @@ export class Decoy extends Entity {
       const dy = e.y - this.y;
       const distSq = dx * dx + dy * dy;
       if (distSq < 48400) { // 220 * 220
+        const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 4;
+        const expDmg = Math.max(35, Math.round(42 + slashDmg * 3.2));
         if (callbacks.hitEnemy) {
-          callbacks.hitEnemy(e, 35);
+          callbacks.hitEnemy(e, expDmg);
         } else {
-          e.hp -= 35;
+          e.hp -= expDmg;
           e.hitFlash = 0.15;
           if (e.hp <= 0) e.setState('dead');
         }
