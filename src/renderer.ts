@@ -82,9 +82,10 @@ export function resizeCanvas() {
   ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
 
   const targetVW = 1650;
-  globals.gameZoom = Math.min(1, globals.width / targetVW);
-  globals.vw = globals.width / globals.gameZoom;
-  globals.vh = globals.height / globals.gameZoom;
+    const baseZoom = Math.min(1, globals.width / targetVW);
+    globals.gameZoom = baseZoom / (globals.cameraZoomLevel || 1);
+    globals.vw = globals.width / globals.gameZoom;
+    globals.vh = globals.height / globals.gameZoom;
 }
 
 let resizeTimeout: any = null;

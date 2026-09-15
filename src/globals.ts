@@ -186,10 +186,11 @@ export const globals = {
   screenShakeEnabled: (() => { try { return safeStorage.getItem('screenShake') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'reduced' | 'off',
   screenFlashEnabled: (() => { try { return safeStorage.getItem('screenFlash') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
   weatherEffectsEnabled: (() => { try { return safeStorage.getItem('weatherEffects') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  speedLinesEnabled: (() => { try { return safeStorage.getItem('speedLines') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  floatingTextEnabled: (() => { try { return safeStorage.getItem('floatingText') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  groundScarsEnabled: (() => { try { return safeStorage.getItem('groundScars') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
-  keyMaps: (() => {
+    speedLinesEnabled: (() => { try { return safeStorage.getItem('speedLines') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+    floatingTextEnabled: (() => { try { return safeStorage.getItem('floatingText') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+    groundScarsEnabled: (() => { try { return safeStorage.getItem('groundScars') || 'on'; } catch(e) { return 'on'; } })() as 'on' | 'off',
+    cameraZoomLevel: (() => { try { return parseInt(safeStorage.getItem('cameraZoom') || '1', 10); } catch(e) { return 1; } })() as 1 | 2 | 3,
+    keyMaps: (() => {
     try {
       const stored = safeStorage.getItem('keyMaps');
       if (stored) return JSON.parse(stored);

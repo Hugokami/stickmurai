@@ -1058,15 +1058,28 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   }
 
   const groundScarsSelect = document.getElementById('ground-scars-select') as HTMLSelectElement;
-  if (groundScarsSelect) {
-    groundScarsSelect.value = globals.groundScarsEnabled;
-    groundScarsSelect.addEventListener('change', (e) => {
-      globals.groundScarsEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
-      safeStorage.setItem('groundScars', globals.groundScarsEnabled);
-    });
-  }
+    if (groundScarsSelect) {
+      groundScarsSelect.value = globals.groundScarsEnabled;
+      groundScarsSelect.addEventListener('change', (e) => {
+        globals.groundScarsEnabled = (e.target as HTMLSelectElement).value as 'on' | 'off';
+        safeStorage.setItem('groundScars', globals.groundScarsEnabled);
+      });
+    }
 
-  updateOverlayDisplays();
+    const cameraZoomSelect = document.getElementById('camera-zoom-select') as HTMLSelectElement;
+    if (cameraZoomSelect) {
+      cameraZoomSelect.value = String(globals.cameraZoomLevel);
+      cameraZoomSelect.addEventListener('change', (e) => {
+        globals.cameraZoomLevel = parseInt((e.target as HTMLSelectElement).value, 10) as 1 | 2 | 3;
+        safeStorage.setItem('cameraZoom', String(globals.cameraZoomLevel));
+        // Re-trigger layout sizing
+        const resizeEvent = new Event('resize');
+        window.dispatchEvent(resizeEvent);
+        updateUI();
+      });
+    }
+
+    updateOverlayDisplays();
 
   const diffEasyBtn = document.getElementById('diff-easy-btn');
   const diffNormalBtn = document.getElementById('diff-normal-btn');
