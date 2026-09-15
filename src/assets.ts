@@ -1327,6 +1327,10 @@ export const vfxAnims = {
   projectiles: {
     iaijutsuWave: loadVfxFrames('vfx/projectiles/iaijutsu_wave/frame_{N}.png', 4, 0, 2, true),
     echoSlash: loadVfxFrames('vfx/projectiles/echo_slash/frame_{N}.png', 4, 0, 2, true),
+    fireArrow: loadVfxFrames('vfx/projectiles/fire_arrow/frame_{N}.png', 8, 1, 0, true),
+    waterArrow: loadVfxFrames('vfx/projectiles/water_arrow/frame_{N}.png', 8, 1, 0, true),
+    fireBall: loadVfxFrames('vfx/projectiles/fire_ball/frame_{N}.png', 8, 1, 0, true),
+    waterBall: loadVfxFrames('vfx/projectiles/water_ball/frame_{N}.png', 12, 1, 0, true),
   },
   ranks: {
     d: loadVfxFrames('vfx/ui/rank_d/frame_{N}.png', 30, 0, 2, false),

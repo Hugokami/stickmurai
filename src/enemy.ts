@@ -795,7 +795,7 @@ export class Enemy extends Entity {
         if (this.subType === 'musketeer') {
           // First shot fires at 0.05s
           if (this.burstShotsFired === 0 && this.stateTime >= 0.05) {
-            const proj1 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+            const proj1 = Projectile.acquire(this.x, this.y, this.targetAngle, true, 2);
             (proj1 as any).shooter = this;
             globals.projectiles.push(proj1);
             this.burstShotsFired = 1;
@@ -803,7 +803,7 @@ export class Enemy extends Entity {
           }
           // Second shot fires 0.18s later in rapid succession!
           else if (this.burstShotsFired === 1 && this.burstShotTimer >= 0.18) {
-            const proj2 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+            const proj2 = Projectile.acquire(this.x, this.y, this.targetAngle, true, 2);
             (proj2 as any).shooter = this;
             globals.projectiles.push(proj2);
             this.burstShotsFired = 2;
@@ -818,7 +818,7 @@ export class Enemy extends Entity {
         if (isOverclocked) {
           // 3-round rapid plasma burst in Overclocked Circuitry!
           if (this.burstShotsFired === 0 && (this.animFrame >= 12 || this.stateTime >= 0.26)) {
-            const proj1 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+            const proj1 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true, 2);
             (proj1 as any).shooter = this;
             (proj1 as any).colorTint = '#38bdf8';
             globals.projectiles.push(proj1);
@@ -826,7 +826,7 @@ export class Enemy extends Entity {
             this.burstShotTimer = 0;
             playEnergyBeam(0.45);
           } else if (this.burstShotsFired === 1 && this.burstShotTimer >= 0.12) {
-            const proj2 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+            const proj2 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true, 2);
             (proj2 as any).shooter = this;
             (proj2 as any).colorTint = '#00ffff';
             globals.projectiles.push(proj2);
@@ -834,7 +834,7 @@ export class Enemy extends Entity {
             this.burstShotTimer = 0;
             playEnergyBeam(0.45);
           } else if (this.burstShotsFired === 2 && this.burstShotTimer >= 0.12) {
-            const proj3 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+            const proj3 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true, 2);
             (proj3 as any).shooter = this;
             (proj3 as any).colorTint = '#f43f5e';
             globals.projectiles.push(proj3);
@@ -845,7 +845,7 @@ export class Enemy extends Entity {
         } else {
           // Standard single plasma blast
           if (!this.attackLanded && (this.animFrame >= 12 || this.stateTime >= 0.32)) {
-            const proj = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true);
+            const proj = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true, 2);
             (proj as any).shooter = this;
             (proj as any).colorTint = '#38bdf8';
             globals.projectiles.push(proj);
@@ -855,17 +855,17 @@ export class Enemy extends Entity {
         }
       } else if (this.subType === 'tengu_sorcerer') {
         if (!this.attackLanded && this.stateTime >= 0.10) {
-          const p1 = Projectile.acquire(this.x, this.y, this.targetAngle - 0.18, true, 1);
-          const p2 = Projectile.acquire(this.x, this.y, this.targetAngle + 0.18, true, 1);
-          (p1 as any).shooter = this; (p1 as any).colorTint = '#38bdf8';
-          (p2 as any).shooter = this; (p2 as any).colorTint = '#38bdf8';
+          const p1 = Projectile.acquire(this.x, this.y, this.targetAngle - 0.18, true, 2);
+          const p2 = Projectile.acquire(this.x, this.y, this.targetAngle + 0.18, true, 2);
+          (p1 as any).shooter = this; (p1 as any).colorTint = '#38bdf8'; (p1 as any).projectileType = 'water';
+          (p2 as any).shooter = this; (p2 as any).colorTint = '#38bdf8'; (p2 as any).projectileType = 'water';
           globals.projectiles.push(p1, p2);
           this.attackLanded = true;
 
         }
       } else if (this.subType === 'shadow_sniper') {
         if (!this.attackLanded && this.stateTime >= 0.08) {
-          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 2);
+          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 4);
           (p as any).shooter = this; (p as any).colorTint = '#ef4444';
           p.vx = Math.cos(this.targetAngle) * 1600;
           p.vy = Math.sin(this.targetAngle) * 1600;
@@ -874,7 +874,7 @@ export class Enemy extends Entity {
         }
       } else if (this.subType === 'corrupted_shaman') {
         if (!this.attackLanded && this.stateTime >= 0.12) {
-          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 2);
+          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 4);
           (p as any).shooter = this; (p as any).colorTint = '#10b981';
           globals.projectiles.push(p);
           this.attackLanded = true;
@@ -883,10 +883,10 @@ export class Enemy extends Entity {
       } else if (this.subType === 'oni_boss') {
         const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
         if (!this.attackLanded && distToTarget > 200 && this.stateTime >= 0.15) {
-          const p1 = Projectile.acquire(this.x, this.y, this.targetAngle - 0.18, true, 2, true);
-          const p2 = Projectile.acquire(this.x, this.y, this.targetAngle + 0.18, true, 2, true);
-          (p1 as any).shooter = this; (p1 as any).colorTint = '#ef4444';
-          (p2 as any).shooter = this; (p2 as any).colorTint = '#ef4444';
+          const p1 = Projectile.acquire(this.x, this.y, this.targetAngle - 0.18, true, 4, true);
+          const p2 = Projectile.acquire(this.x, this.y, this.targetAngle + 0.18, true, 4, true);
+          (p1 as any).shooter = this; (p1 as any).colorTint = '#ef4444'; (p1 as any).projectileType = 'fire';
+          (p2 as any).shooter = this; (p2 as any).colorTint = '#ef4444'; (p2 as any).projectileType = 'fire';
           globals.projectiles.push(p1, p2);
           globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444'));
           this.attackLanded = true;
@@ -901,8 +901,8 @@ export class Enemy extends Entity {
         const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
         if (!this.attackLanded && distToTarget > 220 && this.stateTime >= 0.15) {
           for (let off of [-0.25, 0, 0.25]) {
-            const p = Projectile.acquire(this.x, this.y, this.targetAngle + off, true, 2);
-            (p as any).shooter = this; (p as any).colorTint = '#a855f7';
+            const p = Projectile.acquire(this.x, this.y, this.targetAngle + off, true, 4);
+            (p as any).shooter = this; (p as any).colorTint = '#a855f7'; (p as any).projectileType = 'water';
             globals.projectiles.push(p);
           }
           this.attackLanded = true;
@@ -916,8 +916,8 @@ export class Enemy extends Entity {
       } else if (this.subType === 'agis_colossus') {
         const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
         if (!this.attackLanded && distToTarget > 220 && this.stateTime >= 0.18) {
-          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 3, true);
-          (p as any).shooter = this; (p as any).colorTint = '#00ffff';
+          const p = Projectile.acquire(this.x, this.y, this.targetAngle, true, 4, true);
+          (p as any).shooter = this; (p as any).colorTint = '#00ffff'; (p as any).projectileType = 'water_ball';
           globals.projectiles.push(p);
           globals.shockwaves.push(new Shockwave(this.x, this.y, '#00ffff'));
           globals.screenShake = Math.max(globals.screenShake, 18);
@@ -933,8 +933,8 @@ export class Enemy extends Entity {
         const distToTarget = Math.hypot(this.target.x - this.x, this.target.y - this.y);
         if (!this.attackLanded && distToTarget > 180 && this.stateTime >= 0.15) {
           for (let off of [-0.3, -0.1, 0.1, 0.3]) {
-            const p = Projectile.acquire(this.x, this.y, this.targetAngle + off, true, 2);
-            (p as any).shooter = this; (p as any).colorTint = '#fbbf24';
+            const p = Projectile.acquire(this.x, this.y, this.targetAngle + off, true, 4);
+            (p as any).shooter = this; (p as any).colorTint = '#fbbf24'; (p as any).projectileType = 'fire';
             globals.projectiles.push(p);
           }
           this.attackLanded = true;
@@ -1085,18 +1085,20 @@ export class Enemy extends Entity {
     if (this.subType === 'pyromancer') {
       if (Math.random() < 0.4) {
         // Fire burning fireball projectile (burst of 2 in a row!)
-        const proj = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+        const proj = Projectile.acquire(this.x, this.y, this.targetAngle, true, 2);
         (proj as any).shooter = this;
         (proj as any).colorTint = '#ff4400';
+        (proj as any).projectileType = 'fire_ball';
         globals.projectiles.push(proj);
 
         globals.delayedActions.push({
           delay: 0.18,
           run: () => {
             if (this.state !== 'dead') {
-              const proj2 = Projectile.acquire(this.x, this.y, this.targetAngle, true);
+              const proj2 = Projectile.acquire(this.x, this.y, this.targetAngle, true, 2);
               (proj2 as any).shooter = this;
               (proj2 as any).colorTint = '#ff4400';
+              (proj2 as any).projectileType = 'fire_ball';
               globals.projectiles.push(proj2);
             }
           }
@@ -1123,7 +1125,7 @@ export class Enemy extends Entity {
             const pdy = globals.player.y - ty;
             const dist = Math.hypot(pdx, pdy);
             if (dist < 120 && globals.player.state !== 'dead') {
-              callbacks.checkPlayerHit(this, 2); // 2 damage
+              callbacks.checkPlayerHit(this, 4); // 4 damage
             }
           }
         });
@@ -1153,7 +1155,7 @@ export class Enemy extends Entity {
               const pdy = globals.player.y - iy;
               if (Math.hypot(pdx, pdy) < 70 && globals.player.state !== 'dead') {
                 globals.player.chillTimer = 3.0; // Chill player
-                callbacks.checkPlayerHit(this, 1);
+                callbacks.checkPlayerHit(this, 2);
               }
             }
           });
@@ -1190,7 +1192,7 @@ export class Enemy extends Entity {
           const pdx = globals.player.x - tx;
           const pdy = globals.player.y - ty;
           if (Math.hypot(pdx, pdy) < 100 && globals.player.state !== 'dead') {
-            callbacks.checkPlayerHit(this, 2);
+            callbacks.checkPlayerHit(this, 4);
           }
         }
       });
@@ -1215,7 +1217,7 @@ export class Enemy extends Entity {
         });
       } else {
         // Homing Shadow Skull projectile
-        const skullProj = Projectile.acquire(this.x, this.y - 20, this.targetAngle, true);
+        const skullProj = Projectile.acquire(this.x, this.y - 20, this.targetAngle, true, 4);
         (skullProj as any).shooter = this;
         (skullProj as any).isHoming = true;
         (skullProj as any).colorTint = '#a855f7';
@@ -1237,9 +1239,9 @@ export class Enemy extends Entity {
       const baseAng = this.targetAngle;
       const spreadAngles = [baseAng - 0.28, baseAng, baseAng + 0.28];
       for (const ang of spreadAngles) {
-        const proj = Projectile.acquire(this.x, this.y, ang, true);
+        const proj = Projectile.acquire(this.x, this.y, ang, true, 2);
         (proj as any).shooter = this;
-        (proj as any).colorTint = '#38bdf8';
+        (proj as any).colorTint = '#38bdf8'; (proj as any).projectileType = 'water';
         globals.projectiles.push(proj);
       }
 
@@ -1247,7 +1249,7 @@ export class Enemy extends Entity {
       const pdx = globals.player.x - this.x;
       const pdy = globals.player.y - this.y;
       if (pdx * pdx + pdy * pdy < 200 * 200 && globals.player.state !== 'dead') {
-        callbacks.checkPlayerHit(this, 2);
+        callbacks.checkPlayerHit(this, 4);
       }
 
       // Secondary delayed seismic aftershock!
@@ -1284,9 +1286,9 @@ export class Enemy extends Entity {
       // Enraged bone storm flurry (6 radial shards)
       for (let i = 0; i < 6; i++) {
         const shardAng = this.targetAngle + (i * Math.PI / 3);
-        const proj = Projectile.acquire(this.x, this.y, shardAng, true);
+        const proj = Projectile.acquire(this.x, this.y, shardAng, true, 4);
         (proj as any).shooter = this;
-        (proj as any).colorTint = '#f87171';
+        (proj as any).colorTint = '#f87171'; (proj as any).projectileType = 'water';
         proj.vx = Math.cos(shardAng) * 950;
         proj.vy = Math.sin(shardAng) * 950;
         globals.projectiles.push(proj);
@@ -1308,9 +1310,9 @@ export class Enemy extends Entity {
       // 3 radiating magma projectiles
       const baseAng = this.targetAngle;
       for (const offset of [-0.32, 0, 0.32]) {
-        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true);
+        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true, 4);
         (proj as any).shooter = this;
-        (proj as any).colorTint = '#ef4444';
+        (proj as any).colorTint = '#ef4444'; (proj as any).projectileType = 'fire_ball';
         proj.vx = Math.cos(baseAng + offset) * 1050;
         proj.vy = Math.sin(baseAng + offset) * 1050;
         globals.projectiles.push(proj);
@@ -1331,9 +1333,9 @@ export class Enemy extends Entity {
       // 5-blade fan projectile barrage
       const baseAng = this.targetAngle;
       for (const offset of [-0.44, -0.22, 0, 0.22, 0.44]) {
-        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true);
+        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true, 4);
         (proj as any).shooter = this;
-        (proj as any).colorTint = '#a855f7';
+        (proj as any).colorTint = '#a855f7'; (proj as any).projectileType = 'water_ball';
         proj.vx = Math.cos(baseAng + offset) * 1200;
         proj.vy = Math.sin(baseAng + offset) * 1200;
         globals.projectiles.push(proj);

@@ -498,6 +498,8 @@ export class Projectile {
   isEcho!: boolean;
   shooter?: any;
   enhancedType!: string;
+  projectileType?: 'fire' | 'water' | 'fire_ball' | 'water_ball';
+  animFrame = 0;
 
   constructor(x: number, y: number, angle: number, isEnemy = false, damage = 1, isHuge = false, isEcho = false, enhancedType = '') {
     this.init(x, y, angle, isEnemy, damage, isHuge, isEcho, enhancedType);
@@ -513,6 +515,8 @@ export class Projectile {
     this.hitEnemies.clear();
     this.life = isEnemy ? 2.5 : 2.0;
     this.shooter = undefined;
+    this.projectileType = undefined;
+    this.animFrame = 0;
     (this as any).colorTint = undefined;
     (this as any).isBloodScythe = undefined;
     (this as any).isHoming = undefined;
@@ -729,32 +733,86 @@ export class Projectile {
       
       if (this.isEnemy) {
         const tint = (this as any).colorTint;
-        let primary = '#ff0000';
-        let secondary = '#ffff00';
-        
-        if (tint === '#ff4400') {
-          primary = '#ff4400';
-          secondary = '#ffb700';
-        } else if (tint === '#a855f7') {
-          primary = '#a855f7';
-          secondary = '#d8b4fe';
-        } else if (tint === '#f43f5e') {
-          primary = '#f43f5e';
-          secondary = '#fda4af';
+        let projType = this.projectileType || (this as any).projectileType;
+        if (!projType) {
+          if (tint === '#ff4400' || tint === '#ea580c' || tint === '#f97316' || (this as any).shooter?.subType === 'pyromancer') {
+            projType = 'fire';
+          } else if (tint === '#38bdf8' || tint === '#60a5fa' || tint === '#00ffff' || (this as any).shooter?.subType === 'tengu_sorcerer' || (this as any).shooter?.subType === 'glacial_sentinel') {
+            projType = 'water';
+          }
         }
 
-        ctx.beginPath();
-        ctx.arc(0, 0, 22, 0, Math.PI*2);
-        ctx.fillStyle = primary;
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(0, 0, 16, 0, Math.PI*2);
-        ctx.fillStyle = secondary;
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(0, 0, 8, 0, Math.PI*2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
+        let drawn = false;
+        if (projType === 'fire' || projType === 'fire_arrow') {
+          const frames = (vfxAnims as any).projectiles?.fireArrow;
+          if (frames && frames.length > 0) {
+            const fIdx = Math.floor(((performance.now() / 70) + (this.animFrame || 0)) % frames.length);
+            const img = frames[fIdx];
+            if (img && img.complete && img.naturalWidth > 0) {
+              ctx.drawImage(img, -44, -22, 88, 44);
+              drawn = true;
+            }
+          }
+        } else if (projType === 'water' || projType === 'water_arrow') {
+          const frames = (vfxAnims as any).projectiles?.waterArrow;
+          if (frames && frames.length > 0) {
+            const fIdx = Math.floor(((performance.now() / 70) + (this.animFrame || 0)) % frames.length);
+            const img = frames[fIdx];
+            if (img && img.complete && img.naturalWidth > 0) {
+              ctx.drawImage(img, -40, -27, 80, 54);
+              drawn = true;
+            }
+          }
+        } else if (projType === 'fire_ball') {
+          const frames = (vfxAnims as any).projectiles?.fireBall;
+          if (frames && frames.length > 0) {
+            const fIdx = Math.floor(((performance.now() / 70) + (this.animFrame || 0)) % frames.length);
+            const img = frames[fIdx];
+            if (img && img.complete && img.naturalWidth > 0) {
+              ctx.drawImage(img, -30, -30, 60, 60);
+              drawn = true;
+            }
+          }
+        } else if (projType === 'water_ball') {
+          const frames = (vfxAnims as any).projectiles?.waterBall;
+          if (frames && frames.length > 0) {
+            const fIdx = Math.floor(((performance.now() / 70) + (this.animFrame || 0)) % frames.length);
+            const img = frames[fIdx];
+            if (img && img.complete && img.naturalWidth > 0) {
+              ctx.drawImage(img, -30, -30, 60, 60);
+              drawn = true;
+            }
+          }
+        }
+
+        if (!drawn) {
+          let primary = '#ff0000';
+          let secondary = '#ffff00';
+          
+          if (tint === '#ff4400') {
+            primary = '#ff4400';
+            secondary = '#ffb700';
+          } else if (tint === '#a855f7') {
+            primary = '#a855f7';
+            secondary = '#d8b4fe';
+          } else if (tint === '#f43f5e') {
+            primary = '#f43f5e';
+            secondary = '#fda4af';
+          }
+
+          ctx.beginPath();
+          ctx.arc(0, 0, 22, 0, Math.PI*2);
+          ctx.fillStyle = primary;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, 0, 16, 0, Math.PI*2);
+          ctx.fillStyle = secondary;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(0, 0, 8, 0, Math.PI*2);
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+        }
       } else if (this.isDeflected) {
         ctx.beginPath();
         ctx.arc(0, 0, 15, 0, Math.PI*2);

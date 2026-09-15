@@ -110,7 +110,12 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
 export const heroAwakeningSkill=(id:string):HeroAwakeningSkill|undefined=>HERO_AWAKENING_SKILLS[id];
 export const BOSS_BASE_HP = {oni_boss:600,agis_colossus:950,skeleton_warlord:850,shogun_boss:800};
 export function campaignHpMultiplier(stage:number,boss:boolean):number {
-  return 1.5*(1+(Math.max(1,stage)-1)*(boss?.25:.16));
+  const s = Math.max(1, stage);
+  const late = Math.max(0, s - 5);
+  if (boss) {
+    return 1.5 * (1 + (s - 1) * 0.35 + late * 0.65 + (late * late) * 0.05);
+  }
+  return 1.5 * (1 + (s - 1) * 0.20 + late * 0.35 + (late * late) * 0.02);
 }
 export function heroDescription(id:string,ja=false):string {
   const b=heroBalance(id),pct=(v:number)=>Math.round(v*100);
