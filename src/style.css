@@ -1092,10 +1092,23 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .action-btn .btn-text {
-  font-size: clamp(9px, 1.8vh, 12px);
-  margin-top: 2px;
+  font-size: clamp(7.5px, 1.4vh, 9.5px);
+  margin-top: 1px;
   position: relative;
   z-index: 12;
+  white-space: nowrap;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  letter-spacing: -0.2px;
+  line-height: 1.1;
+}
+
+#btn-enhance .btn-text {
+  font-size: clamp(8px, 1.5vh, 10px);
+  max-width: 86%;
+  letter-spacing: -0.1px;
 }
 
 .action-btn .hotkey {
@@ -1255,111 +1268,146 @@ input[type="range"]::-webkit-slider-thumb:hover {
 /* short landscape screen adjustments (e.g. mobile phones) */
 @media (max-height: 450px) {
   #ui-layer {
-    padding: 10px;
+    padding: 8px;
   }
 
   .top-bars {
-    gap: 4px;
-    max-width: 220px;
-    padding: 8px 12px;
-    border-radius: 10px;
+    gap: 3px;
+    max-width: 190px;
+    padding: 6px 10px;
+    border-radius: 8px;
   }
 
   .bar-container {
-    height: 12px;
+    height: 10px;
   }
 
   #score-display {
-    font-size: 13px;
-    margin-top: 6px;
+    font-size: 11px;
+    margin-top: 3px;
   }
 
   #combo-display {
-    font-size: 18px;
-    margin-top: 2px;
+    font-size: 15px;
+    margin-top: 1px;
   }
 
   #hearts-container {
-    font-size: 16px;
+    font-size: 13px;
   }
 
   #pause-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 12px;
-    top: max(10px, env(safe-area-inset-top));
-    right: max(10px, env(safe-area-inset-right));
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
   }
 
   .menu-box {
-    padding: 20px 30px;
-    gap: 12px;
-    min-width: 320px;
+    padding: 12px 18px;
+    gap: 8px;
+    min-width: 240px;
   }
 
   .menu-box h2 {
-    font-size: 20px;
-    margin-bottom: 4px;
+    font-size: 16px;
+    margin-bottom: 3px;
   }
 
   .menu-btn {
-    padding: 10px 24px;
-    font-size: 14px;
+    padding: 6px 14px;
+    font-size: 11px;
+    min-height: 28px;
   }
 
   .guide-box {
-    padding: 12px 16px;
-    margin-bottom: 4px;
+    padding: 8px 10px;
+    margin-bottom: 3px;
   }
 
   .guide-box h3 {
-    font-size: 15px;
-    padding-bottom: 4px;
+    font-size: 11px;
+    padding-bottom: 3px;
   }
 
   .guide-box ul {
-    font-size: 11px;
+    font-size: 9px;
   }
 
   #level-up-screen h2, #ult-screen h2 {
-    font-size: 24px;
-    margin-bottom: 12px;
-  }
-
-  .power-choices {
-    gap: 12px;
-  }
-
-  .power-card {
-    padding: 12px 16px;
-    width: clamp(160px, 22vw, 220px);
-    border-radius: 12px;
-  }
-
-  .power-card h3 {
-    font-size: 14px;
+    font-size: 18px;
     margin-bottom: 6px;
   }
 
-  .power-card p {
+  .power-choices {
+    gap: 8px;
+  }
+
+  .power-card {
+    padding: 8px 10px;
+    width: clamp(110px, 16vw, 160px);
+    border-radius: 8px;
+  }
+
+  .power-card h3 {
     font-size: 11px;
+    margin-bottom: 3px;
+  }
+
+  .power-card p {
+    font-size: 8.5px;
+    line-height: 1.25;
   }
 
   #action-buttons {
-    bottom: max(12px, env(safe-area-inset-bottom));
-    right: max(12px, env(safe-area-inset-right));
-    gap: 10px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    right: max(8px, env(safe-area-inset-right));
+    gap: 6px;
   }
 
   .action-btn {
-    width: clamp(52px, 11vh, 68px);
-    height: clamp(52px, 11vh, 68px);
-    font-size: clamp(9px, 2vh, 11px);
+    width: clamp(46px, 9.5vh, 58px);
+    height: clamp(46px, 9.5vh, 58px);
+    font-size: clamp(8px, 1.6vh, 9.5px);
   }
 
   #btn-enhance {
-    width: clamp(100px, 20vh, 135px) !important;
-    height: clamp(100px, 20vh, 135px) !important;
+    width: clamp(84px, 17vh, 112px) !important;
+    height: clamp(84px, 17vh, 112px) !important;
+  }
+
+  .action-btn .skill-icon {
+    width: clamp(16px, 3vh, 22px);
+    height: clamp(16px, 3vh, 22px);
+  }
+
+  .action-btn .btn-text {
+    font-size: clamp(6.5px, 1.2vh, 8px) !important;
+    letter-spacing: -0.3px !important;
+    max-width: 90% !important;
+  }
+
+  #btn-enhance .btn-text {
+    font-size: clamp(7px, 1.3vh, 8.5px) !important;
+    max-width: 86% !important;
+  }
+
+  .action-btn .hotkey {
+    font-size: 7.5px !important;
+  }
+
+  .ult-action-btn {
+    width: clamp(38px, 7vh, 48px) !important;
+    height: clamp(38px, 7vh, 48px) !important;
+  }
+
+  .ult-action-btn .ult-icon {
+    font-size: clamp(11px, 2vh, 15px) !important;
+  }
+
+  .ult-action-btn .ult-text {
+    font-size: clamp(5.5px, 0.9vh, 7px) !important;
   }
 }
 
@@ -1972,42 +2020,52 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   .main-menu-box, .pause-menu-box {
     flex-direction: row !important;
-    max-width: 94% !important;
-    width: 94% !important;
-    gap: 20px !important;
-    padding: clamp(8px, 2vh, 14px) clamp(14px, 3.5vw, 26px) !important;
+    max-width: 92% !important;
+    width: 92% !important;
+    gap: 14px !important;
+    padding: clamp(6px, 1.8vh, 10px) clamp(10px, 2.5vw, 18px) !important;
     align-items: stretch !important;
     justify-content: space-between !important;
   }
 
   #game-over .menu-box {
-    width: 90% !important;
-    max-width: 440px !important;
-    padding: 15px 30px !important;
+    width: 88% !important;
+    max-width: 380px !important;
+    padding: 10px 18px !important;
     justify-content: center !important;
   }
 
   .skill-select-box {
-    width: 94% !important;
-    max-width: 800px !important;
+    width: 92% !important;
+    max-width: 720px !important;
     justify-content: flex-start !important;
-    padding: 15px 15px 25px 15px !important;
-    gap: 10px !important;
+    padding: 10px 12px 14px 12px !important;
+    gap: 6px !important;
   }
   
   .settings-grid {
     flex-direction: row !important;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 12px !important;
+    gap: 8px !important;
     width: 100%;
   }
   
   .setting-row {
     margin-bottom: 0 !important;
-    max-width: 220px !important;
-    padding: 8px 12px !important;
-    flex: 1 1 180px;
+    max-width: 190px !important;
+    padding: 5px 8px !important;
+    flex: 1 1 160px;
+    font-size: 10px !important;
+  }
+
+  .setting-row label {
+    font-size: 10px !important;
+  }
+
+  .setting-row select {
+    font-size: 10px !important;
+    padding: 3px 6px !important;
   }
 
   .menu-left {
@@ -2015,7 +2073,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
     height: 100% !important; /* Force full height of parent */
     justify-content: center;
     align-items: center;
-    gap: 10px !important;
+    gap: 8px !important;
     overflow: visible;
   }
   
@@ -2026,17 +2084,17 @@ input[type="range"]::-webkit-slider-thumb:hover {
     flex-direction: column;
     align-items: stretch !important;
     overflow: hidden;
-    gap: 8px;
+    gap: 6px;
   }
   
   .menu-left .game-title {
-    font-size: clamp(16px, 6vh, 26px) !important;
+    font-size: clamp(14px, 5vh, 22px) !important;
     line-height: 1.1 !important;
-    margin: 0 0 5px 0 !important;
+    margin: 0 0 3px 0 !important;
   }
 
   .menu-left h2 {
-    font-size: clamp(14px, 5.5vh, 22px) !important;
+    font-size: clamp(12px, 4.5vh, 18px) !important;
     margin: 0 !important;
   }
   
@@ -2045,10 +2103,21 @@ input[type="range"]::-webkit-slider-thumb:hover {
     max-height: none !important;
     margin-bottom: 0 !important;
     width: 100% !important;
-    padding: 10px 14px !important;
+    padding: 8px 10px !important;
     flex: 1 1 0;
     min-height: 0;
     overflow-y: auto;
+    font-size: 9.5px !important;
+  }
+
+  .guide-box h3 {
+    font-size: 11px !important;
+    padding-bottom: 3px !important;
+  }
+
+  .guide-box p, .guide-box li {
+    font-size: 9px !important;
+    line-height: 1.3 !important;
   }
 
   #high-scores-box {
@@ -2063,50 +2132,93 @@ input[type="range"]::-webkit-slider-thumb:hover {
     flex-wrap: wrap;
     justify-content: center;
     width: 100%;
-    gap: 6px !important;
+    gap: 5px !important;
     overflow: visible;
   }
   
   .menu-btn {
     flex: 1 1 auto;
-    padding: 8px 12px !important;
-    font-size: clamp(10px, 2.5vh, 13px) !important;
-    min-width: 100px !important;
+    padding: 6px 10px !important;
+    font-size: clamp(9px, 2.2vh, 11.5px) !important;
+    min-width: 80px !important;
     max-width: none !important;
     margin: 0 !important;
     white-space: nowrap;
   }
   
   #skill-select-screen h2 {
-    font-size: clamp(14px, 5vh, 18px) !important;
-    margin: 0 0 8px 0 !important;
+    font-size: clamp(12px, 4vh, 15px) !important;
+    margin: 0 0 4px 0 !important;
   }
   
   #skill-select-screen .skill-choices {
-    gap: 8px !important;
-    margin-bottom: 10px !important;
+    gap: 6px !important;
+    margin-bottom: 6px !important;
   }
   
   #skill-select-screen .skill-card {
-    width: clamp(120px, 18vw, 150px) !important;
-    padding: 6px 8px !important;
-    border-radius: 10px !important;
+    width: clamp(100px, 14vw, 125px) !important;
+    padding: 5px 6px !important;
+    border-radius: 8px !important;
   }
   
   #skill-select-screen .skill-card h3 {
-    font-size: clamp(10px, 3vh, 12px) !important;
+    font-size: clamp(8px, 1.8vh, 9.5px) !important;
     margin-bottom: 2px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
   }
-  
+
   #skill-select-screen .skill-card p {
-    font-size: clamp(8px, 2.2vh, 10px) !important;
-    line-height: 1.3 !important;
+    font-size: clamp(6.5px, 1.5vh, 8px) !important;
+    line-height: 1.25 !important;
+  }
+
+  #skill-select-screen .skill-lock-btn {
+    font-size: clamp(7.5px, 1.5vh, 8.5px) !important;
+    padding: 3px 2px !important;
+    margin-top: 4px !important;
+  }
+
+  #skill-select-screen .skill-category-badge {
+    font-size: 8px !important;
+    padding: 1px 4px !important;
   }
   
   #skill-select-screen .menu-btn {
+    padding: 6px 10px !important;
+    font-size: clamp(9px, 2.2vh, 11px) !important;
+    max-width: 120px !important;
+  }
+
+  .shop-modal-box {
     padding: 8px 12px !important;
-    font-size: clamp(10px, 2.8vh, 13px) !important;
-    max-width: 140px !important;
+    max-width: 880px !important;
+  }
+
+  .shop-power-card {
+    min-height: 105px !important;
+    padding: 6px 6px !important;
+  }
+
+  .shop-power-card h3 {
+    font-size: 9.5px !important;
+  }
+
+  .shop-power-card p {
+    font-size: 8px !important;
+    line-height: 1.25 !important;
+  }
+
+  .shop-buy-btn {
+    font-size: 9px !important;
+    padding: 2px 6px !important;
+  }
+
+  .shop-freeze-btn {
+    font-size: 8px !important;
+    padding: 1px 4px !important;
   }
 
   /* Dojo Screen Landscape Optimization */
@@ -2706,20 +2818,23 @@ input[type="range"]::-webkit-slider-thumb:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   width: 100%;
-  margin-top: 10px;
-  padding: 6px 10px;
+  margin-top: 8px;
+  padding: 5px 6px;
   background: rgba(0, 0, 0, 0.55);
   border: 1px solid rgba(255, 215, 0, 0.4);
   border-radius: 6px;
   font-family: 'Orbitron', monospace;
-  font-size: 11px;
+  font-size: 9.5px;
   color: #ffd700;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .skill-lock-btn:hover {
@@ -2797,14 +2912,17 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 #skill-select-screen .skill-card h3 {
   color: #f1f5f9;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
   margin-top: 0;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 11px;
   line-height: 1.25;
   text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 #skill-select-screen .skill-card.active h3 {
@@ -2814,7 +2932,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 #skill-select-screen .skill-card p {
   color: #94a3b8;
   margin: 0;
-  font-size: 11.5px;
+  font-size: 10.5px;
   line-height: 1.55;
   font-family: 'Noto Sans JP', sans-serif;
 }
@@ -3043,12 +3161,12 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 @media (max-height: 520px), (max-width: 900px) and (orientation: landscape) {
   .pregame-difficulty-container {
-    margin-bottom: 12px !important;
+    margin-bottom: 8px !important;
   }
   .diff-btn, .time-opt-btn, .lvl-opt-btn {
-    padding: 6px 8px !important;
-    font-size: 11px !important;
-    min-width: 70px !important;
+    padding: 4px 6px !important;
+    font-size: 9.5px !important;
+    min-width: 60px !important;
   }
 }
 
@@ -3971,11 +4089,16 @@ html.qol-left #ult-buttons-wrap {
 }
 
 .ult-action-btn .ult-text {
-  font-size: clamp(7px, 1.2vh, 9px);
+  font-size: clamp(6px, 1vh, 7.5px);
   font-weight: 900;
   font-family: 'Shojumaru', sans-serif;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.2px;
   margin-top: 1px;
+  white-space: nowrap;
+  max-width: 90%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
 }
 
 .ult-action-btn .ult-hotkey {
@@ -4068,5 +4191,98 @@ html.qol-left #ult-buttons-wrap {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Mobile Narrow & Portrait Viewports */
+@media (max-width: 768px) {
+  .menu-box {
+    padding: clamp(12px, 3vh, 18px) clamp(12px, 3vw, 18px) !important;
+    gap: 10px !important;
+    min-width: 260px !important;
+    max-width: 92vw !important;
+  }
+
+  .menu-box h2 {
+    font-size: clamp(16px, 4vh, 20px) !important;
+    margin-bottom: 4px !important;
+  }
+
+  .game-title {
+    font-size: clamp(22px, 6vw, 32px) !important;
+  }
+
+  .menu-btn {
+    padding: 7px 14px !important;
+    font-size: 11.5px !important;
+    min-height: 30px !important;
+  }
+
+  .skill-select-box {
+    max-width: 94vw !important;
+    padding: 12px 14px !important;
+  }
+
+  #skill-select-screen .skill-card {
+    width: clamp(110px, 28vw, 140px) !important;
+    padding: 6px 8px !important;
+  }
+
+  #skill-select-screen .skill-card h3 {
+    font-size: 9.5px !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  #skill-select-screen .skill-card p {
+    font-size: 8px !important;
+    line-height: 1.25 !important;
+  }
+
+  .skill-lock-btn {
+    font-size: 8.5px !important;
+    padding: 4px 4px !important;
+  }
+
+  .top-bars {
+    max-width: 180px !important;
+    padding: 6px 8px !important;
+  }
+
+  .action-btn {
+    width: clamp(48px, 12vw, 60px) !important;
+    height: clamp(48px, 12vw, 60px) !important;
+  }
+
+  #btn-enhance {
+    width: clamp(86px, 22vw, 115px) !important;
+    height: clamp(86px, 22vw, 115px) !important;
+  }
+
+  .action-btn .btn-text {
+    font-size: 7.5px !important;
+    letter-spacing: -0.2px !important;
+    max-width: 90% !important;
+  }
+
+  #btn-enhance .btn-text {
+    font-size: 8px !important;
+    max-width: 86% !important;
+  }
+
+  .power-card {
+    width: clamp(115px, 28vw, 150px) !important;
+    padding: 8px 8px !important;
+  }
+
+  .power-card h3 {
+    font-size: 10.5px !important;
+  }
+
+  .power-card p {
+    font-size: 8px !important;
+    line-height: 1.25 !important;
+  }
+}
+
 
 
