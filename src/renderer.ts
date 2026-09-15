@@ -29,6 +29,11 @@ function getEntityFootY(e: Entity): number {
     case 'skeleton': baseFoot = 38; break;
     case 'enemy01': baseFoot = 35; break;
     case 'evil_wizard': baseFoot = 33; break;
+    case 'wraith01':
+    case 'wraith02':
+    case 'wraith03':
+      baseFoot = 32;
+      break;
     case 'heroluneblade': baseFoot = 30; break;
     case 'enemy_orc': baseFoot = 27; break;
     case 'enemy05': baseFoot = 18; break;

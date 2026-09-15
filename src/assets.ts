@@ -924,7 +924,10 @@ export const enemyFolderMap: Record<string, string> = {
   herosatyr: 'HeroSatyr',
   heroakakage: 'HeroAkakage',
   akakage: 'HeroAkakage',
-  toaster_bot: 'EnemyToasterBot'
+  toaster_bot: 'EnemyToasterBot',
+  wraith01: 'Wraith01',
+  wraith02: 'Wraith02',
+  wraith03: 'Wraith03'
 };
 
 export function loadEnemyAssetsNow(type: string) {
@@ -950,6 +953,10 @@ export function preloadStageEnemyAssets(stage: number) {
   loadEnemyAssetsNow('skeleton');
   loadEnemyAssetsNow('enemy_orc');
   loadEnemyAssetsNow('enemy_barrel');
+  loadEnemyAssetsNow('enemy05');
+  loadEnemyAssetsNow('wraith01');
+  loadEnemyAssetsNow('wraith02');
+  loadEnemyAssetsNow('wraith03');
   if (stage >= 3) loadEnemyAssetsNow('evil_wizard');
   if (stage >= 6) loadEnemyAssetsNow('toaster_bot');
   pumpBackgroundQueue();
@@ -985,6 +992,13 @@ function loadCustomEnemyAnim(folder: string, prefix: string, count: number, isPr
     images.push(img);
   }
   return images;
+}
+
+function loadSingleCustomFrame(path: string, tag: string, isPriority = false) {
+  const img = new Image();
+  const src = encodeURI(path);
+  queueAsset(img, src, tag, isPriority);
+  return [img];
 }
 
 function loadVfxFrames(pathPattern: string, count: number, startIdx = 1, padSize = 0, isPriority = false) {
@@ -1052,7 +1066,7 @@ export const anims = {
     dead: loadCustomEnemyAnim('Enemy03', 'hit', 7, false),
   },
   enemy05: {
-    idle: loadCustomEnemyAnim('Enemy05', 'idle', 2, false),
+    idle: loadSingleCustomFrame('sprites/Enemy05/hit01.png', 'Enemy05', false),
     walk: loadCustomEnemyAnim('Enemy05', 'walk', 8, false),
     attack: loadCustomEnemyAnim('Enemy05', 'attack', 4, false),
     dash: loadCustomEnemyAnim('Enemy05', 'walk', 8, false),
@@ -1149,6 +1163,27 @@ export const anims = {
     hit: loadCustomEnemyAnim('EnemyToasterBot', 'hit', 4, false),
     dash: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 16, false),
     dead: loadCustomEnemyAnim('EnemyToasterBot', 'dead', 10, false),
+  },
+  wraith01: {
+    idle: loadCustomEnemyAnim('Wraith01', 'idle', 12, false),
+    walk: loadCustomEnemyAnim('Wraith01', 'walk', 12, false),
+    attack: loadCustomEnemyAnim('Wraith01', 'attack', 18, false),
+    dash: loadCustomEnemyAnim('Wraith01', 'walk', 12, false),
+    dead: loadCustomEnemyAnim('Wraith01', 'dead', 15, false),
+  },
+  wraith02: {
+    idle: loadCustomEnemyAnim('Wraith02', 'idle', 12, false),
+    walk: loadCustomEnemyAnim('Wraith02', 'walk', 12, false),
+    attack: loadCustomEnemyAnim('Wraith02', 'attack', 18, false),
+    dash: loadCustomEnemyAnim('Wraith02', 'walk', 12, false),
+    dead: loadCustomEnemyAnim('Wraith02', 'dead', 15, false),
+  },
+  wraith03: {
+    idle: loadCustomEnemyAnim('Wraith03', 'idle', 12, false),
+    walk: loadCustomEnemyAnim('Wraith03', 'walk', 12, false),
+    attack: loadCustomEnemyAnim('Wraith03', 'attack', 18, false),
+    dash: loadCustomEnemyAnim('Wraith03', 'walk', 12, false),
+    dead: loadCustomEnemyAnim('Wraith03', 'dead', 15, false),
   }
 };
 

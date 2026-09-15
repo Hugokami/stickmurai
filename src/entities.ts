@@ -49,7 +49,7 @@ export function getTintedImage(img: HTMLImageElement | HTMLCanvasElement, hexCol
 export class Entity {
   x = 0; y = 0; vx = 0; vy = 0;
   yOffset = 0; yVelocity = 0; // Simulated vertical juggle height physics
-  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' | 'heroakakage' = 'sword';
+  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' | 'heroakakage' | 'wraith01' | 'wraith02' | 'wraith03' = 'sword';
   subType?: string;
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
@@ -114,7 +114,14 @@ export class Entity {
     if (!img || (img instanceof HTMLImageElement && (!img.complete || img.naturalWidth === 0))) return;
     
     const rx = (this.x - cx + globals.vw/2) | 0;
-    const ry = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
+    let ry = (this.y - cy + globals.vh/2 + (this.yOffset || 0)) | 0;
+    if (this.type === 'enemy05' && (this.state === 'idle' || this.state === 'charge')) {
+      // Subtle float animation for single-frame idle (~1.8px unnoticeable up/down bobbing)
+      ry += Math.sin(performance.now() / 300 + (this.x * 0.05)) * 1.8;
+    } else if (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03') {
+      // Ethereal ghostly floating bob for wraiths
+      ry += Math.sin(performance.now() / 260 + (this.x * 0.05)) * 2.2;
+    }
     let scale = 0.5 * this.scaleMult;
     if (this.type === 'enemy01') {
       scale *= 7.0;
@@ -124,6 +131,8 @@ export class Entity {
       scale *= 2.6;
     } else if (this.type === 'enemy05') {
       scale *= 4.0;
+    } else if (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03') {
+      scale *= 1.3;
     } else if (this.type === 'skeleton') {
       scale *= 2.4;
     } else if (this.type === 'heroluneblade') {

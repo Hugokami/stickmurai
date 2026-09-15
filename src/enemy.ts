@@ -347,10 +347,10 @@ export class Enemy extends Entity {
       this.speed = 210;
       this.maxPosture = 250;
     } else if (this.subType === 'tengu_sorcerer') {
-      this.type = 'enemy01';
+      this.type = 'wraith01';
       this.lungeSpeed = 0; this.chargeTimeMax = 0.95; this.lungeDuration = 0.5;
-      this.scaleMult = 2.1; this.hp = this.maxHp = 70; this.expValue = 5;
-      this.colorTint = '#38bdf8';
+      this.scaleMult = 1.9; this.hp = this.maxHp = 70; this.expValue = 5;
+      this.colorTint = 'none';
       this.speed = 250;
       this.maxPosture = 300;
     } else if (this.subType === 'corrupted_shaman') {
@@ -361,31 +361,31 @@ export class Enemy extends Entity {
       this.speed = 180;
       this.maxPosture = 350;
     } else if (this.subType === 'pyromancer') {
-      this.type = 'enemy01';
+      this.type = 'wraith02';
       this.lungeSpeed = 0; this.chargeTimeMax = 1.15; this.lungeDuration = 0.5;
-      this.scaleMult = 2.0; this.hp = this.maxHp = 48; this.expValue = 4;
-      this.colorTint = '#ff4400';
+      this.scaleMult = 1.8; this.hp = this.maxHp = 48; this.expValue = 4;
+      this.colorTint = 'none';
       this.speed = 175;
       this.maxPosture = 220;
     } else if (this.subType === 'glacial_sentinel') {
-      this.type = 'enemy02';
+      this.type = 'wraith01';
       this.lungeSpeed = 880; this.chargeTimeMax = 1.6; this.lungeDuration = 0.65;
       this.scaleMult = 1.7; this.hp = this.maxHp = 80; this.expValue = 5;
       this.colorTint = '#60a5fa';
       this.speed = 200;
       this.maxPosture = 340;
     } else if (this.subType === 'astromancer') {
-      this.type = 'enemy01';
+      this.type = 'wraith03';
       this.lungeSpeed = 0; this.chargeTimeMax = 1.05; this.lungeDuration = 0.45;
-      this.scaleMult = 2.1; this.hp = this.maxHp = 52; this.expValue = 5;
-      this.colorTint = '#f43f5e';
+      this.scaleMult = 1.9; this.hp = this.maxHp = 52; this.expValue = 5;
+      this.colorTint = 'none';
       this.speed = 220;
       this.maxPosture = 230;
     } else if (this.subType === 'necromancer') {
-      this.type = 'enemy05';
+      this.type = 'wraith03';
       this.lungeSpeed = 0; this.chargeTimeMax = 1.25; this.lungeDuration = 0.55;
-      this.scaleMult = 2.1; this.hp = this.maxHp = 92; this.expValue = 8;
-      this.colorTint = '#a855f7';
+      this.scaleMult = 1.9; this.hp = this.maxHp = 92; this.expValue = 8;
+      this.colorTint = '#c084fc';
       this.speed = 160;
       this.maxPosture = 340;
     } else if (this.subType === 'oni_boss') {
@@ -1489,6 +1489,7 @@ export class Enemy extends Entity {
     else if (this.type === 'enemy05') headOffset = 26;
     else if (this.type === 'enemy_orc') headOffset = 44;
     else if (this.type === 'enemy_barrel') headOffset = 52;
+    else if (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03') headOffset = 48;
 
     // Sniper Laser Aim Telegraph
     if (this.subType === 'shadow_sniper' && this.state === 'charge') {
@@ -1595,7 +1596,7 @@ export class Enemy extends Entity {
     }
 
     // Ground contact shadow (drawn anchored at entity's physical feet baseline)
-    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'boss_skeleton' ? 44 : (this.type === 'toaster_bot' ? 20 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37))))))))) * this.scaleMult;
+    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'boss_skeleton' ? 44 : (this.type === 'toaster_bot' ? 20 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03' ? 30 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37)))))))))) * this.scaleMult;
     const shadowGroundRy = ((this.y - cy + globals.vh/2) + footOffsetY) | 0;
     const shadowGroundRx = (this.x - cx + globals.vw/2) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
