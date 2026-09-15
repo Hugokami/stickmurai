@@ -107,6 +107,7 @@ callbacks.checkPlayerHit = checkPlayerHit;
 callbacks.killEnemy = killEnemy;
 callbacks.addCombo = addCombo;
 callbacks.addFlow = addFlow;
+(callbacks as any).getCurrentSlashDamage = getCurrentSlashDamage;
 callbacks.updateUI = updateUI;
 callbacks.updateEnhanceButton = updateEnhanceButton;
 callbacks.updateComboDisplay = updateComboDisplay;
@@ -2060,58 +2061,58 @@ function fireFullyChargedIaijutsu(angle: number) {
     let enhancedType = '';
     const slashDmg = getCurrentSlashDamage();
     const iaiBonus = globals.playerStats?.iaijutsuBonusDmg || 0;
-    let projDmg = Math.max(12, Math.round(slashDmg * 3.0)) + iaiBonus;
+    let projDmg = Math.max(12, Math.round(15 + slashDmg * 3.0)) + iaiBonus;
     let txtColor = '#00ffff';
     let txtLabel = t('iaijutsuText');
     
     if (globals.flowState === 'awakened') {
       enhancedType = 'shadow_awakening';
-      projDmg = Math.max(18, Math.round(slashDmg * 4.0)) + iaiBonus;
+      projDmg = Math.max(18, Math.round(25 + slashDmg * 4.0)) + iaiBonus;
       txtColor = '#aa66ff';
       txtLabel = "🔥 SHADOW IAIJUTSU! 🔥";
     } else if (globals.flowState === 'storm_god') {
       enhancedType = 'storm_god';
-      projDmg = Math.max(20, Math.round(slashDmg * 4.2)) + iaiBonus;
+      projDmg = Math.max(20, Math.round(28 + slashDmg * 4.2)) + iaiBonus;
       txtColor = '#fbbf24';
       txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
     } else if (globals.zenFieldActiveTimer > 0 && globals.flowState !== 'omnislash') {
       enhancedType = 'zen_field';
-      projDmg = Math.max(18, Math.round(slashDmg * 4.0)) + iaiBonus;
+      projDmg = Math.max(18, Math.round(25 + slashDmg * 4.0)) + iaiBonus;
       txtColor = '#22d3ee';
       txtLabel = "🌀 CHRONO IAIJUTSU! 🌀";
     } else if (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'dragon';
-      projDmg = Math.max(24, Math.round(slashDmg * 4.5)) + iaiBonus;
+      projDmg = Math.max(24, Math.round(35 + slashDmg * 4.5)) + iaiBonus;
       txtColor = '#ff4400';
       txtLabel = "🔥 DRAGON IAIJUTSU! 🔥";
     } else if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'shield';
-      projDmg = Math.max(14, Math.round(slashDmg * 3.2)) + iaiBonus;
+      projDmg = Math.max(14, Math.round(18 + slashDmg * 3.2)) + iaiBonus;
       txtColor = '#00ffc8';
       txtLabel = "🌀 TORNADO IAIJUTSU! 🌀";
     } else if (globals.selectedSkill === 'firewheel' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'firewheel';
-      projDmg = Math.max(15, Math.round(slashDmg * 3.4)) + iaiBonus;
+      projDmg = Math.max(15, Math.round(20 + slashDmg * 3.4)) + iaiBonus;
       txtColor = '#ff8800';
       txtLabel = "🔥 INFERNO IAIJUTSU! 🔥";
     } else if (globals.selectedSkill === 'gravity' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'gravity';
-      projDmg = Math.max(16, Math.round(slashDmg * 3.6)) + iaiBonus;
+      projDmg = Math.max(16, Math.round(22 + slashDmg * 3.6)) + iaiBonus;
       txtColor = '#c084fc';
       txtLabel = "🌌 GRAVITY IAIJUTSU! 🌌";
     } else if (globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'parry';
-      projDmg = Math.max(15, Math.round(slashDmg * 3.5)) + iaiBonus;
+      projDmg = Math.max(15, Math.round(20 + slashDmg * 3.5)) + iaiBonus;
       txtColor = '#ffd700';
       txtLabel = "🛡️ PARRY IAIJUTSU! 🛡️";
     } else if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'decoy';
-      projDmg = Math.max(18, Math.round(slashDmg * 3.8)) + iaiBonus;
+      projDmg = Math.max(18, Math.round(24 + slashDmg * 3.8)) + iaiBonus;
       txtColor = '#a855f7';
       txtLabel = "👤 DECOY IAIJUTSU! 👤";
     } else if (globals.selectedSkill === 'dash' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'storm_god';
-      projDmg = Math.max(16, Math.round(slashDmg * 3.5)) + iaiBonus;
+      projDmg = Math.max(16, Math.round(22 + slashDmg * 3.5)) + iaiBonus;
       txtColor = '#fbbf24';
       txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
     }
@@ -2275,12 +2276,12 @@ function executeSwiftCounter() {
   
   // Damage enemies along the line
   const slashDmg = getCurrentSlashDamage();
-  const counterDmg = Math.max(4, Math.round(slashDmg * 1.2));
-  globals.enemies.forEach(e => {
-    if (e.state === 'dead') return;
-    const dist = distToSegment(e.x, e.y, startX, startY, globals.player.x, globals.player.y);
-    if (dist < 100) {
-      hitEnemy(e, counterDmg);
+    const counterDmg = Math.max(4, Math.round(4 + slashDmg * 1.4));
+    globals.enemies.forEach(e => {
+      if (e.state === 'dead') return;
+      const dist = distToSegment(e.x, e.y, startX, startY, globals.player.x, globals.player.y);
+      if (dist < 100) {
+        hitEnemy(e, counterDmg);
       for (let j = 0; j < 3; j++) {
         globals.particles.push(Particle.acquire(e.x, e.y, '#ffb7c5', 200, 0.4, 2));
       }
@@ -2354,7 +2355,7 @@ function executeThunderclapAndFlash() {
 
   // Hit path enemies
   let firstHit: Enemy | null = null;
-  const thunderDmg = Math.max(8, Math.round(getCurrentSlashDamage() * 2.0));
+  const thunderDmg = Math.max(8, Math.round(10 + getCurrentSlashDamage() * 2.2));
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const dist = distToSegment(e.x, e.y, startX, startY, endX, endY);
@@ -2392,7 +2393,7 @@ function executeRisingDragon() {
   globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, angle, 1.8, true, '#00ffc8', false, globals.player));
   globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#00ffc8'));
   
-  const dragonDmg = Math.max(6, Math.round(getCurrentSlashDamage() * 1.6));
+  const dragonDmg = Math.max(6, Math.round(8 + getCurrentSlashDamage() * 1.8));
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const dx = e.x - globals.player.x;
@@ -5590,9 +5591,11 @@ function update(realDt: number) {
       
       if (attackPower < 1.7 && globals.comboFinisherReady) {
         globals.comboFinisherReady = false;
+        const slashDmg = getCurrentSlashDamage();
+        const finisherDmg = Math.max(3, Math.round(3 + slashDmg * 0.4));
         const angles = [angle - 0.25, angle, angle + 0.25];
         angles.forEach(a => {
-          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, a, false, 2.5, false, true));
+          globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, a, false, finisherDmg, false, true));
         });
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffcc00'));
         globals.screenShake += 15;

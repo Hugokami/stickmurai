@@ -358,13 +358,12 @@ export function triggerLevelUp() {
 }
 
 export function omnislashHitDmg(hitIndex: number, isFinalBlast = false): number {
+  const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
   const base = isFinalBlast ? 24 : 14;
-  const slashBonus = globals.playerStats?.slashBonusDmgPct || 0;
   const iaiBonus = globals.playerStats?.iaijutsuBonusDmg || 0;
   const enhanceBonus = (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) ? (globals.playerStats?.enhanceBonusDmg || 1) * 2 : 0;
   const comboBonus = Math.min(0.6, (globals.combo || 0) * 0.01 + hitIndex * 0.02);
-  const scaling = 1 + slashBonus + Math.min(1.0, (globals.level - 1) * 0.04);
-  const dmg = Math.round((base * scaling * (1 + comboBonus)) + iaiBonus + enhanceBonus);
+  const dmg = Math.round((base + slashDmg * (isFinalBlast ? 2.5 : 1.8)) * (1 + comboBonus) + iaiBonus + enhanceBonus);
   return Math.max(isFinalBlast ? 16 : 6, dmg);
 }
 
@@ -914,7 +913,7 @@ export function renderShopModal() {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 10px;">
             <div style="color: #94a3b8;">Health: <b style="color: #ef4444;">${globals.lives}/${globals.maxLives} ❤️</b></div>
             <div style="color: #94a3b8;">Level: <b style="color: #ffd700;">LVL ${globals.level}</b></div>
-            <div style="color: #94a3b8;">Slash DMG: <b style="color: #4ade80;">+${Math.round((globals.playerStats.slashBonusDmgPct || 0) * 100)}%</b></div>
+            <div style="color: #94a3b8;">Slash DMG: <b style="color: #4ade80;">${((callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1).toFixed(1)} (+${Math.round((globals.playerStats.slashBonusDmgPct || 0) * 100)}%)</b></div>
             <div style="color: #94a3b8;">Iaijutsu: <b style="color: #00ffff;">+${globals.playerStats.iaijutsuBonusDmg || 0}</b></div>
             <div style="color: #94a3b8;">Attack CD: <b style="color: #cbd5e1;">${globals.playerStats.attackCooldownBase.toFixed(2)}s</b></div>
             <div style="color: #94a3b8;">Dash CD: <b style="color: #cbd5e1;">${globals.playerStats.dashCooldownBase.toFixed(2)}s</b></div>

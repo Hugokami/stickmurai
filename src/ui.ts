@@ -2781,8 +2781,14 @@ export function populateAscensionUpgrades() {
     infiniteRiposte: 0
   };
 
+  const currentSlashStat = ((callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : (1.0 + (globals.playerStats?.slashFlatDmg || 0)) * (1.0 + (globals.playerStats?.slashBonusDmgPct || 0))).toFixed(1);
+  const slashStatBadge = `<div style="grid-column: 1 / -1; background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 6px; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 4px;">
+    <span style="color: #94a3b8; display: flex; align-items: center; gap: 6px;">🗡️ <b>${isJa ? '現在の基礎斬撃力' : 'CURRENT SLASH POWER'}:</b></span>
+    <span style="color: #4ade80; font-family: 'Orbitron', monospace; font-weight: bold; font-size: 13px;">${currentSlashStat} DMG <span style="font-size: 10px; color: #a3e635;">(+${Math.round((globals.playerStats?.slashBonusDmgPct || 0) * 100)}%)</span></span>
+  </div>`;
+
   containers.forEach(container => {
-    container.innerHTML = '';
+    container.innerHTML = slashStatBadge;
 
     ASCENSION_UPGRADES.forEach(u => {
       const curLevel = (upgrades as any)[u.id] || 0;

@@ -546,7 +546,8 @@ export class Player extends Entity {
           if (globals.raijinDashActive) {
             if (!globals.raijinHitEnemies.has(e)) {
               globals.raijinHitEnemies.add(e);
-              const dmg = 12 + 3 * (globals.playerStats.dashDamageLevel || 0);
+              const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
+              const dmg = Math.max(12, Math.round(12 + slashDmg * 1.5 + 3 * (globals.playerStats.dashDamageLevel || 0)));
               const stunDur = 0.5 + 0.15 * (globals.playerStats.dashDamageLevel || 0);
               callbacks.hitEnemy(e, dmg);
               e.stunTimer = stunDur;
