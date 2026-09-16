@@ -388,6 +388,61 @@ canvas.inverted {
   transform: scale(0.92);
 }
 
+/* Fullscreen HUD Button */
+#fullscreen-hud-btn {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(68px, calc(env(safe-area-inset-right) + 52px));
+  width: 44px;
+  height: 44px;
+  font-size: 18px;
+  background: rgba(15, 15, 20, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #38bdf8;
+  border-radius: 50%;
+  pointer-events: auto;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  z-index: 15;
+}
+
+#fullscreen-hud-btn:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: #38bdf8;
+  transform: scale(1.08);
+  box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+}
+
+#fullscreen-hud-btn:active {
+  transform: scale(0.92);
+}
+
+#fullscreen-hud-btn.is-fullscreen {
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.5);
+  background: rgba(251, 191, 36, 0.15);
+}
+
+/* Magatama display offset when Fullscreen button is rendered */
+html:not(.crazygames) #magatama-display {
+  right: max(120px, calc(env(safe-area-inset-right) + 104px)) !important;
+}
+
+/* Strict CrazyGames Fullscreen & Prompt Suppression */
+html.crazygames #fullscreen-hud-btn,
+html.crazygames #pause-fullscreen-btn,
+html.crazygames #menu-fullscreen-btn,
+html.crazygames #setting-fullscreen-row,
+html.crazygames #fullscreen-prompt {
+  display: none !important;
+}
+
 /* overlay menus (game over, pause, settings, choices) */
 .flash-overlay {
   position: absolute;
@@ -1302,6 +1357,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
     font-size: 11px;
     top: max(8px, env(safe-area-inset-top));
     right: max(8px, env(safe-area-inset-right));
+  }
+
+  #fullscreen-hud-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+    top: max(8px, env(safe-area-inset-top));
+    right: max(42px, calc(env(safe-area-inset-right) + 34px));
+  }
+
+  html:not(.crazygames) #magatama-display {
+    right: max(78px, calc(env(safe-area-inset-right) + 70px)) !important;
   }
 
   .menu-box {

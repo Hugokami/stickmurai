@@ -14,6 +14,7 @@ import { FUSION_RECIPES, openShop, closeShop, triggerSpecificUltimate } from './
 import { YOMI_SEALS } from './shrine';
 import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered, triggerHapticFeedback } from './audio';
 import { FloatingText, Shockwave } from './entities';
+import { updateFullscreenUI } from './fullscreen';
 
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
@@ -1990,6 +1991,7 @@ export function updateStaticText() {
   }
   initKeybindsUI();
   updateHighScoresDisplay();
+  updateFullscreenUI();
 }
 
 export function updateHighScoresDisplay() {

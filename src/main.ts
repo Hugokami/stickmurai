@@ -87,6 +87,7 @@ import { initInput, pollGamepad } from './input';
 import { initUI, updateUI, updateEnhanceButton, updateStanceSwitchButton, toggleAetherionStance, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
 import { initRenderer, draw, resetCanvasVisuals } from './renderer';
 import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate, openShop, refreshShop } from './powerups';
+import { initFullscreen, isCrazyGames, requestFullscreen } from './fullscreen';
 
 // register callbacks
 callbacks.t = t;
@@ -318,54 +319,13 @@ function updateLoaderProgress() {
 function t(key: string): string { return i18n[globals.currentLang]?.[key] || key; }
 
 function tryEnterFullscreen(onComplete: () => void) {
-  const docEl = document.documentElement as any;
-  const requestFS = docEl.requestFullscreen || 
-                    docEl.webkitRequestFullscreen || 
-                    docEl.mozRequestFullScreen || 
-                    docEl.msRequestFullscreen;
-
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-  const isPWA = (navigator as any).standalone || 
-                window.matchMedia('(display-mode: standalone)').matches || 
-                window.matchMedia('(display-mode: fullscreen)').matches;
-
-  // On iOS Safari (not PWA), standard Fullscreen API is not supported on document elements.
-  // Do not prompt the user as it will always fail and annoy them.
-  if (isIOS && !isPWA) {
+  if (isCrazyGames()) {
     onComplete();
     return;
   }
-
-  // If already in fullscreen, proceed directly
-  const isCurrentlyFS = !!(document.fullscreenElement || 
-                           (document as any).webkitFullscreenElement || 
-                           (document as any).mozFullScreenElement || 
-                           (document as any).msFullscreenElement);
-  if (isCurrentlyFS) {
+  requestFullscreen().finally(() => {
     onComplete();
-    return;
-  }
-
-  if (requestFS) {
-    try {
-      const res = requestFS.call(docEl);
-      if (res && typeof res.then === 'function') {
-        res.then(() => {
-          onComplete();
-        }).catch((err: any) => {
-          console.warn("Fullscreen request rejected (continuing):", err);
-          onComplete();
-        });
-      } else {
-        onComplete();
-      }
-    } catch (err) {
-      console.warn("Fullscreen request crashed (continuing):", err);
-      onComplete();
-    }
-  } else {
-    onComplete();
-  }
+  });
 }
 
 export function showFullscreenPrompt(onComplete: () => void) {
@@ -641,6 +601,7 @@ function startApp() {
       () => { initGame(); }, // Zen start
       () => { initGame(); }  // Restart run
     );
+    initFullscreen();
     initQol(initGame);
     initJourney(initGame,HEROES_DATA);
     initRuntimeQol(initGame);

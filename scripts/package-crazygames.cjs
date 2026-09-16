@@ -37,6 +37,10 @@ bridge_script = """
 <script>
 (function() {
   window.crazygames = window.CrazyGames = window.CrazyGames || {};
+  window.isCrazyGames = true;
+  if (typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.classList.add('crazygames');
+  }
   var sdk = null;
   var isCrazyMuted = false;
   var registeredAudios = new Set();
@@ -545,6 +549,11 @@ with zipfile.ZipFile(src_zip, 'r') as zin, zipfile.ZipFile(target_zip, 'w', zipf
                 html_str,
                 flags=re.IGNORECASE | re.DOTALL
             )
+            # Strip fullscreen buttons for CrazyGames build
+            html_str = re.sub(r'<button[^>]*id="fullscreen-hud-btn"[^>]*>.*?</button>', '', html_str, flags=re.DOTALL)
+            html_str = re.sub(r'<button[^>]*id="menu-fullscreen-btn"[^>]*>.*?</button>', '', html_str, flags=re.DOTALL)
+            html_str = re.sub(r'<button[^>]*id="pause-fullscreen-btn"[^>]*>.*?</button>', '', html_str, flags=re.DOTALL)
+            html_str = re.sub(r'<div[^>]*id="setting-fullscreen-row"[^>]*>.*?</div>', '', html_str, flags=re.DOTALL)
             # Inject SDK script and early bridge at the VERY TOP of <head> before any game module scripts
             if '<head>' in html_str:
                 html_str = html_str.replace('<head>', '<head>\\n' + bridge_script, 1)
