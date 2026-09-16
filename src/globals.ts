@@ -47,6 +47,7 @@ export const globals = {
       return ['enhance'];
     }
   })() as string[],
+  aetherionStance: 'melee' as 'melee' | 'ranged',
   raijinDashActive: false,
   raijinHitEnemies: new Set<any>(),
   maxLives: 5,

@@ -158,7 +158,7 @@ export class Entity {
     } else if (this.type === 'heroakakage') {
       scale *= 4.8;
     } else if (this.type === 'heroaetherion') {
-      scale *= 3.8;
+      scale *= 7.8;
     } else if (this.type === 'toaster_bot') {
       scale *= 3.2;
     }
@@ -727,6 +727,8 @@ export class Projectile {
             pColor = Math.random() > 0.5 ? '#ef4444' : '#b91c1c';
           } else if (this.enhancedType === 'astral_beam') {
             pColor = Math.random() > 0.5 ? '#38bdf8' : '#e0f2fe';
+          } else if (this.enhancedType === 'astral_heavy_bullet') {
+            pColor = Math.random() > 0.5 ? '#00ffff' : '#ffffff';
           } else if (this.enhancedType === 'astral_crescent') {
             pColor = Math.random() > 0.5 ? '#38bdf8' : '#c084fc';
           }
@@ -904,45 +906,49 @@ export class Projectile {
           return;
         }
 
-        if (this.enhancedType === 'astral_beam') {
-          // Aetherion Piercing Astral Starbeam
+        if (this.enhancedType === 'astral_beam' || this.enhancedType === 'astral_heavy_bullet') {
+          const isHeavy = this.enhancedType === 'astral_heavy_bullet';
+          const frames = (vfxAnims as any).projectiles?.windBlade;
+          if (frames && frames.length > 0) {
+            const maxL = (this as any).maxLife || (isHeavy ? 1.2 : 0.75);
+            const progress = Math.min(0.99, Math.max(0, 1 - (this.life / maxL)));
+            const frameIndex = Math.min(frames.length - 1, Math.floor(progress * frames.length));
+            const frame = frames[frameIndex];
+            if (frame && frame.complete && frame.naturalWidth > 0) {
+              const scale = isHeavy ? 6.2 : 3.4;
+              const w = frame.naturalWidth * scale;
+              const h = frame.naturalHeight * scale;
+              ctx.drawImage(frame, -w / 2, -h / 2, w, h);
+              ctx.restore();
+              return;
+            }
+          }
+
+          // Fallback canvas starlight beam if sprite not loaded
           ctx.save();
-          // Outer cyan halo
           ctx.beginPath();
           ctx.moveTo(-15, 0);
-          ctx.lineTo(85, 0);
-          ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
-          ctx.lineWidth = 14;
+          ctx.lineTo(isHeavy ? 180 : 100, 0);
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
+          ctx.lineWidth = isHeavy ? 28 : 16;
           ctx.lineCap = 'round';
           ctx.stroke();
 
-          // Bright cyan beam core
           ctx.beginPath();
           ctx.moveTo(-10, 0);
-          ctx.lineTo(80, 0);
+          ctx.lineTo(isHeavy ? 170 : 95, 0);
           ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = 6;
+          ctx.lineWidth = isHeavy ? 12 : 7;
           ctx.lineCap = 'round';
           ctx.stroke();
 
-          // Core starlight white filament
           ctx.beginPath();
           ctx.moveTo(-5, 0);
-          ctx.lineTo(75, 0);
+          ctx.lineTo(isHeavy ? 160 : 90, 0);
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2.5;
+          ctx.lineWidth = isHeavy ? 5 : 3;
           ctx.lineCap = 'round';
           ctx.stroke();
-
-          // Tip diamond shockwave
-          ctx.beginPath();
-          ctx.moveTo(85, 0);
-          ctx.lineTo(75, -5);
-          ctx.lineTo(65, 0);
-          ctx.lineTo(75, 5);
-          ctx.closePath();
-          ctx.fillStyle = '#ffffff';
-          ctx.fill();
           ctx.restore();
           return;
         }

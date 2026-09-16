@@ -3966,6 +3966,18 @@ html:not(.qol-touch-custom) #btn-attack {
 }
 html:not(.qol-touch-custom) #btn-dash { right: calc(var(--size) * 1.35); bottom: 0; }
 html:not(.qol-touch-custom) #btn-enhance { right: 0; bottom: calc(var(--size) * 1.35); }
+html:not(.qol-touch-custom) #btn-stance-switch {
+  right: calc(var(--size) * 1.35);
+  bottom: calc(var(--size) * 1.35);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(56, 189, 248, 0.25);
+}
+html:not(.qol-touch-custom) #btn-stance-switch.mode-ranged {
+  border-color: #00ffff;
+  color: #00ffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 14px rgba(0, 255, 255, 0.45);
+}
 html.qol-left:not(.qol-touch-custom) #action-buttons { right: auto; left: calc(14px + env(safe-area-inset-left)); transform: scaleX(-1); }
 html.qol-left:not(.qol-touch-custom) #action-buttons > button { scale: -1 1; }
 

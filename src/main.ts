@@ -44,6 +44,7 @@ import {
   playSynthesizedLevelUp,
   playSynthesizedTempleBell,
   playSynthesizedSingingBowl,
+  playEnergyBeam,
   startBgm,
   playTeleportSfx,
   playAffixAlert,
@@ -83,7 +84,7 @@ let shogunSpawned = false;
 
 // Import helper modules
 import { initInput, pollGamepad } from './input';
-import { initUI, updateUI, updateEnhanceButton, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
+import { initUI, updateUI, updateEnhanceButton, updateStanceSwitchButton, toggleAetherionStance, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
 import { initRenderer, draw, resetCanvasVisuals } from './renderer';
 import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate, openShop, refreshShop } from './powerups';
 
@@ -110,6 +111,8 @@ callbacks.addFlow = addFlow;
 (callbacks as any).getCurrentSlashDamage = getCurrentSlashDamage;
 callbacks.updateUI = updateUI;
 callbacks.updateEnhanceButton = updateEnhanceButton;
+callbacks.updateStanceSwitchButton = updateStanceSwitchButton;
+callbacks.toggleAetherionStance = toggleAetherionStance;
 callbacks.updateComboDisplay = updateComboDisplay;
 callbacks.triggerFlowingCounterReset = triggerFlowingCounterReset;
 callbacks.triggerElementalExplosion = triggerElementalExplosion;
@@ -2051,6 +2054,49 @@ function fireFullyChargedIaijutsu(angle: number) {
   globals.invertScreenTimer = 0.25;
 
   globals.screenShake = Math.max(globals.screenShake, 20 * 1.8);
+
+  if (globals.selectedHero === 'aetherion') {
+    const slashDmg = getCurrentSlashDamage();
+    const heavyBulletDmg = Math.round(6 * slashDmg);
+    const heavyBullet = Projectile.acquire(
+      globals.player.x + Math.cos(angle) * 50,
+      globals.player.y + Math.sin(angle) * 50,
+      angle,
+      false,
+      heavyBulletDmg,
+      true,
+      false,
+      'astral_heavy_bullet'
+    );
+    heavyBullet.isHuge = true;
+    const bulletSpeed = 1900;
+    heavyBullet.vx = Math.cos(angle) * bulletSpeed;
+    heavyBullet.vy = Math.sin(angle) * bulletSpeed;
+    heavyBullet.life = 1.2;
+    (heavyBullet as any).maxLife = 1.2;
+    globals.projectiles.push(heavyBullet);
+
+    globals.player.setState('shoot');
+    globals.player.vx -= Math.cos(angle) * 350;
+    globals.player.vy -= Math.sin(angle) * 350;
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 45, "🌪️ ASTRAL HEAVY BULLET! 🌪️", "#38bdf8", 30));
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
+    globals.screenShake = Math.max(globals.screenShake, 30);
+    playSynthesizedThunder();
+    
+    for (let i = 0; i < 20; i++) {
+      globals.particles.push(Particle.acquire(
+        globals.player.x + Math.cos(angle) * 50,
+        globals.player.y + Math.sin(angle) * 50,
+        Math.random() > 0.5 ? '#38bdf8' : '#ffffff',
+        300 + Math.random() * 200,
+        0.4,
+        3.5,
+        angle + (Math.random() - 0.5) * 1.2
+      ));
+    }
+    return;
+  }
   
   if (globals.grimHarvestActive && (globals.grimHarvestSouls || 0) >= 3) {
     executeSpectralSoulCleave(angle);
@@ -5226,18 +5272,7 @@ function update(realDt: number) {
         globals.comboSlashesCount = 0;
       }
 
-      let isAetherionRanged = false;
-      if (globals.selectedHero === 'aetherion' && attackPower < 1.7) {
-        let nearestDist = Infinity;
-        for (const en of globals.enemies) {
-          if (en.state === 'dead') continue;
-          const d = Math.hypot(en.x - globals.player.x, en.y - globals.player.y);
-          if (d < nearestDist) nearestDist = d;
-        }
-        if (nearestDist > 200) {
-          isAetherionRanged = true;
-        }
-      }
+      const isAetherionRanged = globals.selectedHero === 'aetherion' && globals.aetherionStance === 'ranged' && attackPower < 1.7;
 
       if (isAetherionRanged) {
         globals.player.setState('shoot');
@@ -5245,7 +5280,9 @@ function update(realDt: number) {
         globals.player.setState('attack');
       }
       // Dynamic pitch crescendo on slash; silenced during Akakage Blood Asura awakening per user request
-      if (globals.selectedHero === 'akakage' && globals.flowState === 'awakened') {
+      if (isAetherionRanged) {
+        playEnergyBeam(0.8);
+      } else if (globals.selectedHero === 'akakage' && globals.flowState === 'awakened') {
         // Suppress noisy rapid slash SFX during Akakage Blood Asura awakening
       } else {
         playSlashSfx(1.2, Math.min(1.45, 1.0 + (globals.combo || 0) * 0.015));
@@ -5271,35 +5308,53 @@ function update(realDt: number) {
       globals.player.attackCooldown = currentAtkCooldown;
 
       let angle = globals.player.dir === 1 ? 0 : Math.PI;
-      if (globals.useMobileIaijutsuAimAngle) {
-        angle = globals.mobileIaijutsuAimAngle;
+      if (isAetherionRanged) {
+        if (globals.useMobileIaijutsuAimAngle) {
+          angle = globals.mobileIaijutsuAimAngle;
+        } else if (globals.joystickActive) {
+          angle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+        } else {
+          angle = Math.atan2(globals.mouse.y - globals.height/2, globals.mouse.x - globals.width/2);
+        }
         globals.player.dir = Math.cos(angle) >= 0 ? 1 : -1;
       } else {
-        if (!globals.joystickActive) { angle = Math.atan2(globals.mouse.y - globals.height/2, globals.mouse.x - globals.width/2); }
-        
-        let closestEnemy: Enemy | null = null;
-        let minDistanceSq = 360000; // 600 * 600
-        for (let j = 0; j < globals.enemies.length; j++) {
-          const e = globals.enemies[j];
-          if (e.state === 'dead') continue;
-          const edx = e.x - globals.player.x;
-          const edy = e.y - globals.player.y;
-          const dSq = edx * edx + edy * edy;
-          if (dSq < minDistanceSq) {
-            minDistanceSq = dSq;
-            closestEnemy = e;
+        if (globals.useMobileIaijutsuAimAngle) {
+          angle = globals.mobileIaijutsuAimAngle;
+          globals.player.dir = Math.cos(angle) >= 0 ? 1 : -1;
+        } else {
+          if (!globals.joystickActive) { angle = Math.atan2(globals.mouse.y - globals.height/2, globals.mouse.x - globals.width/2); }
+          
+          let closestEnemy: Enemy | null = null;
+          let minDistanceSq = 360000; // 600 * 600
+          for (let j = 0; j < globals.enemies.length; j++) {
+            const e = globals.enemies[j];
+            if (e.state === 'dead') continue;
+            const edx = e.x - globals.player.x;
+            const edy = e.y - globals.player.y;
+            const dSq = edx * edx + edy * edy;
+            if (dSq < minDistanceSq) {
+              minDistanceSq = dSq;
+              closestEnemy = e;
+            }
           }
-        }
-        if (closestEnemy) {
-          angle = Math.atan2(closestEnemy.y - globals.player.y, closestEnemy.x - globals.player.x);
-          globals.player.dir = closestEnemy.x > globals.player.x ? 1 : -1;
+          if (closestEnemy) {
+            angle = Math.atan2(closestEnemy.y - globals.player.y, closestEnemy.x - globals.player.x);
+            globals.player.dir = closestEnemy.x > globals.player.x ? 1 : -1;
+          }
         }
       }
       
-      let lungePower = 1000 * attackPower;
-      if (globals.flowState === 'awakened') lungePower *= 2; 
-      
-      globals.player.vx = Math.cos(angle) * lungePower; globals.player.vy = Math.sin(angle) * lungePower; globals.screenShake += 3 * attackPower;
+      if (isAetherionRanged) {
+        globals.player.vx = -Math.cos(angle) * 160;
+        globals.player.vy = -Math.sin(angle) * 160;
+        globals.screenShake += 3 * attackPower;
+      } else {
+        let lungePower = 1000 * attackPower;
+        if (globals.flowState === 'awakened') lungePower *= 2; 
+        globals.player.vx = Math.cos(angle) * lungePower;
+        globals.player.vy = Math.sin(angle) * lungePower;
+        globals.screenShake += 3 * attackPower;
+      }
 
       let size = globals.playerStats.slashSizeMult * attackPower;
       const flatBonus = globals.playerStats?.slashFlatDmg || 0;
@@ -5386,17 +5441,17 @@ function update(realDt: number) {
 
       if (isAetherionRanged) {
         const slashDmg = getCurrentSlashDamage();
-        const beamDmg = Math.round(40 + slashDmg * 2.8);
+        const beamDmg = Math.round(80 + slashDmg * 5.6);
         const beamAngle = angle;
-        const muzzleX = globals.player.x + Math.cos(beamAngle) * 35;
-        const muzzleY = globals.player.y + Math.sin(beamAngle) * 35;
+        const muzzleX = globals.player.x + Math.cos(beamAngle) * 45;
+        const muzzleY = globals.player.y + Math.sin(beamAngle) * 45;
 
         const beam = Projectile.acquire(muzzleX, muzzleY, beamAngle, false, beamDmg, false, false, 'astral_beam');
         const beamSpeed = 2200;
         beam.vx = Math.cos(beamAngle) * beamSpeed;
         beam.vy = Math.sin(beamAngle) * beamSpeed;
-        beam.life = 0.65;
-        (beam as any).maxLife = 0.65;
+        beam.life = 0.75;
+        (beam as any).maxLife = 0.75;
         globals.projectiles.push(beam);
 
         if (globals.hasHeroAwakening('aetherion') && globals.flowState === 'awakened') {
@@ -5405,17 +5460,23 @@ function update(realDt: number) {
             const sideBeam = Projectile.acquire(muzzleX, muzzleY, bAng, false, beamDmg, false, false, 'astral_beam');
             sideBeam.vx = Math.cos(bAng) * beamSpeed;
             sideBeam.vy = Math.sin(bAng) * beamSpeed;
-            sideBeam.life = 0.65;
-            (sideBeam as any).maxLife = 0.65;
+            sideBeam.life = 0.75;
+            (sideBeam as any).maxLife = 0.75;
             globals.projectiles.push(sideBeam);
           });
         }
 
-        globals.player.vx -= Math.cos(beamAngle) * 160;
-        globals.player.vy -= Math.sin(beamAngle) * 160;
-        for (let i = 0; i < 10; i++) {
-          globals.particles.push(Particle.acquire(muzzleX, muzzleY, Math.random() > 0.5 ? '#38bdf8' : '#ffffff', 200 + Math.random() * 200, 0.25, 2.5, beamAngle + (Math.random() - 0.5) * 0.8));
+        for (let i = 0; i < 12; i++) {
+          globals.particles.push(Particle.acquire(muzzleX, muzzleY, Math.random() > 0.5 ? '#38bdf8' : '#ffffff', 220 + Math.random() * 200, 0.25, 2.5, beamAngle + (Math.random() - 0.5) * 0.8));
         }
+
+        globals.combo = (globals.combo || 0) + 1;
+        globals.comboTimer = 3.0;
+        globals.flow = Math.min(globals.playerStats.flowMax, globals.flow + 5);
+        callbacks.updateComboDisplay?.();
+
+        // RETURN EARLY: Zero slash effects or melee hitboxes in ranged mode
+        return;
       } else {
         globals.slashes.push(Slash.acquire(
           globals.player.x + Math.cos(angle)*50, 
@@ -6155,10 +6216,14 @@ function update(realDt: number) {
         const dx = e.x - proj.x;
         const dy = e.y - proj.y;
         let isHit = false;
-        if (proj.enhancedType === 'astral_beam') {
+        if (proj.enhancedType === 'astral_beam' || proj.enhancedType === 'astral_heavy_bullet') {
+          const isHeavy = proj.enhancedType === 'astral_heavy_bullet';
           const forwardDist = dx * Math.cos(proj.angle) + dy * Math.sin(proj.angle);
           const lateralDist = Math.abs(-dx * Math.sin(proj.angle) + dy * Math.cos(proj.angle));
-          isHit = (forwardDist >= -25 && forwardDist <= 90 + enemyHitRadius && lateralDist <= 38 + enemyHitRadius);
+          const maxForward = (isHeavy ? 240 : 120) + enemyHitRadius;
+          const maxLateral = (isHeavy ? 110 : 55) + enemyHitRadius;
+          const minForward = isHeavy ? -40 : -25;
+          isHit = (forwardDist >= minForward && forwardDist <= maxForward && lateralDist <= maxLateral);
         } else if (proj.isDeflected) {
           isHit = (dx * dx + dy * dy < (60 + enemyHitRadius) * (60 + enemyHitRadius));
         } else if (proj.isHuge) {
@@ -6206,29 +6271,34 @@ function update(realDt: number) {
               const dy = e.y - proj.y;
               const pushAngle = Math.atan2(dy, dx);
               
-              if (proj.enhancedType === 'astral_beam') {
-                e.knockbackTimer = 0.35;
-                e.knockbackVx = Math.cos(proj.angle) * 1600;
-                e.knockbackVy = Math.sin(proj.angle) * 1600;
+              if (proj.enhancedType === 'astral_beam' || proj.enhancedType === 'astral_heavy_bullet') {
+                const isHeavy = proj.enhancedType === 'astral_heavy_bullet';
+                e.knockbackTimer = isHeavy ? 0.55 : 0.35;
+                e.knockbackVx = Math.cos(proj.angle) * (isHeavy ? 2200 : 1600);
+                e.knockbackVy = Math.sin(proj.angle) * (isHeavy ? 2200 : 1600);
                 e.vx = e.knockbackVx; e.vy = e.knockbackVy;
+
+                if (isHeavy && typeof (e as any).addPostureDamage === 'function') {
+                  (e as any).addPostureDamage(50);
+                }
 
                 const brands = (e as any).starBrand || 0;
                 if (brands > 0) {
                   (e as any).starBrand = 0;
                   (e as any).starBrandTimer = 0;
                   const slashDmg = getCurrentSlashDamage();
-                  const detonateDmg = Math.round((35 + slashDmg * 2.8) * (1 + (brands - 1) * 0.5));
-                  globals.screenShake = Math.max(globals.screenShake, 16);
+                  const detonateDmg = Math.round((70 + slashDmg * 5.6) * (1 + (brands - 1) * 0.5));
+                  globals.screenShake = Math.max(globals.screenShake, isHeavy ? 24 : 18);
                   globals.shockwaves.push(new Shockwave(e.x, e.y, '#38bdf8'));
-                  globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `💥 ASTRAL DETONATE -${detonateDmg}!`, '#38bdf8', 24));
+                  globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `💥 ASTRAL DETONATE -${detonateDmg}!`, '#38bdf8', 26));
                   globals.enemies.forEach(other => {
                     if (other !== e && other.state !== 'dead') {
-                      if (Math.hypot(other.x - e.x, other.y - e.y) < 200) {
+                      if (Math.hypot(other.x - e.x, other.y - e.y) < 220) {
                         hitEnemy(other, detonateDmg);
                       }
                     }
                   });
-                  for (let k = 0; k < 16; k++) {
+                  for (let k = 0; k < 18; k++) {
                     const pAng = Math.random() * Math.PI * 2;
                     globals.particles.push(Particle.acquire(e.x, e.y, Math.random() > 0.5 ? '#38bdf8' : '#ffffff', 260 + Math.random() * 260, 0.45, 3.5, pAng));
                   }

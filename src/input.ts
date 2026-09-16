@@ -31,6 +31,12 @@ export function initInput() {
       }
     }
     
+    if (e.code === 'KeyR' || e.code === 'KeyX') {
+      if (globals.selectedHero === 'aetherion') {
+        callbacks.toggleAetherionStance?.();
+      }
+    }
+    
     globals.keys[e.code] = true;
   });
   window.addEventListener('keyup', e => globals.keys[e.code] = false);
@@ -54,6 +60,17 @@ export function initInput() {
   const btnAttack = document.getElementById('btn-attack')!;
   const btnDash = document.getElementById('btn-dash')!;
   const btnEnhance = document.getElementById('btn-enhance')!;
+  const btnStanceSwitch = document.getElementById('btn-stance-switch');
+
+  if (btnStanceSwitch) {
+    const handleStanceToggle = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      callbacks.toggleAetherionStance?.();
+    };
+    btnStanceSwitch.addEventListener('touchstart', handleStanceToggle, { passive: false });
+    btnStanceSwitch.addEventListener('click', handleStanceToggle);
+  }
 
   let joystickActive = false;
   let joystickOriginX = 0;

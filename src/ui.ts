@@ -1453,6 +1453,56 @@ export function updateEnhanceButton() {
       `;
     }
   }
+  updateStanceSwitchButton();
+}
+
+export function updateStanceSwitchButton() {
+  const btn = document.getElementById('btn-stance-switch');
+  if (!btn) return;
+  if (globals.selectedHero !== 'aetherion') {
+    btn.style.display = 'none';
+    return;
+  }
+  btn.style.display = 'flex';
+  const textSpan = document.getElementById('stance-switch-text');
+  const iconSvg = btn.querySelector('.skill-icon');
+  if (globals.aetherionStance === 'ranged') {
+    btn.classList.add('mode-ranged');
+    if (textSpan) textSpan.textContent = 'RANGED';
+    if (iconSvg) {
+      iconSvg.innerHTML = `
+        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
+        <line x1="12" y1="3" x2="12" y2="7" stroke="currentColor" stroke-width="2"/>
+        <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/>
+        <line x1="3" y1="12" x2="7" y2="12" stroke="currentColor" stroke-width="2"/>
+        <line x1="17" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"/>
+        <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
+      `;
+    }
+  } else {
+    btn.classList.remove('mode-ranged');
+    if (textSpan) textSpan.textContent = 'SLASH';
+    if (iconSvg) {
+      iconSvg.innerHTML = `
+        <path d="M14.5 17.5L3 6V3h3l11.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M13 19l6 2 2-6-4.5-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M16 16l4 4" stroke="currentColor" stroke-width="1.8"/>
+      `;
+    }
+  }
+}
+
+export function toggleAetherionStance() {
+  if (globals.selectedHero !== 'aetherion') return;
+  globals.aetherionStance = globals.aetherionStance === 'melee' ? 'ranged' : 'melee';
+  updateStanceSwitchButton();
+  if (globals.player) {
+    if (globals.aetherionStance === 'ranged') {
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 45, '🏹 RANGED STANCE', '#38bdf8', 22));
+    } else {
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 45, '⚔️ SLASH STANCE', '#e0f2fe', 22));
+    }
+  }
 }
 
 export function updateComboDisplay() {
@@ -2516,6 +2566,7 @@ export function populateDojoHeroGrid() {
       safeStorage.setItem('stickmurai_selected_hero', heroId);
       loadHeroAssets(heroId);
       globals.player?.updateHeroType();
+      updateStanceSwitchButton();
       playSynthesizedTempleBell();
       populateDojoHeroGrid();
     });
@@ -2539,6 +2590,7 @@ export function populateDojoHeroGrid() {
       safeStorage.setItem('stickmurai_unlocked_heroes', JSON.stringify(globals.unlockedHeroes));
       safeStorage.setItem('stickmurai_selected_hero', heroId);
       globals.player?.updateHeroType();
+      updateStanceSwitchButton();
       playSynthesizedFusionUnlock();
       playShrineBlessing(0.85);
       refreshAllMagatamaDisplays();

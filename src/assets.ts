@@ -1345,6 +1345,7 @@ export const vfxAnims = {
     waterArrow: loadVfxFrames('vfx/projectiles/water_arrow/frame_{N}.png', 8, 1, 0, true),
     fireBall: loadVfxFrames('vfx/projectiles/fire_ball/frame_{N}.png', 8, 1, 0, true),
     waterBall: loadVfxFrames('vfx/projectiles/water_ball/frame_{N}.png', 12, 1, 0, true),
+    windBlade: loadVfxFrames('vfx/projectiles/wind_blade/frame_{N}.png', 48, 1, 2, true),
   },
   ranks: {
     d: loadVfxFrames('vfx/ui/rank_d/frame_{N}.png', 30, 0, 2, false),
