@@ -41,7 +41,11 @@ if (typeof window !== 'undefined') {
 }
 
 export const bgmAudio = new Audio();
-export const playlist = ['audio/Bushido_Storm_Intense_Battle_Mix.m4a'];
+export const playlist = [
+  'audio/dark_ambient_reimagining.m4a',
+  'audio/aggressive_cinematic_taiko.m4a',
+  'audio/shadows_of_noh.m4a'
+];
 
 export let currentBgmIndex = 0;
 export let bgmStarted = false;
@@ -49,7 +53,7 @@ export let bgmStarted = false;
 // BGM setup
 try {
   bgmAudio.preload = 'auto';
-  bgmAudio.loop = true;
+  bgmAudio.loop = false;
   bgmAudio.src = playlist[currentBgmIndex];
   if (isPortalMuted) {
     bgmAudio.muted = true;
@@ -743,6 +747,14 @@ bgmAudio.addEventListener('ended', () => {
   bgmAudio.play().catch(e => console.log('BGM play error:', e));
 });
 
+export function playNextTrack() {
+  currentBgmIndex = (currentBgmIndex + 1) % playlist.length;
+  bgmAudio.src = playlist[currentBgmIndex];
+  if (bgmStarted && !isPortalMuted) {
+    bgmAudio.play().catch(() => {});
+  }
+}
+
 export function playSynthesizedThunder() {
   if (isPortalMuted) return;
   try {
@@ -822,7 +834,7 @@ export function startBgm() {
   }
 
   try {
-    bgmAudio.loop = true;
+    bgmAudio.loop = playlist.length <= 1;
     if (!bgmAudio.src) {
       bgmAudio.src = playlist[currentBgmIndex];
     }

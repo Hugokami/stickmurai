@@ -511,7 +511,7 @@ with zipfile.ZipFile(src_zip, 'r') as zin, zipfile.ZipFile(target_zip, 'w', zipf
                 data = bytes(new_bin)
         
         # 3. Compress BGM audio (80k aac) to save ~2.1 MB
-        elif fn.endswith('Bushido_Storm_Intense_Battle_Mix.m4a'):
+        elif fn.endswith('.m4a'):
             tmp_in = os.path.join(os.path.dirname(target_zip), '_tmp_orig_bgm.m4a')
             tmp_out = os.path.join(os.path.dirname(target_zip), '_tmp_opt_bgm.m4a')
             try:
