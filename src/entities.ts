@@ -915,41 +915,38 @@ export class Projectile {
             const frameIndex = Math.min(frames.length - 1, Math.floor(progress * frames.length));
             const frame = frames[frameIndex];
             if (frame && frame.complete && frame.naturalWidth > 0) {
-              const scale = isHeavy ? 6.2 : 3.4;
+              const scale = isHeavy ? 10.5 : 4.2;
               const w = frame.naturalWidth * scale;
               const h = frame.naturalHeight * scale;
               ctx.drawImage(frame, -w / 2, -h / 2, w, h);
-              ctx.restore();
               return;
             }
           }
 
           // Fallback canvas starlight beam if sprite not loaded
-          ctx.save();
           ctx.beginPath();
           ctx.moveTo(-15, 0);
-          ctx.lineTo(isHeavy ? 180 : 100, 0);
+          ctx.lineTo(isHeavy ? 260 : 120, 0);
           ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
-          ctx.lineWidth = isHeavy ? 28 : 16;
+          ctx.lineWidth = isHeavy ? 36 : 18;
           ctx.lineCap = 'round';
           ctx.stroke();
 
           ctx.beginPath();
           ctx.moveTo(-10, 0);
-          ctx.lineTo(isHeavy ? 170 : 95, 0);
+          ctx.lineTo(isHeavy ? 250 : 115, 0);
           ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = isHeavy ? 12 : 7;
+          ctx.lineWidth = isHeavy ? 18 : 9;
           ctx.lineCap = 'round';
           ctx.stroke();
 
           ctx.beginPath();
           ctx.moveTo(-5, 0);
-          ctx.lineTo(isHeavy ? 160 : 90, 0);
+          ctx.lineTo(isHeavy ? 240 : 110, 0);
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = isHeavy ? 5 : 3;
+          ctx.lineWidth = isHeavy ? 8 : 4;
           ctx.lineCap = 'round';
           ctx.stroke();
-          ctx.restore();
           return;
         }
 

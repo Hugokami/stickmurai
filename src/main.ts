@@ -2058,7 +2058,7 @@ function fireFullyChargedIaijutsu(angle: number) {
 
   if (globals.selectedHero === 'aetherion') {
     const slashDmg = getCurrentSlashDamage();
-    const heavyBulletDmg = Math.round(6 * slashDmg);
+    const heavyBulletDmg = Math.round(9 * slashDmg);
     const heavyBullet = Projectile.acquire(
       globals.player.x + Math.cos(angle) * 50,
       globals.player.y + Math.sin(angle) * 50,
@@ -2270,7 +2270,7 @@ function triggerAetherionWarpHyperSnipe() {
   globals.player.dir = Math.cos(angle) >= 0 ? 1 : -1;
 
   const slashDmg = getCurrentSlashDamage();
-  const heavyBulletDmg = Math.round(6 * slashDmg);
+  const heavyBulletDmg = Math.round(9 * slashDmg);
   const muzzleX = globals.player.x + Math.cos(angle) * 50;
   const muzzleY = globals.player.y + Math.sin(angle) * 50;
 
@@ -2370,7 +2370,7 @@ function executeSwiftCounter() {
     playEnergyBeam(1.0);
 
     const slashDmg = getCurrentSlashDamage();
-    const volleyDmg = Math.round(80 + slashDmg * 5.6);
+    const volleyDmg = Math.round(130 + slashDmg * 8.0);
     const muzzleX = globals.player.x + Math.cos(aimAngle) * 45;
     const muzzleY = globals.player.y + Math.sin(aimAngle) * 45;
 
@@ -2501,7 +2501,7 @@ function executeThunderclapAndFlash() {
     playSynthesizedThunder();
 
     const slashDmg = getCurrentSlashDamage();
-    const beamDmg = Math.round(110 + slashDmg * 6.5);
+    const beamDmg = Math.round(160 + slashDmg * 9.5);
     const muzzleX = globals.player.x + Math.cos(aimAngle) * 50;
     const muzzleY = globals.player.y + Math.sin(aimAngle) * 50;
 
@@ -2602,7 +2602,7 @@ function executeRisingDragon() {
     }
 
     const slashDmg = getCurrentSlashDamage();
-    const burstDmg = Math.round(90 + slashDmg * 5.8);
+    const burstDmg = Math.round(140 + slashDmg * 8.5);
     const muzzleX = globals.player.x;
     const muzzleY = globals.player.y - 30;
 
@@ -2755,7 +2755,7 @@ function executeMirrorStrike(angle: number, baseDmg: number) {
     const leftY = globals.player.y - perpY;
     const leftAngle = angle + 0.12;
     const slashDmg = getCurrentSlashDamage();
-    const projDmg = Math.round(80 + slashDmg * 5.6);
+    const projDmg = Math.round(130 + slashDmg * 8.0);
     const leftBeam = Projectile.acquire(leftX, leftY, leftAngle, false, projDmg, false, false, 'astral_beam');
     leftBeam.vx = Math.cos(leftAngle) * 2200;
     leftBeam.vy = Math.sin(leftAngle) * 2200;
@@ -5682,7 +5682,7 @@ function update(realDt: number) {
 
       if (isAetherionRanged) {
         const slashDmg = getCurrentSlashDamage();
-        const beamDmg = Math.round(80 + slashDmg * 5.6);
+        const beamDmg = Math.round(130 + slashDmg * 8.0);
         const beamAngle = angle;
         const muzzleX = globals.player.x + Math.cos(beamAngle) * 45;
         const muzzleY = globals.player.y + Math.sin(beamAngle) * 45;
@@ -6451,6 +6451,53 @@ function update(realDt: number) {
         }
       }
     } else {
+      // Projectile Clashing / Reflection: Player projectiles deflect enemy bullets back
+      for (let ep = 0; ep < globals.projectiles.length; ep++) {
+        const enemyProj = globals.projectiles[ep];
+        if (!enemyProj.isEnemy || enemyProj.isDeflected || enemyProj.life <= 0) continue;
+        const cdx = enemyProj.x - proj.x;
+        const cdy = enemyProj.y - proj.y;
+        const isHeavyProj = proj.enhancedType === 'astral_heavy_bullet' || proj.isHuge;
+        const clashDist = (isHeavyProj ? 170 : 80) + 30;
+        if (cdx * cdx + cdy * cdy < clashDist * clashDist) {
+          enemyProj.isEnemy = false;
+          enemyProj.isDeflected = true;
+          enemyProj.life = 3.5;
+
+          let targetEnemy: Enemy | null = (enemyProj.shooter && enemyProj.shooter.state !== 'dead') ? enemyProj.shooter : null;
+          if (!targetEnemy) {
+            let minDistanceSq = Infinity;
+            for (const otherEnemy of globals.enemies) {
+              if (otherEnemy.state === 'dead') continue;
+              const edx = otherEnemy.x - enemyProj.x;
+              const edy = otherEnemy.y - enemyProj.y;
+              const edSq = edx * edx + edy * edy;
+              if (edSq < minDistanceSq) {
+                minDistanceSq = edSq;
+                targetEnemy = otherEnemy;
+              }
+            }
+          }
+
+          const refAngle = targetEnemy ? Math.atan2(targetEnemy.y - enemyProj.y, targetEnemy.x - enemyProj.x) : (enemyProj.angle + Math.PI);
+          const refSpeed = 2400;
+          enemyProj.vx = Math.cos(refAngle) * refSpeed;
+          enemyProj.vy = Math.sin(refAngle) * refSpeed;
+          enemyProj.angle = refAngle;
+          const slashDmg = getCurrentSlashDamage();
+          enemyProj.damage = Math.max(25, Math.round(30 + slashDmg * 2.5));
+
+          playSynthesizedParry();
+          globals.screenShake = Math.max(globals.screenShake, 16);
+          globals.shockwaves.push(new Shockwave(enemyProj.x, enemyProj.y, '#38bdf8'));
+          globals.floatingTexts.push(FloatingText.acquire(enemyProj.x, enemyProj.y - 45, "PROJECTILE REFLECT! 💥", "#38bdf8", 24));
+
+          for (let sp = 0; sp < 10; sp++) {
+            globals.particles.push(Particle.acquire(enemyProj.x, enemyProj.y, '#38bdf8', 350, 0.4, 2.5, refAngle + (Math.random() - 0.5) * 1.0));
+          }
+        }
+      }
+
       globals.enemies.forEach(e => {
         if (e.state === 'dead' || proj.hitEnemies.has(e)) return;
         const enemyHitRadius = (e.scaleMult - 1) * 60;
@@ -6461,9 +6508,9 @@ function update(realDt: number) {
           const isHeavy = proj.enhancedType === 'astral_heavy_bullet';
           const forwardDist = dx * Math.cos(proj.angle) + dy * Math.sin(proj.angle);
           const lateralDist = Math.abs(-dx * Math.sin(proj.angle) + dy * Math.cos(proj.angle));
-          const maxForward = (isHeavy ? 240 : 120) + enemyHitRadius;
-          const maxLateral = (isHeavy ? 110 : 55) + enemyHitRadius;
-          const minForward = isHeavy ? -40 : -25;
+          const maxForward = (isHeavy ? 380 : 140) + enemyHitRadius;
+          const maxLateral = (isHeavy ? 180 : 65) + enemyHitRadius;
+          const minForward = isHeavy ? -60 : -25;
           isHit = (forwardDist >= minForward && forwardDist <= maxForward && lateralDist <= maxLateral);
         } else if (proj.isDeflected) {
           isHit = (dx * dx + dy * dy < (60 + enemyHitRadius) * (60 + enemyHitRadius));
@@ -6528,10 +6575,10 @@ function update(realDt: number) {
                   (e as any).starBrand = 0;
                   (e as any).starBrandTimer = 0;
                   const slashDmg = getCurrentSlashDamage();
-                  const detonateDmg = Math.round((70 + slashDmg * 5.6) * (1 + (brands - 1) * 0.5));
-                  globals.screenShake = Math.max(globals.screenShake, isHeavy ? 24 : 18);
+                  const detonateDmg = Math.round((120 + slashDmg * 8.0) * (1 + (brands - 1) * 0.5));
+                  globals.screenShake = Math.max(globals.screenShake, isHeavy ? 28 : 20);
                   globals.shockwaves.push(new Shockwave(e.x, e.y, '#38bdf8'));
-                  globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `💥 ASTRAL DETONATE -${detonateDmg}!`, '#38bdf8', 26));
+                  globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `💥 ASTRAL DETONATE -${detonateDmg}!`, '#38bdf8', 28));
                   globals.enemies.forEach(other => {
                     if (other !== e && other.state !== 'dead') {
                       if (Math.hypot(other.x - e.x, other.y - e.y) < 220) {
