@@ -12,7 +12,7 @@ export const HERO_BALANCE:Record<string,HeroBalance> = {
   nightborne:{cost:50000,slash:.40,move:1.12,attack:.76,dash:1,area:1.40,crit:.18,iai:5,posture:0,skillCooldown:.94,passiveEn:'Soul Siphon: executions restore 1 heart and grant 35 Magatama.',passiveJa:'魂の吸収：処刑で体力1回復、勾玉35獲得。'},
   satyr:{cost:75000,slash:.50,move:1.18,attack:.80,dash:.95,area:1.30,crit:.21,iai:6,posture:8,skillCooldown:.92,passiveEn:'Earthshaker: executions deal 18 damage and 32 posture to up to 4 nearby foes; 5s cooldown.',passiveJa:'大地震：処刑で周囲最大4体に18ダメージ・体幹32。再使用5秒。'},
   akakage:{cost:120000,slash:.65,move:1.25,attack:.72,dash:.82,area:1.35,crit:.25,iai:4,posture:0,skillCooldown:.90,passiveEn:'Crimson Aftermath: one echo after each basic slash, dealing 45% slash damage (maximum 12).',passiveJa:'紅蓮残影：通常斬撃後に一度追撃。斬撃の45%ダメージ（上限12）。'},
-  aetherion:{cost:180000,slash:.80,move:1.28,attack:.65,dash:.78,area:1.45,crit:.25,iai:6,posture:16,skillCooldown:.90,passiveEn:'Celestial Duality: melee slashes apply Star Brand; ranged beam shots detonate marks in heavy cosmic AoE explosions.',passiveJa:'天星の双撃：近接斬撃で星の刻印を付与し、遠距離光線で刻印を起爆して大爆発を起こす。'}
+  aetherion:{cost:360000,slash:.80,move:1.28,attack:.65,dash:.78,area:1.45,crit:.25,iai:6,posture:16,skillCooldown:.90,passiveEn:'Celestial Duality: melee slashes apply Star Brand; ranged beam shots detonate marks in heavy cosmic AoE explosions.',passiveJa:'天星の双撃：近接斬撃で星の刻印を付与し、遠距離光線で刻印を起爆して大爆発を起こす。'}
 };
 export const heroBalance=(id:string):HeroBalance=>HERO_BALANCE[id]||HERO_BALANCE.default;
 
@@ -112,7 +112,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     nameJa: '星彩特異点',
     titleEn: 'Celestial Convergence',
     titleJa: '星辰の収束',
-    cost: 360000,
+    cost: 720000,
     icon: '🌌',
     descEn: 'Railgun fires 3-way piercing starbeam cone. Basic slashes unleash dual homing crescent blades. 100% crit chance on targets marked with Star Brand.',
     descJa: 'レールガンが3方向の貫通光線を放射。通常斬撃で追尾する二重の三日月刃を射出。星の刻印を持つ敵に確定会心。'

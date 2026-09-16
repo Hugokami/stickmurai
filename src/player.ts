@@ -267,6 +267,8 @@ export class Player extends Entity {
       if ((globals.keys[globals.keyMaps.dash] || globals.mobileDashJustPressed) && this.dashCooldown <= 0) {
         globals.mobileDashJustPressed = false;
         globals.mobileDashAimActive = false;
+        const wasCharging = this.state === 'charge';
+        const previousCharge = this.chargeTimer;
         this.setState('dash');
         playSound(sfx.dash, 0.015);
         this.chargeTimer = 0;
@@ -275,6 +277,10 @@ export class Player extends Entity {
         this.lastAfterimageX = this.x;
         this.lastAfterimageY = this.y;
         (this as any).rupturePhaseHit = false;
+
+        if (globals.selectedHero === 'aetherion' && globals.aetherionStance === 'ranged' && wasCharging && previousCharge >= 0.35) {
+          callbacks.triggerAetherionWarpHyperSnipe?.();
+        }
 
         // Spawn directional dash dust puff opposite to player motion vector
         const dustFrames = (vfxAnims as any).player?.dashDust;

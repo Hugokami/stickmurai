@@ -113,6 +113,7 @@ callbacks.updateUI = updateUI;
 callbacks.updateEnhanceButton = updateEnhanceButton;
 callbacks.updateStanceSwitchButton = updateStanceSwitchButton;
 callbacks.toggleAetherionStance = toggleAetherionStance;
+callbacks.triggerAetherionWarpHyperSnipe = triggerAetherionWarpHyperSnipe;
 callbacks.updateComboDisplay = updateComboDisplay;
 callbacks.triggerFlowingCounterReset = triggerFlowingCounterReset;
 callbacks.triggerElementalExplosion = triggerElementalExplosion;
@@ -2082,7 +2083,7 @@ function fireFullyChargedIaijutsu(angle: number) {
     globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 45, "🌪️ ASTRAL HEAVY BULLET! 🌪️", "#38bdf8", 30));
     globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
     globals.screenShake = Math.max(globals.screenShake, 30);
-    playSynthesizedThunder();
+    playEnergyBeam(1.0);
     
     for (let i = 0; i < 20; i++) {
       globals.particles.push(Particle.acquire(
@@ -2257,6 +2258,62 @@ function fireFullyChargedIaijutsu(angle: number) {
   }
 }
 
+function triggerAetherionWarpHyperSnipe() {
+  let angle = globals.player.dir === 1 ? 0 : Math.PI;
+  if (globals.useMobileIaijutsuAimAngle) {
+    angle = globals.mobileIaijutsuAimAngle;
+  } else if (globals.joystickActive) {
+    angle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+  } else {
+    angle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+  }
+  globals.player.dir = Math.cos(angle) >= 0 ? 1 : -1;
+
+  const slashDmg = getCurrentSlashDamage();
+  const heavyBulletDmg = Math.round(6 * slashDmg);
+  const muzzleX = globals.player.x + Math.cos(angle) * 50;
+  const muzzleY = globals.player.y + Math.sin(angle) * 50;
+
+  const heavyBullet = Projectile.acquire(
+    muzzleX,
+    muzzleY,
+    angle,
+    false,
+    heavyBulletDmg,
+    true,
+    false,
+    'astral_heavy_bullet'
+  );
+  heavyBullet.isHuge = true;
+  const bulletSpeed = 2100;
+  heavyBullet.vx = Math.cos(angle) * bulletSpeed;
+  heavyBullet.vy = Math.sin(angle) * bulletSpeed;
+  heavyBullet.life = 1.2;
+  (heavyBullet as any).maxLife = 1.2;
+  globals.projectiles.push(heavyBullet);
+
+  globals.player.setState('shoot');
+  globals.player.vx -= Math.cos(angle) * 400;
+  globals.player.vy -= Math.sin(angle) * 400;
+
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, "🌌 WARP HYPER-SNIPE! 🌌", "#38bdf8", 30));
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
+  globals.screenShake = Math.max(globals.screenShake, 30);
+  playEnergyBeam(1.0);
+
+  for (let i = 0; i < 22; i++) {
+    globals.particles.push(Particle.acquire(
+      muzzleX,
+      muzzleY,
+      Math.random() > 0.5 ? '#38bdf8' : '#ffffff',
+      320 + Math.random() * 220,
+      0.45,
+      3.5,
+      angle + (Math.random() - 0.5) * 1.2
+    ));
+  }
+}
+
 function executeSwiftCounter() {
   // Check for Perfect Dodge on Swift Counter execution
   let perfectDodgeTriggered = false;
@@ -2287,6 +2344,57 @@ function executeSwiftCounter() {
     globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
   } else {
     globals.invulnTimer = Math.max(globals.invulnTimer, 0.4);
+  }
+
+  if (globals.selectedHero === 'aetherion' && globals.aetherionStance === 'ranged') {
+    globals.player.setState('shoot');
+    globals.player.attackCooldown = globals.playerStats.attackCooldownBase;
+
+    let aimAngle = globals.player.dir === 1 ? 0 : Math.PI;
+    if (globals.useMobileIaijutsuAimAngle) {
+      aimAngle = globals.mobileIaijutsuAimAngle;
+    } else if (globals.joystickActive) {
+      aimAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+    } else {
+      aimAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+    }
+    globals.player.dir = Math.cos(aimAngle) >= 0 ? 1 : -1;
+
+    // Tactical backwards slide
+    const slideAngle = aimAngle + Math.PI;
+    globals.player.vx = Math.cos(slideAngle) * 450;
+    globals.player.vy = Math.sin(slideAngle) * 450;
+
+    globals.screenShake += 10;
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, "✨ ASTRAL DRIFT VOLLEY! ✨", "#38bdf8", 24));
+    playEnergyBeam(1.0);
+
+    const slashDmg = getCurrentSlashDamage();
+    const volleyDmg = Math.round(80 + slashDmg * 5.6);
+    const muzzleX = globals.player.x + Math.cos(aimAngle) * 45;
+    const muzzleY = globals.player.y + Math.sin(aimAngle) * 45;
+
+    [-0.20, 0, 0.20].forEach(offAngle => {
+      const bAng = aimAngle + offAngle;
+      const b = Projectile.acquire(muzzleX, muzzleY, bAng, false, volleyDmg, false, false, 'astral_beam');
+      b.vx = Math.cos(bAng) * 2300;
+      b.vy = Math.sin(bAng) * 2300;
+      b.life = 0.75;
+      (b as any).maxLife = 0.75;
+      globals.projectiles.push(b);
+    });
+
+    for (let i = 0; i < 14; i++) {
+      globals.particles.push(Particle.acquire(
+        muzzleX, muzzleY,
+        Math.random() > 0.5 ? '#38bdf8' : '#ffffff',
+        240 + Math.random() * 180,
+        0.35,
+        2.8,
+        aimAngle + (Math.random() - 0.5) * 0.8
+      ));
+    }
+    return;
   }
 
   globals.player.setState('attack');
@@ -2369,6 +2477,57 @@ function executeThunderclapAndFlash() {
     globals.invulnTimer = Math.max(globals.invulnTimer, 0.4);
   }
 
+  if (globals.selectedHero === 'aetherion' && globals.aetherionStance === 'ranged') {
+    globals.player.setState('shoot');
+    globals.player.attackCooldown = globals.playerStats.attackCooldownBase;
+    globals.raijinDashActive = false; // consume
+
+    let aimAngle = globals.player.dir === 1 ? 0 : Math.PI;
+    if (globals.useMobileIaijutsuAimAngle) {
+      aimAngle = globals.mobileIaijutsuAimAngle;
+    } else if (globals.joystickActive) {
+      aimAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+    } else {
+      aimAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+    }
+    globals.player.dir = Math.cos(aimAngle) >= 0 ? 1 : -1;
+
+    globals.player.vx = -Math.cos(aimAngle) * 350;
+    globals.player.vy = -Math.sin(aimAngle) * 350;
+
+    globals.screenShake += 16;
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "⚡ ASTRAL THUNDER-BEAM! ⚡", "#38bdf8", 26));
+    playEnergyBeam(1.0);
+    playSynthesizedThunder();
+
+    const slashDmg = getCurrentSlashDamage();
+    const beamDmg = Math.round(110 + slashDmg * 6.5);
+    const muzzleX = globals.player.x + Math.cos(aimAngle) * 50;
+    const muzzleY = globals.player.y + Math.sin(aimAngle) * 50;
+
+    const heavyBeam = Projectile.acquire(muzzleX, muzzleY, aimAngle, false, beamDmg, true, false, 'astral_heavy_bullet');
+    heavyBeam.isHuge = true;
+    heavyBeam.vx = Math.cos(aimAngle) * 2200;
+    heavyBeam.vy = Math.sin(aimAngle) * 2200;
+    heavyBeam.life = 1.0;
+    (heavyBeam as any).maxLife = 1.0;
+    globals.projectiles.push(heavyBeam);
+
+    globals.lightningBeams.push(new LightningBeam(muzzleX + Math.cos(aimAngle) * 200, muzzleY + Math.sin(aimAngle) * 200));
+
+    for (let i = 0; i < 20; i++) {
+      globals.particles.push(Particle.acquire(
+        muzzleX, muzzleY,
+        Math.random() > 0.5 ? '#38bdf8' : '#fbbf24',
+        300 + Math.random() * 200,
+        0.4,
+        3.2,
+        aimAngle + (Math.random() - 0.5) * 1.0
+      ));
+    }
+    return;
+  }
+
   globals.player.setState('attack');
   globals.player.attackCooldown = globals.playerStats.attackCooldownBase;
 
@@ -2424,6 +2583,43 @@ function executeThunderclapAndFlash() {
 }
 
 function executeRisingDragon() {
+  if (globals.selectedHero === 'aetherion' && globals.aetherionStance === 'ranged') {
+    globals.player.setState('shoot');
+    globals.player.attackCooldown = globals.playerStats.attackCooldownBase * 1.2;
+
+    playEnergyBeam(1.0);
+    globals.player.yVelocity = -750;
+    globals.screenShake += 10;
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "✨ SKYWARD ASTRAL BURST! ✨", "#38bdf8", 24));
+
+    let aimAngle = globals.player.dir === 1 ? -Math.PI / 4 : -Math.PI * 3 / 4;
+    if (globals.useMobileIaijutsuAimAngle) {
+      aimAngle = globals.mobileIaijutsuAimAngle;
+    } else if (globals.joystickActive) {
+      aimAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+    } else {
+      aimAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+    }
+
+    const slashDmg = getCurrentSlashDamage();
+    const burstDmg = Math.round(90 + slashDmg * 5.8);
+    const muzzleX = globals.player.x;
+    const muzzleY = globals.player.y - 30;
+
+    [-0.25, 0, 0.25].forEach(offAngle => {
+      const bAng = aimAngle + offAngle;
+      const b = Projectile.acquire(muzzleX, muzzleY, bAng, false, burstDmg, false, false, 'astral_beam');
+      b.vx = Math.cos(bAng) * 2200;
+      b.vy = Math.sin(bAng) * 2200;
+      b.life = 0.75;
+      (b as any).maxLife = 0.75;
+      globals.projectiles.push(b);
+    });
+
+    globals.shockwaves.push(new Shockwave(muzzleX, muzzleY, '#38bdf8'));
+    return;
+  }
+
   globals.player.setState('attack');
   globals.player.attackCooldown = globals.playerStats.attackCooldownBase * 1.2;
 
@@ -2546,6 +2742,38 @@ function executeSpectralSoulCleave(angle: number) {
 function executeMirrorStrike(angle: number, baseDmg: number) {
   globals.decoyInvisibilityTimer = 0; // break invisibility
   globals.screenShake += 15;
+
+  if (globals.selectedHero === 'aetherion' && globals.aetherionStance === 'ranged') {
+    playEnergyBeam(1.0);
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "👤 ASTRAL MIRROR SHOT! 👤", "#38bdf8", 28));
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8', 200));
+
+    const perpX = -Math.sin(angle) * 50;
+    const perpY = Math.cos(angle) * 50;
+
+    const leftX = globals.player.x - perpX;
+    const leftY = globals.player.y - perpY;
+    const leftAngle = angle + 0.12;
+    const slashDmg = getCurrentSlashDamage();
+    const projDmg = Math.round(80 + slashDmg * 5.6);
+    const leftBeam = Projectile.acquire(leftX, leftY, leftAngle, false, projDmg, false, false, 'astral_beam');
+    leftBeam.vx = Math.cos(leftAngle) * 2200;
+    leftBeam.vy = Math.sin(leftAngle) * 2200;
+    leftBeam.life = 0.75;
+    (leftBeam as any).maxLife = 0.75;
+    globals.projectiles.push(leftBeam);
+
+    const rightX = globals.player.x + perpX;
+    const rightY = globals.player.y + perpY;
+    const rightAngle = angle - 0.12;
+    const rightBeam = Projectile.acquire(rightX, rightY, rightAngle, false, projDmg, false, false, 'astral_beam');
+    rightBeam.vx = Math.cos(rightAngle) * 2200;
+    rightBeam.vy = Math.sin(rightAngle) * 2200;
+    rightBeam.life = 0.75;
+    (rightBeam as any).maxLife = 0.75;
+    globals.projectiles.push(rightBeam);
+    return;
+  }
 
   playSynthesizedPerfectParry();
   
@@ -5063,7 +5291,17 @@ function update(realDt: number) {
             globals.riposteTimer = 0.4;
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "RIPOSTE READY!", "#ff0055", 22));
             if (isFullyCharged) {
-              fireFullyChargedIaijutsu(Math.atan2(dy, dx));
+              let iaiAngle = Math.atan2(dy, dx);
+              if (globals.selectedHero === 'aetherion') {
+                if (globals.useMobileIaijutsuAimAngle) {
+                  iaiAngle = globals.mobileIaijutsuAimAngle;
+                } else if (globals.joystickActive) {
+                  iaiAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+                } else {
+                  iaiAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+                }
+              }
+              fireFullyChargedIaijutsu(iaiAngle);
             }
           }
 
@@ -5280,8 +5518,8 @@ function update(realDt: number) {
         globals.player.setState('attack');
       }
       // Dynamic pitch crescendo on slash; silenced during Akakage Blood Asura awakening per user request
-      if (isAetherionRanged) {
-        playEnergyBeam(0.8);
+      if (isAetherionRanged || (globals.selectedHero === 'aetherion' && attackPower >= 1.7)) {
+        playEnergyBeam(attackPower >= 1.7 ? 1.0 : 0.8);
       } else if (globals.selectedHero === 'akakage' && globals.flowState === 'awakened') {
         // Suppress noisy rapid slash SFX during Akakage Blood Asura awakening
       } else {
@@ -5308,7 +5546,7 @@ function update(realDt: number) {
       globals.player.attackCooldown = currentAtkCooldown;
 
       let angle = globals.player.dir === 1 ? 0 : Math.PI;
-      if (isAetherionRanged) {
+      if (isAetherionRanged || globals.selectedHero === 'aetherion') {
         if (globals.useMobileIaijutsuAimAngle) {
           angle = globals.mobileIaijutsuAimAngle;
         } else if (globals.joystickActive) {
@@ -5437,6 +5675,9 @@ function update(realDt: number) {
       
       if (attackPower >= 1.7) {
         fireFullyChargedIaijutsu(angle);
+        if (globals.selectedHero === 'aetherion') {
+          return;
+        }
       }
 
       if (isAetherionRanged) {

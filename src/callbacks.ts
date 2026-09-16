@@ -21,6 +21,7 @@ export const callbacks = {
   updateEnhanceButton: () => {},
   updateStanceSwitchButton: () => {},
   toggleAetherionStance: () => {},
+  triggerAetherionWarpHyperSnipe: () => {},
   updateComboDisplay: () => {},
   triggerFlowingCounterReset: () => {},
   triggerElementalExplosion: (_x: number, _y: number, _wasChilled: boolean, _wasBurning: boolean) => {},
