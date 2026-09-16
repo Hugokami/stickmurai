@@ -642,12 +642,12 @@ export function assetReadiness() {
     else if (failedAssets.has(item.img)) failed++;
   }
   const isAllResolved = requiredAssets.length > 0 && (loaded + failed === requiredAssets.length);
-  const isSufficient = loaded >= Math.floor(requiredAssets.length * 0.90);
+  const isSufficient = loaded >= Math.floor(requiredAssets.length * 0.99);
   return {
     loaded,
     failed,
     total: requiredAssets.length,
-    ready: requiredAssets.length === 0 || loaded === requiredAssets.length || (isAllResolved && isSufficient) || loaded >= 50
+    ready: requiredAssets.length > 0 && (loaded === requiredAssets.length || (isAllResolved && isSufficient))
   };
 }
 
@@ -662,7 +662,7 @@ export function retryRequiredAssets() {
   pumpPriorityQueue();
 }
 
-const MAX_CONCURRENT_PRIORITY = 20;
+const MAX_CONCURRENT_PRIORITY = 36;
 const MAX_CONCURRENT_BACKGROUND = 16;
 let isBackgroundLoadingActive = false;
 
@@ -786,15 +786,20 @@ export function ensurePackedAssets(): Promise<boolean> {
 // Immediately trigger bundled assets load
 ensurePackedAssets();
 
-function queueAsset(img: HTMLImageElement, src: string, folder?: string, isPriority = false) {
-  if (isPriority) {
-    globals.totalAssetsToLoad++;
-    const item = { img, src, folder, isPriority: true };
-    requiredAssets.push(item);
-    priorityQueue.push(item);
-  } else {
-    backgroundQueue.push({ img, src, folder, isPriority: false });
-  }
+function queueAsset(img: HTMLImageElement, src: string, folder?: string, _isPriority = true) {
+  globals.totalAssetsToLoad++;
+  const item: QueuedAsset = { img, src, folder, isPriority: true };
+  requiredAssets.push(item);
+  priorityQueue.push(item);
+}
+
+// Preload stickmurai sprites for loading screen animation
+export const loaderStickmanSprites: HTMLImageElement[] = [];
+for (let i = 1; i <= 8; i++) {
+  const img = new Image();
+  const src = encodeURI(`sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_000${i}.png`);
+  queueAsset(img, src, 'loader_stickman', true);
+  loaderStickmanSprites.push(img);
 }
 
 function startLoadingItem(item: QueuedAsset) {
@@ -1213,7 +1218,7 @@ bgLayers.forEach(layer => {
       img.src = `./fantasy_bg/${encodeURIComponent((layer as any).fallbackName + '.png')}`;
     }
   };
-  img.src = baseSrc;
+  queueAsset(img, baseSrc, 'fantasy_bg', true);
   bgImages[layer.name] = img;
   if ((layer as any).fallbackName) {
     bgImages[(layer as any).fallbackName] = img;

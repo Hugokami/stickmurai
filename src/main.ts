@@ -260,13 +260,24 @@ function finishLoading() {
 function startLoaderStickmanAnimation() {
   const img = document.getElementById('loader-stickman-img') as HTMLImageElement;
   if (!img) return;
+
+  const preloaded = (window as any).__loaderStickmuraiSprites as HTMLImageElement[] | undefined;
+  if (preloaded && preloaded[0] && preloaded[0].src) {
+    img.src = preloaded[0].src;
+  }
+
   loaderStickmanInterval = setInterval(() => {
     const currentImg = document.getElementById('loader-stickman-img') as HTMLImageElement;
     if (currentImg) {
       loaderStickmanFrame = (loaderStickmanFrame % 8) + 1;
-      currentImg.src = resolveAssetUrl(encodeURI(`sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_000${loaderStickmanFrame}.png`));
+      const idx = loaderStickmanFrame - 1;
+      if (preloaded && preloaded[idx] && preloaded[idx].complete && preloaded[idx].naturalWidth > 0) {
+        currentImg.src = preloaded[idx].src;
+      } else {
+        currentImg.src = resolveAssetUrl(encodeURI(`sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_000${loaderStickmanFrame}.png`));
+      }
     }
-  }, 120);
+  }, 110);
 }
 
 let currentTipIndex = 0;
@@ -310,7 +321,9 @@ function updateLoaderProgress() {
   }
 
   if (statusText) {
-    statusText.textContent = readiness.ready ? 'Heroes & combat effects ready · Audio loads separately' : `Heroes & combat effects: ${readiness.loaded}/${readiness.total}${readiness.failed ? ` · ${readiness.failed} downloads need retry` : ''}`;
+    statusText.textContent = readiness.ready
+      ? 'All assets fully loaded · Ready'
+      : `Loading all assets: ${readiness.loaded}/${readiness.total}${readiness.failed ? ` · ${readiness.failed} retrying` : ''}`;
   }
   
   if (readiness.ready && !loadingFinished) {

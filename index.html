@@ -23,7 +23,23 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Super Samurai Sticky</title>
+    <!-- Preload Stickmurai loading screen stickman frames -->
+    <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0001.png" />
+    <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0002.png" />
+    <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0003.png" />
+    <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0004.png" />
+    <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0005.png" />
+    <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0006.png" />
+    <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0007.png" />
+    <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0008.png" />
     <script>
+      // Eagerly preload Stickmurai loading screen stickman frames into memory
+      window.__loaderStickmuraiSprites = [];
+      for (var s = 1; s <= 8; s++) {
+        var sImg = new Image();
+        sImg.src = 'sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_000' + s + '.png';
+        window.__loaderStickmuraiSprites.push(sImg);
+      }
       /* Fail-Safe Mobile Startup Watchdog: Guarantees user is NEVER stuck on loading screen */
       (function() {
         var failsafeTriggered = false;
