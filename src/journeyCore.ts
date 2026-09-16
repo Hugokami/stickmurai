@@ -1,4 +1,4 @@
-export const HERO_IDS = ['default','luneblade','ninja','samurai','nightborne','satyr','akakage'] as const;
+export const HERO_IDS = ['default','luneblade','ninja','samurai','nightborne','satyr','akakage','aetherion'] as const;
 export const SKILL_IDS = ['enhance','shield','dash','firewheel','gravity','parry_master','decoy_illusion'] as const;
 export type Contract = 'untouched' | 'swift' | 'sword';
 export interface HeroRecord { clears:number; kills:number; bosses:number; parries:number; dodges:number; combo:number; flawless:number }
@@ -36,7 +36,7 @@ export function contractPassed(contract:Contract,result:ClearResult):boolean {
   return result.skillUses===0;
 }
 export function signatureProgress(hero:string,record:HeroRecord):{label:string;value:number;target:number} {
-  const goals:Record<string,[string,keyof HeroRecord,number]>={default:['Parries','parries',25],ninja:['Perfect dodges','dodges',25],luneblade:['Best combo','combo',50],samurai:['Stage clears','clears',10],nightborne:['Boss kills','bosses',5],satyr:['No-hit clears','flawless',3],akakage:['Kills in cleared stages','kills',500]};
+  const goals:Record<string,[string,keyof HeroRecord,number]>={default:['Parries','parries',25],ninja:['Perfect dodges','dodges',25],luneblade:['Best combo','combo',50],samurai:['Stage clears','clears',10],nightborne:['Boss kills','bosses',5],satyr:['No-hit clears','flawless',3],akakage:['Kills in cleared stages','kills',500],aetherion:['Boss kills','bosses',8]};
   const [label,key,target]=goals[hero]||goals.default;return {label,value:record[key],target};
 }
 export function masteryRank(hero:string,record:HeroRecord):number {

@@ -924,6 +924,8 @@ export const enemyFolderMap: Record<string, string> = {
   herosatyr: 'HeroSatyr',
   heroakakage: 'HeroAkakage',
   akakage: 'HeroAkakage',
+  heroaetherion: 'HeroAetherion',
+  aetherion: 'HeroAetherion',
   toaster_bot: 'EnemyToasterBot',
   wraith01: 'Wraith01',
   wraith02: 'Wraith02',
@@ -1156,6 +1158,15 @@ export const anims = {
     dash: loadCustomEnemyAnim('HeroAkakage', 'dash', 2, true),
     dead: loadCustomEnemyAnim('HeroAkakage', 'dead', 6, true),
   },
+  heroaetherion: {
+    idle: loadCustomEnemyAnim('HeroAetherion', 'idle', 16, true),
+    walk: loadCustomEnemyAnim('HeroAetherion', 'walk', 10, true),
+    attack: loadCustomEnemyAnim('HeroAetherion', 'attack', 12, true),
+    hit: loadCustomEnemyAnim('HeroAetherion', 'hit', 6, true),
+    dash: loadCustomEnemyAnim('HeroAetherion', 'dash', 6, true),
+    dead: loadCustomEnemyAnim('HeroAetherion', 'dead', 6, true),
+    shoot: loadCustomEnemyAnim('HeroAetherion', 'shoot', 12, true),
+  },
   toaster_bot: {
     idle: loadCustomEnemyAnim('EnemyToasterBot', 'idle', 10, false),
     walk: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 16, false),
@@ -1226,7 +1237,8 @@ export const heroPortraits: HTMLImageElement[] = [];
   'portrait_samurai.png',
   'portrait_nightborne.png',
   'portrait_satyr.png',
-  'portrait_akakage.png'
+  'portrait_akakage.png',
+  'portrait_aetherion.png'
 ].forEach(p => {
   const img = new Image();
   queueAsset(img, `sprites/portraits/${p}`, 'portraits', true);
@@ -1289,6 +1301,8 @@ export const vfxAnims = {
     nightborne: loadVfxFrames('vfx/slashes/slash_nightborne/frame_{N}.png', 9, 1, 2, true),
     satyr: loadVfxFrames('vfx/slashes/slash_satyr/frame_{N}.png', 9, 1, 2, true),
     akakage: loadVfxFrames('vfx/slashes/slash_akakage/frame_{N}.png', 15, 1, 2, true),
+    aetherion: loadVfxFrames('vfx/slashes/slash_aetherion/frame_{N}.png', 20, 1, 2, true),
+    aetherionDouble: loadVfxFrames('vfx/slashes/slash_aetherion_double/frame_{N}.png', 18, 1, 2, true),
     dragon: loadVfxFrames('vfx/slashes/slash_dragon/frame_{N}.png', 9, 1, 2, true),
   },
   impacts: {

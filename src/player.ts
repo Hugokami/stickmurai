@@ -58,6 +58,8 @@ export class Player extends Entity {
       this.type = 'herosatyr';
     } else if (globals.selectedHero === 'akakage') {
       this.type = 'heroakakage';
+    } else if (globals.selectedHero === 'aetherion') {
+      this.type = 'heroaetherion';
     } else {
       this.type = 'sword';
     }
@@ -663,7 +665,7 @@ export class Player extends Entity {
     
     let currentAtkCooldown = globals.playerStats.attackCooldownBase;
     if ((globals.flowState as string) === 'awakened') currentAtkCooldown *= 0.5;
-    if (this.state === 'attack' && this.stateTime > currentAtkCooldown) { this.setState('idle'); }
+    if ((this.state === 'attack' || this.state === 'shoot') && this.stateTime > currentAtkCooldown) { this.setState('idle'); }
 
     if ((globals.gameMode as string) === 'pvp' && pvpManager.subMode === 'insane_survival' && !this.isPvpRemote) {
       pvpManager.sendState({
@@ -1261,7 +1263,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // Physical ground contact shadow (anchored at world ground baseline)
-    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : 62)))));
+    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : (this.type === 'heroaetherion' ? 68 : 62))))));
     const groundShadowRx = (this.x - cx + globals.vw / 2) | 0;
     const groundShadowRy = ((this.y - cy + globals.vh / 2) + playerFootOffsetY) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));

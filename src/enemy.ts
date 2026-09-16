@@ -611,6 +611,13 @@ export class Enemy extends Entity {
       this.posture = Math.max(0, this.posture - 8 * effectiveDt);
     }
 
+    if ((this as any).starBrandTimer > 0) {
+      (this as any).starBrandTimer -= effectiveDt;
+      if ((this as any).starBrandTimer <= 0) {
+        (this as any).starBrand = 0;
+      }
+    }
+
     if (isStunned) {
       this.stunTimer -= effectiveDt;
       this.vx = 0;
@@ -1542,6 +1549,17 @@ export class Enemy extends Entity {
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;
       ctx.strokeRect(barX, barY, barW, barH);
+    }
+
+    if (this.state !== 'dead' && (this as any).starBrand > 0) {
+      const stacks = (this as any).starBrand;
+      const brandY = (effectiveRy - headOffset * this.scaleMult - 14) | 0;
+      ctx.save();
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '900 11px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('★'.repeat(stacks), rx, brandY);
+      ctx.restore();
     }
 
     // Posture bar directly under HP bar (for bosses, elites, or when posture > 0)

@@ -2791,7 +2791,10 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   const heroCritChance = globals.playerStats?.heroCritChance || 0;
   const powerupCritChance = Math.min(0.4, globals.playerStats?.critChanceBonus || 0);
   const critChance = Math.min(1.0, heroCritChance + powerupCritChance);
-  const isCrit = Math.random() < critChance;
+  let isCrit = Math.random() < critChance;
+  if (globals.selectedHero === 'aetherion' && ((e as any).starBrand > 0) && (globals.hasHeroAwakening('aetherion') || globals.flowState === 'awakened')) {
+    isCrit = true; // 100% crit chance on targets marked with Star Brand during awakening
+  }
   globals.guaranteedCrit = false;
   
   let finalDmg = dmg;
@@ -5224,7 +5227,24 @@ function update(realDt: number) {
         globals.comboSlashesCount = 0;
       }
 
-      globals.player.setState('attack');
+      let isAetherionRanged = false;
+      if (globals.selectedHero === 'aetherion' && attackPower < 1.7) {
+        let nearestDist = Infinity;
+        for (const en of globals.enemies) {
+          if (en.state === 'dead') continue;
+          const d = Math.hypot(en.x - globals.player.x, en.y - globals.player.y);
+          if (d < nearestDist) nearestDist = d;
+        }
+        if (nearestDist > 200) {
+          isAetherionRanged = true;
+        }
+      }
+
+      if (isAetherionRanged) {
+        globals.player.setState('shoot');
+      } else {
+        globals.player.setState('attack');
+      }
       // Dynamic pitch crescendo on slash; silenced during Akakage Blood Asura awakening per user request
       if (globals.selectedHero === 'akakage' && globals.flowState === 'awakened') {
         // Suppress noisy rapid slash SFX during Akakage Blood Asura awakening
@@ -5365,16 +5385,61 @@ function update(realDt: number) {
         fireFullyChargedIaijutsu(angle);
       }
 
-      globals.slashes.push(Slash.acquire(
-        globals.player.x + Math.cos(angle)*50, 
-        globals.player.y + Math.sin(angle)*50, 
-        angle, 
-        size, 
-        isEnhanced, 
-        isRiposteStrike ? 'rgba(255, 0, 85, ALPHA)' : undefined, 
-        isRiposteStrike,
-        globals.player
-      ));
+      if (isAetherionRanged) {
+        const slashDmg = getCurrentSlashDamage();
+        const beamDmg = Math.round(40 + slashDmg * 2.8);
+        const beamAngle = angle;
+        const muzzleX = globals.player.x + Math.cos(beamAngle) * 35;
+        const muzzleY = globals.player.y + Math.sin(beamAngle) * 35;
+
+        const beam = Projectile.acquire(muzzleX, muzzleY, beamAngle, false, beamDmg, false, false, 'astral_beam');
+        const beamSpeed = 2200;
+        beam.vx = Math.cos(beamAngle) * beamSpeed;
+        beam.vy = Math.sin(beamAngle) * beamSpeed;
+        beam.life = 0.65;
+        (beam as any).maxLife = 0.65;
+        globals.projectiles.push(beam);
+
+        if (globals.hasHeroAwakening('aetherion') && globals.flowState === 'awakened') {
+          [-0.22, 0.22].forEach(offsetA => {
+            const bAng = beamAngle + offsetA;
+            const sideBeam = Projectile.acquire(muzzleX, muzzleY, bAng, false, beamDmg, false, false, 'astral_beam');
+            sideBeam.vx = Math.cos(bAng) * beamSpeed;
+            sideBeam.vy = Math.sin(bAng) * beamSpeed;
+            sideBeam.life = 0.65;
+            (sideBeam as any).maxLife = 0.65;
+            globals.projectiles.push(sideBeam);
+          });
+        }
+
+        globals.player.vx -= Math.cos(beamAngle) * 160;
+        globals.player.vy -= Math.sin(beamAngle) * 160;
+        for (let i = 0; i < 10; i++) {
+          globals.particles.push(Particle.acquire(muzzleX, muzzleY, Math.random() > 0.5 ? '#38bdf8' : '#ffffff', 200 + Math.random() * 200, 0.25, 2.5, beamAngle + (Math.random() - 0.5) * 0.8));
+        }
+      } else {
+        globals.slashes.push(Slash.acquire(
+          globals.player.x + Math.cos(angle)*50, 
+          globals.player.y + Math.sin(angle)*50, 
+          angle, 
+          size, 
+          isEnhanced, 
+          isRiposteStrike ? 'rgba(255, 0, 85, ALPHA)' : undefined, 
+          isRiposteStrike,
+          globals.player
+        ));
+
+        if (globals.selectedHero === 'aetherion' && globals.hasHeroAwakening('aetherion') && globals.flowState === 'awakened') {
+          const slashDmg = getCurrentSlashDamage();
+          const crescentDmg = Math.round(35 + slashDmg * 2.2);
+          [-0.28, 0.28].forEach(offA => {
+            const c = Projectile.acquire(globals.player.x, globals.player.y, angle + offA, false, crescentDmg, false, true, 'astral_crescent');
+            c.life = 1.2;
+            (c as any).maxLife = 1.2;
+            globals.projectiles.push(c);
+          });
+        }
+      }
 
       // Active Skill: Void Rupture (Dimension Slicer) phantom blade projection
       if (globals.selectedSkill === 'decoy_illusion' && globals.enhanceActiveTimer > 0) {
@@ -5797,6 +5862,10 @@ function update(realDt: number) {
 
             enemyHitCount++;
             hitEnemy(e, dmg);
+            if (globals.selectedHero === 'aetherion') {
+              (e as any).starBrand = Math.min(3, ((e as any).starBrand || 0) + 1);
+              (e as any).starBrandTimer = 8.0;
+            }
             if (globals.flowState === 'storm_god' && !hasChained) {
               hasChained = true;
               triggerChainLightning(e);
@@ -6087,7 +6156,11 @@ function update(realDt: number) {
         const dx = e.x - proj.x;
         const dy = e.y - proj.y;
         let isHit = false;
-        if (proj.isDeflected) {
+        if (proj.enhancedType === 'astral_beam') {
+          const forwardDist = dx * Math.cos(proj.angle) + dy * Math.sin(proj.angle);
+          const lateralDist = Math.abs(-dx * Math.sin(proj.angle) + dy * Math.cos(proj.angle));
+          isHit = (forwardDist >= -25 && forwardDist <= 90 + enemyHitRadius && lateralDist <= 38 + enemyHitRadius);
+        } else if (proj.isDeflected) {
           isHit = (dx * dx + dy * dy < (60 + enemyHitRadius) * (60 + enemyHitRadius));
         } else if (proj.isHuge) {
           // Precise forward directional crescent arc trajectory check along proj.angle
@@ -6134,7 +6207,39 @@ function update(realDt: number) {
               const dy = e.y - proj.y;
               const pushAngle = Math.atan2(dy, dx);
               
-              if (proj.enhancedType === 'dragon') {
+              if (proj.enhancedType === 'astral_beam') {
+                e.knockbackTimer = 0.35;
+                e.knockbackVx = Math.cos(proj.angle) * 1600;
+                e.knockbackVy = Math.sin(proj.angle) * 1600;
+                e.vx = e.knockbackVx; e.vy = e.knockbackVy;
+
+                const brands = (e as any).starBrand || 0;
+                if (brands > 0) {
+                  (e as any).starBrand = 0;
+                  (e as any).starBrandTimer = 0;
+                  const slashDmg = getCurrentSlashDamage();
+                  const detonateDmg = Math.round((35 + slashDmg * 2.8) * (1 + (brands - 1) * 0.5));
+                  globals.screenShake = Math.max(globals.screenShake, 16);
+                  globals.shockwaves.push(new Shockwave(e.x, e.y, '#38bdf8'));
+                  globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `💥 ASTRAL DETONATE -${detonateDmg}!`, '#38bdf8', 24));
+                  globals.enemies.forEach(other => {
+                    if (other !== e && other.state !== 'dead') {
+                      if (Math.hypot(other.x - e.x, other.y - e.y) < 200) {
+                        hitEnemy(other, detonateDmg);
+                      }
+                    }
+                  });
+                  for (let k = 0; k < 16; k++) {
+                    const pAng = Math.random() * Math.PI * 2;
+                    globals.particles.push(Particle.acquire(e.x, e.y, Math.random() > 0.5 ? '#38bdf8' : '#ffffff', 260 + Math.random() * 260, 0.45, 3.5, pAng));
+                  }
+                }
+              } else if (proj.enhancedType === 'astral_crescent') {
+                (proj as any).pierceCount = ((proj as any).pierceCount || 0) + 1;
+                if ((proj as any).pierceCount >= 3) {
+                  proj.life = 0;
+                }
+              } else if (proj.enhancedType === 'dragon') {
                 e.vx += Math.cos(pushAngle) * 900;
                 e.vy += Math.sin(pushAngle) * 900;
                 e.burnTimer = 4.0;

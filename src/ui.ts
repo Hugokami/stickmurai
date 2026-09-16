@@ -1682,6 +1682,7 @@ export function updateCooldownsUI() {
         nightborne: { label: 'ABYSS', icon: '🌌', title: 'Abyssal Singularity (Press 1)' },
         satyr: { label: 'TITAN', icon: '🌋', title: 'Titan Cataclysm (Press 1)' },
         akakage: { label: 'ASURA', icon: '🩸', title: 'Blood Asura Frenzy (Press 1)' },
+        aetherion: { label: 'ASTRAL', icon: '🌌', title: 'Astral Singularity (Press 1)' },
       };
       const info = heroUlts[hero] || heroUlts.default;
       textEl.textContent = info.label;
@@ -2263,6 +2264,14 @@ export const HEROES_DATA = [
     titleEn: 'Crimson Revenant',
     titleJa: '紅蓮の亡影',
     image: 'sprites/portraits/portrait_akakage.png?v=akakage1',
+  },
+  {
+    id: 'aetherion',
+    nameEn: 'Aetherion, Celestial Arbiter',
+    nameJa: '天星の執行者・エセリオン',
+    titleEn: 'Celestial Arbiter',
+    titleJa: '天星の執行者',
+    image: 'sprites/portraits/portrait_aetherion.png?v=aeth1',
   }
 ].map(hero => {
   const stats = heroBalance(hero.id);

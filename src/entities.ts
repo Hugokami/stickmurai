@@ -49,7 +49,7 @@ export function getTintedImage(img: HTMLImageElement | HTMLCanvasElement, hexCol
 export class Entity {
   x = 0; y = 0; vx = 0; vy = 0;
   yOffset = 0; yVelocity = 0; // Simulated vertical juggle height physics
-  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' | 'heroakakage' | 'wraith01' | 'wraith02' | 'wraith03' = 'sword';
+  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' | 'heroakakage' | 'heroaetherion' | 'wraith01' | 'wraith02' | 'wraith03' = 'sword';
   subType?: string;
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
@@ -76,8 +76,8 @@ export class Entity {
     const currentAnim = anims[this.type][animState as keyof typeof anims['sword']];
     if (currentAnim && currentAnim.length > 0) {
       let currentFps = this.fps;
-      if (this.state === 'attack') {
-         const isPlayerHero = this.subType === 'player' || this.type === 'sword' || this.type === 'heroluneblade' || this.type === 'heroninja' || this.type === 'heronightborne' || this.type === 'herosamurai' || this.type === 'herosatyr' || this.type === 'heroakakage';
+      if (this.state === 'attack' || this.state === 'shoot') {
+         const isPlayerHero = this.subType === 'player' || this.type === 'sword' || this.type === 'heroluneblade' || this.type === 'heroninja' || this.type === 'heronightborne' || this.type === 'herosamurai' || this.type === 'herosatyr' || this.type === 'heroakakage' || this.type === 'heroaetherion';
          let attackDuration = isPlayerHero ? globals.playerStats.attackCooldownBase : 0.4;
          if (isPlayerHero && globals.flowState === 'awakened') attackDuration *= 0.5;
          currentFps = currentAnim.length / attackDuration;
@@ -157,6 +157,8 @@ export class Entity {
       scale *= 8.0;
     } else if (this.type === 'heroakakage') {
       scale *= 4.8;
+    } else if (this.type === 'heroaetherion') {
+      scale *= 3.8;
     } else if (this.type === 'toaster_bot') {
       scale *= 3.2;
     }
@@ -182,6 +184,7 @@ export class Entity {
       if (globals.flowState === 'storm_god') trailColor = '#fbbf24';
       else if (globals.flowState === 'awakened') trailColor = '#c084fc';
       else if (this.type === 'heroninja') trailColor = '#c084fc';
+      else if (this.type === 'heroaetherion') trailColor = '#38bdf8';
       else if (this.type === 'heronightborne') trailColor = '#7c3aed';
       else if (this.type === 'herosamurai') trailColor = '#fbbf24';
       else if (this.type === 'herosatyr') trailColor = '#10b981';
@@ -604,6 +607,27 @@ export class Projectile {
       }
     }
 
+    // Aetherion Astral Crescent homing curve
+    if (this.enhancedType === 'astral_crescent' && !this.isEnemy) {
+      let target: any = null;
+      let minD = Infinity;
+      for (const en of globals.enemies) {
+        if (en.state === 'dead') continue;
+        const d = Math.hypot(en.x - this.x, en.y - this.y);
+        if (d < minD) { minD = d; target = en; }
+      }
+      if (target) {
+        const targetAngle = Math.atan2(target.y - this.y, target.x - this.x);
+        let diff = targetAngle - this.angle;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        this.angle += diff * Math.min(1.0, 7.0 * dt);
+        const homingSpeed = 950;
+        this.vx = Math.cos(this.angle) * homingSpeed;
+        this.vy = Math.sin(this.angle) * homingSpeed;
+      }
+    }
+
     // Shield (Wind Aegis) pulling and bullet deflection logic
     if (this.enhancedType === 'shield' && !this.isEnemy) {
       const pullRadius = 260;
@@ -701,6 +725,10 @@ export class Projectile {
             pColor = Math.random() > 0.5 ? '#22d3ee' : '#e0f2fe';
           } else if (this.enhancedType === 'blood_scythe') {
             pColor = Math.random() > 0.5 ? '#ef4444' : '#b91c1c';
+          } else if (this.enhancedType === 'astral_beam') {
+            pColor = Math.random() > 0.5 ? '#38bdf8' : '#e0f2fe';
+          } else if (this.enhancedType === 'astral_crescent') {
+            pColor = Math.random() > 0.5 ? '#38bdf8' : '#c084fc';
           }
         }
 
@@ -872,6 +900,70 @@ export class Projectile {
           ctx.fillStyle = '#ffffff';
           ctx.fill();
 
+          ctx.restore();
+          return;
+        }
+
+        if (this.enhancedType === 'astral_beam') {
+          // Aetherion Piercing Astral Starbeam
+          ctx.save();
+          // Outer cyan halo
+          ctx.beginPath();
+          ctx.moveTo(-15, 0);
+          ctx.lineTo(85, 0);
+          ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+          ctx.lineWidth = 14;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          // Bright cyan beam core
+          ctx.beginPath();
+          ctx.moveTo(-10, 0);
+          ctx.lineTo(80, 0);
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 6;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          // Core starlight white filament
+          ctx.beginPath();
+          ctx.moveTo(-5, 0);
+          ctx.lineTo(75, 0);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          // Tip diamond shockwave
+          ctx.beginPath();
+          ctx.moveTo(85, 0);
+          ctx.lineTo(75, -5);
+          ctx.lineTo(65, 0);
+          ctx.lineTo(75, 5);
+          ctx.closePath();
+          ctx.fillStyle = '#ffffff';
+          ctx.fill();
+          ctx.restore();
+          return;
+        }
+
+        if (this.enhancedType === 'astral_crescent') {
+          // Aetherion Homing Dual Crescent Blade
+          ctx.save();
+          const spin = performance.now() * 0.015;
+          ctx.rotate(spin);
+          ctx.beginPath();
+          ctx.arc(0, 0, 24, -Math.PI / 3, Math.PI / 2.5, false);
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 5;
+          ctx.lineCap = 'round';
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(0, 0, 21, -Math.PI / 3.2, Math.PI / 2.6, false);
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.2;
+          ctx.stroke();
           ctx.restore();
           return;
         }
@@ -1285,6 +1377,7 @@ export class Slash {
       else if (globals.selectedHero === 'luneblade') heroKey = 'heroluneblade';
       else if (globals.selectedHero === 'ninja') heroKey = 'heroninja';
       else if (globals.selectedHero === 'akakage') heroKey = 'heroakakage';
+      else if (globals.selectedHero === 'aetherion') heroKey = 'heroaetherion';
     }
 
     let col1 = 'rgba(56, 189, 248, '; // cyan
@@ -1320,6 +1413,8 @@ export class Slash {
       col1 = 'rgba(168, 85, 247, '; edgeCol = '#9333ea';
     } else if (heroKey === 'heroakakage') {
       col1 = 'rgba(244, 63, 94, '; edgeCol = '#f43f5e';
+    } else if (heroKey === 'heroaetherion') {
+      col1 = 'rgba(56, 189, 248, '; edgeCol = '#38bdf8';
     }
 
     ctx.save();
@@ -1415,7 +1510,9 @@ export class Slash {
       let frames: HTMLImageElement[] | null = null;
       let isAkakage = false;
       if (slashes) {
-        if (heroKey === 'heroakakage' || heroKey === 'akakage') {
+        if (heroKey === 'heroaetherion' || heroKey === 'aetherion') {
+          frames = (globals.hasHeroAwakening('aetherion') && globals.flowState === 'awakened') ? (slashes.aetherionDouble || slashes.aetherion) : slashes.aetherion;
+        } else if (heroKey === 'heroakakage' || heroKey === 'akakage') {
           frames = slashes.akakage;
           isAkakage = true;
         } else if (heroKey === 'heronightborne' && slashes.nightborne) {
