@@ -46,6 +46,8 @@ import {
   playSynthesizedSingingBowl,
   playEnergyBeam,
   startBgm,
+  resumeAudioContext,
+  initImmediateAudio,
   playTeleportSfx,
   playAffixAlert,
   getConsecutiveParries,
@@ -615,16 +617,21 @@ function startApp() {
 
     setupPvpRematchListeners();
 
-    // Allow early tap-to-skip on loader screen
+    // Start audio & unlock handlers as early as loading screen
+    initImmediateAudio();
+    startBgm();
+
+    // Allow early tap-to-skip on loader screen & immediately trigger audio
     const loaderScreen = document.getElementById('loader-screen');
     if (loaderScreen) {
-      const earlySkip = (e: Event) => {
-        e.stopPropagation();
+      const earlySkip = () => {
+        resumeAudioContext();
+        startBgm();
         if (assetReadiness().ready) finishLoading();
       };
-      loaderScreen.addEventListener('click', earlySkip, { once: true });
-      loaderScreen.addEventListener('touchstart', earlySkip, { once: true });
-      loaderScreen.addEventListener('pointerdown', earlySkip, { once: true });
+      loaderScreen.addEventListener('click', earlySkip);
+      loaderScreen.addEventListener('touchstart', earlySkip, { passive: true });
+      loaderScreen.addEventListener('pointerdown', earlySkip, { passive: true });
     }
 
     // Setup loader video events and programmatically trigger play
@@ -736,36 +743,6 @@ function inplaceFilter<T>(arr: T[], predicate: (item: T) => boolean, releaseCall
 let lastTime = performance.now();
 let uiUpdateAccumulator = 0;
 
-function showBossWarningBanner(stage: number) {
-  const banner = document.getElementById('boss-warning-banner');
-  const nameEl = document.getElementById('boss-banner-name');
-  if (!banner || !nameEl) return;
-
-  const realm = Math.floor((stage - 1) / 5) + 1;
-  const bossNames = [
-    { name: 'SKELETON ONI OVERLORD', nameJa: '冥府の鬼神・骸骨鬼王' },
-    { name: 'DIVINE SHOGUN OF YOMI', nameJa: '黄泉の神将・魔界征夷大将軍' },
-    { name: 'AGIS ASTRUM COLOSSUS', nameJa: '星海巨神・アギス・コロッサス' },
-    { name: 'VOID CALAMITY INCARNATE', nameJa: '虚無の災厄・破滅の権化' }
-  ];
-  const b = bossNames[(realm - 1) % bossNames.length];
-  nameEl.textContent = (globals.currentLang === 'ja' ? b.nameJa : b.name) + ` [STAGE ${stage}]`;
-
-  banner.style.display = 'block';
-  setTimeout(() => { if (banner) banner.style.opacity = '1'; }, 10);
-  globals.screenShake = Math.max(globals.screenShake, 35);
-  try { playSynthesizedSingingBowl(); } catch(e) {}
-
-  setTimeout(() => {
-    if (banner) {
-      banner.style.opacity = '0';
-      setTimeout(() => {
-        if (banner) banner.style.display = 'none';
-      }, 550);
-    }
-  }, 3200);
-}
-
 export function setupWaveObjectives(wave: number, totalWaves: number, stage: number, isBossStage: boolean) {
   globals.currentWave = wave;
   globals.totalWaves = totalWaves;
@@ -789,20 +766,16 @@ export function advanceToNextWave() {
   globals.gameState = 'playing';
   globals.waveState = 'active';
   const stage = globals.currentStage || 1;
-  const isBossStage = stage % 5 === 0;
+  const isBossStage = true;
 
   globals.currentWave++;
   setupWaveObjectives(globals.currentWave, globals.totalWaves, stage, isBossStage);
 
   const isJa = globals.currentLang === 'ja';
   const isFinalWave = globals.currentWave >= globals.totalWaves;
-  let waveTitle = '';
-  if (isBossStage && isFinalWave) {
-    waveTitle = isJa ? '🚨 最終波：魔王降臨！ 🚨' : '🚨 FINAL WAVE: BOSS INBOUND! 🚨';
-    showBossWarningBanner(stage);
-  } else {
-    waveTitle = isJa ? `⚠️ 第 ${globals.currentWave} / ${globals.totalWaves} 波 開始！ ⚠️` : `⚠️ WAVE ${globals.currentWave} / ${globals.totalWaves} COMMENCING! ⚠️`;
-  }
+  const waveTitle = isJa
+    ? (isFinalWave ? `第 ${globals.currentWave} / ${globals.totalWaves} 波 (最終決戦)` : `第 ${globals.currentWave} / ${globals.totalWaves} 波 開始！`)
+    : (isFinalWave ? `WAVE ${globals.currentWave} / ${globals.totalWaves} (FINAL WAVE)` : `WAVE ${globals.currentWave} / ${globals.totalWaves} COMMENCING!`);
 
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, waveTitle, isFinalWave ? '#ef4444' : '#ffd700', 26));
   playAffixAlert(0.9);
@@ -1292,11 +1265,6 @@ function initGame() {
     }
   } else {
     globals.activeStageAffix = null;
-  }
-
-  // Cinematic Boss Encounter Announcement
-  if (globals.gameMode === 'classic' && isBossStage) {
-    showBossWarningBanner(currentStage);
   }
 
   document.getElementById('level-display')!.textContent = globals.level.toString();
@@ -3370,6 +3338,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   // Boss damage clamp: prevent any single-hit burst from deleting more than 12% of boss max HP
   const isBossEntity = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
   if (isBossEntity) {
+    if ((e as any).phaseTransitionTimer > 0) return;
     const maxBossSingleHit = Math.max(70, Math.round((e.maxHp || 100) * 0.12));
     finalDmg = Math.min(finalDmg, maxBossSingleHit);
   }
@@ -3384,7 +3353,11 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
 
   // Bushido Rally can only be restored via perfect parry or perfect dodge
 
-    if (e.hp <= 0) {
+  if (e.hp <= 0) {
+    if (e.isBoss && e.currentPhase < e.totalPhases) {
+      e.advanceBossPhase();
+      return;
+    }
     if (globals.gameMode === 'pvp' && pvpManager.subMode === 'insane_survival' && pvpManager.role === 'host') {
       if (killedByClient) {
         globals.p2Kills++;
@@ -3428,8 +3401,12 @@ function checkVampireHeal(e: Enemy) {
 }
 
 function killEnemy(e: Enemy) {
-  if(e.state==='dead')return;
-  e.setState('dead'); 
+  if (e.state === 'dead') return;
+  if (e.isBoss && e.currentPhase < e.totalPhases) {
+    e.advanceBossPhase();
+    return;
+  }
+  e.setState('dead');
   addCombo();
   globals.runStats.kills++;
   const isBossKill = (e.subType?.includes('boss') || (e as any).isBoss);
@@ -3509,8 +3486,7 @@ function killEnemy(e: Enemy) {
   globals.waveEnemiesKilled = (globals.waveEnemiesKilled || 0) + 1;
 
   if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
-    const stage = globals.currentStage || 1;
-    const isBossStage = stage % 5 === 0;
+    const isBossStage = true;
     const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
 
     // In boss stage final wave, defeating the boss also eliminates remaining minor minions
@@ -3776,7 +3752,7 @@ function update(realDt: number) {
     // Classic Stage & Wave Progress Watchdog: prevents stalls, missing spawns, and stranded wave states
     if (globals.gameMode === 'classic') {
       const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
-      const isBossStage = (globals.currentStage || 1) % 5 === 0;
+      const isBossStage = true;
       const activeAlive = globals.enemies.filter(en => en && en.state !== 'dead' && !en.isPvpRemote).length;
 
       // 1. If wave shop was closed or never opened, ensure active progression resumes

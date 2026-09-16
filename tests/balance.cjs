@@ -9,13 +9,14 @@ test('boss bases are robustly buffed and scale properly with late-game power',()
  for(const [id,hp] of Object.entries(expectedBases))assert.equal(BOSS_BASE_HP[id],hp);
  for(const stage of [1,5,10,15,20,50,100]){
   const late = Math.max(0, stage - 5);
-  const expectedBoss = 1.5 * (1 + (stage - 1) * 0.35 + late * 0.65 + (late * late) * 0.05);
+  const stage50Mult = stage >= 50 ? 5.0 : 1.0;
+  const expectedBoss = 2.0 * stage50Mult * 1.5 * (1 + (stage - 1) * 0.35 + late * 0.65 + (late * late) * 0.05);
   const expectedMob = 1.5 * (1 + (stage - 1) * 0.20 + late * 0.35 + (late * late) * 0.02);
   assert.ok(Math.abs(campaignHpMultiplier(stage, true) - expectedBoss) < 1e-10);
   assert.ok(Math.abs(campaignHpMultiplier(stage, false) - expectedMob) < 1e-10);
  }
- assert.equal(Math.round(BOSS_BASE_HP.oni_boss*campaignHpMultiplier(5,true)),2160);
- assert.equal(Math.round(BOSS_BASE_HP.agis_colossus*campaignHpMultiplier(10,true)),12326);
+ assert.equal(Math.round(BOSS_BASE_HP.oni_boss*campaignHpMultiplier(5,true)),4320);
+ assert.equal(Math.round(BOSS_BASE_HP.agis_colossus*campaignHpMultiplier(10,true)),24653);
 });
 test('hero prices keep a rising baseline attack budget and capped crit',()=>{
  let previous=0;

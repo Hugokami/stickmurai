@@ -946,12 +946,9 @@ export function loadEnemyAssetsNow(type: string) {
 }
 
 export function preloadStageEnemyAssets(stage: number) {
-  if (stage % 5 === 0) {
-    if (stage === 5) loadEnemyAssetsNow('oni_boss');
-    else if (stage === 10) loadEnemyAssetsNow('boss_agis');
-    else if (stage === 15) loadEnemyAssetsNow('boss_skeleton');
-    else if (stage >= 20) loadEnemyAssetsNow('shogun_boss');
-  }
+  const bossAssetKeys = ['oni_boss', 'boss_agis', 'boss_skeleton', 'shogun_boss'] as const;
+  const currentBossKey = bossAssetKeys[(stage - 1) % bossAssetKeys.length];
+  loadEnemyAssetsNow(currentBossKey);
   loadEnemyAssetsNow('enemy01');
   loadEnemyAssetsNow('enemy02');
   loadEnemyAssetsNow('skeleton');

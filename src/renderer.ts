@@ -1244,6 +1244,8 @@ export function draw() {
       const hpH = 12;
       const postureH = 6;
       const isJa = globals.currentLang === 'ja';
+      const totalPhases = (activeBoss as any).totalPhases || 1;
+      const currentPhase = (activeBoss as any).currentPhase || 1;
 
       let bossName = isJa ? '強敵 (BOSS)' : 'BOSS ENCOUNTER';
       if (activeBoss.subType === 'oni_boss') {
@@ -1254,6 +1256,29 @@ export function draw() {
         bossName = isJa ? '💀 骸骨軍団長 (SKELETON WARLORD)' : '💀 SKELETON WARLORD';
       } else if (activeBoss.subType === 'shogun_boss') {
         bossName = isJa ? '⚔️ 征夷大将軍 (SUPREME SHOGUN)' : '⚔️ SUPREME SHOGUN';
+      }
+      if (totalPhases > 1) {
+        bossName += ` · PHASE ${currentPhase}/${totalPhases}`;
+      }
+
+      // Draw multi-phase life stock pips
+      if (totalPhases > 1) {
+        const pipRadius = 4.5;
+        const pipSpacing = 16;
+        const pipsStartX = ((globals.width / 2) - ((totalPhases - 1) * pipSpacing) / 2) | 0;
+        const pipsY = barY - 24;
+        for (let p = 0; p < totalPhases; p++) {
+          const px = pipsStartX + p * pipSpacing;
+          const isRemaining = (p + 1) >= currentPhase;
+          const isCurrent = (p + 1) === currentPhase;
+          ctx.fillStyle = isRemaining ? (isCurrent ? '#f59e0b' : '#ef4444') : '#374151';
+          ctx.beginPath();
+          ctx.arc(px, pipsY, pipRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = isCurrent ? '#fbbf24' : '#ffffff';
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
       }
 
       // Boss Name & Title Banner
@@ -1280,15 +1305,16 @@ export function draw() {
       ctx.fillStyle = '#f97316';
       ctx.fillRect(barX, barY, (barW * delayRatio) | 0, hpH);
 
-      // Main Crimson HP Fill
+      // Main HP Fill (Phase colored)
       const hpRatio = Math.max(0, Math.min(1, activeBoss.hp / activeBoss.maxHp));
-      ctx.fillStyle = '#dc2626';
+      const phaseColor = currentPhase === 1 ? '#dc2626' : (currentPhase === 2 ? '#d97706' : '#7c3aed');
+      ctx.fillStyle = phaseColor;
       ctx.fillRect(barX, barY, (barW * hpRatio) | 0, hpH);
 
       // HP numerical text
       ctx.font = "bold 9px 'Orbitron', monospace";
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(`${activeBoss.hp} / ${activeBoss.maxHp}`, (globals.width / 2) | 0, barY + 9);
+      ctx.fillText(`${activeBoss.hp} / ${activeBoss.maxHp}  (P${currentPhase}/${totalPhases})`, (globals.width / 2) | 0, barY + 9);
 
       // 2. Sekiro-Style Orange Posture / Stagger Bar (directly under HP)
       const postY = barY + hpH + 3;

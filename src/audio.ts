@@ -811,7 +811,7 @@ export function startBgm() {
     bgmStarted = false;
     return;
   }
-  if (bgmStarted) return;
+  if (bgmStarted && !bgmAudio.paused) return;
   bgmStarted = true;
   
   const bgmVolumeSlider = typeof document !== 'undefined' ? document.getElementById('bgm-volume') as HTMLInputElement : null;
@@ -822,16 +822,49 @@ export function startBgm() {
   }
 
   try {
+    bgmAudio.loop = true;
     if (!bgmAudio.src) {
       bgmAudio.src = playlist[currentBgmIndex];
     }
-    bgmAudio.load();
+    if (bgmAudio.readyState === 0) {
+      bgmAudio.load();
+    }
   } catch (e) {
     console.warn('Failed BGM load call:', e);
   }
-  bgmAudio.play().catch(err => {
-    console.warn('BGM play failed:', err);
-    bgmStarted = false;
+  const playPromise = bgmAudio.play();
+  if (playPromise !== undefined) {
+    playPromise.catch(() => {
+      // Browser autoplay policy prevented playback before interaction
+      bgmStarted = false;
+    });
+  }
+}
+
+export function initImmediateAudio() {
+  if (typeof window === 'undefined') return;
+
+  // Immediate attempt on boot / loading screen
+  try {
+    startBgm();
+  } catch (_) {}
+
+  // Instant unlock listeners on any early gesture anywhere on screen
+  const unlockEvents = ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'];
+  const unlockHandler = () => {
+    resumeAudioContext();
+    startBgm();
+    if (bgmStarted && !bgmAudio.paused) {
+      unlockEvents.forEach(evt => {
+        window.removeEventListener(evt, unlockHandler, true);
+        document.removeEventListener(evt, unlockHandler, true);
+      });
+    }
+  };
+
+  unlockEvents.forEach(evt => {
+    window.addEventListener(evt, unlockHandler, { capture: true, passive: true });
+    document.addEventListener(evt, unlockHandler, { capture: true, passive: true });
   });
 }
 
@@ -1250,5 +1283,8 @@ if (typeof document !== 'undefined') {
     }
   });
 }
+
+// Kick off instant audio autoplay & unlock handlers immediately upon module load
+initImmediateAudio();
 
 

@@ -57,6 +57,10 @@ export class Enemy extends Entity {
   airborneVz = 0;
   canAerialCleave = false;
   aerialCleaveTriggered = false;
+  isBoss = false;
+  totalPhases = 1;
+  currentPhase = 1;
+  phaseTransitionTimer = 0;
 
   constructor(x: number, y: number, target: Player) {
     super(); 
@@ -100,6 +104,10 @@ export class Enemy extends Entity {
     this.stunTimer = 0;
     this.chillTimer = 0;
     this.hitFlash = 0;
+    this.isBoss = false;
+    this.totalPhases = 1;
+    this.currentPhase = 1;
+    this.phaseTransitionTimer = 0;
 
     // Reset properties to base defaults before applying roll customization
     this.hp = 2;
@@ -132,9 +140,17 @@ export class Enemy extends Entity {
       else if (globals.score > 50) this.subType = 'shogun_boss';
       else this.subType = 'necromancer';
     } else {
-      // Stage Mode Campaign Spawning
+      // Stage Mode Campaign Spawning - Final Boss in ALL Stages on Final Wave
       const stage = globals.currentStage || 1;
-      if (stage === 1) {
+      const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
+      const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'skeleton_warlord', 'shogun_boss'];
+      const targetBoss = bossTypes[(stage - 1) % bossTypes.length];
+      const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && (bossTypes.includes(e.subType) || (e as any).isBoss));
+
+      if (isFinalWave && !bossAlive && !globals.stageBossSpawned) {
+        this.subType = targetBoss;
+        globals.stageBossSpawned = true;
+      } else if (stage === 1) {
         // Stage 1: Bamboo Grove - Grunts & Rogues
         const r = Math.random();
         this.subType = r < 0.60 ? 'brawler' : 'samurai';
@@ -390,10 +406,10 @@ export class Enemy extends Entity {
       this.maxPosture = 340;
     } else if (this.subType === 'oni_boss') {
       this.type = 'skeleton';
-      this.lungeSpeed = 1150; this.chargeTimeMax = 1.6; this.lungeDuration = 0.75;
+      this.lungeSpeed = 1350; this.chargeTimeMax = 0.75; this.lungeDuration = 0.42;
       this.scaleMult = 2.5; this.hp = this.maxHp = BOSS_BASE_HP.oni_boss; this.expValue = 25;
       this.colorTint = 'none';
-      this.speed = 290;
+      this.speed = 320;
       this.maxPosture = 1800;
     } else if (this.subType === 'barrel_bomber') {
       this.type = 'enemy_barrel';
@@ -411,17 +427,17 @@ export class Enemy extends Entity {
       this.maxPosture = 350;
     } else if (this.subType === 'agis_colossus') {
       this.type = 'boss_agis';
-      this.lungeSpeed = 800; this.chargeTimeMax = 1.8; this.lungeDuration = 0.75;
+      this.lungeSpeed = 1050; this.chargeTimeMax = 0.85; this.lungeDuration = 0.48;
       this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.agis_colossus; this.expValue = 45;
       this.colorTint = 'none';
-      this.speed = 210;
+      this.speed = 240;
       this.maxPosture = 2400;
     } else if (this.subType === 'skeleton_warlord') {
       this.type = 'boss_skeleton';
-      this.lungeSpeed = 1000; this.chargeTimeMax = 1.7; this.lungeDuration = 0.7;
+      this.lungeSpeed = 1250; this.chargeTimeMax = 0.80; this.lungeDuration = 0.44;
       this.scaleMult = 2.2; this.hp = this.maxHp = BOSS_BASE_HP.skeleton_warlord; this.expValue = 50;
       this.colorTint = 'none';
-      this.speed = 240;
+      this.speed = 270;
       this.maxPosture = 2200;
     } else if (this.subType === 'toaster_bot') {
       this.type = 'toaster_bot';
@@ -432,10 +448,10 @@ export class Enemy extends Entity {
       this.maxPosture = 190;
     } else { // shogun_boss
       this.type = 'evil_wizard';
-      this.lungeSpeed = 1450; this.chargeTimeMax = 1.45; this.lungeDuration = 0.55;
+      this.lungeSpeed = 1650; this.chargeTimeMax = 0.65; this.lungeDuration = 0.36;
       this.scaleMult = 2.4; this.hp = this.maxHp = BOSS_BASE_HP.shogun_boss; this.expValue = 35;
       this.colorTint = 'none';
-      this.speed = 300;
+      this.speed = 340;
       this.maxPosture = 2000;
     }
 
@@ -448,7 +464,11 @@ export class Enemy extends Entity {
       const stage = Math.max(1, globals.currentStage || 1);
       const isBoss = this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord';
       if (isBoss) {
+        this.isBoss = true;
         (this as any).isBoss = true;
+        this.totalPhases = stage < 5 ? 2 : 3;
+        this.currentPhase = 1;
+        this.phaseTransitionTimer = 0;
       }
       
       // Progressive endless scaling: keeps grunts killable in 1-3 clean strikes while steadily raising challenge
@@ -495,6 +515,54 @@ export class Enemy extends Entity {
     this.chargeTimeMax *= chargeMult;
     loadEnemyAssetsNow(this.type);
   }
+
+  advanceBossPhase(): boolean {
+    if (!this.isBoss || this.currentPhase >= this.totalPhases) return false;
+    this.currentPhase++;
+    this.hp = this.maxHp;
+    this.hpDelayed = this.maxHp;
+    this.phaseTransitionTimer = 0.55;
+    this.posture = 0;
+    this.postureBrokenTimer = 0;
+    this.stunTimer = 0;
+    this.chillTimer = 0;
+    this.burnTimer = 0;
+
+    // Aggression and speed buffs per phase
+    this.speed = Math.round(this.speed * 1.15);
+    this.lungeSpeed = Math.round(this.lungeSpeed * 1.12);
+    this.chargeTimeMax = Math.max(0.35, this.chargeTimeMax * 0.85);
+    this.lungeDuration = Math.max(0.24, this.lungeDuration * 0.88);
+    this.attackCooldownTimer = 0.15;
+    this.setState('idle');
+
+    if (typeof globals !== 'undefined') {
+      globals.screenShake = Math.max(globals.screenShake, 35);
+      const phaseColor = this.currentPhase === 2 ? '#f59e0b' : '#a855f7';
+      globals.shockwaves.push(new Shockwave(this.x, this.y, phaseColor, 320));
+
+      if (globals.projectiles) {
+        globals.projectiles = globals.projectiles.filter((p: any) => {
+          const dx = p.x - this.x;
+          const dy = p.y - this.y;
+          return dx * dx + dy * dy > 280 * 280;
+        });
+      }
+
+      // Micro-feature: reward player on clearing a boss phase (+15 Magatama & +1 Life)
+      globals.magatama = (globals.magatama || 0) + 15;
+      if (globals.lives < globals.maxLives) {
+        globals.lives++;
+      }
+      callbacks.updateUI?.();
+
+      const phaseTitle = this.currentPhase === 2 ? '⚡ PHASE II: ENRAGED! ⚡' : '💀 PHASE III: FINAL STAND! 💀';
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 75, phaseTitle, phaseColor, 32));
+      playExplosionSfx();
+      playSynthesizedThunder();
+    }
+    return true;
+  }
   
   update(dt: number) {
     if (this.state === 'dead') {
@@ -513,6 +581,10 @@ export class Enemy extends Entity {
     const isBurning = this.burnTimer > 0;
 
     const effectiveDt = isChilled ? dt * 0.6 : dt;
+
+    if (this.phaseTransitionTimer > 0) {
+      this.phaseTransitionTimer -= effectiveDt;
+    }
 
     if (isChilled) {
       this.chillTimer -= dt;
@@ -662,8 +734,12 @@ export class Enemy extends Entity {
         }
         
         if (this.hp <= 0) {
-          callbacks.killEnemy(this);
-          return;
+          if (this.isBoss && this.currentPhase < this.totalPhases) {
+            this.advanceBossPhase();
+          } else {
+            callbacks.killEnemy(this);
+            return;
+          }
         }
       }
       
@@ -737,10 +813,11 @@ export class Enemy extends Entity {
 
     if (this.state === 'recover') {
       this.vx = 0; this.vy = 0;
-      const recovery=isBoss(this)&&globals.gameMode==='classic'?(this.hp/this.maxHp<=.33?.9:1.2):.8;
+      const recovery = isBoss(this) && globals.gameMode === 'classic' ? (this.currentPhase >= 3 ? 0.2 : (this.currentPhase >= 2 ? 0.25 : 0.35)) : .8;
       if (this.stateTime > recovery) {
         this.setState('idle');
-        this.attackCooldownTimer = 0.8 + Math.random() * 0.5;
+        const phaseCooldownFactor = this.currentPhase >= 3 ? 0.5 : (this.currentPhase >= 2 ? 0.7 : 0.85);
+        this.attackCooldownTimer = isBoss(this) ? (0.25 + Math.random() * 0.2) * phaseCooldownFactor : (0.8 + Math.random() * 0.5);
       }
       return;
     }
@@ -970,7 +1047,12 @@ export class Enemy extends Entity {
         this.burstShotsFired = 0;
         this.burstShotTimer = 0;
         this.isAimLocked = false;
-        this.attackCooldownTimer = this.isRanged() ? (0.35 + Math.random() * 0.3) : (1.0 + Math.random() * 0.6);
+        if (isBoss(this)) {
+          const phaseFactor = this.currentPhase >= 3 ? 0.55 : (this.currentPhase >= 2 ? 0.7 : 0.85);
+          this.attackCooldownTimer = (0.26 + Math.random() * 0.20) * phaseFactor;
+        } else {
+          this.attackCooldownTimer = this.isRanged() ? (0.35 + Math.random() * 0.3) : (1.0 + Math.random() * 0.6);
+        }
       }
       return;
     }
@@ -1528,11 +1610,33 @@ export class Enemy extends Entity {
     }
 
     // HP bar directly above enemy head
-    if (this.state !== 'dead' && this.hp < this.maxHp) {
-      const barW = (this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' ? 80 : 48) * this.scaleMult;
-      const barH = 5;
+    const showHpBar = this.state !== 'dead' && (this.hp < this.maxHp || isBoss(this));
+    if (showHpBar) {
+      const boss = isBoss(this);
+      const barW = (boss ? 90 : 48) * this.scaleMult;
+      const barH = boss ? 6 : 5;
       const barY = (effectiveRy - headOffset * this.scaleMult) | 0;
       const barX = (rx - barW / 2) | 0;
+
+      // Draw multi-phase pips for bosses
+      if (boss && this.totalPhases > 1) {
+        const pipRadius = 3.5;
+        const pipSpacing = 11;
+        const pipsStartX = rx - ((this.totalPhases - 1) * pipSpacing) / 2;
+        const pipY = barY - 8;
+        for (let p = 0; p < this.totalPhases; p++) {
+          const px = pipsStartX + p * pipSpacing;
+          const isRemaining = (p + 1) >= this.currentPhase;
+          const isCurrent = (p + 1) === this.currentPhase;
+          ctx.fillStyle = isRemaining ? (isCurrent ? '#f59e0b' : '#ef4444') : '#4b5563';
+          ctx.beginPath();
+          ctx.arc(px, pipY, pipRadius, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = isCurrent ? '#fbbf24' : '#ffffff';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
       ctx.fillRect(barX, barY, barW, barH);
@@ -1542,8 +1646,11 @@ export class Enemy extends Entity {
       const delayRatio = (this.hpDelayed || this.hp) / this.maxHp;
       ctx.fillRect(barX, barY, barW * delayRatio, barH);
 
-      // health red bar
-      ctx.fillStyle = '#ff3333';
+      // health colored bar (by phase if boss)
+      const phaseColor = boss
+        ? (this.currentPhase === 1 ? '#ff3333' : (this.currentPhase === 2 ? '#f59e0b' : '#a855f7'))
+        : '#ff3333';
+      ctx.fillStyle = phaseColor;
       ctx.fillRect(barX, barY, barW * (this.hp / this.maxHp), barH);
 
       ctx.strokeStyle = '#fff';

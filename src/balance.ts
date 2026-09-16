@@ -125,7 +125,8 @@ export function campaignHpMultiplier(stage:number,boss:boolean):number {
   const s = Math.max(1, stage);
   const late = Math.max(0, s - 5);
   if (boss) {
-    return 1.5 * (1 + (s - 1) * 0.35 + late * 0.65 + (late * late) * 0.05);
+    const stage50Mult = s >= 50 ? 5.0 : 1.0;
+    return 2.0 * stage50Mult * 1.5 * (1 + (s - 1) * 0.35 + late * 0.65 + (late * late) * 0.05);
   }
   return 1.5 * (1 + (s - 1) * 0.20 + late * 0.35 + (late * late) * 0.02);
 }
