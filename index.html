@@ -458,9 +458,9 @@
             <button class="codex-tab-btn active" data-tab="all" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace; font-weight: bold;">⚔️ ALL</button>
             <button class="codex-tab-btn" data-tab="combos" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">🌪️ COMBOS</button>
             <button class="codex-tab-btn" data-tab="skills" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">🔮 SKILLS & AWAKENINGS</button>
-            <button class="codex-tab-btn" data-tab="fusions" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">⚡ COMBINED SKILLS</button>
-            <button class="codex-tab-btn" data-tab="powerups" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">💎 POWERUPS & STANCES</button>
-            <button class="codex-tab-btn" data-tab="mechanics" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">🛡️ SPECIAL EFFECTS</button>
+            <button class="codex-tab-btn" data-tab="heroes" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">👑 HEROES & STANCES</button>
+            <button class="codex-tab-btn" data-tab="powerups" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">💎 POWERUPS</button>
+            <button class="codex-tab-btn" data-tab="mechanics" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">🛡️ COMBAT MECHANICS</button>
           </div>
 
           <div class="guide-tabs-container" id="codex-cards-container" style="display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
@@ -477,25 +477,28 @@
                   <strong style="color: #7dd3fc;"><kbd class="kbd-badge">LMB × 3</kbd> Triple Crescent Cadence</strong>: <span>Fluid 3-hit string auto-locking within 600px. Slashes scale damage (+0%, +25%, +50%) and finish in a broad 180° horizontal sweep.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #f43f5e;">
-                  <strong style="color: #fda4af;"><kbd class="kbd-badge">SPACE</kbd> + <kbd class="kbd-badge">LMB</kbd> Swift Counter</strong>: <span>Teleports through enemy lunges for an instant back-slash. Deals <strong style="color: #f43f5e;">120% of current slash damage</strong> with 1.5s invulnerability frames.</span>
+                  <strong style="color: #fda4af;"><kbd class="kbd-badge">SPACE</kbd> + <kbd class="kbd-badge">LMB</kbd> Swift Counter</strong>: <span>Teleports through enemy lunges for an instant back-slash dealing <strong style="color: #f43f5e;">120% of slash damage</strong> with 1.5s i-frames. <em>(Aetherion Ranged: Astral Drift Volley — backslides firing a 3-way fan of piercing wind blades dealing 130 + 8.0x Slash DMG).</em></span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #fbbf24;">
-                  <strong style="color: #fef08a;"><kbd class="kbd-badge">SPACE</kbd> + <kbd class="kbd-badge">LMB</kbd> Thunderclap & Flash</strong>: <span>While in Storm God or with Raijin Step equipped: Blinks through up to 5 foes leaving a trail of electric devastation dealing <strong style="color: #fbbf24;">200% slash damage</strong> + 1.5s stun.</span>
+                  <strong style="color: #fef08a;"><kbd class="kbd-badge">SPACE</kbd> + <kbd class="kbd-badge">LMB</kbd> Thunderclap & Flash</strong>: <span>While in Storm God or with Raijin Step equipped: Blinks through foes leaving electric devastation dealing <strong style="color: #fbbf24;">200% slash damage</strong> + 1.5s stun. <em>(Aetherion Ranged: Astral Thunder-Beam dealing 160 + 9.5x Slash DMG).</em></span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #22c55e;">
-                  <strong style="color: #bbf7d0;"><kbd class="kbd-badge">LMB × 2</kbd> + Early Release: Rising Dragon</strong>: <span>Airborne uppercut whirlwind dealing <strong style="color: #22c55e;">160% slash damage</strong>, lifting mobs into the air for aerial juggles.</span>
+                  <strong style="color: #bbf7d0;"><kbd class="kbd-badge">LMB × 2</kbd> + Early Release: Rising Dragon</strong>: <span>Airborne uppercut whirlwind dealing <strong style="color: #22c55e;">160% slash damage</strong>, lifting mobs for aerial juggles. <em>(Aetherion Ranged: Skyward Astral Burst dealing 140 + 8.5x Slash DMG).</em></span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #00ffff;">
-                  <strong style="color: #67e8f9;"><kbd class="kbd-badge">HOLD LMB (0.8s)</kbd> ➔ Release: Iaijutsu Shockwave</strong>: <span>Charged draw strike dealing <strong style="color: #00ffff;">300% of current slash damage</strong> + Iaijutsu flat stat. Cuts through incoming projectiles and pierces the full battlefield lane.</span>
+                  <strong style="color: #67e8f9;"><kbd class="kbd-badge">HOLD LMB (0.8s)</kbd> ➔ Release: Iaijutsu Shockwave</strong>: <span>Charged draw strike dealing <strong style="color: #00ffff;">300% slash damage</strong> + Iaijutsu stat. Cuts through incoming projectiles and pierces the lane. <em>(Aetherion: manual-aim colossal 672px Wind Blade dealing massive 9x Slash DMG).</em></span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #f97316;">
-                  <strong style="color: #fed7aa;"><kbd class="kbd-badge">Iaijutsu</kbd> + Decoy Active: Mirror Strike</strong>: <span>3 shadow clones blink to high-priority targets and strike in unison for <strong style="color: #f97316;">350% slash damage</strong> each.</span>
+                  <strong style="color: #fed7aa;"><kbd class="kbd-badge">Iaijutsu</kbd> + Decoy Active: Mirror Strike</strong>: <span>Shadow clones strike in unison for <strong style="color: #f97316;">350% slash damage</strong> each. <em>(Aetherion Ranged: Astral Mirror Shot firing twin diverging wind blades dealing 130 + 8.0x Slash DMG).</em></span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #a855f7;">
+                  <strong style="color: #d8b4fe;"><kbd class="kbd-badge">HOLD LMB (Charge)</kbd> + <kbd class="kbd-badge">SPACE</kbd>: Warp Hyper-Snipe</strong>: <span><em>(Aetherion Ranged Exclusive)</em> Dashing during Iaijutsu charge warps forward with full i-frames while instantly releasing the heavy 9x Slash DMG projectile!</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #c084fc;">
                   <strong style="color: #e9d5ff;"><kbd class="kbd-badge">W / UP</kbd> on Stagger: Rising Aerial Cleave</strong>: <span>Launches posture-broken foes skyward; tap Dash/Attack to dive and cleave them back into an explosive ground crater (250% AoE burst).</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ea580c;">
-                  <strong style="color: #fb923c;">🩸 Bushido Rally (Clutch Recovery)</strong>: <span>Taking damage turns lost heart into a pulsating orange Ghost Heart (<code style="color:#f97316;">#f97316</code>) for 3.2s. Landing 5 quick slashes or 1 perfect parry restores 100% full life!</span>
+                  <strong style="color: #fb923c;">🩸 Bushido Rally (Clutch Recovery)</strong>: <span>Taking damage turns lost heart into a pulsating orange Ghost Heart (<code style="color:#f97316;">#f97316</code>) for 3.2s. Executing a <strong>Perfect Parry</strong> or <strong>Perfect Dodge</strong> restores 100% full lost health!</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #dc2626;">
                   <strong style="color: #fca5a5;">🩸 Chiburui & Noto (血振るい)</strong>: <span>Stand still 1.2s after 3+ kills. Cleanses blade, grants +15 Flow, and your next strike deals guaranteed <strong style="color: #dc2626;">2.5x CRITICAL damage</strong>!</span>
@@ -516,25 +519,25 @@
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #fde047;">
-                  <strong style="color: #fde047;">Tier 1 • Dragon's Fury (0 🔮)</strong>: <span>+80% blade size, +300% burst scaling, crescent wave shockwaves on each swing. Iaijutsu fires twin flaming dragons.</span>
+                  <strong style="color: #fde047;">Tier 1 • Dragon's Fury (0 🔮)</strong>: <span>Blade size +80%, +3 Flat Slash DMG, and sword swings unleash piercing purple crescent waves (100% Slash DMG). Iaijutsu fires twin blazing dragons (300% Slash DMG). Duration 10s. Cooldown 12s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #38bdf8;">
-                  <strong style="color: #38bdf8;">Tier 2 • Raijin Step (10,000 🔮)</strong>: <span>0.9s cooldown hyper-dash leaving lightning trails, dealing 200% slash damage + 2.2s stun. Auto-triggers Thunderclap & Flash.</span>
+                  <strong style="color: #38bdf8;">Tier 2 • Raijin Step (5,000 🔮)</strong>: <span>Ultra-snappy lightning hyper-dash (0.9s CD, 0.45s invuln). Slashes through enemies for 20 + 150% Slash DMG and 1.2s stun with twin sky strikes.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #4ade80;">
-                  <strong style="color: #4ade80;">Tier 3 • Wind Aegis (15,000 🔮)</strong>: <span>4.5s deflection cyclone, reflects 3x enemy projectiles back as homing bolts, emits 180% slash damage radial shock pulses.</span>
+                  <strong style="color: #4ade80;">Tier 3 • Wind Aegis (7,500 🔮)</strong>: <span>4.5s tempest barrier. Deflects enemy projectiles at 3x speed, pulsing every 0.6s for 18 + 220% Slash DMG with vacuum pull. Cooldown 10s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #fbbf24;">
-                  <strong style="color: #fbbf24;">Tier 4 • Parry Master (20,000 🔮)</strong>: <span>4.0s golden stance with 2.5x counter-crit, +15 Flow per deflection, auto-stuns attacking mobs in 200px radius.</span>
+                  <strong style="color: #fbbf24;">Tier 4 • Parry Master (10,000 🔮)</strong>: <span>4.0s golden focus stance with +50% parry window. Riposte deals guaranteed 2.5x critical damage, breaks 40 enemy posture & grants +15 Flow. Cooldown 9s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #fb923c;">
-                  <strong style="color: #fb923c;">Tier 5 • Inferno Sweep / Firewheel (25,000 🔮)</strong>: <span>260px orbiting blade ring dealing continuous burning damage, fires 12 homing ember blades, ends in 250% AoE infernal supernova.</span>
+                  <strong style="color: #fb923c;">Tier 5 • Inferno Sweep / Firewheel (12,500 🔮)</strong>: <span>6.0s spinning blade ring dealing continuous burn damage (2 + 24% Slash DMG every 0.25s) & fires 4 rotating fire projectiles every 0.45s (80% Slash DMG). Ends in a 300px Inferno Supernova (250% Slash DMG + burn). Cooldown 11s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #c084fc;">
-                  <strong style="color: #c084fc;">Tier 6 • Shadow Decoy (35,000 🔮)</strong>: <span>Spawns 3 armed shadow clones that taunt mobs, grants 5.0s phantom invisibility with 3.0x crit multiplier, clones detonate on death for 200% damage + 2.5s stun.</span>
+                  <strong style="color: #c084fc;">Tier 6 • Void Rupture / Phantom Slicer (35,000 🔮)</strong>: <span>Instant 320px supersonic dimensional blink slicing all enemies in path for 110 + 950% Slash DMG + 75 posture break and 0.7s stun. For 6s, enters void phase with afterimages and homing void blades (135% Slash DMG). Cooldown 12s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #e879f9;">
-                  <strong style="color: #e879f9;">Apex Tier • Raijin's Cataclysm / Gravity Well (50,000 🔮)</strong>: <span>420px event horizon that vacuums all mobs and devours projectiles, crushes for 360% slash DPS, detonates in screen-clearing supernova.</span>
+                  <strong style="color: #e879f9;">Apex Tier • Raijin's Cataclysm / Heavenly Judgement (50,000 🔮)</strong>: <span>Obliterates ALL on-screen enemy projectiles on cast! Calls down a 550px celestial thunderbolt dealing 140 + 1250% Slash DMG + 120 posture break and 0.75s stun. Slashes chain violet lightning to 5 enemies (250% Slash DMG) for 7s. Cooldown 10s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #ef4444; margin-top: 4px;">
                   <strong style="color: #fca5a5;">⚡ Divine Awakenings (Flow 100 / L-Shift)</strong>: 
@@ -543,32 +546,26 @@
               </div>
             </div>
 
-            <!-- Category 3: Combined Skills (Fusions) -->
-            <div class="guide-card" data-section="fusions" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 14px;">
+            <!-- Category 3: Heroes & Combat Stances -->
+            <div class="guide-card" data-section="heroes" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(168, 85, 247, 0.25); border-radius: 8px; padding: 14px;">
               <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #c084fc; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <span>⚡</span> <span>FORBIDDEN WEAPON FUSIONS (COMBINED SKILLS)</span>
+                  <span>👑</span> <span>HEROES & COMBAT STANCES</span>
                 </div>
-                <span style="font-family: 'Space Mono', monospace; font-size: 11px; color: #d8b4fe; background: rgba(168, 85, 247, 0.15); padding: 2px 8px; border-radius: 4px;">HYBRID ARTS</span>
+                <span style="font-family: 'Space Mono', monospace; font-size: 11px; color: #d8b4fe; background: rgba(168, 85, 247, 0.15); padding: 2px 8px; border-radius: 4px;">WARRIOR MASTERY</span>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;">
-                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #f97316;">
-                  <strong style="color: #fb923c;">⚡ Plasma Tempest</strong> <em style="color: #94a3b8; font-size: 11px;">(Firewheel + Raijin Step)</em>: <span>Superheats electric dashes into roaring plasma storms, melting boss armor and chaining 400% voltage bursts across mobs.</span>
-                </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #c084fc;">
-                  <strong style="color: #d8b4fe;">🌌 Singularity Cleave</strong> <em style="color: #94a3b8; font-size: 11px;">(Gravity Well + Dragon's Fury)</em>: <span>Slashes tear open micro-black holes pulling enemies 180px around impact point, crushing mobs into a single strike zone.</span>
-                </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #38bdf8;">
-                  <strong style="color: #7dd3fc;">👤 Hundred Phantoms</strong> <em style="color: #94a3b8; font-size: 11px;">(Shadow Decoy + Glass Demon)</em>: <span>Increases clone cap to 6; every slash and Iaijutsu fires across all clones simultaneously.</span>
-                </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #22c55e;">
-                  <strong style="color: #86efac;">🌪️ Kamaitachi Sickle Gale</strong> <em style="color: #94a3b8; font-size: 11px;">(Wind Aegis + Iron Spikes)</em>: <span>Parried projectiles reflect as spinning sickle gale disks that pierce through entire ranks of enemies.</span>
+                  <strong style="color: #7dd3fc;">🏹 Aetherion (Apex Celestial Blade)</strong>: <span>Equipped with a dual stance system! Tap <kbd class="kbd-badge">STANCE</kbd> / <kbd class="kbd-badge">X</kbd> to manually toggle between Melee Slash and Celestial Ranged Stance.<br>• <strong>Ranged Stance</strong>: Fires high-velocity Astral Wind Blades (<strong style="color: #38bdf8;">130 + 8.0x Slash DMG</strong>) using manual aim. Applies Star Brand; 3rd shot detonates for massive AoE shockwaves.<br>• <strong>Heavy Iaijutsu</strong>: Manual-aim colossal 672px Wind Blade (<strong style="color: #38bdf8;">9x Slash DMG</strong>) piercing the whole lane.<br>• <strong>Ranged Kit</strong>: Astral Drift Volley, Astral Thunder-Beam, Skyward Burst, Astral Mirror Shot, and Warp Hyper-Snipe.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ef4444;">
-                  <strong style="color: #fca5a5;">🩸 Asura Storm Frenzy</strong> <em style="color: #94a3b8; font-size: 11px;">(Parry Master + Blood Thirst)</em>: <span>Consecutive parries summon 4 screen-clearing blood lightning bolts and grant unyielding attack speed.</span>
+                  <strong style="color: #fca5a5;">🩸 Akakage (Blood Assassin)</strong>: <span>Lethal execution specialist. Crits inflict arterial hemorrhaging and missing health bleed. Awakening unlocks the fearsome <strong>Blood Asura</strong> 6-armed manifestation with execution life-drain and untrackable shadow steps.</span>
                 </div>
-                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #38bdf8;">
-                  <strong style="color: #67e8f9;">❄️🔥 Frostfire Supernova</strong> <em style="color: #94a3b8; font-size: 11px;">(Frost Stance + Firewheel)</em>: <span>Alternating cold and heat causes violent thermal shock, detonating burning frozen targets for 500% AoE blast damage.</span>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ffd700;">
+                  <strong style="color: #fef08a;">⚔️ Ronin (Way of the Blade)</strong>: <span>The balanced master of traditional Kenjutsu. Excels at rhythmic parry counters, wide crescent sweeps, and rapid Flow generation for frequent Divine Awakenings.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #f97316;">
+                  <strong style="color: #fed7aa;">🐂 Satyr (Beast King)</strong>: <span>Unyielding titan with high poise and devastating wide-arc cleaves. Shrugs off light chip damage and rapidly crushes enemy posture shields.</span>
                 </div>
               </div>
             </div>
@@ -644,6 +641,12 @@
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #a855f7;">
                   <strong style="color: #d8b4fe;">🎵 Dynamic Audio Pitch Crescendo</strong>: <span>Slash sound pitch escalates with active combo streak up to 1.45x (<code style="color: #d8b4fe;">Math.min(1.45, 1.0 + combo * 0.015)</code>), building adrenaline as your combo climbs.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #38bdf8;">
+                  <strong style="color: #7dd3fc;">💥 Projectile Clash & Reflection</strong>: <span>Any player projectile (including Aetherion's Astral Wind Blades, charged Iaijutsu, and active skill projectiles) colliding with enemy bullets deflects them directly back toward enemies at 2,400 px/s with bonus scaling (<strong style="color: #38bdf8;">30 + 2.5x Slash DMG</strong>), parry SFX, and cyan shockwaves!</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #22c55e;">
+                  <strong style="color: #bbf7d0;">📈 Unified Damage Scaling Law</strong>: <span>Every combo attack, active skill, and dash damage scales with <strong style="color: #22c55e;">Flat Base + % of Current Slash Damage</strong>. Your katana upgrades permanently amplify every maneuver in your repertoire.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ffd700;">
                   <strong style="color: #fef08a;">⛩️ Shrines of Yomi (7 Divine Trials)</strong>: <span>Unlock permanent character power by conquering trials: Untouchable, 1-Heart Survival, 150-Combo Streak, Boss Execution, Outpost Armory, 10-Parry Streak, and Dawn Shogun!</span>
