@@ -42,7 +42,6 @@ import {
   playSynthesizedFirewheel,
   playSynthesizedGravity,
   playSynthesizedLevelUp,
-  playSynthesizedClash,
   playSynthesizedTempleBell,
   playSynthesizedSingingBowl,
   startBgm,
@@ -4856,7 +4855,7 @@ function update(realDt: number) {
     if (isAttackPressed) {
       clash.tapsCurrent++;
       clash.timer = Math.min(clash.timer + 0.08, clash.maxTimer);
-      playSynthesizedClash();
+      // Clash audio removed per user instruction
       globals.screenShake = Math.max(globals.screenShake, 8);
       for (let p = 0; p < 8; p++) {
         const spd = 200 + Math.random() * 250;
@@ -5850,7 +5849,7 @@ function update(realDt: number) {
               e.vx = 0; e.vy = 0;
               e.stunTimer = 0.55;
               globals.screenShake = Math.max(globals.screenShake, 12);
-              playSynthesizedClash();
+              // Clash audio removed per user instruction
               globals.shockwaves.push(new Shockwave(clashX, clashY, '#ffd700'));
               for (let p = 0; p < 12; p++) {
                 const spd = 200 + Math.random() * 300;

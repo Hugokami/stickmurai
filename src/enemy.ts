@@ -3,7 +3,7 @@ import { BOSS_BASE_HP, campaignHpMultiplier } from './balance';
 import { callbacks } from './callbacks';
 import { Entity, Particle, FloatingText, Projectile, AnimatedEffect, Shockwave } from './entities';
 import { Player } from './player';
-import { playSynthesizedThunder, playEnergyBeam, playTeleportSfx, playExplosionSfx, playSynthesizedClash } from './audio';
+import { playSynthesizedThunder, playEnergyBeam, playTeleportSfx, playExplosionSfx } from './audio';
 import { vfxAnims, loadEnemyAssetsNow } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 import { isBoss } from './combatPolish';
@@ -1364,7 +1364,7 @@ export class Enemy extends Entity {
       globals.screenShake = bossEntity ? 22 : 14;
       globals.shockwaves.push(new Shockwave(this.x, this.y, '#ff003c', bossEntity ? 200 : 130));
       globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 75, bossEntity ? "BOSS POSTURE BROKEN! 💀" : "STANCE BROKEN!", "#ff003c", bossEntity ? 26 : 22));
-      playSynthesizedClash();
+      // Posture break audio removed per user instruction
 
       // Grim Harvest: award spectral soul on posture break
       if (globals.grimHarvestActive && (globals.grimHarvestSouls || 0) < 3) {
