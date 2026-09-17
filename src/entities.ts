@@ -359,6 +359,17 @@ export class Particle {
 }
 
 const floatingTextPool: FloatingText[] = [];
+const statusThrottle = new Map<string, { time: number; x: number; y: number }>();
+const numPattern = /^(.*?[^\d.]*?)(-?\d+(?:\.\d+)?)(.*?)$/;
+
+export function formatCombatNumber(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'B';
+  if (abs >= 1_000_000) return (n / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+  if (abs >= 10_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+  if (abs >= 1_000) return (n / 1_000).toFixed(1).replace(/\.0$/, '') + 'K';
+  return Math.round(n).toString();
+}
 
 const fontCache: Record<number, string> = {};
 function getFont(size: number): string {
@@ -366,8 +377,33 @@ function getFont(size: number): string {
 }
 
 export class FloatingText {
-  x!: number; y!: number; text!: string; color!: string; life = 1.2; maxLife = 1.2; size!: number;
+  x!: number; y!: number; text!: string; color!: string; life = 0.65; maxLife = 0.65; size!: number;
   isFrozenDuringTimeStop = false;
+  visible = true;
+  damageValue = 0;
+  isDamageNumber = false;
+  prefix = '';
+  suffix = '';
+
+  static getMaxFloatingTexts(): number {
+    const isLow = globals.graphicsSettings === 'low';
+    const isRedMotion = typeof window !== 'undefined' && (window as any).stickmuraiReducedMotion === true;
+    if (isRedMotion) return 12;
+    if (isLow) return 16;
+    return isMobile ? 24 : 36;
+  }
+
+  static getSilent(): FloatingText {
+    let f = floatingTextPool.pop();
+    if (!f) {
+      f = new FloatingText(0, 0, '', '#ffffff', 0);
+    }
+    f.visible = false;
+    f.life = -1;
+    f.maxLife = 0;
+    f.isDamageNumber = false;
+    return f;
+  }
 
   constructor(x: number, y: number, text: string, color: string = '#ffffff', size: number = 20) {
     this.init(x, y, text, color, size);
@@ -375,52 +411,143 @@ export class FloatingText {
 
   init(x: number, y: number, text: string, color: string = '#ffffff', size: number = 20) {
     this.x = x; this.y = y; this.text = text; this.color = color; this.size = size;
-    this.life = 1.2; this.maxLife = 1.2;
+    this.life = 0.65; this.maxLife = 0.65;
+    this.visible = true;
+    this.damageValue = 0;
+    this.isDamageNumber = false;
+    this.prefix = '';
+    this.suffix = '';
     this.isFrozenDuringTimeStop = false;
   }
 
   static acquire(x: number, y: number, text: string, color: string = '#ffffff', size: number = 20): FloatingText {
-    const f = floatingTextPool.pop();
-    if (f) {
-      f.init(x, y, text, color, size);
+    if (globals.floatingTextEnabled === 'off') {
+      return FloatingText.getSilent();
+    }
+
+    const m = text.match(numPattern);
+    const hasNumber = m && !isNaN(parseFloat(m[2]));
+    const isNumericDamageOrReward = hasNumber && (m[1].includes('-') || m[2].startsWith('-') || m[1].includes('+') || !isNaN(Number(text)));
+
+    if (isNumericDamageOrReward) {
+      const rawPrefix = m[1];
+      const val = Math.abs(parseFloat(m[2]));
+      const suffix = m[3];
+      const sign = (rawPrefix.includes('-') || m[2].startsWith('-')) ? '-' : (rawPrefix.includes('+') ? '+' : '');
+      const prefix = rawPrefix.endsWith('-') || rawPrefix.endsWith('+') ? rawPrefix.slice(0, -1) + sign : (sign ? rawPrefix + sign : rawPrefix);
+
+      // Check for nearby recent floating damage/currency to coalesce
+      if (globals.floatingTexts && globals.floatingTexts.length > 0) {
+        for (let i = globals.floatingTexts.length - 1; i >= 0; i--) {
+          const existing = globals.floatingTexts[i];
+          if (
+            existing &&
+            existing.visible &&
+            existing.isDamageNumber &&
+            existing.prefix === prefix &&
+            existing.suffix === suffix &&
+            existing.life > 0.15 &&
+            Math.abs(existing.x - x) < 55 &&
+            Math.abs(existing.y - y) < 60
+          ) {
+            existing.damageValue += val;
+            existing.text = `${existing.prefix}${formatCombatNumber(existing.damageValue)}${existing.suffix}`;
+            existing.life = Math.min(existing.maxLife, existing.life + 0.2);
+            existing.y = Math.min(existing.y, y - 5);
+            existing.size = Math.min(30, existing.size + 1);
+            return FloatingText.getSilent();
+          }
+        }
+      }
+
+      // Format text with compact number notation
+      const formattedText = `${prefix}${formatCombatNumber(val)}${suffix}`;
+
+      // Enforce global active limit before allocating new floater
+      const max = FloatingText.getMaxFloatingTexts();
+      while (globals.floatingTexts && globals.floatingTexts.length >= max) {
+        const oldest = globals.floatingTexts.shift();
+        if (oldest) FloatingText.release(oldest);
+      }
+
+      let f = floatingTextPool.pop();
+      if (f) {
+        f.init(x, y, formattedText, color, size);
+      } else {
+        f = new FloatingText(x, y, formattedText, color, size);
+      }
+      f.damageValue = val;
+      f.isDamageNumber = true;
+      f.prefix = prefix;
+      f.suffix = suffix;
       return f;
     }
-    return new FloatingText(x, y, text, color, size);
+
+    // Status text rate-limiting (e.g. STANCE BROKEN!, LAUNCHED!, DEFLECTED!, WALL SPLAT!)
+    const now = typeof performance !== 'undefined' ? performance.now() : Date.now();
+    const lastStatus = statusThrottle.get(text);
+    if (lastStatus && (now - lastStatus.time < 350) && Math.hypot(x - lastStatus.x, y - lastStatus.y) < 260) {
+      return FloatingText.getSilent();
+    }
+    statusThrottle.set(text, { time: now, x, y });
+    if (statusThrottle.size > 40) {
+      statusThrottle.clear();
+    }
+
+    // Enforce global active limit
+    const max = FloatingText.getMaxFloatingTexts();
+    while (globals.floatingTexts && globals.floatingTexts.length >= max) {
+      const oldest = globals.floatingTexts.shift();
+      if (oldest) FloatingText.release(oldest);
+    }
+
+    let f = floatingTextPool.pop();
+    if (f) {
+      f.init(x, y, text, color, size);
+    } else {
+      f = new FloatingText(x, y, text, color, size);
+    }
+    return f;
   }
 
   static release(f: FloatingText) {
-    if (floatingTextPool.length < 100) {
+    f.visible = false;
+    f.life = -1;
+    f.damageValue = 0;
+    f.isDamageNumber = false;
+    if (floatingTextPool.length < 80) {
       floatingTextPool.push(f);
     }
   }
 
   update(dt: number) {
+    if (!this.visible || this.life <= 0) return;
     if (this.isFrozenDuringTimeStop && (globals.flowState === 'awakened' || globals.zenFieldActiveTimer > 0)) {
       return;
     }
-    this.y -= 40 * dt;
+    this.y -= 45 * dt;
     this.life -= dt;
   }
+
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
+    if (!this.visible || this.life <= 0) return;
     if (globals.floatingTextEnabled === 'off') return;
     const rx = (this.x - cx + globals.vw/2) | 0;
     const ry = (this.y - cy + globals.vh/2) | 0;
     if (rx < -160 || rx > globals.vw + 160 || ry < -50 || ry > globals.vh + 50) return;
 
-    ctx.save();
     ctx.globalAlpha = Math.max(0, this.life / this.maxLife);
     ctx.font = getFont(this.size);
-    ctx.textAlign = 'center';
     
     if (this.color === '#ff003c') {
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 2.5;
       ctx.strokeText(this.text, rx, ry);
       ctx.fillStyle = this.color;
     } else if (this.color.startsWith('neon-')) {
       const neonHex = this.color.substring(5);
       ctx.strokeStyle = neonHex;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 2.5;
       ctx.strokeText(this.text, rx, ry);
       ctx.fillStyle = '#ffffff';
     } else {
@@ -428,7 +555,6 @@ export class FloatingText {
     }
     
     ctx.fillText(this.text, rx, ry);
-    ctx.restore();
   }
 }
 

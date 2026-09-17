@@ -785,7 +785,14 @@ export function draw() {
   if (globals.shockwaves && globals.shockwaves.length > 0) {
     globals.shockwaves.forEach(s => s.draw(ctx, globals.camera.x, globals.camera.y));
   }
-  globals.floatingTexts.forEach(f => f.draw(ctx, globals.camera.x, globals.camera.y));
+  if (globals.floatingTexts && globals.floatingTexts.length > 0 && globals.floatingTextEnabled !== 'off') {
+    ctx.save();
+    ctx.textAlign = 'center';
+    for (let i = 0; i < globals.floatingTexts.length; i++) {
+      globals.floatingTexts[i].draw(ctx, globals.camera.x, globals.camera.y);
+    }
+    ctx.restore();
+  }
 
   // Off-screen Enemy Threat Radar Chevrons
   // Renders small warning chevrons pointing toward distant enemies so none are lost in the vast battlefield
@@ -1199,32 +1206,46 @@ export function draw() {
     ctx.restore();
   }
 
-  // Option 3: Aerial Cleave Indicator
-  globals.enemies.forEach(e => {
-    if (e.state !== 'dead' && (e as any).canAerialCleave && (e as any).airborneZ > 20) {
-      ctx.save();
-      const ex = (e.x - globals.camera.x) * globals.gameZoom + globals.width / 2;
-      const ey = ((e.y - (e as any).airborneZ) - globals.camera.y) * globals.gameZoom + globals.height / 2;
-
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.font = "bold 13px 'Outfit', sans-serif";
-      const cleavePrompt = `⚡ ${globals.currentLang === 'ja' ? '空中斬り [攻撃/回避]!' : 'AERIAL CLEAVE!'}`;
-      const width = ctx.measureText(cleavePrompt).width;
-
-      ctx.fillStyle = 'rgba(14, 165, 233, 0.9)';
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.roundRect(ex - width / 2 - 8, ey - 50, width + 16, 24, 6);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#ffffff';
-      ctx.fillText(cleavePrompt, ex, ey - 38);
-      ctx.restore();
+  // Option 3: Aerial Cleave Indicator (single prompt for closest airborne target to avoid indicator stacking)
+  let closestCleaveTarget: any = null;
+  let closestCleaveDistSq = Infinity;
+  for (let i = 0; i < globals.enemies.length; i++) {
+    const e = globals.enemies[i] as any;
+    if (e.state !== 'dead' && e.canAerialCleave && e.airborneZ > 20) {
+      const dx = e.x - globals.player.x;
+      const dy = e.y - globals.player.y;
+      const dSq = dx * dx + dy * dy;
+      if (dSq < closestCleaveDistSq) {
+        closestCleaveDistSq = dSq;
+        closestCleaveTarget = e;
+      }
     }
-  });
+  }
+
+  if (closestCleaveTarget) {
+    const e = closestCleaveTarget;
+    ctx.save();
+    const ex = (e.x - globals.camera.x) * globals.gameZoom + globals.width / 2;
+    const ey = ((e.y - e.airborneZ) - globals.camera.y) * globals.gameZoom + globals.height / 2;
+
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = "bold 13px 'Outfit', sans-serif";
+    const cleavePrompt = `⚡ ${globals.currentLang === 'ja' ? '空中斬り [攻撃/回避]!' : 'AERIAL CLEAVE!'}`;
+    const width = 140;
+
+    ctx.fillStyle = 'rgba(14, 165, 233, 0.9)';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(ex - width / 2 - 8, ey - 50, width + 16, 24, 6);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(cleavePrompt, ex, ey - 38);
+    ctx.restore();
+  }
 
   // Mechanic 3: Screen-Top Boss Health & Sekiro Posture / Stagger Bar HUD
   if (globals.gameState === 'playing') {
