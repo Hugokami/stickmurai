@@ -767,9 +767,9 @@ html.crazygames #fullscreen-prompt {
 .menu-grid-2x4 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
   width: 100%;
-  max-width: 440px;
+  max-width: 460px;
 }
 
 .neo-grid-btn {
@@ -777,9 +777,9 @@ html.crazygames #fullscreen-prompt {
   flex-direction: row !important;
   align-items: center !important;
   justify-content: flex-start !important;
-  gap: 9px !important;
-  padding: 8px 10px !important;
-  min-height: 46px !important;
+  gap: 10px !important;
+  padding: 10px 12px !important;
+  min-height: 48px !important;
   width: 100% !important;
   max-width: 100% !important;
   background: rgba(11, 14, 20, 0.92) !important;
@@ -850,27 +850,79 @@ html.crazygames #fullscreen-prompt {
   transform: translateX(3px);
 }
 
-/* Button Themed Accents */
-.dojo-btn { border-color: #d500f9 !important; color: #f0abfc !important; box-shadow: 0 0 12px rgba(213, 0, 249, 0.25) !important; }
-.dojo-btn:hover { box-shadow: 0 0 20px rgba(213, 0, 249, 0.6) !important; }
+/* Button Themed Accents: Disciplined Neo-Japanese Samurai Lacquer Palette */
+.neo-grid-btn {
+  background: rgba(12, 15, 22, 0.94) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.32) !important;
+  color: #f1f5f9 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), inset 0 0 10px rgba(212, 162, 78, 0.05) !important;
+}
 
-.upgrades-btn { border-color: #ffd200 !important; color: #fde047 !important; box-shadow: 0 0 12px rgba(255, 210, 0, 0.25) !important; }
-.upgrades-btn:hover { box-shadow: 0 0 20px rgba(255, 210, 0, 0.6) !important; }
+.neo-grid-btn:hover {
+  border-color: rgba(212, 162, 78, 0.85) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 14px rgba(212, 162, 78, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
 
-.grimoire-btn { border-color: #ff9100 !important; color: #fed7aa !important; box-shadow: 0 0 12px rgba(255, 145, 0, 0.25) !important; }
-.grimoire-btn:hover { box-shadow: 0 0 20px rgba(255, 145, 0, 0.6) !important; }
+.neo-grid-btn .grid-btn-icon {
+  color: #ffd700 !important;
+}
 
-.chronicle-btn { border-color: #00e5ff !important; color: #7dd3fc !important; box-shadow: 0 0 12px rgba(0, 229, 255, 0.25) !important; }
-.chronicle-btn:hover { box-shadow: 0 0 20px rgba(0, 229, 255, 0.6) !important; }
+.neo-grid-btn .grid-btn-title {
+  color: #f8fafc !important;
+}
 
-.codex-btn { border-color: #00b0ff !important; color: #93c5fd !important; box-shadow: 0 0 12px rgba(0, 176, 255, 0.25) !important; }
-.codex-btn:hover { box-shadow: 0 0 20px rgba(0, 176, 255, 0.6) !important; }
+.neo-grid-btn .grid-btn-sub {
+  color: #d4a24e !important;
+  opacity: 0.85 !important;
+}
 
-.settings-btn { border-color: #94a3b8 !important; color: #e2e8f0 !important; box-shadow: 0 0 12px rgba(148, 163, 184, 0.2) !important; }
-.settings-btn:hover { box-shadow: 0 0 18px rgba(148, 163, 184, 0.5) !important; }
+.neo-grid-btn .grid-btn-chevron {
+  color: #d4a24e !important;
+  opacity: 0.6 !important;
+}
 
-.fullscreen-btn { border-color: #38bdf8 !important; color: #bae6fd !important; box-shadow: 0 0 12px rgba(56, 189, 248, 0.25) !important; }
-.fullscreen-btn:hover { box-shadow: 0 0 20px rgba(56, 189, 248, 0.6) !important; }
+.dojo-btn { border-color: rgba(192, 132, 252, 0.38) !important; }
+.dojo-btn .grid-btn-icon { color: #d8b4fe !important; }
+.dojo-btn:hover { border-color: #c084fc !important; box-shadow: 0 4px 16px rgba(192, 132, 252, 0.3) !important; }
+
+.upgrades-btn { border-color: rgba(250, 204, 21, 0.38) !important; }
+.upgrades-btn .grid-btn-icon { color: #fde047 !important; }
+.upgrades-btn:hover { border-color: #facc15 !important; box-shadow: 0 4px 16px rgba(250, 204, 21, 0.3) !important; }
+
+.grimoire-btn { border-color: rgba(251, 146, 60, 0.38) !important; }
+.grimoire-btn .grid-btn-icon { color: #fed7aa !important; }
+.grimoire-btn:hover { border-color: #fb923c !important; box-shadow: 0 4px 16px rgba(251, 146, 60, 0.3) !important; }
+
+.chronicle-btn { border-color: rgba(45, 212, 191, 0.38) !important; }
+.chronicle-btn .grid-btn-icon { color: #99f6e4 !important; }
+.chronicle-btn:hover { border-color: #2dd4bf !important; box-shadow: 0 4px 16px rgba(45, 212, 191, 0.3) !important; }
+
+.codex-btn { border-color: rgba(56, 189, 248, 0.38) !important; }
+.codex-btn .grid-btn-icon { color: #bae6fd !important; }
+.codex-btn:hover { border-color: #38bdf8 !important; box-shadow: 0 4px 16px rgba(56, 189, 248, 0.3) !important; }
+
+.settings-btn { border-color: rgba(148, 163, 184, 0.35) !important; }
+.settings-btn .grid-btn-icon { color: #cbd5e1 !important; }
+.settings-btn:hover { border-color: #94a3b8 !important; box-shadow: 0 4px 16px rgba(148, 163, 184, 0.25) !important; }
+
+.fullscreen-btn {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  border-color: rgba(212, 162, 78, 0.38) !important;
+}
+.fullscreen-btn .grid-btn-labels {
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  text-align: center !important;
+}
+.fullscreen-btn .grid-btn-chevron {
+  display: none !important;
+}
+.fullscreen-btn .grid-btn-icon { color: #facc15 !important; }
+.fullscreen-btn:hover { border-color: #ffd700 !important; box-shadow: 0 4px 16px rgba(255, 215, 0, 0.3) !important; }
 
 /* Compact button variants for hero cards, modals & grid menus */
 .btn-compact {
@@ -992,19 +1044,37 @@ html.crazygames #fullscreen-prompt {
   background-image: radial-gradient(circle at 100% 150%, transparent 20%, rgba(255,255,255,0.02) 21%, rgba(255,255,255,0.02) 34%, transparent 35%, transparent),
                     radial-gradient(circle at 0% 150%, transparent 20%, rgba(255,255,255,0.02) 21%, rgba(255,255,255,0.02) 34%, transparent 35%, transparent) !important;
   background-size: 50px 25px !important;
-  border: 1.5px solid rgba(255, 210, 0, 0.35) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.35) !important;
   clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px) !important;
-  padding: 16px 18px !important;
-  max-width: 580px !important;
+  padding: 18px 22px !important;
+  max-width: 100% !important;
   width: 100% !important;
+  box-sizing: border-box !important;
   text-align: left;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), inset 0 0 20px rgba(255, 210, 0, 0.05) !important;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.85), inset 0 0 20px rgba(212, 162, 78, 0.05) !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 12px !important;
-  max-height: min(580px, calc(100dvh - 80px)) !important;
+  max-height: min(680px, calc(100dvh - 80px)) !important;
   overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 162, 78, 0.45) rgba(10, 12, 18, 0.6);
   -webkit-overflow-scrolling: touch;
+}
+
+.guide-box::-webkit-scrollbar {
+  width: 6px;
+}
+.guide-box::-webkit-scrollbar-track {
+  background: rgba(8, 10, 15, 0.6);
+}
+.guide-box::-webkit-scrollbar-thumb {
+  background: rgba(212, 162, 78, 0.4);
+  border-radius: 3px;
+}
+.guide-box::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 162, 78, 0.7);
 }
 
 .guide-header {
@@ -1052,62 +1122,64 @@ html.crazygames #fullscreen-prompt {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  background: rgba(14, 18, 25, 0.85);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 16px;
+  background: rgba(14, 18, 26, 0.92);
+  border: 1px solid rgba(212, 162, 78, 0.2);
   border-left: 3px solid #ff1e27;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-  padding: 10px 12px;
-  transition: all 0.2s ease;
+  padding: 14px 16px;
+  transition: transform 0.2s ease, border-color 0.2s ease;
 }
 
 .guide-technique-card:hover {
-  background: rgba(20, 26, 36, 0.95);
-  border-color: rgba(255, 255, 255, 0.2);
-  transform: translateX(2px);
+  background: rgba(20, 26, 38, 0.96);
+  border-color: rgba(212, 162, 78, 0.45);
+  transform: translateX(3px);
 }
 
-.card-movement { border-left-color: #00e5ff !important; }
+.card-movement { border-left-color: #38bdf8 !important; }
 .card-slash { border-left-color: #ff1e27 !important; }
 .card-parry { border-left-color: #ffd200 !important; }
 
 .technique-text-side {
-  flex: 1 1 58%;
+  flex: 1 1 auto;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 5px;
 }
 
 .technique-tag-row {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
 }
 
 .technique-tag {
   font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.8px;
 }
 
-.move-tag { color: #00e5ff; }
+.move-tag { color: #38bdf8; }
 .slash-tag { color: #ff1e27; }
 .parry-tag { color: #ffd200; }
 
 .technique-desc {
   font-family: 'Noto Sans JP', sans-serif;
-  font-size: 11.5px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.5;
   color: #cbd5e1;
   margin: 0;
+  text-wrap: pretty;
 }
 
 .technique-diagram {
-  flex: 0 0 135px;
-  height: 74px;
+  flex: 0 0 140px;
+  width: 140px;
+  height: 76px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1115,6 +1187,7 @@ html.crazygames #fullscreen-prompt {
   clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  flex-shrink: 0;
 }
 
 .technique-diagram img {
@@ -2341,7 +2414,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 @media (min-width: 900px) and (min-height: 521px) {
-  .main-menu-box, .pause-menu-box {
+  .main-menu-box {
+    flex-direction: row;
+    max-width: 1360px;
+    width: 96vw;
+    min-height: min(720px, calc(100dvh - 36px));
+    max-height: calc(100dvh - 20px);
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 32px;
+    padding: 28px 36px;
+  }
+  .pause-menu-box {
     flex-direction: row;
     max-width: 1040px;
     width: 95%;
@@ -2352,14 +2436,26 @@ input[type="range"]::-webkit-slider-thumb:hover {
     padding: 24px 30px;
   }
   .main-menu-box .menu-left {
-    flex: 0 0 430px;
-    max-width: 440px;
+    flex: 0 0 460px;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
   }
   .main-menu-box .menu-right {
-    flex: 1 1 540px;
-    max-width: 580px;
-    max-height: min(580px, calc(100dvh - 80px));
-    overflow-y: auto;
+    flex: 1 1 760px;
+    max-width: 840px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .main-menu-box .guide-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - 84px) !important;
+    height: 100% !important;
   }
 }
 
@@ -5005,7 +5101,6 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
 /* 2. Cyber-Samurai Armor Corner Brackets (4-corner framing) */
 .neo-framed::before,
 .main-menu-box::before,
-.guide-box::before,
 #upgrades-modal .menu-box::before,
 #grimoire-screen .menu-box::before,
 #chronicle-screen .menu-box::before,
@@ -5039,7 +5134,7 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
     bottom 0 left 0,
     bottom 0 right 0;
   background-repeat: no-repeat;
-  background-size: 40px 40px;
+  background-size: 46px 46px;
   opacity: 0.94;
 }
 
@@ -5050,7 +5145,6 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
 @media (max-width: 640px) {
   .neo-framed::before,
   .main-menu-box::before,
-  .guide-box::before,
   #upgrades-modal .menu-box::before,
   #grimoire-screen .menu-box::before,
   #chronicle-screen .menu-box::before,
@@ -5072,21 +5166,21 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
 /* 3. Title Screen Blood Moon & Torii Gate Enso Watermark */
 .title-emblem-watermark {
   position: absolute;
-  top: 50%;
+  top: 36%;
   left: 50%;
-  transform: translate(-50%, -52%);
-  width: 260px;
-  height: 260px;
+  transform: translate(-50%, -50%);
+  width: 170px;
+  height: 170px;
   background: url('/ui/torii_bloodmoon_emblem.png') no-repeat center / contain;
   pointer-events: none;
-  opacity: 0.42;
+  opacity: 0.15;
   z-index: 0;
   animation: emblem-breath 6s ease-in-out infinite alternate;
 }
 
 @keyframes emblem-breath {
-  0% { transform: translate(-50%, -52%) scale(0.97); opacity: 0.36; }
-  100% { transform: translate(-50%, -52%) scale(1.03); opacity: 0.46; }
+  0% { transform: translate(-50%, -50%) scale(0.96); opacity: 0.12; }
+  100% { transform: translate(-50%, -50%) scale(1.04); opacity: 0.18; }
 }
 
 @media (max-width: 640px) {
