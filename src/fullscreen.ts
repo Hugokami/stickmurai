@@ -127,8 +127,10 @@ export function updateFullscreenUI(): void {
   const settingsBtn = document.getElementById('settings-fullscreen-btn');
   const settingsRow = document.getElementById('setting-fullscreen-row');
 
+  // In-game HUD fullscreen button is removed from battlefield
+  if (hudBtn) hudBtn.style.display = 'none';
+
   if (isCg) {
-    if (hudBtn) hudBtn.style.display = 'none';
     if (pauseBtn) pauseBtn.style.display = 'none';
     if (menuBtn) menuBtn.style.display = 'none';
     if (settingsRow) settingsRow.style.display = 'none';
@@ -138,17 +140,6 @@ export function updateFullscreenUI(): void {
   const active = isFullscreenActive();
   const isJa = globals.currentLang === 'ja';
 
-  if (hudBtn) {
-    hudBtn.style.display = 'flex';
-    hudBtn.innerHTML = active ? '🗗' : '⛶';
-    hudBtn.title = active ? (isJa ? '全画面解除' : 'Exit Fullscreen') : (isJa ? '全画面表示' : 'Fullscreen');
-    if (active) {
-      hudBtn.classList.add('is-fullscreen');
-    } else {
-      hudBtn.classList.remove('is-fullscreen');
-    }
-  }
-
   if (pauseBtn) {
     pauseBtn.style.display = 'block';
     pauseBtn.textContent = active 
@@ -157,10 +148,17 @@ export function updateFullscreenUI(): void {
   }
 
   if (menuBtn) {
-    menuBtn.style.display = 'block';
-    menuBtn.textContent = active 
-      ? (isJa ? '🗗 全画面解除' : '🗗 Exit Fullscreen') 
-      : (isJa ? '⛶ 全画面表示' : '⛶ Fullscreen');
+    menuBtn.style.display = 'flex';
+    menuBtn.innerHTML = `
+      <svg class="grid-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+      </svg>
+      <div class="grid-btn-labels">
+        <span class="grid-btn-title">${active ? (isJa ? '全画面解除' : 'WINDOWED') : (isJa ? '全画面表示' : 'FULLSCREEN')}</span>
+        <span class="grid-btn-sub">${active ? (isJa ? '縮小' : 'Exit') : (isJa ? '拡大' : 'Display')}</span>
+      </div>
+      <span class="grid-btn-chevron">›</span>
+    `;
   }
 
   if (settingsBtn) {

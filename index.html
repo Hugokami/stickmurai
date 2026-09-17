@@ -110,11 +110,11 @@
           </div>
         </div>
         <div id="score-display">Kills: 0</div>
-        <div id="stage-currency-display" style="position: absolute; top: max(52px, calc(env(safe-area-inset-top) + 38px)); right: max(75px, calc(env(safe-area-inset-right) + 65px)); color:#fbbf24; background:rgba(0,0,0,.55); padding:5px 12px; border:1px solid rgba(251,191,36,.45); border-radius:14px; font:bold 13px Orbitron,monospace; pointer-events:none;">◆ <span id="stage-currency-count">0</span></div>
+        <div id="stage-currency-display" class="hud-pill-badge hud-currency-badge">◆ <span id="stage-currency-count">0</span></div>
         <button id="shop-btn" class="hud-shop-btn" title="Stage Requisitions Shop">
-          <span style="font-size: 14px;">🛒</span><span style="font-family: 'Orbitron', monospace; font-size: 11px; font-weight: bold; color: #fbbf24;">SHOP</span>
+          <span style="font-size: 14px;">🛒</span><span class="hud-btn-text">SHOP</span>
         </button>
-        <div id="magatama-display" style="position: absolute; top: max(16px, env(safe-area-inset-top)); right: max(75px, calc(env(safe-area-inset-right) + 65px)); font-family: 'Orbitron', monospace; font-size: 13px; color: #c084fc; font-weight: bold; background: rgba(0,0,0,0.55); padding: 5px 12px; border-radius: 14px; border: 1px solid rgba(192, 132, 252, 0.4); display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(192, 132, 252, 0.2); pointer-events: auto;">
+        <div id="magatama-display" class="hud-pill-badge hud-magatama-badge">
           <span style="font-size: 14px;">🔮</span><span id="hud-magatama-count">0</span>
         </div>
         <div id="hud-mission-tracker">
@@ -122,8 +122,7 @@
           <div id="bounty-display" style="display: none;"></div>
         </div>
         <div id="combo-display">x1 Combo</div>
-        <button id="pause-btn">⏸</button>
-        <button id="fullscreen-hud-btn" class="hud-fs-btn" title="Toggle Fullscreen" aria-label="Toggle Fullscreen">⛶</button>
+        <button id="pause-btn" class="hud-pause-btn" title="Pause Game" aria-label="Pause Game">⏸</button>
         <!-- Boss Encounter Warning Banner -->
         <div id="boss-warning-banner" style="display: none; opacity: 0; position: absolute; top: 22%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; z-index: 100; transition: opacity 0.5s ease; width: 90%; max-width: 600px;">
           <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: clamp(20px, 4vw, 38px); color: #ef4444; text-shadow: 0 0 20px rgba(239, 68, 68, 0.9), 0 0 40px rgba(0,0,0,0.9); letter-spacing: 2px;">
@@ -322,20 +321,112 @@
       <div id="main-menu" class="overlay" style="display:none;">
         <div class="menu-box main-menu-box">
           <div class="menu-left">
-            <h1 class="game-title" data-i18n="title">SUPER<br>SAMURAI<br>STICKY</h1>
+            <div class="game-title-wrap">
+              <h1 class="game-title" data-i18n="title">SUPER<br>SAMURAI<br>STICKY</h1>
+              <div class="game-subtitle-bar">
+                <span class="sub-flourish"></span>
+                <span class="sub-text">SLASH / PARRY / STICK / SURVIVE</span>
+                <span class="sub-flourish"></span>
+              </div>
+            </div>
             <div class="menu-buttons">
-              <button id="start-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.3); font-weight: bold; letter-spacing: 1px;">⚔️ STAGE MODE (CAMPAIGN)</button>
+              <button id="start-btn" class="menu-btn menu-btn-hero">
+                <div class="btn-hero-glow"></div>
+                <div class="btn-hero-inner">
+                  <svg class="btn-hero-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="4" y1="20" x2="20" y2="4"></line>
+                    <line x1="14" y1="4" x2="20" y2="4"></line>
+                    <line x1="20" y1="4" x2="20" y2="10"></line>
+                    <line x1="20" y1="20" x2="4" y2="4"></line>
+                    <line x1="10" y1="4" x2="4" y2="4"></line>
+                    <line x1="4" y1="4" x2="4" y2="10"></line>
+                  </svg>
+                  <div class="btn-hero-text">
+                    <span class="hero-primary">STAGE MODE</span>
+                    <span class="hero-secondary">(CAMPAIGN)</span>
+                  </div>
+                  <span class="btn-hero-chevron">›</span>
+                </div>
+              </button>
               <!-- PvP removed from the campaign menu -->
-              <button id="pvp-mode-btn" style="display:none" class="menu-btn" style="border-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);" data-i18n="playPvP">⚔️ Iaijutsu PvP (1v1)</button>
+              <button id="pvp-mode-btn" style="display:none" class="menu-btn" data-i18n="playPvP">⚔️ Iaijutsu PvP (1v1)</button>
               <div class="menu-grid-2x4">
-                <button id="open-dojo-btn" class="menu-btn" style="border-color: #c084fc; color: #c084fc; box-shadow: 0 0 10px rgba(192, 132, 252, 0.25);">🏯 Dojo</button>
-                <button id="open-upgrades-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">⚡ Upgrades</button>
-                <button id="open-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);">📜 Grimoire</button>
-                <button id="open-chronicle-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛩️ Chronicle</button>
-                <button id="journey-open-btn" style="display:none" class="menu-btn" style="border-color: #f59e0b; color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);">🎯 Trials</button>
-                <button id="open-guide-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);"><span data-i18n="openGuideBtn">📖 Codex</span></button>
-                <button id="open-settings-btn" class="menu-btn" data-i18n="settings">⚙️ Settings</button>
-                <button id="menu-fullscreen-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);">⛶ Fullscreen</button>
+                <button id="open-dojo-btn" class="menu-btn neo-grid-btn dojo-btn">
+                  <svg class="grid-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 5h20M4 8h16M7 5v16M17 5v16"/>
+                  </svg>
+                  <div class="grid-btn-labels">
+                    <span class="grid-btn-title">DOJO</span>
+                    <span class="grid-btn-sub">Practice</span>
+                  </div>
+                  <span class="grid-btn-chevron">›</span>
+                </button>
+                <button id="open-upgrades-btn" class="menu-btn neo-grid-btn upgrades-btn">
+                  <svg class="grid-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                  <div class="grid-btn-labels">
+                    <span class="grid-btn-title">UPGRADES</span>
+                    <span class="grid-btn-sub">Progression</span>
+                  </div>
+                  <span class="grid-btn-chevron">›</span>
+                </button>
+                <button id="open-grimoire-btn" class="menu-btn neo-grid-btn grimoire-btn">
+                  <svg class="grid-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                    <line x1="9" y1="7" x2="15" y2="7"/>
+                    <line x1="9" y1="11" x2="15" y2="11"/>
+                  </svg>
+                  <div class="grid-btn-labels">
+                    <span class="grid-btn-title">GRIMOIRE</span>
+                    <span class="grid-btn-sub">Lore & Arts</span>
+                  </div>
+                  <span class="grid-btn-chevron">›</span>
+                </button>
+                <button id="open-chronicle-btn" class="menu-btn neo-grid-btn chronicle-btn">
+                  <svg class="grid-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 4h18M5 7h14M7 7v14M17 7v14M10 11h4M10 15h4"/>
+                  </svg>
+                  <div class="grid-btn-labels">
+                    <span class="grid-btn-title">CHRONICLE</span>
+                    <span class="grid-btn-sub">Journey</span>
+                  </div>
+                  <span class="grid-btn-chevron">›</span>
+                </button>
+                <button id="journey-open-btn" style="display:none" class="menu-btn">🎯 Trials</button>
+                <button id="open-guide-btn" class="menu-btn neo-grid-btn codex-btn">
+                  <svg class="grid-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                  </svg>
+                  <div class="grid-btn-labels">
+                    <span class="grid-btn-title" data-i18n="openGuideBtn">CODEX</span>
+                    <span class="grid-btn-sub">Bestiary</span>
+                  </div>
+                  <span class="grid-btn-chevron">›</span>
+                </button>
+                <button id="open-settings-btn" class="menu-btn neo-grid-btn settings-btn">
+                  <svg class="grid-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                  </svg>
+                  <div class="grid-btn-labels">
+                    <span class="grid-btn-title" data-i18n="settings">SETTINGS</span>
+                    <span class="grid-btn-sub">System</span>
+                  </div>
+                  <span class="grid-btn-chevron">›</span>
+                </button>
+                <button id="menu-fullscreen-btn" class="menu-btn neo-grid-btn fullscreen-btn">
+                  <svg class="grid-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+                  </svg>
+                  <div class="grid-btn-labels">
+                    <span class="grid-btn-title">FULLSCREEN</span>
+                    <span class="grid-btn-sub">Display</span>
+                  </div>
+                  <span class="grid-btn-chevron">›</span>
+                </button>
               </div>
               <button id="level-mode-btn" style="display:none;"></button>
               <button id="zen-btn" style="display:none;"></button>
@@ -343,27 +434,73 @@
           </div>
           <div class="menu-right">
             <div class="guide-box">
-              <h3 data-i18n="guideTitle">Combat Guide & Techniques</h3>
-              <ul>
-                <li data-i18n="guideMove"><strong>Movement:</strong> Use <kbd class="kbd-badge">WASD</kbd> / Arrow Keys on Desktop, or the Virtual Joystick on Mobile devices to move around the battlefield.</li>
-                <li data-i18n="guideSlash"><strong>Slash (Basic Attack):</strong> Left-click / <kbd class="kbd-badge">LMB</kbd> on Desktop or tap <kbd class="kbd-badge">SLASH</kbd> on Mobile. Auto-aims toward nearest targets within 600px. Chain hits to build Combo!</li>
-                <li data-i18n="guideDodge"><strong>Dodge / Dash:</strong> Press <kbd class="kbd-badge">SPACE</kbd> on Desktop or tap <kbd class="kbd-badge">DASH</kbd> on Mobile. Full invulnerability frames (i-frames).</li>
-                <li data-i18n="guidePerfect"><strong>Perfect Dodge:</strong> Dash right as an enemy lunges with a red alert to trigger a screen flash, a massive Combo boost, and 2s of total invulnerability.</li>
-                <li data-i18n="guideParry"><strong>Parrying & Deflection:</strong> Hold <kbd class="kbd-badge">LMB</kbd> to charge, and release it at the exact moment of impact. Parrying consecutively raises musical pitch and upgrades deflection sparks from Amber ➔ Gold ➔ Cyan ➔ White-Blue!</li>
-                <li data-i18n="guidePosture"><strong>Posture Break & Execution:</strong> Heavy hits and deflections fill the enemy's Posture meter. When full, strike to trigger a cinematic Execution dealing lethal damage and stance synergy detonations!</li>
-                <li data-i18n="guideChiburui"><strong>Chiburui & Noto (血振るい):</strong> Stand completely still for 1.2s after 3+ kills. Cleanses blade, grants +15 Flow, and your next strike deals guaranteed 2.5x CRIT damage!</li>
-                <li data-i18n="guideIaijutsu"><strong>Iaijutsu Shockwave:</strong> Hold <kbd class="kbd-badge">LMB</kbd> and release at full charge to unleash a piercing crescent shockwave.</li>
-                <li data-i18n="guideFlow"><strong>Flow Awakening (Ultimate):</strong> Defeat enemies to fill the FLOW meter. Press <kbd class="kbd-badge">F</kbd> Key or tap <kbd class="kbd-badge">ULT</kbd> on Mobile to unleash an awakened ultimate.</li>
-                <li data-i18n="comboSwift"><strong>Combo - Swift Counter:</strong> <kbd class="kbd-badge">DASH</kbd> + <kbd class="kbd-badge">SLASH</kbd> immediately. Teleports behind the target for a quick slash.</li>
-                <li data-i18n="comboThunder"><strong>Combo - Thunderclap & Flash:</strong> <kbd class="kbd-badge">DASH</kbd> + <kbd class="kbd-badge">SLASH</kbd> during Storm God or Raijin Step. Teleport-cleaves through targets with lightning.</li>
-                <li data-i18n="comboDragon"><strong>Combo - Rising Dragon:</strong> <kbd class="kbd-badge">SLASH</kbd> × 2 + release charge early. Launches enemies into an airborne whirlwind.</li>
-                <li data-i18n="comboMirror"><strong>Combo - Mirror Strike:</strong> Fully charged Iaijutsu Slash while invisible from Decoy. Teleports 3 clones to strike simultaneously!</li>
-              </ul>
-            </div>
-            <div id="high-scores-box" style="background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 215, 0, 0.25); border-radius: 12px; padding: 15px; width: 100%; text-align: left; box-sizing: border-box; margin-top: 10px; font-family: 'Space Mono', monospace;">
-              <h3 style="margin-top: 0; color: #ffd700; font-size: 16px; border-bottom: 1px dashed rgba(255, 215, 0, 0.3); padding-bottom: 5px; font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;" data-i18n="highScoresTitle">HIGH RECORDS</h3>
-              <div id="high-scores-content" style="color: #cbd8d6; font-size: 12px; line-height: 1.6;">
-                <!-- Filled by JS -->
+              <div class="guide-header">
+                <svg class="guide-header-icon" viewBox="0 0 24 24" fill="none" stroke="#ffd200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+                <div class="guide-header-titles">
+                  <h3 data-i18n="guideTitle">COMBAT GUIDE & TECHNIQUES</h3>
+                  <span class="guide-header-sub">MASTER THE BLADE · DEFLECT & SURVIVE</span>
+                </div>
+              </div>
+
+              <div class="guide-cards-container">
+                <!-- Movement Card -->
+                <div class="guide-technique-card card-movement">
+                  <div class="technique-text-side">
+                    <div class="technique-tag-row">
+                      <span class="technique-tag move-tag">MOVEMENT</span>
+                      <span class="technique-badges"><kbd class="kbd-badge">WASD</kbd><kbd class="kbd-badge">JOYSTICK</kbd></span>
+                    </div>
+                    <p class="technique-desc"><span data-i18n="guideMove">Use WASD / Arrow Keys on Desktop, or Virtual Joystick on Mobile. 360° fluid omni-directional dashes.</span></p>
+                  </div>
+                  <div class="technique-diagram">
+                    <img src="ui/technique-movement.svg" alt="Movement Technique" loading="lazy" width="140" height="77" />
+                  </div>
+                </div>
+
+                <!-- Slash Card -->
+                <div class="guide-technique-card card-slash">
+                  <div class="technique-text-side">
+                    <div class="technique-tag-row">
+                      <span class="technique-tag slash-tag">SLASH (ATTACK)</span>
+                      <span class="technique-badges"><kbd class="kbd-badge">LMB</kbd><kbd class="kbd-badge">SLASH</kbd></span>
+                    </div>
+                    <p class="technique-desc"><span data-i18n="guideSlash">Left-click / LMB on Desktop or tap SLASH on Mobile. Auto-aims closest foes within 600px. Chain hits to build Combo!</span></p>
+                  </div>
+                  <div class="technique-diagram">
+                    <img src="ui/technique-slash.svg" alt="Slash Technique" loading="lazy" width="140" height="77" />
+                  </div>
+                </div>
+
+                <!-- Parry Card -->
+                <div class="guide-technique-card card-parry">
+                  <div class="technique-text-side">
+                    <div class="technique-tag-row">
+                      <span class="technique-tag parry-tag">PARRY & DEFLECTION</span>
+                      <span class="technique-badges"><kbd class="kbd-badge">TIMED RELEASE</kbd></span>
+                    </div>
+                    <p class="technique-desc"><span data-i18n="guideParry">Hold LMB to charge, release at exact impact. Timed deflection negates damage, builds momentum & breaks enemy posture!</span></p>
+                  </div>
+                  <div class="technique-diagram">
+                    <img src="ui/technique-parry.svg" alt="Parry Technique" loading="lazy" width="140" height="77" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Tactical Insights -->
+              <div class="guide-insights-list">
+                <div class="insight-pill"><span class="insight-label">PERFECT DODGE:</span> Dash into red alert for 2s total invulnerability & combo spike.</div>
+                <div class="insight-pill"><span class="insight-label">CHIBURUI (血振るい):</span> Stand still for 1.2s after 3+ kills for +15 Flow & guaranteed 2.5x CRIT.</div>
+                <div class="insight-pill"><span class="insight-label">FLOW AWAKENING:</span> Fill FLOW to unleash awakened ultimate (<kbd class="kbd-badge">F</kbd> / <kbd class="kbd-badge">ULT</kbd>).</div>
+              </div>
+
+              <!-- Distressed Crimson Footer Banner -->
+              <div class="guide-callout-banner">
+                <span class="banner-flourish">⚔️</span>
+                <span class="banner-text">CHAIN KILLS · BUILD FLOW · STAY STICKY</span>
+                <span class="banner-flourish">⚔️</span>
               </div>
             </div>
           </div>
