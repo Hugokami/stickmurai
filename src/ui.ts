@@ -1320,10 +1320,23 @@ export function renderSkillChoicesPregame() {
       `;
     }
 
+    const hankoMap: Record<string, string> = {
+      vitality: 'ui/hanko_ryu.png',
+      wind: 'ui/hanko_fuu.png',
+      thunder: 'ui/hanko_raijin.png',
+      fire: 'ui/hanko_en.png',
+      void: 'ui/hanko_kyou.png',
+      basic: 'ui/hanko_bushi.png'
+    };
+    const hankoSrc = hankoMap[category] || 'ui/hanko_bushi.png';
+
     card.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
         <span class="skill-category-badge">${category}</span>
-        <span style="font-size: 16px;">${icon}</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <img src="${hankoSrc}" alt="${category} seal" style="width: 22px; height: 22px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(220, 38, 38, 0.5)); vertical-align: middle;" />
+          <span style="font-size: 16px;">${icon}</span>
+        </div>
       </div>
       <h3>${t(skill.nameKey)}</h3>
       <p>${t(skill.descKey)}</p>
@@ -2485,8 +2498,9 @@ export function populateDojoHeroGrid() {
     // Hero portrait container with elegant dark dojo alcove podium & SVG fallback
     const heroImgUrl = resolveAssetUrl(hero.image);
     const portraitHtml = `
-      <div class="hero-portrait-wrap" style="width: 100%; height: 96px; min-height: 96px; flex: 0 0 96px; flex-shrink: 0; background: radial-gradient(circle at 50% 65%, rgba(212,162,78,0.2) 0%, rgba(12,13,18,0.95) 75%); border-radius: 0; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1.5px solid rgba(212,162,78,0.35); margin-bottom: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.4);">
+      <div class="hero-portrait-wrap" style="position: relative; width: 100%; height: 96px; min-height: 96px; flex: 0 0 96px; flex-shrink: 0; background: radial-gradient(circle at 50% 65%, rgba(212,162,78,0.2) 0%, rgba(12,13,18,0.95) 75%); border-radius: 0; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1.5px solid rgba(212,162,78,0.35); margin-bottom: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.4);">
         <img src="${heroImgUrl}" alt="${hero.nameEn}" style="width: 76px; height: 76px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23d4a24e\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
+        <img src="ui/hanko_bushi.png" alt="Seal" style="position: absolute; top: 4px; right: 4px; width: 20px; height: 20px; opacity: 0.85; pointer-events: none; filter: drop-shadow(0 0 4px rgba(220,38,38,0.6));" />
       </div>
     `;
 

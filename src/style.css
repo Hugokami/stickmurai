@@ -4979,6 +4979,147 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
   }
 }
 
+/* ==========================================================================
+   NEO-JAPANESE SAMURAI LACQUER UI FRAMING & TEXTURES
+   ========================================================================== */
+
+/* 1. Global Seigaiha Wave Pattern Watermark on Lacquer Panels */
+.menu-box,
+.guide-box,
+.guide-technique-card,
+.hero-card,
+.skill-card,
+.codex-card,
+.grimoire-card,
+.level-up-card {
+  position: relative;
+  background-color: rgba(10, 12, 18, 0.95) !important;
+  background-image: 
+    linear-gradient(135deg, rgba(16, 18, 26, 0.94) 0%, rgba(8, 9, 14, 0.97) 100%),
+    url('/ui/seigaiha_tile.jpg') !important;
+  background-size: auto, 160px 160px !important;
+  background-repeat: no-repeat, repeat !important;
+  background-blend-mode: normal, overlay !important;
+}
+
+/* 2. Cyber-Samurai Armor Corner Brackets (4-corner framing) */
+.neo-framed::before,
+.main-menu-box::before,
+.guide-box::before,
+#upgrades-modal .menu-box::before,
+#grimoire-screen .menu-box::before,
+#chronicle-screen .menu-box::before,
+#dojo-screen .menu-box::before,
+#guide-modal .menu-box::before,
+#settings-screen .menu-box::before,
+#pause-screen .menu-box::before,
+#game-over .menu-box::before,
+#stage-clear-modal .menu-box::before,
+#level-up-screen .menu-box::before,
+#ult-screen .menu-box::before,
+#codex-modal .menu-box::before,
+#pvp-lobby-modal .menu-box::before,
+.loader-hud-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 12;
+  background-image:
+    url('/ui/frame_corner_tl.png'),
+    url('/ui/frame_corner_tr.png'),
+    url('/ui/frame_corner_bl.png'),
+    url('/ui/frame_corner_br.png');
+  background-position:
+    top 0 left 0,
+    top 0 right 0,
+    bottom 0 left 0,
+    bottom 0 right 0;
+  background-repeat: no-repeat;
+  background-size: 40px 40px;
+  opacity: 0.94;
+}
+
+.loader-hud-container::after {
+  display: none !important;
+}
+
+@media (max-width: 640px) {
+  .neo-framed::before,
+  .main-menu-box::before,
+  .guide-box::before,
+  #upgrades-modal .menu-box::before,
+  #grimoire-screen .menu-box::before,
+  #chronicle-screen .menu-box::before,
+  #dojo-screen .menu-box::before,
+  #guide-modal .menu-box::before,
+  #settings-screen .menu-box::before,
+  #pause-screen .menu-box::before,
+  #game-over .menu-box::before,
+  #stage-clear-modal .menu-box::before,
+  #level-up-screen .menu-box::before,
+  #ult-screen .menu-box::before,
+  #codex-modal .menu-box::before,
+  #pvp-lobby-modal .menu-box::before,
+  .loader-hud-container::before {
+    background-size: 26px 26px;
+  }
+}
+
+/* 3. Title Screen Blood Moon & Torii Gate Enso Watermark */
+.title-emblem-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -52%);
+  width: 260px;
+  height: 260px;
+  background: url('/ui/torii_bloodmoon_emblem.png') no-repeat center / contain;
+  pointer-events: none;
+  opacity: 0.42;
+  z-index: 0;
+  animation: emblem-breath 6s ease-in-out infinite alternate;
+}
+
+@keyframes emblem-breath {
+  0% { transform: translate(-50%, -52%) scale(0.97); opacity: 0.36; }
+  100% { transform: translate(-50%, -52%) scale(1.03); opacity: 0.46; }
+}
+
+@media (max-width: 640px) {
+  .title-emblem-watermark {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+/* 4. Bushi Hanko Seal on Loader Screen */
+.loader-hanko-seal {
+  position: absolute;
+  top: 12px !important;
+  right: 14px !important;
+  width: 34px !important;
+  height: 34px !important;
+  background: url('/ui/hanko_bushi.png') no-repeat center / contain !important;
+  border: none !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 0 8px rgba(220, 38, 38, 0.7)) !important;
+  color: transparent !important;
+  font-size: 0 !important;
+}
+
+/* 5. Guide Header Hanko Seal */
+.guide-header-seal {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(220, 38, 38, 0.6));
+  flex-shrink: 0;
+}
+
 
 
 
