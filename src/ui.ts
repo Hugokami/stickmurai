@@ -2164,14 +2164,15 @@ export function populateGrimoireGrid() {
     const isDiscovered = globals.discoveredFusions.includes(recipe.key) || globals.activeFusions.has(recipe.key);
     const card = document.createElement('div');
     card.className = 'grimoire-card' + (isDiscovered ? ' discovered' : ' locked');
-    card.style.background = isDiscovered ? 'rgba(30, 41, 59, 0.95)' : 'rgba(15, 23, 42, 0.8)';
-    card.style.border = isDiscovered ? '1px solid #ffd700' : '1px solid #334155';
-    card.style.borderRadius = '8px';
+    card.style.background = isDiscovered ? 'linear-gradient(135deg, rgba(20, 24, 35, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%)' : 'rgba(12, 14, 20, 0.95)';
+    card.style.border = isDiscovered ? '1.5px solid #d4a24e' : '1px solid rgba(255, 255, 255, 0.1)';
+    card.style.borderRadius = '0';
+    card.style.clipPath = 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)';
     card.style.padding = '16px';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
     card.style.gap = '8px';
-    card.style.boxShadow = isDiscovered ? '0 0 18px rgba(255, 215, 0, 0.25)' : 'none';
+    card.style.boxShadow = isDiscovered ? '0 0 18px rgba(212, 162, 78, 0.25)' : 'none';
     
     // Live Run Synergy Calculation
     let req1Met = false;
@@ -2467,9 +2468,10 @@ export function populateDojoHeroGrid() {
 
     const card = document.createElement('div');
     card.className = 'hero-card';
-    card.style.background = isEquipped ? 'rgba(88, 28, 135, 0.4)' : (isUnlocked ? 'rgba(30, 41, 59, 0.85)' : 'rgba(15, 23, 42, 0.8)');
-    card.style.border = isEquipped ? '2px solid #c084fc' : (isUnlocked ? '1px solid #94a3b8' : '1px solid #334155');
-    card.style.borderRadius = '10px';
+    card.style.background = isEquipped ? 'linear-gradient(135deg, rgba(30, 20, 45, 0.95) 0%, rgba(12, 13, 18, 0.98) 100%)' : (isUnlocked ? 'linear-gradient(135deg, rgba(18, 20, 28, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%)' : 'linear-gradient(135deg, rgba(10, 12, 16, 0.95) 0%, rgba(6, 7, 10, 0.98) 100%)');
+    card.style.border = isEquipped ? '2px solid #d4a24e' : (isUnlocked ? '1.5px solid rgba(212, 162, 78, 0.4)' : '1.5px solid rgba(255, 255, 255, 0.1)');
+    card.style.borderRadius = '0';
+    card.style.clipPath = 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)';
     card.style.padding = '12px 14px';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
@@ -2478,13 +2480,13 @@ export function populateDojoHeroGrid() {
     card.style.height = 'auto';
     card.style.minHeight = 'fit-content';
     card.style.flexShrink = '0';
-    card.style.boxShadow = isEquipped ? '0 0 20px rgba(192, 132, 252, 0.4)' : 'none';
+    card.style.boxShadow = isEquipped ? '0 0 20px rgba(212, 162, 78, 0.35)' : '0 4px 16px rgba(0, 0, 0, 0.5)';
 
     // Hero portrait container with elegant dark dojo alcove podium & SVG fallback
     const heroImgUrl = resolveAssetUrl(hero.image);
     const portraitHtml = `
-      <div class="hero-portrait-wrap" style="width: 100%; height: 96px; min-height: 96px; flex: 0 0 96px; flex-shrink: 0; background: radial-gradient(circle at 50% 65%, rgba(192,132,252,0.22) 0%, rgba(15,23,42,0.92) 75%); border-radius: 8px; display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1px solid rgba(192,132,252,0.28); margin-bottom: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.4);">
-        <img src="${heroImgUrl}" alt="${hero.nameEn}" style="width: 76px; height: 76px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23c084fc\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
+      <div class="hero-portrait-wrap" style="width: 100%; height: 96px; min-height: 96px; flex: 0 0 96px; flex-shrink: 0; background: radial-gradient(circle at 50% 65%, rgba(212,162,78,0.2) 0%, rgba(12,13,18,0.95) 75%); border-radius: 0; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); display: flex; justify-content: center; align-items: center; overflow: hidden; border: 1.5px solid rgba(212,162,78,0.35); margin-bottom: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.8), 0 2px 8px rgba(0,0,0,0.4);">
+        <img src="${heroImgUrl}" alt="${hero.nameEn}" style="width: 76px; height: 76px; object-fit: contain; image-rendering: pixelated; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.7));" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'80\\' height=\\'80\\' viewBox=\\'0 0 80 80\\'><circle cx=\\'40\\' cy=\\'40\\' r=\\'30\\' fill=\\'%23d4a24e\\' opacity=\\'0.2\\'/><text x=\\'50%\\' y=\\'55%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'32\\'>⚔️</text></svg>';" />
       </div>
     `;
 
@@ -2496,9 +2498,9 @@ export function populateDojoHeroGrid() {
     if (awk) {
       if (hasAwakening) {
         awakeningHtml = `
-          <div style="margin-top: 4px; padding: 6px 8px; border-radius: 6px; background: rgba(251, 191, 36, 0.12); border: 1px solid #fbbf24; display: flex; flex-direction: column; gap: 3px;">
+          <div style="margin-top: 4px; padding: 6px 8px; border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); background: rgba(212, 162, 78, 0.12); border: 1.5px solid #d4a24e; display: flex; flex-direction: column; gap: 3px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 11px; font-weight: bold; color: #fbbf24;">⚡ ${isJa ? '覚醒スキル習得済み' : 'AWAKENING ACQUIRED'}</span>
+              <span style="font-size: 11px; font-weight: bold; color: #ffd700;">⚡ ${isJa ? '覚醒スキル習得済み' : 'AWAKENING ACQUIRED'}</span>
               <span style="font-size: 10px; color: #ffd700; font-family: monospace;">${awk.icon} ${isJa ? awk.nameJa : awk.nameEn}</span>
             </div>
             <div style="font-size: 10px; color: #fef08a; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
@@ -2507,13 +2509,13 @@ export function populateDojoHeroGrid() {
       } else if (isUnlocked) {
         const canAffordAwk = (globals.magatama || 0) >= awk.cost;
         awakeningHtml = `
-          <div style="margin-top: 4px; padding: 6px 8px; border-radius: 6px; background: rgba(15, 23, 42, 0.85); border: 1px dashed rgba(251, 191, 36, 0.4); display: flex; flex-direction: column; gap: 3px;">
+          <div style="margin-top: 4px; padding: 6px 8px; border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); background: rgba(15, 23, 42, 0.85); border: 1px dashed rgba(212, 162, 78, 0.4); display: flex; flex-direction: column; gap: 3px;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 11px; font-weight: bold; color: #fbbf24;">⚡ ${isJa ? '追加覚醒スキル' : 'AWAKENING SKILL'}</span>
+              <span style="font-size: 11px; font-weight: bold; color: #ffd700;">⚡ ${isJa ? '追加覚醒スキル' : 'AWAKENING SKILL'}</span>
               <span style="font-size: 10px; color: #f59e0b; font-family: monospace;">${awk.icon} ${isJa ? awk.nameJa : awk.nameEn}</span>
             </div>
             <div style="font-size: 10px; color: #94a3b8; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
-            <button class="menu-btn btn-card buy-awakening-btn" data-hero="${hero.id}" ${canAffordAwk ? '' : 'disabled'} style="margin-top: 4px; padding: 4px 10px !important; min-height: 28px !important; font-size: 11px !important; border-color: ${canAffordAwk ? '#fbbf24' : '#64748b'}; color: ${canAffordAwk ? '#fbbf24' : '#94a3b8'}; cursor: ${canAffordAwk ? 'pointer' : 'not-allowed'};">
+            <button class="menu-btn btn-card buy-awakening-btn" data-hero="${hero.id}" ${canAffordAwk ? '' : 'disabled'} style="margin-top: 4px; padding: 4px 10px !important; min-height: 28px !important; font-size: 11px !important; border-color: ${canAffordAwk ? '#d4a24e' : '#64748b'}; color: ${canAffordAwk ? '#ffd700' : '#94a3b8'}; cursor: ${canAffordAwk ? 'pointer' : 'not-allowed'};">
               ${isJa ? `覚醒習得: ${awk.cost.toLocaleString()} 🔮` : `AWAKEN: ${awk.cost.toLocaleString()} 🔮`}
             </button>
           </div>
@@ -2525,22 +2527,22 @@ export function populateDojoHeroGrid() {
     if (isEquipped) {
       actionBtnHtml = `<button class="menu-btn btn-card" disabled style="margin: 0; background: #166534; border-color: #22c55e; color: #bbf7d0; cursor: default;">✓ ${isJa ? '装備中' : 'EQUIPPED'}</button>`;
     } else if (isUnlocked) {
-      actionBtnHtml = `<button class="menu-btn btn-card equip-hero-btn" data-hero="${hero.id}" style="margin: 0; border-color: #38bdf8; color: #38bdf8; cursor: pointer;">${isJa ? '装備する' : 'EQUIP HERO'}</button>`;
+      actionBtnHtml = `<button class="menu-btn btn-card equip-hero-btn" data-hero="${hero.id}" style="margin: 0; border-color: #d4a24e; color: #ffd700; cursor: pointer;">${isJa ? '装備する' : 'EQUIP HERO'}</button>`;
     } else {
       const canAfford = (globals.magatama || 0) >= hero.cost;
-      actionBtnHtml = `<button class="menu-btn btn-card buy-hero-btn" data-hero="${hero.id}" ${canAfford ? '' : 'disabled'} style="margin: 0; border-color: ${canAfford ? '#ffd700' : '#64748b'}; color: ${canAfford ? '#ffd700' : '#94a3b8'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 15px rgba(255,215,0,0.25)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">${isJa ? `解放: ${hero.cost.toLocaleString()} 🔮` : `UNLOCK: ${hero.cost.toLocaleString()} 🔮`}</button>`;
+      actionBtnHtml = `<button class="menu-btn btn-card buy-hero-btn" data-hero="${hero.id}" ${canAfford ? '' : 'disabled'} style="margin: 0; border-color: ${canAfford ? '#d4a24e' : '#64748b'}; color: ${canAfford ? '#ffd700' : '#94a3b8'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 15px rgba(212,162,78,0.25)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">${isJa ? `解放: ${hero.cost.toLocaleString()} 🔮` : `UNLOCK: ${hero.cost.toLocaleString()} 🔮`}</button>`;
     }
 
     card.innerHTML = `
       ${portraitHtml}
       <span class="journey-badge">${masteryBadge(hero.id)}</span>
       <div style="display: flex; justify-content: space-between; align-items: baseline;">
-        <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 14px; color: ${isEquipped ? '#c084fc' : '#f1f5f9'}; font-weight: bold;">${isJa ? hero.nameJa : hero.nameEn}</span>
-        <span style="font-size: 10px; color: #a855f7; font-family: monospace;">${isJa ? hero.titleJa : hero.titleEn}</span>
+        <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 14px; color: ${isEquipped ? '#ffd700' : '#f1f5f9'}; font-weight: bold;">${isJa ? hero.nameJa : hero.nameEn}</span>
+        <span style="font-size: 10px; color: #d4a24e; font-family: monospace;">${isJa ? hero.titleJa : hero.titleEn}</span>
       </div>
       <div style="font-size: 11px; color: #94a3b8; line-height: 1.4; min-height: 32px;">${isJa ? hero.descJa : hero.descEn}</div>
       ${statsHtml}
-      <div style="font-size: 11px; color: #fef08a; background: rgba(254, 240, 138, 0.08); padding: 4px 8px; border-radius: 4px; border-left: 2px solid #ffd700; margin-top: 2px;">
+      <div style="font-size: 11px; color: #fef08a; background: rgba(212, 162, 78, 0.1); padding: 4px 8px; border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); border-left: 2px solid #d4a24e; margin-top: 2px;">
         ✨ ${isJa ? hero.specialJa : hero.specialEn}
       </div>
       ${awakeningHtml}
@@ -2639,30 +2641,31 @@ export function populateChronicleList() {
     if (!seal) continue;
     const isUnlocked = globals.unlockedSeals.includes(seal.id);
     const card = document.createElement('div');
-    card.style.background = isUnlocked ? 'rgba(15, 23, 42, 0.9)' : 'rgba(10, 15, 26, 0.6)';
-    card.style.border = isUnlocked ? '1px solid #38bdf8' : '1px solid #1e293b';
-    card.style.borderRadius = '8px';
+    card.style.background = isUnlocked ? 'linear-gradient(135deg, rgba(20, 24, 35, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%)' : 'rgba(10, 12, 16, 0.95)';
+    card.style.border = isUnlocked ? '1.5px solid #d4a24e' : '1px solid rgba(255, 255, 255, 0.1)';
+    card.style.borderRadius = '0';
+    card.style.clipPath = 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)';
     card.style.padding = '16px';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
     card.style.gap = '8px';
-    card.style.boxShadow = isUnlocked ? '0 0 15px rgba(56, 189, 248, 0.15)' : 'none';
+    card.style.boxShadow = isUnlocked ? '0 0 15px rgba(212, 162, 78, 0.25)' : 'none';
 
     if (isUnlocked) {
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#38bdf8;">⛩️ ${isJa ? seal.titleJa : seal.titleEn}</span>
-          <span style="font-size:11px; padding:2px 8px; border-radius:4px; background:rgba(56,189,248,0.2); color:#38bdf8; border:1px solid #38bdf8;">${isJa ? '封印解除' : 'SEAL BROKEN'}</span>
+          <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">⛩️ ${isJa ? seal.titleJa : seal.titleEn}</span>
+          <span style="font-size:11px; padding:2px 8px; border-radius:0; clip-path:polygon(3px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 0 calc(100% - 3px), 0 3px); background:rgba(212,162,78,0.2); color:#ffd700; border:1px solid #d4a24e;">${isJa ? '封印解除' : 'SEAL BROKEN'}</span>
         </div>
         <div style="font-size:13px; color:#cbd5e1;"><strong>${isJa ? '【達成試練】' : '【FEAT CLEARED】'}</strong> ${isJa ? seal.featDescJa : seal.featDescEn}</div>
-        <div style="font-size:13px; color:#94a3b8; font-style:italic; border-left:3px solid #38bdf8; padding-left:10px; margin:4px 0;">"${isJa ? seal.loreFragmentJa : seal.loreFragmentEn}"</div>
+        <div style="font-size:13px; color:#94a3b8; font-style:italic; border-left:3px solid #d4a24e; padding-left:10px; margin:4px 0;">"${isJa ? seal.loreFragmentJa : seal.loreFragmentEn}"</div>
         <div style="margin-top:auto; font-size:13px; color:#ffd700; font-weight:500;">✨ ${isJa ? seal.rewardJa : seal.rewardEn}</div>
       `;
     } else {
       card.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#64748b;">⛩️ Seal ${seal.id}: ???</span>
-          <span style="font-size:11px; padding:2px 8px; border-radius:4px; background:rgba(148,163,184,0.1); color:#64748b; border:1px solid #334155;">${isJa ? '封印中' : 'SEALED'}</span>
+          <span style="font-size:11px; padding:2px 8px; border-radius:0; clip-path:polygon(3px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 0 calc(100% - 3px), 0 3px); background:rgba(148,163,184,0.1); color:#64748b; border:1px solid #334155;">${isJa ? '封印中' : 'SEALED'}</span>
         </div>
         <div style="font-size:13px; color:#94a3b8;">
           <strong>${isJa ? '【解呪条件】' : '【FEAT OBJECTIVE】'}</strong> ${isJa ? seal.featDescJa : seal.featDescEn}
@@ -2872,15 +2875,16 @@ export function populateAscensionUpgrades() {
       const card = document.createElement('div');
       card.className = 'ascension-card';
       card.style.cssText = `
-        background: rgba(15, 23, 42, 0.75);
-        border: 1px solid ${isMax ? 'rgba(34, 197, 94, 0.4)' : (isEndless ? 'rgba(251, 191, 36, 0.45)' : (canAfford ? 'rgba(255, 215, 0, 0.35)' : 'rgba(255, 255, 255, 0.1)'))};
-        border-radius: 8px;
+        background: rgba(12, 13, 18, 0.92);
+        border: 1.5px solid ${isMax ? 'rgba(34, 197, 94, 0.5)' : (isEndless ? 'rgba(212, 162, 78, 0.6)' : (canAfford ? 'rgba(212, 162, 78, 0.5)' : 'rgba(255, 255, 255, 0.12)'))};
+        border-radius: 0;
+        clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
         padding: 10px 12px;
         display: flex;
         flex-direction: column;
         gap: 6px;
         transition: all 0.2s ease;
-        box-shadow: ${isEndless ? '0 0 12px rgba(251, 191, 36, 0.1)' : 'none'};
+        box-shadow: ${isEndless ? '0 0 12px rgba(212, 162, 78, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.4)'};
       `;
 
       card.innerHTML = `

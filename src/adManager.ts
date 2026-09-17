@@ -261,9 +261,7 @@ export class AdManager {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       width: 100%; height: 100%;
-      background: rgba(5, 5, 8, 0.9);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+      background: rgba(5, 5, 8, 0.95);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -277,12 +275,13 @@ export class AdManager {
     box.style.cssText = `
       position: relative;
       background: linear-gradient(135deg, #160404 0%, #0d0404 100%);
-      border: 2px solid #bc2c2c;
-      border-top: 8px solid #bc2c2c;
-      border-radius: 4px;
+      border: 2px solid #d4a24e;
+      border-top: 6px solid #d4a24e;
+      border-radius: 0;
+      clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px);
       padding: 30px;
       text-align: center;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 15px rgba(188, 44, 44, 0.3), inset 0 0 0 1.5px #d4af37;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 162, 78, 0.35);
       width: 90%;
       max-width: 380px;
       display: flex;

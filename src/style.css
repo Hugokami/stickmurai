@@ -667,13 +667,14 @@ html.crazygames #fullscreen-prompt {
   font-size: clamp(13px, 2.2vw, 16px);
   background: rgba(14, 18, 25, 0.9);
   color: #f1f5f9;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1.5px solid rgba(212, 162, 78, 0.35);
   cursor: pointer;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: 'Outfit', sans-serif;
   font-weight: 700;
   line-height: 1.2;
-  border-radius: 6px;
+  border-radius: 0;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
   width: 100%;
   max-width: 440px;
   text-transform: uppercase;
@@ -887,7 +888,8 @@ html.crazygames #fullscreen-prompt {
   width: 100% !important;
   max-width: 100% !important;
   letter-spacing: 0.04em !important;
-  border-radius: 6px !important;
+  border-radius: 0 !important;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px) !important;
 }
 
 .menu-grid-2x2, .menu-grid-2x3 {
@@ -944,9 +946,10 @@ html.crazygames #fullscreen-prompt {
   gap: 8px;
   color: #f4efe2;
   font-size: 15px;
-  background: rgba(15, 15, 20, 0.85);
-  border: 1.5px solid #bc2c2c;
-  border-radius: 4px;
+  background: rgba(12, 13, 18, 0.92);
+  border: 1.5px solid rgba(212, 162, 78, 0.4);
+  border-radius: 0;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
   padding: 14px 18px;
   margin-bottom: 4px;
   max-width: 320px;
@@ -1108,7 +1111,8 @@ html.crazygames #fullscreen-prompt {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 0;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
 }
@@ -1133,8 +1137,9 @@ html.crazygames #fullscreen-prompt {
   line-height: 1.4;
   color: #94a3b8;
   background: rgba(15, 20, 28, 0.7);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 4px;
+  border: 1px solid rgba(212, 162, 78, 0.25);
+  border-radius: 0;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px);
   padding: 5px 10px;
 }
 
@@ -1149,10 +1154,11 @@ html.crazygames #fullscreen-prompt {
   justify-content: center;
   gap: 10px;
   background: linear-gradient(90deg, rgba(127, 29, 29, 0.8) 0%, rgba(185, 28, 28, 0.95) 50%, rgba(127, 29, 29, 0.8) 100%);
-  border: 1px solid rgba(239, 68, 68, 0.6);
-  border-radius: 4px;
+  border: 1px solid rgba(212, 162, 78, 0.5);
+  border-radius: 0;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px);
   padding: 8px 14px;
-  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+  box-shadow: 0 0 15px rgba(212, 162, 78, 0.2);
   margin-top: auto;
 }
 
@@ -1175,11 +1181,12 @@ html.crazygames #fullscreen-prompt {
   font-family: 'Space Mono', monospace;
   font-size: 11px;
   font-weight: bold;
-  color: #f8fafc;
-  background: rgba(30, 41, 59, 0.9);
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  border-bottom: 2px solid rgba(148, 163, 184, 0.6);
-  border-radius: 4px;
+  color: #ffd700;
+  background: rgba(20, 24, 35, 0.95);
+  border: 1px solid rgba(212, 162, 78, 0.4);
+  border-bottom: 2px solid #d4a24e;
+  border-radius: 0;
+  clip-path: polygon(3px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 0 calc(100% - 3px), 0 3px);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
   margin: 0 2px;
 }
@@ -1250,7 +1257,7 @@ html.crazygames #fullscreen-prompt {
   background: linear-gradient(135deg, #0f0f14 0%, #15151c 100%);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border: 1.5px solid #bc2c2c;
+  border: 1.5px solid #d4a24e;
   border-radius: 0;
   clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
   padding: 24px;
@@ -1258,7 +1265,7 @@ html.crazygames #fullscreen-prompt {
   text-align: center;
   cursor: pointer;
   transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), border-color 0.3s ease, box-shadow 0.3s ease;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(212, 175, 55, 0.25);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75), inset 0 0 0 1px rgba(212, 162, 78, 0.25);
   position: relative;
   overflow: hidden;
   opacity: 0;
@@ -1267,7 +1274,7 @@ html.crazygames #fullscreen-prompt {
 
 @keyframes card-glow-pulse {
   0% { box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75); }
-  50% { box-shadow: 0 15px 38px rgba(188, 44, 44, 0.25); }
+  50% { box-shadow: 0 15px 38px rgba(212, 162, 78, 0.35); }
   100% { box-shadow: 0 15px 35px rgba(0, 0, 0, 0.75); }
 }
 
@@ -3218,25 +3225,26 @@ input[type="range"]::-webkit-slider-thumb:hover {
   width: 100%;
   margin-top: 8px;
   padding: 5px 6px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 215, 0, 0.4);
-  border-radius: 6px;
+  background: rgba(12, 13, 18, 0.92);
+  border: 1.5px solid rgba(212, 162, 78, 0.4);
+  border-radius: 0;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px);
   font-family: 'Orbitron', monospace;
   font-size: 9.5px;
   color: #ffd700;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+  box-shadow: 0 0 10px rgba(212, 162, 78, 0.15);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .skill-lock-btn:hover {
-  background: rgba(255, 215, 0, 0.2);
+  background: rgba(212, 162, 78, 0.2);
   border-color: #ffd700;
-  box-shadow: 0 0 15px rgba(255, 215, 0, 0.35);
+  box-shadow: 0 0 15px rgba(212, 162, 78, 0.35);
 }
 
 .skill-lock-btn:disabled {
@@ -3295,7 +3303,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   padding: 2px 7px;
-  border-radius: 4px;
+  border-radius: 0;
+  clip-path: polygon(3px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 0 calc(100% - 3px), 0 3px);
   margin-bottom: 8px;
   background: rgba(255, 255, 255, 0.06);
   color: #94a3b8;
@@ -3515,7 +3524,8 @@ input[type="range"]::-webkit-slider-thumb:hover {
   background: transparent !important;
   color: #94a3b8 !important;
   border: 1px solid transparent !important;
-  border-radius: 6px !important;
+  border-radius: 0 !important;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px) !important;
   box-shadow: none !important;
   padding: 9px 12px !important;
   cursor: pointer;
@@ -4102,18 +4112,20 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* PvP UI Theme Color Overrides */
 #pvp-step-select > div {
-  background: rgba(10, 10, 15, 0.85) !important;
-  border: 1.5px solid #bc2c2c !important;
-  border-radius: 4px !important;
-  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.15), 0 4px 10px rgba(0, 0, 0, 0.4) !important;
+  background: rgba(12, 13, 18, 0.92) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.4) !important;
+  border-radius: 0 !important;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px) !important;
+  box-shadow: inset 0 0 0 1px rgba(212, 162, 78, 0.15), 0 4px 10px rgba(0, 0, 0, 0.4) !important;
 }
 
 #pvp-name-input, #pvp-friend-uid-input {
-  background: #0f0f14 !important;
-  border: 1px solid #bc2c2c !important;
-  border-radius: 2px !important;
-  color: #f4efe2 !important;
-  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.1) !important;
+  background: rgba(12, 13, 18, 0.95) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.4) !important;
+  border-radius: 0 !important;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px) !important;
+  color: #ffd700 !important;
+  box-shadow: inset 0 0 0 1px rgba(212, 162, 78, 0.1) !important;
   font-family: 'Space Mono', monospace !important;
 }
 
@@ -4718,6 +4730,195 @@ html.qol-left #ult-buttons-wrap {
     font-size: 8px !important;
     line-height: 1.25 !important;
   }
+}
+
+/* ==========================================================================
+   NEO-JAPANESE SAMURAI LACQUER THEME UNIFICATION (NO SCREEN LEFT OUT)
+   Master Gold: #d4a24e | High Gold: #ffd700 | Deep Lacquer: rgba(12, 13, 18, 0.94)
+   All surfaces: 45° chamfers, 0px border-radius, zero backdrop blur
+   ========================================================================== */
+
+/* 1. Skill Selection Screen */
+#skill-select-screen .skill-select-box {
+  background: rgba(6, 6, 10, 0.95) !important;
+  border: 2px solid #d4a24e !important;
+  border-radius: 0 !important;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
+  box-shadow: 0 0 35px rgba(212, 162, 78, 0.25), 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+#skill-select-screen .skill-card {
+  background: rgba(12, 13, 18, 0.94) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.4) !important;
+  border-radius: 0 !important;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+#skill-select-screen .skill-card:hover {
+  border-color: #ffd700 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(212, 162, 78, 0.25) !important;
+}
+
+#skill-select-screen .skill-card.active {
+  border-color: #ffd700 !important;
+  background: rgba(20, 22, 32, 0.98) !important;
+  box-shadow: 0 0 18px rgba(212, 162, 78, 0.4), inset 0 0 12px rgba(212, 162, 78, 0.15) !important;
+}
+
+#skill-select-screen .skill-category-badge {
+  border-radius: 0 !important;
+  clip-path: polygon(3px 0, calc(100% - 3px) 0, 100% 3px, 100% calc(100% - 3px), calc(100% - 3px) 100%, 3px 100%, 0 calc(100% - 3px), 0 3px) !important;
+  background: rgba(212, 162, 78, 0.15) !important;
+  border: 1px solid rgba(212, 162, 78, 0.35) !important;
+  color: #ffd700 !important;
+}
+
+#skill-select-screen .skill-lock-btn {
+  border-radius: 0 !important;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px) !important;
+  background: rgba(12, 13, 18, 0.92) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.4) !important;
+  color: #ffd700 !important;
+}
+
+/* 2. Heroes Selection Page (Dojo Screen) */
+#dojo-screen .dojo-menu-box {
+  background: rgba(6, 6, 10, 0.95) !important;
+  border: 2px solid #d4a24e !important;
+  border-radius: 0 !important;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
+  box-shadow: 0 0 35px rgba(212, 162, 78, 0.25), 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+#dojo-screen .hero-card {
+  border-radius: 0 !important;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+}
+
+#dojo-screen .hero-portrait-wrap {
+  border-radius: 0 !important;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px) !important;
+  border: 1px solid rgba(212, 162, 78, 0.35) !important;
+}
+
+#dojo-screen .hero-card div[style*="border-radius"],
+#dojo-screen .hero-card span[style*="border-radius"],
+#dojo-screen .hero-card button {
+  border-radius: 0 !important;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px) !important;
+}
+
+/* 3. Settings Modal */
+#settings-screen .menu-box {
+  background: rgba(6, 6, 10, 0.95) !important;
+  border: 2px solid #d4a24e !important;
+  border-radius: 0 !important;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
+}
+
+.setting-row select {
+  padding: 6px 10px !important;
+  font-family: 'Noto Sans JP', sans-serif !important;
+  font-size: 14px !important;
+  background: rgba(12, 13, 18, 0.95) !important;
+  color: #f1f5f9 !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.4) !important;
+  border-radius: 0 !important;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px) !important;
+  outline: none !important;
+}
+
+.setting-row select:focus {
+  border-color: #ffd700 !important;
+  box-shadow: 0 0 10px rgba(212, 162, 78, 0.3) !important;
+}
+
+#keybinds-grid {
+  border-radius: 0 !important;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px) !important;
+  background: rgba(12, 13, 18, 0.92) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.3) !important;
+}
+
+/* 4. Codex / Combat Guide */
+#guide-screen .menu-box,
+#codex-modal .menu-box {
+  background: rgba(6, 6, 10, 0.95) !important;
+  border: 2px solid #d4a24e !important;
+  border-radius: 0 !important;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
+}
+
+.codex-tab-btn {
+  border-radius: 0 !important;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px) !important;
+}
+
+.guide-card {
+  border-radius: 0 !important;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px) !important;
+  background: rgba(12, 13, 18, 0.92) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.35) !important;
+}
+
+.guide-card > div,
+.guide-card span[style*="border-radius"],
+.guide-card div[style*="border-radius"] {
+  border-radius: 0 !important;
+  clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px) !important;
+}
+
+/* 5. In-Game Level-Up & Ult Pick Screens */
+#level-up-screen .menu-box,
+#ult-screen .menu-box {
+  background: rgba(6, 6, 10, 0.95) !important;
+  border: 2px solid #d4a24e !important;
+  border-radius: 0 !important;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
+  box-shadow: 0 0 35px rgba(212, 162, 78, 0.25), 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+/* 6. Grimoire, Chronicle, Shrine, and Hermit Modals */
+#grimoire-modal .menu-box,
+#chronicle-modal .menu-box,
+#shrine-modal .menu-box,
+#hermit-modal .menu-box,
+#upgrades-modal .menu-box {
+  background: rgba(6, 6, 10, 0.95) !important;
+  border: 2px solid #d4a24e !important;
+  border-radius: 0 !important;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
+  box-shadow: 0 0 35px rgba(212, 162, 78, 0.25), 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+.grimoire-card,
+#chronicle-grid > div {
+  border-radius: 0 !important;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px) !important;
+}
+
+/* 7. PvP Modals & Panels */
+#pvp-lobby-modal .menu-box,
+#pvp-ready-room .menu-box,
+#pvp-matchmaking-modal .menu-box {
+  background: rgba(6, 6, 10, 0.95) !important;
+  border: 2px solid #d4a24e !important;
+  border-radius: 0 !important;
+  clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
+  box-shadow: 0 0 35px rgba(212, 162, 78, 0.25), 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+}
+
+#pvp-lobby-modal .menu-box div[style*="border-radius"],
+#pvp-ready-room .menu-box div[style*="border-radius"],
+#pvp-lobby-modal .menu-box button[style*="border-radius"],
+#pvp-ready-room .menu-box button[style*="border-radius"],
+#pvp-matchmaking-modal .menu-box div[style*="border-radius"] {
+  border-radius: 0 !important;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px) !important;
 }
 
 
