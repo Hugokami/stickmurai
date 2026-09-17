@@ -2355,6 +2355,8 @@ export function refreshAllMagatamaDisplays() {
   if (dojoEl) dojoEl.textContent = formatted;
   const pregameEl = document.getElementById('pregame-magatama-count');
   if (pregameEl) pregameEl.textContent = formatted;
+  const menuEl = document.getElementById('menu-magatama-count');
+  if (menuEl) menuEl.textContent = formatted;
   const stageClearEl = document.getElementById('stage-clear-magatama');
   if (stageClearEl) stageClearEl.textContent = formatted + ' 🔮';
 }

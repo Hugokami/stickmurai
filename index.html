@@ -320,6 +320,14 @@
 
       <div id="main-menu" class="overlay" style="display:none;">
         <div class="menu-box main-menu-box">
+          <div class="main-menu-topbar">
+            <div class="menu-edition-tag">STICKMURAI · SHINOBI EDITION</div>
+            <div class="menu-currency-pill" id="main-menu-currency-pill" title="Soul Magatama">
+              <span class="currency-icon">🔮</span>
+              <span id="menu-magatama-count">0</span>
+              <span class="currency-label">MAGATAMA</span>
+            </div>
+          </div>
           <div class="menu-left">
             <div class="game-title-wrap">
               <div class="title-emblem-watermark"></div>
@@ -330,6 +338,7 @@
                 <span class="sub-flourish"></span>
               </div>
             </div>
+            <div class="katana-divider-bar" style="max-width: 320px; margin: 4px auto 14px auto;"></div>
             <div class="menu-buttons">
               <button id="start-btn" class="menu-btn menu-btn-hero">
                 <div class="btn-hero-glow"></div>
@@ -442,6 +451,7 @@
                   <span class="guide-header-sub">MASTER THE BLADE · DEFLECT & SURVIVE</span>
                 </div>
               </div>
+              <div class="katana-divider-bar" style="margin: 6px 0 10px 0;"></div>
 
               <div class="guide-cards-container">
                 <!-- Movement Card -->
@@ -814,16 +824,22 @@
       </div>
 
       <div id="skill-select-screen" class="overlay" style="display:none;">
-        <div class="menu-box skill-select-box" style="max-width: 780px; width: 92vw; padding: 24px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 8px; flex-wrap: wrap; gap: 8px;">
-            <h2 id="skill-select-title" class="skill-select-heading" style="margin: 0 !important; text-align: left !important;" data-i18n="selectSkillTitle">SELECT ACTIVE SKILL</h2>
-            <div style="background: rgba(12, 13, 18, 0.92); border: 1.5px solid #d4a24e; border-radius: 0; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); padding: 4px 14px; font-family: 'Orbitron', monospace; font-size: 13px; color: #ffd700; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(212, 162, 78, 0.2);">
-              <span style="font-size: 15px;">🔮</span> <span id="pregame-magatama-count">0</span>
+        <div class="skill-select-frame-layout">
+          <div class="samurai-ribbon-pillar"></div>
+          <div class="menu-box skill-select-box" style="max-width: 780px; width: 92vw; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+              <div>
+                <h2 id="skill-select-title" class="skill-select-heading" style="margin: 0 !important; text-align: left !important;" data-i18n="selectSkillTitle">SELECT ACTIVE SKILL</h2>
+                <div class="skill-select-sub" style="font-family: 'Space Mono', monospace; font-size: 11px; color: #d4a24e; letter-spacing: 1.5px; margin-top: 2px;">CHOOSE YOUR KATANA TECHNIQUE FOR BATTLE</div>
+              </div>
+              <div style="background: rgba(12, 13, 18, 0.92); border: 1.5px solid #d4a24e; border-radius: 0; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); padding: 4px 14px; font-family: 'Orbitron', monospace; font-size: 13px; color: #ffd700; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(212, 162, 78, 0.2);">
+                <span style="font-size: 15px;">🔮</span> <span id="pregame-magatama-count">0</span>
+              </div>
             </div>
-          </div>
-          <div class="skill-choices" id="pregame-skill-choices" style="display: flex; gap: 14px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
-            <!-- Populated by JS -->
-          </div>
+            <div class="katana-divider-bar" style="margin: 4px 0 14px 0;"></div>
+            <div class="skill-choices" id="pregame-skill-choices" style="display: flex; gap: 14px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap;">
+              <!-- Populated by JS -->
+            </div>
           
           <!-- Stance Blessing Options -->
           <div id="pregame-blessing-options" style="margin-bottom: 18px; display: flex; align-items: center; justify-content: center; gap: 8px; flex-direction: column; width: 100%;">
@@ -873,6 +889,7 @@
           </div>
         </div>
       </div>
+    </div>
 
       <div id="pause-screen" class="overlay" style="display:none;">
         <div class="menu-box pause-menu-box">
