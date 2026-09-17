@@ -521,7 +521,7 @@ export class Enemy extends Entity {
     this.currentPhase++;
     this.hp = this.maxHp;
     this.hpDelayed = this.maxHp;
-    this.phaseTransitionTimer = 0.55;
+    this.phaseTransitionTimer = 1.0;
     this.posture = 0;
     this.postureBrokenTimer = 0;
     this.stunTimer = 0;
@@ -538,7 +538,8 @@ export class Enemy extends Entity {
 
     if (typeof globals !== 'undefined') {
       globals.screenShake = Math.max(globals.screenShake, 35);
-      const phaseColor = this.currentPhase === 2 ? '#f59e0b' : '#a855f7';
+      const isFinal = this.currentPhase >= this.totalPhases;
+      const phaseColor = isFinal ? '#ef4444' : '#f59e0b';
       globals.shockwaves.push(new Shockwave(this.x, this.y, phaseColor, 320));
 
       if (globals.projectiles) {
@@ -556,7 +557,7 @@ export class Enemy extends Entity {
       }
       callbacks.updateUI?.();
 
-      const phaseTitle = this.currentPhase === 2 ? '⚡ PHASE II: ENRAGED! ⚡' : '💀 PHASE III: FINAL STAND! 💀';
+      const phaseTitle = isFinal ? '💀 FINAL PHASE: ENRAGED! 💀' : `⚡ PHASE ${this.currentPhase} ⚡`;
       globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 75, phaseTitle, phaseColor, 32));
       playExplosionSfx();
       playSynthesizedThunder();
@@ -1610,7 +1611,7 @@ export class Enemy extends Entity {
     }
 
     // HP bar directly above enemy head
-    const showHpBar = this.state !== 'dead' && (this.hp < this.maxHp || isBoss(this));
+    const showHpBar = this.state !== 'dead' && this.hp > 0 && (this.hp < this.maxHp || isBoss(this));
     if (showHpBar) {
       const boss = isBoss(this);
       const barW = (boss ? 90 : 48) * this.scaleMult;
@@ -1626,32 +1627,39 @@ export class Enemy extends Entity {
         const pipY = barY - 8;
         for (let p = 0; p < this.totalPhases; p++) {
           const px = pipsStartX + p * pipSpacing;
-          const isRemaining = (p + 1) >= this.currentPhase;
+          const isCleared = (p + 1) < this.currentPhase;
           const isCurrent = (p + 1) === this.currentPhase;
-          ctx.fillStyle = isRemaining ? (isCurrent ? '#f59e0b' : '#ef4444') : '#4b5563';
+          ctx.fillStyle = isCleared ? '#374151' : (isCurrent ? '#fbbf24' : '#ef4444');
           ctx.beginPath();
           ctx.arc(px, pipY, pipRadius, 0, Math.PI * 2);
           ctx.fill();
-          ctx.strokeStyle = isCurrent ? '#fbbf24' : '#ffffff';
+          ctx.strokeStyle = isCurrent ? '#ffffff' : (isCleared ? '#4b5563' : '#f87171');
           ctx.lineWidth = 1;
           ctx.stroke();
         }
       }
 
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      // Track background (if upcoming phases remain underneath, show underlying dark crimson track)
+      if (boss && this.currentPhase < this.totalPhases) {
+        ctx.fillStyle = '#7f1d1d';
+      } else {
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+      }
       ctx.fillRect(barX, barY, barW, barH);
 
       // catchup orange bar
-      ctx.fillStyle = '#ffa500';
-      const delayRatio = (this.hpDelayed || this.hp) / this.maxHp;
+      ctx.fillStyle = '#f97316';
+      const delayRatio = Math.max(0, Math.min(1, (this.hpDelayed || this.hp) / this.maxHp));
       ctx.fillRect(barX, barY, barW * delayRatio, barH);
 
       // health colored bar (by phase if boss)
+      // Final phase is ALWAYS Crimson Red (#ef4444); earlier phases are Gold (#f59e0b) or Purple (#a855f7)
+      const isFinalPhase = this.currentPhase >= this.totalPhases;
       const phaseColor = boss
-        ? (this.currentPhase === 1 ? '#ff3333' : (this.currentPhase === 2 ? '#f59e0b' : '#a855f7'))
+        ? (isFinalPhase ? '#ef4444' : (this.totalPhases === 3 && this.currentPhase === 1 ? '#a855f7' : '#f59e0b'))
         : '#ff3333';
       ctx.fillStyle = phaseColor;
-      ctx.fillRect(barX, barY, barW * (this.hp / this.maxHp), barH);
+      ctx.fillRect(barX, barY, barW * Math.max(0, Math.min(1, this.hp / this.maxHp)), barH);
 
       ctx.strokeStyle = '#fff';
       ctx.lineWidth = 1;

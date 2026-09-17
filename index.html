@@ -58,15 +58,8 @@
           }
         }
 
-        // Uncaught error and promise rejection recovery
-        window.addEventListener('error', function(e) {
-          console.warn('Stickmurai watchdog captured startup error:', e);
-          setTimeout(forceDismissLoader, 300);
-        });
-        window.addEventListener('unhandledrejection', function(e) {
-          console.warn('Stickmurai watchdog captured unhandled rejection:', e);
-          setTimeout(forceDismissLoader, 300);
-        });
+        // Failsafe watchdog timer (25s) in case network completely freezes on low-bandwidth connections
+        window.__loaderFailSafeTimer = setTimeout(forceDismissLoader, 25000);
       })();
     </script>
   </head>

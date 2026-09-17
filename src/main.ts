@@ -46,6 +46,7 @@ import {
   playSynthesizedSingingBowl,
   playEnergyBeam,
   startBgm,
+  bgmAudio,
   resumeAudioContext,
   initImmediateAudio,
   playTeleportSfx,
@@ -201,10 +202,11 @@ function finishLoading() {
   if (flare) flare.style.left = 'calc(100% - 7px)';
   if (percentText) percentText.innerText = '100%';
   if (text) {
-    text.innerText = t('tapToContinue') || 'TAP / CLICK TO CONTINUE';
+    const isJa = globals.currentLang === 'ja';
+    text.innerText = isJa ? '⚔️ 画面をタップして開始 ⚔️' : '⚔️ TAP / CLICK ANYWHERE TO START ⚔️';
     text.classList.add('ready-to-continue');
   }
-  if (statusText) statusText.innerText = "READY";
+  if (statusText) statusText.innerText = globals.currentLang === 'ja' ? '武具・奥義 全読込完了 · 準備完了' : 'ALL ASSETS FULLY LOADED · READY';
 
   const loaderScreen = document.getElementById('loader-screen');
   if (loaderScreen && !loaderScreen.dataset.bound) {
@@ -218,6 +220,13 @@ function finishLoading() {
       loaderScreen.removeEventListener('touchstart', onContinue);
       loaderScreen.removeEventListener('pointerdown', onContinue);
       
+      // Guaranteed immediate audio start on this user gesture
+      resumeAudioContext();
+      if (bgmAudio.muted) {
+        bgmAudio.muted = false;
+      }
+      startBgm();
+
       clearInterval(tipsInterval);
       if (loaderStickmanInterval) {
         clearInterval(loaderStickmanInterval);
@@ -249,11 +258,9 @@ function finishLoading() {
     loaderScreen.addEventListener('click', onContinue);
     loaderScreen.addEventListener('touchstart', onContinue);
     loaderScreen.addEventListener('pointerdown', onContinue);
-
-    // Auto-proceed after 600ms so mobile players don't need to guess to tap
-    setTimeout(() => {
-      onContinue();
-    }, 600);
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+      if (e.code === 'Space' || e.code === 'Enter') onContinue(e);
+    }, { once: true });
   }
 }
 
@@ -2947,6 +2954,7 @@ export function revivePlayer() {
 /* hack: had to separate awakening execution hits from standard normal hits */
 function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   if (e.state === 'dead') return;
+  if ((e as any).phaseTransitionTimer > 0) return;
   // Shadow Doppelganger Mirror Counter-Parry
   if ((e as any).isShadowDoppelganger && e.state === 'charge' && Math.random() < 0.45) {
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 50, globals.currentLang === 'ja' ? '影の受け流し！ 🛡️' : 'SHADOW PARRY! 🛡️', '#a855f7', 26));
@@ -3351,7 +3359,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
   // Boss damage clamp: prevent any single-hit burst from deleting more than 12% of boss max HP
   const isBossEntity = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
   if (isBossEntity) {
-    if ((e as any).phaseTransitionTimer > 0) return;
     const maxBossSingleHit = Math.max(70, Math.round((e.maxHp || 100) * 0.12));
     finalDmg = Math.min(finalDmg, maxBossSingleHit);
   }

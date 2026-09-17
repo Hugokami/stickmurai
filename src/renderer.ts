@@ -1290,13 +1290,13 @@ export function draw() {
         const pipsY = barY - 24;
         for (let p = 0; p < totalPhases; p++) {
           const px = pipsStartX + p * pipSpacing;
-          const isRemaining = (p + 1) >= currentPhase;
+          const isCleared = (p + 1) < currentPhase;
           const isCurrent = (p + 1) === currentPhase;
-          ctx.fillStyle = isRemaining ? (isCurrent ? '#f59e0b' : '#ef4444') : '#374151';
+          ctx.fillStyle = isCleared ? '#374151' : (isCurrent ? '#fbbf24' : '#ef4444');
           ctx.beginPath();
           ctx.arc(px, pipsY, pipRadius, 0, Math.PI * 2);
           ctx.fill();
-          ctx.strokeStyle = isCurrent ? '#fbbf24' : '#ffffff';
+          ctx.strokeStyle = isCurrent ? '#ffffff' : (isCleared ? '#4b5563' : '#f87171');
           ctx.lineWidth = 1.2;
           ctx.stroke();
         }
@@ -1317,8 +1317,9 @@ export function draw() {
       ctx.fill();
       ctx.stroke();
 
-      // 1. Boss HP Bar Background
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      // 1. Boss HP Bar Background (dark crimson if more phases remain; black on final)
+      const isFinalPhase = currentPhase >= totalPhases;
+      ctx.fillStyle = isFinalPhase ? 'rgba(0, 0, 0, 0.85)' : '#7f1d1d';
       ctx.fillRect(barX, barY, barW, hpH);
 
       // Delayed catch-up orange bar
@@ -1326,16 +1327,16 @@ export function draw() {
       ctx.fillStyle = '#f97316';
       ctx.fillRect(barX, barY, (barW * delayRatio) | 0, hpH);
 
-      // Main HP Fill (Phase colored)
+      // Main HP Fill (Phase colored: final = Crimson, earlier phases = Gold/Purple)
       const hpRatio = Math.max(0, Math.min(1, activeBoss.hp / activeBoss.maxHp));
-      const phaseColor = currentPhase === 1 ? '#dc2626' : (currentPhase === 2 ? '#d97706' : '#7c3aed');
+      const phaseColor = isFinalPhase ? '#ef4444' : (totalPhases === 3 && currentPhase === 1 ? '#a855f7' : '#f59e0b');
       ctx.fillStyle = phaseColor;
       ctx.fillRect(barX, barY, (barW * hpRatio) | 0, hpH);
 
       // HP numerical text
       ctx.font = "bold 9px 'Orbitron', monospace";
       ctx.fillStyle = '#ffffff';
-      ctx.fillText(`${activeBoss.hp} / ${activeBoss.maxHp}  (P${currentPhase}/${totalPhases})`, (globals.width / 2) | 0, barY + 9);
+      ctx.fillText(`${Math.max(0, activeBoss.hp)} / ${activeBoss.maxHp}  (P${currentPhase}/${totalPhases})`, (globals.width / 2) | 0, barY + 9);
 
       // 2. Sekiro-Style Orange Posture / Stagger Bar (directly under HP)
       const postY = barY + hpH + 3;

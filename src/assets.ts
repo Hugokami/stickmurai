@@ -826,7 +826,11 @@ function startLoadingItem(item: QueuedAsset) {
   item.img.onload = () => {
     failedAssets.delete(item.img);
     retryCounts.delete(item.img);
-    onDone();
+    if (typeof item.img.decode === 'function') {
+      item.img.decode().then(onDone).catch(onDone);
+    } else {
+      onDone();
+    }
   };
 
   item.img.onerror = () => {
@@ -855,7 +859,11 @@ function startLoadingItem(item: QueuedAsset) {
     const mappedSrc = resolveAssetUrl(item.src);
     item.img.src = mappedSrc;
     if (item.img.complete && item.img.naturalWidth > 0) {
-      Promise.resolve().then(onDone);
+      if (typeof item.img.decode === 'function') {
+        item.img.decode().then(onDone).catch(onDone);
+      } else {
+        Promise.resolve().then(onDone);
+      }
     }
   };
 

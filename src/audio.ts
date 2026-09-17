@@ -861,17 +861,31 @@ export function initImmediateAudio() {
     startBgm();
   } catch (_) {}
 
+  // Fallback: If unmuted play failed or was blocked, attempt muted play to prime audio pipeline
+  if (bgmAudio.paused) {
+    try {
+      bgmAudio.muted = true;
+      const p = bgmAudio.play();
+      if (p !== undefined) p.catch(() => {});
+    } catch (_) {}
+  }
+
   // Instant unlock listeners on any early gesture anywhere on screen
   const unlockEvents = ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'];
   const unlockHandler = () => {
     resumeAudioContext();
-    startBgm();
-    if (bgmStarted && !bgmAudio.paused) {
-      unlockEvents.forEach(evt => {
-        window.removeEventListener(evt, unlockHandler, true);
-        document.removeEventListener(evt, unlockHandler, true);
-      });
+    if (bgmAudio.muted) {
+      bgmAudio.muted = false;
     }
+    startBgm();
+    setTimeout(() => {
+      if (!bgmAudio.paused) {
+        unlockEvents.forEach(evt => {
+          window.removeEventListener(evt, unlockHandler, true);
+          document.removeEventListener(evt, unlockHandler, true);
+        });
+      }
+    }, 150);
   };
 
   unlockEvents.forEach(evt => {
