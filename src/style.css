@@ -1002,7 +1002,7 @@ html.crazygames #fullscreen-prompt {
   display: flex !important;
   flex-direction: column !important;
   gap: 12px !important;
-  max-height: min(580px, calc(100vh - 80px)) !important;
+  max-height: min(580px, calc(100dvh - 80px)) !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch;
 }
@@ -1837,7 +1837,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   position: absolute;
   top: 0; left: 0; width: 200%; height: 200%;
   background: radial-gradient(circle, rgba(188, 44, 44, 0.05) 0%, transparent 70%);
-  filter: blur(40px);
+  filter: none;
   z-index: 1;
   pointer-events: none;
   animation: mist-drift 25s ease-in-out infinite alternate;
@@ -1868,7 +1868,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
 /* Depth of Field Sakura classes */
 .sakura-foreground {
-  filter: blur(2px);
+  filter: none;
   opacity: 0.65;
   z-index: 15; /* Sits in front of the HUD container */
 }
@@ -1880,7 +1880,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 .sakura-background {
-  filter: blur(0.5px);
+  filter: none;
   opacity: 0.4;
   z-index: 2;
 }
@@ -2050,9 +2050,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
 }
 
 @keyframes hanko-stamp {
-  0% { transform: rotate(-8deg) scale(2.5); opacity: 0; filter: blur(3px); }
-  85% { transform: rotate(-10deg) scale(0.95); opacity: 1; filter: none; }
-  100% { transform: rotate(-8deg) scale(1); opacity: 0.9; filter: none; }
+  0% { transform: rotate(-8deg) scale(2.5); opacity: 0; }
+  85% { transform: rotate(-10deg) scale(0.95); opacity: 1; }
+  100% { transform: rotate(-8deg) scale(1); opacity: 0.9; }
 }
 
 /* Calligraphic HUD Container Box - Premium Scroll Style */
@@ -2060,10 +2060,11 @@ input[type="range"]::-webkit-slider-thumb:hover {
   position: relative;
   width: 90%;
   max-width: 440px;
-  background: rgba(9, 10, 15, 0.88) !important;
-  border: 1.5px solid rgba(212, 175, 55, 0.35) !important;
-  border-radius: 4px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(188, 44, 44, 0.15) !important;
+  background: rgba(9, 10, 15, 0.94) !important;
+  border: 1.5px solid rgba(212, 162, 78, 0.4) !important;
+  border-radius: 0;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7), 0 0 15px rgba(212, 162, 78, 0.2) !important;
   padding: 24px 20px 20px 20px !important;
   display: flex;
   flex-direction: column;
@@ -2344,7 +2345,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
     flex-direction: row;
     max-width: 1040px;
     width: 95%;
-    max-height: calc(100vh - 40px);
+    max-height: calc(100dvh - 40px);
     align-items: stretch;
     justify-content: space-between;
     gap: 28px;
@@ -2357,7 +2358,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   .main-menu-box .menu-right {
     flex: 1 1 540px;
     max-width: 580px;
-    max-height: min(580px, calc(100vh - 80px));
+    max-height: min(580px, calc(100dvh - 80px));
     overflow-y: auto;
   }
 }
@@ -3627,7 +3628,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
               -6px -4px 8px rgba(245, 158, 11, 0.45),
               6px -4px 8px rgba(239, 68, 68, 0.45),
               0 4px 6px rgba(220, 38, 38, 0.35);
-  filter: blur(2px);
+  filter: none;
   z-index: -1;
   animation: flame-lick 1.2s infinite ease-in-out !important;
   pointer-events: none;
@@ -3644,7 +3645,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 -4px 8px rgba(251, 191, 36, 0.65),
               -3px -2px 4px rgba(245, 158, 11, 0.5),
               3px -2px 4px rgba(239, 68, 68, 0.5);
-  filter: blur(1px);
+  filter: none;
   z-index: -1;
   animation: flame-lick-reverse 0.9s infinite ease-in-out !important;
   pointer-events: none;
@@ -4920,6 +4921,64 @@ html.qol-left #ult-buttons-wrap {
   border-radius: 0 !important;
   clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px) !important;
 }
+
+/* ==========================================================================
+   BASELINE UI STANDARDS (ACCESSIBILITY, NUMERIC STABILITY, MOTION)
+   ========================================================================== */
+
+/* 1. Numeric data stability: tabular numbers */
+#timer-display,
+#score-display,
+#kill-count,
+#stage-currency-display,
+#magatama-display,
+#combo-display,
+.stat-val,
+.bento-stat-pill span,
+.stage-clear-bento-stats span,
+.cooldown-text,
+.hud-btn-key,
+.ult-hotkey,
+.hotkey,
+.hud-bar-text,
+.bounty-val,
+.objective-val,
+#dojo-magatama-count,
+#menu-upgrades-magatama-count,
+#dojo-honor-count,
+#upgrades-honor-count,
+#grimoire-unlocked-count,
+#grimoire-total-count {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* 2. Typography polish: headings balanced, body pretty */
+h1, h2, h3, h4, .modal-title, .section-title, .dojo-title, .upgrades-title, .guide-title {
+  text-wrap: balance;
+}
+
+p, .guide-card p, .skill-card p, .power-card p, .tips-content, .hero-bio, .dojo-subtitle, .upgrades-subtitle {
+  text-wrap: pretty;
+}
+
+/* 3. Fast interaction feedback <= 200ms */
+button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x {
+  transition-duration: 150ms !important;
+}
+
+/* 4. Respect prefers-reduced-motion accessibility preference */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 
 
 
