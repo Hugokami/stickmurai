@@ -529,8 +529,8 @@ with zipfile.ZipFile(src_zip, 'r') as zin, zipfile.ZipFile(target_zip, 'w', zipf
                 if os.path.exists(tmp_in): os.unlink(tmp_in)
                 if os.path.exists(tmp_out): os.unlink(tmp_out)
 
-        # 4. Quantize loose loader stickman sprite
-        elif fn.endswith('sword_Idle_0001.png'):
+        # 4. Quantize loose loader stickman sprites (frames 1-8)
+        elif 'sword_Idle_000' in fn and fn.endswith('.png'):
             try:
                 im = Image.open(io.BytesIO(data))
                 im_q = im.quantize(colors=256, method=Image.Quantize.FASTOCTREE)

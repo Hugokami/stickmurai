@@ -35,6 +35,24 @@ if (fs.existsSync(zipPath)) {
   fs.unlinkSync(zipPath);
 }
 
+// Clean up stale hashed chunks from dist/assets if index.html exists
+const distAssets = path.join(distDir, 'assets');
+const distIndex = path.join(distDir, 'index.html');
+if (fs.existsSync(distAssets) && fs.existsSync(distIndex)) {
+  const indexHtml = fs.readFileSync(distIndex, 'utf8');
+  const activeAssets = new Set();
+  const assetRegex = /(?:src|href)=["'](?:\.\/)?assets\/([^"']+)["']/g;
+  let m;
+  while ((m = assetRegex.exec(indexHtml)) !== null) {
+    activeAssets.add(m[1]);
+  }
+  for (const f of fs.readdirSync(distAssets)) {
+    if (activeAssets.size > 0 && !activeAssets.has(f)) {
+      try { fs.unlinkSync(path.join(distAssets, f)); } catch (e) {}
+    }
+  }
+}
+
 console.log('\n--- 2. Packaging HTML5 release for itch.io & Newgrounds ---');
 
 // Use Python's built-in zipfile for reliable fast compression without heavy npm dependencies
@@ -51,8 +69,8 @@ exclude_names = {'.ds_store', 'thumbs.db'}
 # Sprites and VFX are cleanly packed inside assets.bin (lazy on-demand texture loading)
 # Backgrounds and hero portraits are loose for instantaneous native rendering.
 # Stays strictly within itch.io's 1,000-file platform ceiling (~50 files total).
-allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin'}
-allowed_dirs = {'assets', 'audio', 'fonts', 'fantasy_bg'}
+allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin', 'vite.svg', 'icons.svg'}
+allowed_dirs = {'assets', 'audio', 'fonts', 'fantasy_bg', 'ui'}
 allowed_icons = {
     'release_v1.2-single_38.png',
     'release_v1.2-single_15.png',
@@ -98,11 +116,16 @@ if os.path.exists(portraits_dir):
             fp = os.path.join(portraits_dir, f)
             files_to_pack.append((fp, f'sprites/portraits/{f}'))
 
-# 5. Loader Character Sprite (referenced directly in index.html loading screen)
-loader_sprite = 'sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_0001.png'
-fp = os.path.join(dist_dir, loader_sprite)
-if os.path.exists(fp):
-    files_to_pack.append((fp, loader_sprite))
+# 5. Loader Character Sprites (frames 1-8 referenced directly in index.html loading screen & main.ts)
+for s in range(1, 9):
+    lsp = f'sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_000{s}.png'
+    fp = os.path.join(dist_dir, lsp)
+    if os.path.exists(fp):
+        files_to_pack.append((fp, lsp))
+    else:
+        pfp = os.path.join(dist_dir, '..', 'public', lsp)
+        if os.path.exists(pfp):
+            files_to_pack.append((pfp, lsp))
 
 count = len(files_to_pack)
 with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED, compresslevel=6) as zf:

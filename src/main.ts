@@ -268,6 +268,10 @@ function startLoaderStickmanAnimation() {
   const img = document.getElementById('loader-stickman-img') as HTMLImageElement;
   if (!img) return;
 
+  img.onerror = () => {
+    img.src = 'sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0001.png';
+  };
+
   const preloaded = (window as any).__loaderStickmuraiSprites as HTMLImageElement[] | undefined;
   if (preloaded && preloaded[0] && preloaded[0].src) {
     img.src = preloaded[0].src;
