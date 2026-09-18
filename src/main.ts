@@ -2787,7 +2787,7 @@ function triggerChainLightning(startEnemy: Enemy, chainDmg = 2) {
       globals.particles.push(Particle.acquire(px + perpX, py + perpY, '#fbbf24', 0, 0.25, 2.0));
     }
     
-    hitEnemy(closest, chainDmg);
+    hitEnemy(closest, chainDmg, false, true);
     closest.stunTimer = Math.max(closest.stunTimer || 0, 1.5);
     
     hitSet.add(closest);
@@ -2957,8 +2957,8 @@ export function revivePlayer() {
 }
 
 /* hack: had to separate awakening execution hits from standard normal hits */
-function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
-  if (e.state === 'dead') return;
+function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
+  if (!e || e.state === 'dead' || e.deathHandled || (e.hp !== undefined && e.hp <= 0)) return;
   if ((e as any).phaseTransitionTimer > 0) return;
   // Shadow Doppelganger Mirror Counter-Parry
   if ((e as any).isShadowDoppelganger && e.state === 'charge' && Math.random() < 0.45) {
@@ -3007,7 +3007,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     e.burnTimer = 3.0;
     if (e.burnTickTimer <= 0) e.burnTickTimer = 0.5;
   }
-  if (globals.activeFusions.has('plasma_tempest') && e.burnTimer > 0) {
+  if (!isProc && globals.activeFusions.has('plasma_tempest') && e.burnTimer > 0) {
     const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
     const plasmaDmg = Math.round(((10 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 1.5) * slashPct + getCurrentSlashDamage() * 0.5) * (1 + (globals.level - 1) * 0.05));
     triggerChainLightning(e, plasmaDmg);
@@ -3324,7 +3324,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       }
     }
 
-    if (globals.arterialGushActive) {
+    if (!isProc && globals.arterialGushActive) {
       const slashDmg = getCurrentSlashDamage();
       const bloodFx = (vfxAnims as any).combat?.bloodSplatter;
       if (bloodFx && bloodFx.length > 0) {
@@ -3334,7 +3334,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
       const isBossTarget = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
       const bleedPct = isBossTarget ? 0.06 : 0.20;
       const bleedDmg = Math.max(12, Math.round(missingHp * bleedPct)) + Math.round(slashDmg * 1.25);
-      hitEnemy(e, bleedDmg);
+      hitEnemy(e, bleedDmg, false, true);
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `🩸 -${bleedDmg} GUSH`, "#dc2626", 18));
     }
 
@@ -3431,11 +3431,12 @@ function checkVampireHeal(e: Enemy) {
 }
 
 function killEnemy(e: Enemy) {
-  if (e.state === 'dead') return;
+  if (e.state === 'dead' || e.deathHandled) return;
   if (e.isBoss && e.currentPhase < e.totalPhases) {
     e.advanceBossPhase();
     return;
   }
+  e.deathHandled = true;
   e.setState('dead');
   addCombo();
   globals.runStats.kills++;
@@ -3492,7 +3493,7 @@ function killEnemy(e: Enemy) {
           hitCount++;
           const baseExpDmg = globals.activeStageAffix?.id === 'infernal_domain' ? 12 : 8;
           const scaledExpDmg = Math.round(baseExpDmg * (1 + ((globals.currentStage || 1) - 1) * 0.1));
-          callbacks.hitEnemy(other, scaledExpDmg);
+          callbacks.hitEnemy(other, scaledExpDmg, false, true);
           if (hitCount >= 5) break;
         }
       }
@@ -3870,7 +3871,7 @@ function update(realDt: number) {
           for (const t of targets) {
             globals.lightningBeams.push(new LightningBeam(t.x, t.y));
             globals.shockwaves.push(new Shockwave(t.x, t.y, '#38bdf8'));
-            callbacks.hitEnemy(t, 8);
+            callbacks.hitEnemy(t, 8, false, true);
             globals.floatingTexts.push(FloatingText.acquire(t.x, t.y - 40, "⚡ GALE STRIKE", "#38bdf8", 18));
           }
         }
@@ -3956,68 +3957,76 @@ function update(realDt: number) {
         }
 
         // Plasma Tempest Trails Update
-    for (let i = globals.plasmaTrails.length - 1; i >= 0; i--) {
-      const pt = globals.plasmaTrails[i];
-      pt.life -= realDt;
-      if (pt.life <= 0) {
-        globals.plasmaTrails.splice(i, 1);
-        continue;
-      }
-      const rSq = (pt.radius || 50) ** 2;
-      for (let j = 0; j < globals.enemies.length; j++) {
-        const en = globals.enemies[j];
-        if (en.state === 'dead') continue;
-        const dSq = (en.x - pt.x) ** 2 + (en.y - pt.y) ** 2;
-        if (dSq < rSq) {
-          en.burnTimer = 3.0;
-          const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
-          const trailDmg = ((6 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 0.6) * slashPct) * realDt;
-          hitEnemy(en, trailDmg);
-        }
-      }
-    }
-
-    // Kamaitachi Bouncing Sickles Update
-    for (let i = globals.bouncingSickles.length - 1; i >= 0; i--) {
-      const s = globals.bouncingSickles[i];
-      s.life -= realDt;
-      if (s.life <= 0) {
-        globals.bouncingSickles.splice(i, 1);
-        continue;
-      }
-      s.x += s.vx * realDt;
-      s.y += s.vy * realDt;
-      if (s.x < 50) { s.x = 50; s.vx = Math.abs(s.vx); }
-      else if (s.x > globals.width - 50) { s.x = globals.width - 50; s.vx = -Math.abs(s.vx); }
-      if (s.y < 50) { s.y = 50; s.vy = Math.abs(s.vy); }
-      else if (s.y > globals.height - 50) { s.y = globals.height - 50; s.vy = -Math.abs(s.vy); }
-
-      // Kamaitachi Projectile Deflection Vortex
-      for (let pIdx = 0; pIdx < globals.projectiles.length; pIdx++) {
-        const pr = globals.projectiles[pIdx];
-        if (pr.isEnemy && pr.active) {
-          const pdx = pr.x - s.x;
-          const pdy = pr.y - s.y;
-          if (pdx * pdx + pdy * pdy < 65 * 65) {
-            pr.isEnemy = false;
-            pr.angle = Math.atan2(-pdy, -pdx);
-            pr.speed = Math.max(pr.speed, 650);
-            globals.particles.push(Particle.acquire(pr.x, pr.y, '#4ade80', 250, 0.35, 2.5));
+        for (let i = globals.plasmaTrails.length - 1; i >= 0; i--) {
+          const pt = globals.plasmaTrails[i];
+          pt.life -= realDt;
+          if (pt.life <= 0) {
+            globals.plasmaTrails.splice(i, 1);
+            continue;
+          }
+          (pt as any).tickTimer = ((pt as any).tickTimer || 0) - realDt;
+          if ((pt as any).tickTimer <= 0) {
+            (pt as any).tickTimer = 0.25;
+            const rSq = (pt.radius || 50) ** 2;
+            for (let j = 0; j < globals.enemies.length; j++) {
+              const en = globals.enemies[j];
+              if (en.state === 'dead' || (en as any).deathHandled) continue;
+              const dSq = (en.x - pt.x) ** 2 + (en.y - pt.y) ** 2;
+              if (dSq < rSq) {
+                en.burnTimer = 3.0;
+                const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+                const tickDmg = Math.max(1, Math.round(((6 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 0.6) * slashPct) * 0.25));
+                hitEnemy(en, tickDmg, false, true);
+              }
+            }
           }
         }
-      }
 
-      const rSq = (s.radius || 30) ** 2;
-      for (let j = 0; j < globals.enemies.length; j++) {
-        const en = globals.enemies[j];
-        if (en.state === 'dead') continue;
-        const dSq = (en.x - s.x) ** 2 + (en.y - s.y) ** 2;
-        if (dSq < rSq) {
-          hitEnemy(en, s.damage || 5);
-          globals.particles.push(Particle.acquire(s.x, s.y, '#4ade80', 180, 0.3, 2));
+        // Kamaitachi Bouncing Sickles Update
+        for (let i = globals.bouncingSickles.length - 1; i >= 0; i--) {
+          const s = globals.bouncingSickles[i];
+          s.life -= realDt;
+          if (s.life <= 0) {
+            globals.bouncingSickles.splice(i, 1);
+            continue;
+          }
+          s.x += s.vx * realDt;
+          s.y += s.vy * realDt;
+          if (s.x < 50) { s.x = 50; s.vx = Math.abs(s.vx); }
+          else if (s.x > globals.width - 50) { s.x = globals.width - 50; s.vx = -Math.abs(s.vx); }
+          if (s.y < 50) { s.y = 50; s.vy = Math.abs(s.vy); }
+          else if (s.y > globals.height - 50) { s.y = globals.height - 50; s.vy = -Math.abs(s.vy); }
+
+          // Kamaitachi Projectile Deflection Vortex
+          for (let pIdx = 0; pIdx < globals.projectiles.length; pIdx++) {
+            const pr = globals.projectiles[pIdx];
+            if (pr.isEnemy && pr.active) {
+              const pdx = pr.x - s.x;
+              const pdy = pr.y - s.y;
+              if (pdx * pdx + pdy * pdy < 65 * 65) {
+                pr.isEnemy = false;
+                pr.angle = Math.atan2(-pdy, -pdx);
+                pr.speed = Math.max(pr.speed, 650);
+                globals.particles.push(Particle.acquire(pr.x, pr.y, '#4ade80', 250, 0.35, 2.5));
+              }
+            }
+          }
+
+          (s as any).hitTimer = ((s as any).hitTimer || 0) - realDt;
+          if ((s as any).hitTimer <= 0) {
+            (s as any).hitTimer = 0.2;
+            const rSq = (s.radius || 30) ** 2;
+            for (let j = 0; j < globals.enemies.length; j++) {
+              const en = globals.enemies[j];
+              if (en.state === 'dead' || (en as any).deathHandled) continue;
+              const dSq = (en.x - s.x) ** 2 + (en.y - s.y) ** 2;
+              if (dSq < rSq) {
+                hitEnemy(en, s.damage || 5, false, true);
+                globals.particles.push(Particle.acquire(s.x, s.y, '#4ade80', 180, 0.3, 2));
+              }
+            }
+          }
         }
-      }
-    }
   }
 
   // Option 5: Battlefield Bounty Contracts Update
@@ -4248,7 +4257,7 @@ function update(realDt: number) {
           let prevX = globals.player.x;
           let prevY = globals.player.y;
           chainTargets.forEach(t => {
-            hitEnemy(t.enemy, chainDmg);
+            hitEnemy(t.enemy, chainDmg, false, true);
             t.enemy.stunTimer = Math.max(t.enemy.stunTimer || 0, 0.8);
             const segments = 6;
             for (let s = 0; s < segments; s++) {
@@ -4601,7 +4610,7 @@ function update(realDt: number) {
                 const odx = other.x - e.x;
                 const ody = other.y - e.y;
                 if (odx * odx + ody * ody < 25600) { // 160 * 160
-                  hitEnemy(other, echoDmg);
+                  hitEnemy(other, echoDmg, false, true);
                   globals.particles.push(Particle.acquire(other.x, other.y, '#ffd700', 100, 0.3, 1.5));
                   echoTargetsCount++;
                   if (echoTargetsCount >= 5) break; 
@@ -5281,16 +5290,18 @@ function update(realDt: number) {
           const mikiriDmg = Math.max(30, Math.round(35 + currentSlash * 3.2));
           hitEnemy(e, mikiriDmg);
 
-          if (typeof (e as any).addPostureDamage === 'function') {
-            (e as any).addPostureDamage(40);
+          if (e.state !== 'dead' && !(e as any).deathHandled) {
+            if (typeof (e as any).addPostureDamage === 'function') {
+              (e as any).addPostureDamage(40);
+            }
+            e.stunTimer = Math.max(e.stunTimer || 0, 0.5);
+            e.setState('idle');
+            e.knockbackTimer = 0.35;
+            e.knockbackVx = dir * 1600;
+            e.knockbackVy = 0;
+            e.vx = e.knockbackVx;
+            e.vy = 0;
           }
-          e.stunTimer = Math.max(e.stunTimer || 0, 0.5);
-          e.setState('idle');
-          e.knockbackTimer = 0.35;
-          e.knockbackVx = dir * 1600;
-          e.knockbackVy = 0;
-          e.vx = e.knockbackVx;
-          e.vy = 0;
 
           // 3. Polish, Hit-Stop (2-3 frame crunch), Audio, Vitals
           globals.hitStop = 0.045; // 2-3 frames micro freeze
@@ -6227,7 +6238,7 @@ function update(realDt: number) {
               hasChained = true;
               triggerChainLightning(e);
             }
-            if (isRiposteStrike) {
+            if (isRiposteStrike && e.state !== 'dead' && !(e as any).deathHandled) {
               const knockbackAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
               e.knockbackTimer = 0.5;
               e.knockbackVx = Math.cos(knockbackAngle) * 2600;
@@ -6714,7 +6725,7 @@ function update(realDt: number) {
       e.update(dt);
       continue;
     }
-    if (e.state === 'dead') {
+    if (e.state === 'dead' || (e as any).deathHandled) {
       e.update(dt);
       continue;
     }
@@ -6724,7 +6735,7 @@ function update(realDt: number) {
     const dist = Math.sqrt(distSq) || 0.001;
     
     // Leash: if stranded far away in the vast battlefield, reposition to arena perimeter
-    if (dist > 1500) {
+    if (dist > 1500 && e.state !== 'dead' && !(e as any).deathHandled) {
       const ang = Math.atan2(dy, dx);
       e.x = globals.player.x + Math.cos(ang) * 850;
       e.y = globals.player.y + Math.sin(ang) * 850;

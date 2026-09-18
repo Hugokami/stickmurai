@@ -54,8 +54,10 @@ export class Entity {
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
   dir = 1; scaleMult = 1;
+  deathHandled = false;
 
   setState(newState: string) {
+    if (this.deathHandled && newState !== 'dead') return;
     if (this.state !== newState) {
       this.state = newState; this.stateTime = 0; this.animFrame = 0; this.animTimer = 0;
     }

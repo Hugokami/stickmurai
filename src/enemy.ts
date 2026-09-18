@@ -517,7 +517,7 @@ export class Enemy extends Entity {
   }
 
   advanceBossPhase(): boolean {
-    if (!this.isBoss || this.currentPhase >= this.totalPhases) return false;
+    if (!this.isBoss || this.currentPhase >= this.totalPhases || this.deathHandled) return false;
     this.currentPhase++;
     this.hp = this.maxHp;
     this.hpDelayed = this.maxHp;
@@ -735,7 +735,7 @@ export class Enemy extends Entity {
           }
         }
         
-        if (this.hp <= 0) {
+        if (this.hp <= 0 && !this.deathHandled) {
           if (this.isBoss && this.currentPhase < this.totalPhases) {
             this.advanceBossPhase();
           } else {
