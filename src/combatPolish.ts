@@ -5,7 +5,7 @@ import type { Enemy } from './enemy';
 import { hazardContains } from './journeyCore';
 import { isPractice } from './runtimeQol';
 
-export const isBoss = (e:{subType:string})=>['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(e.subType);
+export const isBoss = (e: any) => Boolean(e && (e.isBoss || (e.subType && ['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(e.subType))));
 interface BossMemory {phase:number;state:string;cooldown:number}
 interface Hazard {x:number;y:number;radius:number;inner:number;age:number;hit:boolean;owner:Enemy;color:string;label:string}
 let memories=new WeakMap<Enemy,BossMemory>();

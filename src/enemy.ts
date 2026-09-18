@@ -576,9 +576,23 @@ export class Enemy extends Entity {
       return;
     }
 
+    const isBossEnemy = this.isBoss || isBoss(this);
+    if (isBossEnemy) {
+      // Make boss strictly immune to all stuns and knockbacks except stagger bar (posture break)
+      this.knockbackTimer = 0;
+      this.knockbackVx = 0;
+      this.knockbackVy = 0;
+      if (this.postureBrokenTimer <= 0) {
+        this.stunTimer = 0;
+        if (this.state === 'stun') {
+          this.setState('idle');
+        }
+      }
+    }
+
     const isChilled = this.chillTimer > 0;
-    const isKnockedBack = this.knockbackTimer > 0;
-    const isStunned = this.stunTimer > 0;
+    const isKnockedBack = !isBossEnemy && this.knockbackTimer > 0;
+    const isStunned = isBossEnemy ? (this.postureBrokenTimer > 0 && this.stunTimer > 0) : this.stunTimer > 0;
     const isBurning = this.burnTimer > 0;
 
     const effectiveDt = isChilled ? dt * 0.6 : dt;
@@ -1316,21 +1330,23 @@ export class Enemy extends Entity {
       }
       this.attackLanded = true;
     } else if (this.subType === 'agis_colossus') {
-      // Colossus Seismic Shockwave + Tri-Orb Plasma Spray
-      globals.screenShake = Math.max(globals.screenShake, 24);
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8', 240));
+      const isLateStage = (globals.currentStage || 1) >= 60;
+      globals.screenShake = Math.max(globals.screenShake, isLateStage ? 34 : 24);
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#38bdf8', isLateStage ? 340 : 240));
       const bossImpact = (vfxAnims as any).boss?.slamImpact;
       const bossDust = (vfxAnims as any).boss?.slamDust;
-      if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));
-      if (bossDust?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossDust, 0.55, 2.2));
-      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 65, "COLOSSUS CRUSH! ⚡", "#38bdf8", 30));
+      if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, isLateStage ? 2.6 : 2.0));
+      if (bossDust?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossDust, 0.55, isLateStage ? 2.8 : 2.2));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 65, isLateStage ? "TITANIC APOCALYPSE CRUSH! ⚡" : "COLOSSUS CRUSH! ⚡", "#38bdf8", 30));
       playSynthesizedThunder();
 
-      // Tri-orb spread projectiles
+      // Projectiles: 5-orb spread in stage 60+, otherwise 3-orb
       const baseAng = this.targetAngle;
-      const spreadAngles = [baseAng - 0.28, baseAng, baseAng + 0.28];
+      const spreadAngles = isLateStage 
+        ? [baseAng - 0.48, baseAng - 0.24, baseAng, baseAng + 0.24, baseAng + 0.48]
+        : [baseAng - 0.28, baseAng, baseAng + 0.28];
       for (const ang of spreadAngles) {
-        const proj = Projectile.acquire(this.x, this.y, ang, true, 2);
+        const proj = Projectile.acquire(this.x, this.y, ang, true, isLateStage ? 3 : 2);
         (proj as any).shooter = this;
         (proj as any).colorTint = '#38bdf8'; (proj as any).projectileType = 'water';
         globals.projectiles.push(proj);
@@ -1339,8 +1355,9 @@ export class Enemy extends Entity {
       // Heavy ground tremor damaging player if in range
       const pdx = globals.player.x - this.x;
       const pdy = globals.player.y - this.y;
-      if (pdx * pdx + pdy * pdy < 200 * 200 && globals.player.state !== 'dead') {
-        callbacks.checkPlayerHit(this, 4);
+      const slamRadius = isLateStage ? 260 : 200;
+      if (pdx * pdx + pdy * pdy < slamRadius * slamRadius && globals.player.state !== 'dead') {
+        callbacks.checkPlayerHit(this, isLateStage ? 5 : 4);
       }
 
       // Secondary delayed seismic aftershock!
@@ -1348,87 +1365,112 @@ export class Enemy extends Entity {
         delay: 0.25,
         run: () => {
           if (this.state !== 'dead') {
-            globals.shockwaves.push(new Shockwave(this.x, this.y, '#0284c7', 300));
+            globals.shockwaves.push(new Shockwave(this.x, this.y, '#0284c7', isLateStage ? 400 : 300));
             const afterDx = globals.player.x - this.x;
             const afterDy = globals.player.y - this.y;
-            if (afterDx * afterDx + afterDy * afterDy < 280 * 280 && globals.player.state !== 'dead') {
-              callbacks.checkPlayerHit(this, 1);
+            const afterRadius = isLateStage ? 360 : 280;
+            if (afterDx * afterDx + afterDy * afterDy < afterRadius * afterRadius && globals.player.state !== 'dead') {
+              callbacks.checkPlayerHit(this, isLateStage ? 2 : 1);
             }
           }
         }
       });
+      if (isLateStage) {
+        // Stage 60+ tertiary fissure rupture
+        globals.delayedActions.push({
+          delay: 0.5,
+          run: () => {
+            if (this.state !== 'dead') {
+              globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8', 180));
+              const pDistX = globals.player.x - this.x;
+              const pDistY = globals.player.y - this.y;
+              if (Math.hypot(pDistX, pDistY) < 380 && globals.player.state !== 'dead') {
+                callbacks.checkPlayerHit(this, 2);
+              }
+            }
+          }
+        });
+      }
       this.attackLanded = true;
     } else if (this.subType === 'skeleton_warlord') {
-      // Skeleton Warlord Ground-Splitting Cleave Tremor + Radial Bone Shards
-      globals.screenShake = Math.max(globals.screenShake, 24);
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444', 240));
+      const isLateStage = (globals.currentStage || 1) >= 60;
+      globals.screenShake = Math.max(globals.screenShake, isLateStage ? 32 : 24);
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#ef4444', isLateStage ? 320 : 240));
       const bossImpact = (vfxAnims as any).boss?.slamImpact;
       const bossDust = (vfxAnims as any).boss?.slamDust;
-      if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, 2.0));
-      if (bossDust?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossDust, 0.55, 2.2));
-      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "WARLORD CLEAVE! 💀", "#ef4444", 28));
+      if (bossImpact?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossImpact, 0.5, isLateStage ? 2.6 : 2.0));
+      if (bossDust?.length > 0) globals.animatedEffects.push(new AnimatedEffect(this.x, this.y, bossDust, 0.55, isLateStage ? 2.8 : 2.2));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, isLateStage ? "DREAD WARLORD BONE STORM! 💀" : "WARLORD CLEAVE! 💀", "#ef4444", 28));
 
       const pdx = globals.player.x - this.x;
       const pdy = globals.player.y - this.y;
-      if (pdx * pdx + pdy * pdy < 220 * 220 && globals.player.state !== 'dead') {
-        callbacks.checkPlayerHit(this, 2);
+      const cleaveRadius = isLateStage ? 280 : 220;
+      if (pdx * pdx + pdy * pdy < cleaveRadius * cleaveRadius && globals.player.state !== 'dead') {
+        callbacks.checkPlayerHit(this, isLateStage ? 3 : 2);
       }
 
-      // Enraged bone storm flurry (6 radial shards)
-      for (let i = 0; i < 6; i++) {
-        const shardAng = this.targetAngle + (i * Math.PI / 3);
-        const proj = Projectile.acquire(this.x, this.y, shardAng, true, 4);
+      // Bone storm flurry (10 radial shards in stage 60+, otherwise 6)
+      const shardCount = isLateStage ? 10 : 6;
+      for (let i = 0; i < shardCount; i++) {
+        const shardAng = this.targetAngle + (i * 2 * Math.PI / shardCount);
+        const proj = Projectile.acquire(this.x, this.y, shardAng, true, isLateStage ? 5 : 4);
         (proj as any).shooter = this;
         (proj as any).colorTint = '#f87171'; (proj as any).projectileType = 'water';
-        proj.vx = Math.cos(shardAng) * 950;
-        proj.vy = Math.sin(shardAng) * 950;
+        proj.vx = Math.cos(shardAng) * (isLateStage ? 1150 : 950);
+        proj.vy = Math.sin(shardAng) * (isLateStage ? 1150 : 950);
         globals.projectiles.push(proj);
       }
       this.attackLanded = true;
     } else if (this.subType === 'oni_boss') {
-      // Oni Boss Hellfire Eruption + Magma Waves
-      globals.screenShake = Math.max(globals.screenShake, 24);
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#dc2626', 220));
-      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "ONI HELLFIRE SLAM! 👹", "#ef4444", 30));
+      const isLateStage = (globals.currentStage || 1) >= 60;
+      globals.screenShake = Math.max(globals.screenShake, isLateStage ? 32 : 24);
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#dc2626', isLateStage ? 300 : 220));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, isLateStage ? "INFERNAL ONI CATACLYSM! 👹" : "ONI HELLFIRE SLAM! 👹", "#ef4444", 30));
       playSynthesizedThunder();
 
       const pdx = globals.player.x - this.x;
       const pdy = globals.player.y - this.y;
-      if (pdx * pdx + pdy * pdy < 200 * 200 && globals.player.state !== 'dead') {
-        callbacks.checkPlayerHit(this, 2);
+      const slamRadius = isLateStage ? 260 : 200;
+      if (pdx * pdx + pdy * pdy < slamRadius * slamRadius && globals.player.state !== 'dead') {
+        callbacks.checkPlayerHit(this, isLateStage ? 3 : 2);
       }
 
-      // 3 radiating magma projectiles
+      // Radiating magma projectiles: 7 in stage 60+, otherwise 3
       const baseAng = this.targetAngle;
-      for (const offset of [-0.32, 0, 0.32]) {
-        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true, 4);
+      const offsets = isLateStage ? [-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6] : [-0.32, 0, 0.32];
+      for (const offset of offsets) {
+        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true, isLateStage ? 5 : 4);
         (proj as any).shooter = this;
         (proj as any).colorTint = '#ef4444'; (proj as any).projectileType = 'fire_ball';
-        proj.vx = Math.cos(baseAng + offset) * 1050;
-        proj.vy = Math.sin(baseAng + offset) * 1050;
+        proj.vx = Math.cos(baseAng + offset) * (isLateStage ? 1200 : 1050);
+        proj.vy = Math.sin(baseAng + offset) * (isLateStage ? 1200 : 1050);
         globals.projectiles.push(proj);
       }
       this.attackLanded = true;
     } else if (this.subType === 'shogun_boss') {
-      // Shogun Boss Void Blast + Fan of 5 Shadow Kunai
-      globals.screenShake = Math.max(globals.screenShake, 22);
-      globals.shockwaves.push(new Shockwave(this.x, this.y, '#9333ea', 200));
-      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, "SHADOW VOID FLURRY! 🥷", "#a855f7", 30));
+      const isLateStage = (globals.currentStage || 1) >= 60;
+      globals.screenShake = Math.max(globals.screenShake, isLateStage ? 30 : 22);
+      globals.shockwaves.push(new Shockwave(this.x, this.y, '#9333ea', isLateStage ? 280 : 200));
+      globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, isLateStage ? "OMNIDIRECTIONAL VOID EXECUTION! 🥷" : "SHADOW VOID FLURRY! 🥷", "#a855f7", 30));
 
       const pdx = globals.player.x - this.x;
       const pdy = globals.player.y - this.y;
-      if (pdx * pdx + pdy * pdy < 180 * 180 && globals.player.state !== 'dead') {
-        callbacks.checkPlayerHit(this, 2);
+      const slashRadius = isLateStage ? 240 : 180;
+      if (pdx * pdx + pdy * pdy < slashRadius * slashRadius && globals.player.state !== 'dead') {
+        callbacks.checkPlayerHit(this, isLateStage ? 3 : 2);
       }
 
-      // 5-blade fan projectile barrage
+      // Fan projectile barrage: 8-blade omni-spread in stage 60+, otherwise 5-blade
       const baseAng = this.targetAngle;
-      for (const offset of [-0.44, -0.22, 0, 0.22, 0.44]) {
-        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true, 4);
+      const offsets = isLateStage 
+        ? [-0.7, -0.5, -0.3, -0.1, 0.1, 0.3, 0.5, 0.7] 
+        : [-0.44, -0.22, 0, 0.22, 0.44];
+      for (const offset of offsets) {
+        const proj = Projectile.acquire(this.x, this.y, baseAng + offset, true, isLateStage ? 5 : 4);
         (proj as any).shooter = this;
         (proj as any).colorTint = '#a855f7'; (proj as any).projectileType = 'water_ball';
-        proj.vx = Math.cos(baseAng + offset) * 1200;
-        proj.vy = Math.sin(baseAng + offset) * 1200;
+        proj.vx = Math.cos(baseAng + offset) * (isLateStage ? 1350 : 1200);
+        proj.vy = Math.sin(baseAng + offset) * (isLateStage ? 1350 : 1200);
         globals.projectiles.push(proj);
       }
       this.attackLanded = true;

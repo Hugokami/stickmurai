@@ -278,8 +278,21 @@ export class Player extends Entity {
         this.lastAfterimageY = this.y;
         (this as any).rupturePhaseHit = false;
 
-        if (globals.selectedHero === 'aetherion' && globals.aetherionStance === 'ranged' && wasCharging && previousCharge >= 0.35) {
-          callbacks.triggerAetherionWarpHyperSnipe?.();
+        const nowDash = performance.now();
+        globals.aetherionLastDashTime = nowDash;
+
+        if (globals.selectedHero === 'aetherion') {
+          // Dash + Iaijutsu combo: Starlight Dimension Rend
+          if (wasCharging && previousCharge >= 0.2) {
+            callbacks.triggerAetherionDimensionRend?.(previousCharge);
+          } else {
+            // Slash + Ranged + Dash combo: Astral Phase Warp
+            const slashDelta = nowDash - (globals.aetherionLastSlashTime || 0);
+            const shootDelta = nowDash - (globals.aetherionLastShootTime || 0);
+            if (slashDelta < 700 && shootDelta < 700) {
+              callbacks.triggerAetherionPhaseWarp?.();
+            }
+          }
         }
 
         // Spawn directional dash dust puff opposite to player motion vector

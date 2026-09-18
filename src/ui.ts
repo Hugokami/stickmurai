@@ -1488,45 +1488,20 @@ export function updateStanceSwitchButton() {
     return;
   }
   btn.style.display = 'flex';
+  btn.classList.add('mode-ranged-attack');
   const textSpan = document.getElementById('stance-switch-text');
-  const iconSvg = btn.querySelector('.skill-icon');
-  if (globals.aetherionStance === 'ranged') {
-    btn.classList.add('mode-ranged');
-    if (textSpan) textSpan.textContent = 'RANGED';
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
-        <line x1="12" y1="3" x2="12" y2="7" stroke="currentColor" stroke-width="2"/>
-        <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/>
-        <line x1="3" y1="12" x2="7" y2="12" stroke="currentColor" stroke-width="2"/>
-        <line x1="17" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"/>
-        <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-      `;
-    }
-  } else {
-    btn.classList.remove('mode-ranged');
-    if (textSpan) textSpan.textContent = 'SLASH';
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <path d="M14.5 17.5L3 6V3h3l11.5 11.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M13 19l6 2 2-6-4.5-4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M16 16l4 4" stroke="currentColor" stroke-width="1.8"/>
-      `;
-    }
+  if (textSpan) textSpan.textContent = 'SHOOT';
+  const cdOverlay = document.getElementById('shoot-cooldown-overlay');
+  if (cdOverlay) {
+    const cdRatio = Math.max(0, Math.min(1, (globals.aetherionShootCooldown || 0) / 0.22));
+    cdOverlay.style.height = `${cdRatio * 100}%`;
   }
 }
 
 export function toggleAetherionStance() {
   if (globals.selectedHero !== 'aetherion') return;
-  globals.aetherionStance = globals.aetherionStance === 'melee' ? 'ranged' : 'melee';
-  updateStanceSwitchButton();
-  if (globals.player) {
-    if (globals.aetherionStance === 'ranged') {
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 45, '🏹 RANGED STANCE', '#38bdf8', 22));
-    } else {
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 45, '⚔️ SLASH STANCE', '#e0f2fe', 22));
-    }
-  }
+  // Seamless dual-wield: dedicated shoot action
+  callbacks.triggerAetherionRangedAttack?.();
 }
 
 export function updateComboDisplay() {

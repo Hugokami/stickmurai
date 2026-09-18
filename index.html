@@ -216,14 +216,18 @@
             <div class="cooldown-text" id="enhance-cooldown-text"></div>
           </button>
 
-          <button id="btn-stance-switch" class="action-btn" style="display:none;" title="Switch Stance (Press R)" aria-label="Switch Stance">
+          <button id="btn-stance-switch" class="action-btn" style="display:none;" title="Astral Shot (Press R / RMB)" aria-label="Astral Shot">
             <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.5 17.5L3 6V3h3l11.5 11.5"/>
-              <path d="M13 19l6 2 2-6-4.5-4.5"/>
-              <path d="M16 16l4 4"/>
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
+              <line x1="12" y1="3" x2="12" y2="7" stroke="currentColor" stroke-width="2"/>
+              <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/>
+              <line x1="3" y1="12" x2="7" y2="12" stroke="currentColor" stroke-width="2"/>
+              <line x1="17" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"/>
+              <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
             </svg>
-            <span class="btn-text" id="stance-switch-text">SLASH</span>
+            <span class="btn-text" id="stance-switch-text">SHOOT</span>
             <span class="hotkey">R</span>
+            <div class="cooldown-overlay" id="shoot-cooldown-overlay"></div>
           </button>
         </div>
       </div>

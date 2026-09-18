@@ -10,7 +10,8 @@ test('boss bases are robustly buffed and scale properly with late-game power',()
  for(const stage of [1,5,10,15,20,50,100]){
   const late = Math.max(0, stage - 5);
   const stage50Mult = stage >= 50 ? 5.0 : 1.0;
-  const expectedBoss = 2.0 * stage50Mult * 1.5 * (1 + (stage - 1) * 0.35 + late * 0.65 + (late * late) * 0.05);
+  const stage60BossMult = stage >= 60 ? 1.8 : 1.0;
+  const expectedBoss = 2.0 * stage50Mult * stage60BossMult * 1.5 * (1 + (stage - 1) * 0.35 + late * 0.65 + (late * late) * 0.05);
   const expectedMob = 1.5 * (1 + (stage - 1) * 0.20 + late * 0.35 + (late * late) * 0.02);
   assert.ok(Math.abs(campaignHpMultiplier(stage, true) - expectedBoss) < 1e-10);
   assert.ok(Math.abs(campaignHpMultiplier(stage, false) - expectedMob) < 1e-10);

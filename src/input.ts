@@ -35,7 +35,7 @@ export function initInput() {
     
     if (e.code === 'KeyR' || e.code === 'KeyX') {
       if (globals.selectedHero === 'aetherion') {
-        callbacks.toggleAetherionStance?.();
+        callbacks.triggerAetherionRangedAttack?.();
       }
     }
     
@@ -49,15 +49,29 @@ export function initInput() {
     globals.mouse.x = e.clientX;
     globals.mouse.y = e.clientY;
   });
-  window.addEventListener('mousedown', () => { 
-    if (AdManager.isAdPlaying) return;
-    globals.mouse.down = true; 
-    globals.mouse.justPressed = true; 
+  window.addEventListener('contextmenu', e => {
+    if (globals.selectedHero === 'aetherion') {
+      e.preventDefault();
+    }
   });
-  window.addEventListener('mouseup', () => { 
+  window.addEventListener('mousedown', (e: MouseEvent) => { 
     if (AdManager.isAdPlaying) return;
-    globals.mouse.down = false; 
-    globals.mouse.justReleased = true; 
+    if (e.button === 2 && globals.selectedHero === 'aetherion') {
+      e.preventDefault();
+      callbacks.triggerAetherionRangedAttack?.();
+      return;
+    }
+    if (e.button === 0) {
+      globals.mouse.down = true; 
+      globals.mouse.justPressed = true; 
+    }
+  });
+  window.addEventListener('mouseup', (e: MouseEvent) => { 
+    if (AdManager.isAdPlaying) return;
+    if (e.button === 0) {
+      globals.mouse.down = false; 
+      globals.mouse.justReleased = true; 
+    }
   });
 
   // Mobile Controls Bindings
@@ -70,13 +84,13 @@ export function initInput() {
   const btnStanceSwitch = document.getElementById('btn-stance-switch');
 
   if (btnStanceSwitch) {
-    const handleStanceToggle = (e: Event) => {
+    const handleAetherionShoot = (e: Event) => {
       e.preventDefault();
       e.stopPropagation();
-      callbacks.toggleAetherionStance?.();
+      callbacks.triggerAetherionRangedAttack?.();
     };
-    btnStanceSwitch.addEventListener('touchstart', handleStanceToggle, { passive: false });
-    btnStanceSwitch.addEventListener('click', handleStanceToggle);
+    btnStanceSwitch.addEventListener('touchstart', handleAetherionShoot, { passive: false });
+    btnStanceSwitch.addEventListener('click', handleAetherionShoot);
   }
 
   let joystickActive = false;
@@ -117,6 +131,10 @@ export function initInput() {
         const dx = touch.clientX - attackTouchStartX;
         const dy = touch.clientY - attackTouchStartY;
         const dist = Math.hypot(dx, dy);
+        if (dy < -20 && Math.abs(dy) > Math.abs(dx) * 0.7) {
+          globals.slashSlideUpActive = true;
+          globals.slashSlideUpTime = performance.now();
+        }
         if (dist > 15) {
           globals.mobileIaijutsuAimAngle = Math.atan2(dy, dx);
           globals.mobileIaijutsuAimActive = true;
@@ -144,6 +162,7 @@ export function initInput() {
     globals.mobileAttackDown = false; 
     globals.mobileAttackReleased = true; 
     globals.mobileIaijutsuAimActive = false;
+    globals.slashSlideUpActive = false;
     attackTouchId = null;
   }, { passive: false });
 
@@ -152,6 +171,7 @@ export function initInput() {
     globals.mobileAttackDown = false; 
     globals.mobileAttackReleased = true; 
     globals.mobileIaijutsuAimActive = false;
+    globals.slashSlideUpActive = false;
     attackTouchId = null;
   }, { passive: false });
 

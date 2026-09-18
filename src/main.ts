@@ -118,7 +118,10 @@ callbacks.updateUI = updateUI;
 callbacks.updateEnhanceButton = updateEnhanceButton;
 callbacks.updateStanceSwitchButton = updateStanceSwitchButton;
 callbacks.toggleAetherionStance = toggleAetherionStance;
+callbacks.triggerAetherionRangedAttack = triggerAetherionRangedAttack;
 callbacks.triggerAetherionWarpHyperSnipe = triggerAetherionWarpHyperSnipe;
+(callbacks as any).triggerAetherionDimensionRend = triggerAetherionDimensionRend;
+(callbacks as any).triggerAetherionPhaseWarp = triggerAetherionPhaseWarp;
 callbacks.updateComboDisplay = updateComboDisplay;
 callbacks.triggerFlowingCounterReset = triggerFlowingCounterReset;
 callbacks.triggerElementalExplosion = triggerElementalExplosion;
@@ -2276,6 +2279,169 @@ function triggerAetherionWarpHyperSnipe() {
   }
 }
 
+function triggerAetherionRangedAttack() {
+  if (globals.selectedHero !== 'aetherion') return;
+  if (globals.player.state === 'dead' || globals.gameState !== 'playing') return;
+
+  const now = performance.now();
+  if (globals.aetherionShootCooldown > 0) return;
+
+  globals.aetherionShootCooldown = 0.20;
+  const lastSlashDelta = now - (globals.aetherionLastSlashTime || 0);
+  const isComboCrossfire = lastSlashDelta < 480;
+
+  let angle = globals.player.dir === 1 ? 0 : Math.PI;
+  if (globals.useMobileIaijutsuAimAngle) {
+    angle = globals.mobileIaijutsuAimAngle;
+  } else if (globals.joystickActive && (Math.abs(globals.joystickVector.x) > 0.1 || Math.abs(globals.joystickVector.y) > 0.1)) {
+    angle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+  } else if (globals.mouse && (globals.mouse.x !== 0 || globals.mouse.y !== 0)) {
+    angle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+  } else {
+    let closestEnemy: Enemy | null = null;
+    let minDistSq = 750 * 750;
+    for (const e of globals.enemies) {
+      if (e.state === 'dead') continue;
+      const dSq = (e.x - globals.player.x) ** 2 + (e.y - globals.player.y) ** 2;
+      if (dSq < minDistSq) { minDistSq = dSq; closestEnemy = e; }
+    }
+    if (closestEnemy) {
+      angle = Math.atan2(closestEnemy.y - globals.player.y, closestEnemy.x - globals.player.x);
+    }
+  }
+
+  globals.player.dir = Math.cos(angle) >= 0 ? 1 : -1;
+  globals.player.setState('shoot');
+  globals.aetherionLastShootTime = now;
+
+  const baseDmg = getCurrentSlashDamage();
+  const muzzleX = globals.player.x + Math.cos(angle) * 45;
+  const muzzleY = globals.player.y + Math.sin(angle) * 45;
+
+  playEnergyBeam(1.0);
+  globals.screenShake = Math.max(globals.screenShake, isComboCrossfire ? 14 : 7);
+
+  if (isComboCrossfire) {
+    // Combo: Slash + Ranged -> CELESTIAL CROSSFIRE!
+    const crossDmg = Math.round(baseDmg * 1.8);
+    [-0.18, 0.18].forEach(offsetA => {
+      const bAng = angle + offsetA;
+      const beam = Projectile.acquire(muzzleX, muzzleY, bAng, false, crossDmg, false, false, 'astral_beam');
+      beam.vx = Math.cos(bAng) * 2600;
+      beam.vy = Math.sin(bAng) * 2600;
+      beam.life = 0.85;
+      (beam as any).maxLife = 0.85;
+      globals.projectiles.push(beam);
+    });
+    globals.shockwaves.push(new Shockwave(muzzleX, muzzleY, '#38bdf8', 190));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, "✨ CELESTIAL CROSSFIRE! ✨", "#38bdf8", 26));
+  } else {
+    // Standard Ranged Astral Shot
+    const shotDmg = Math.round(baseDmg * 1.35);
+    const beam = Projectile.acquire(muzzleX, muzzleY, angle, false, shotDmg, false, false, 'astral_beam');
+    beam.vx = Math.cos(angle) * 2500;
+    beam.vy = Math.sin(angle) * 2500;
+    beam.life = 0.8;
+    (beam as any).maxLife = 0.8;
+    globals.projectiles.push(beam);
+
+    if (globals.hasHeroAwakening('aetherion') && globals.flowState === 'awakened') {
+      [-0.22, 0.22].forEach(offsetA => {
+        const bAng = angle + offsetA;
+        const sideBeam = Projectile.acquire(muzzleX, muzzleY, bAng, false, shotDmg, false, false, 'astral_beam');
+        sideBeam.vx = Math.cos(bAng) * 2500;
+        sideBeam.vy = Math.sin(bAng) * 2500;
+        sideBeam.life = 0.8;
+        (sideBeam as any).maxLife = 0.8;
+        globals.projectiles.push(sideBeam);
+      });
+    }
+  }
+
+  // Slight recoil kickback
+  globals.player.vx -= Math.cos(angle) * 140;
+  globals.player.vy -= Math.sin(angle) * 140;
+
+  for (let i = 0; i < 12; i++) {
+    globals.particles.push(Particle.acquire(
+      muzzleX, muzzleY,
+      Math.random() > 0.4 ? '#38bdf8' : '#ffffff',
+      280 + Math.random() * 160,
+      0.35, 2.5,
+      angle + (Math.random() - 0.5) * 1.0
+    ));
+  }
+}
+
+function triggerAetherionDimensionRend(charge: number) {
+  const startX = globals.player.dashStartX || globals.player.x;
+  const startY = globals.player.dashStartY || globals.player.y;
+  const endX = globals.player.x;
+  const endY = globals.player.y;
+
+  const baseDmg = getCurrentSlashDamage();
+  const rendDmg = Math.round(baseDmg * (3.8 + charge * 4.0));
+
+  globals.screenShake = Math.max(globals.screenShake, 24);
+  globals.shockwaves.push(new Shockwave(endX, endY, '#38bdf8', 220));
+  globals.floatingTexts.push(FloatingText.acquire(endX, endY - 60, "🌠 STARLIGHT DIMENSION REND! 🌠", "#38bdf8", 28));
+  playEnergyBeam(1.2);
+  playSynthesizedThunder();
+
+  // Deal dimensional rend damage to all enemies along dash line
+  globals.enemies.forEach(e => {
+    if (e.state === 'dead') return;
+    const distToLine = Math.abs((endY - startY) * e.x - (endX - startX) * e.y + endX * startY - endY * startX) / (Math.hypot(endX - startX, endY - startY) || 1);
+    const inBBox = e.x >= Math.min(startX, endX) - 60 && e.x <= Math.max(startX, endX) + 60 &&
+                   e.y >= Math.min(startY, endY) - 60 && e.y <= Math.max(startY, endY) + 60;
+    if (distToLine < 80 && inBBox) {
+      if (typeof (e as any).addPostureDamage === 'function') {
+        (e as any).addPostureDamage(50);
+      }
+      hitEnemy(e, rendDmg, true);
+    }
+  });
+
+  // Delayed spatial fissures detonating along dash path
+  for (let i = 0; i <= 3; i++) {
+    const ratio = i / 3;
+    const px = startX + (endX - startX) * ratio;
+    const py = startY + (endY - startY) * ratio;
+    globals.delayedActions.push({
+      delay: 0.08 * i,
+      run: () => {
+        globals.shockwaves.push(new Shockwave(px, py, '#38bdf8', 120));
+        for (let p = 0; p < 6; p++) {
+          globals.particles.push(Particle.acquire(px, py, '#ffffff', 200, 0.3, 2.5));
+        }
+      }
+    });
+  }
+}
+
+function triggerAetherionPhaseWarp() {
+  globals.screenShake = Math.max(globals.screenShake, 20);
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 65, "🌌 ASTRAL PHASE WARP! 🌌", "#38bdf8", 28));
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8', 260));
+  playEnergyBeam(1.2);
+
+  globals.player.invulnerable = true;
+  globals.player.invulnerableTimer = 0.55;
+
+  const baseDmg = getCurrentSlashDamage();
+  const shardDmg = Math.round(baseDmg * 1.5);
+
+  for (let i = 0; i < 6; i++) {
+    const ang = (i * Math.PI / 3);
+    const beam = Projectile.acquire(globals.player.x, globals.player.y, ang, false, shardDmg, false, false, 'astral_beam');
+    beam.vx = Math.cos(ang) * 2300;
+    beam.vy = Math.sin(ang) * 2300;
+    beam.life = 0.7;
+    (beam as any).maxLife = 0.7;
+    globals.projectiles.push(beam);
+  }
+}
+
 function executeSwiftCounter() {
   // Check for Perfect Dodge on Swift Counter execution
   let perfectDodgeTriggered = false;
@@ -3051,9 +3217,12 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
   const hasExecutionPerk = Boolean(globals.executionUnlocked || (globals.playerStats.executionLevel && globals.playerStats.executionLevel > 0));
   const isPostureBroken = (e as any).postureBrokenTimer > 0;
   const isExecution = isPostureBroken && hasExecutionPerk;
-  const isUpwardInput = globals.keys['KeyW'] || globals.keys['ArrowUp'] || (globals.joystickActive && globals.joystickVector && globals.joystickVector.y < -0.35);
+  const isSlashSlideUp = globals.slashSlideUpActive || (performance.now() - (globals.slashSlideUpTime || 0) < 350);
+  const isUpwardInput = globals.keys['KeyW'] || globals.keys['ArrowUp'] || isSlashSlideUp;
 
   if (isPostureBroken && isUpwardInput && !(e as any).airborneZ) {
+    globals.slashSlideUpActive = false;
+    globals.slashSlideUpTime = 0;
     // Option 3: Rising Aerial Launcher
     (e as any).airborneZ = 15;
     (e as any).airborneVz = 820;
@@ -3379,11 +3548,27 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 30, "DEFLECTED! 🎯", "#f97316", 20));
   }
   
-  // Boss damage clamp: prevent any single-hit burst from deleting more than 12% of boss max HP
+  // Boss damage clamp and stage 60+ boss enhancements
   const isBossEntity = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
   if (isBossEntity) {
-    const maxBossSingleHit = Math.max(70, Math.round((e.maxHp || 100) * 0.12));
-    finalDmg = Math.min(finalDmg, maxBossSingleHit);
+    const stage = globals.currentStage || 1;
+    // Stage 60+ bosses gain innate damage reduction scaling from 45% at stage 60 up to 70%
+    if (stage >= 60) {
+      const lateStageDmgRed = Math.min(0.70, 0.45 + (stage - 60) * 0.008);
+      finalDmg = Math.max(1, Math.round(finalDmg * (1 - lateStageDmgRed)));
+      const maxBossSingleHit = Math.max(40, Math.round((e.maxHp || 100) * 0.05));
+      finalDmg = Math.min(finalDmg, maxBossSingleHit);
+    } else {
+      const maxBossSingleHit = Math.max(70, Math.round((e.maxHp || 100) * 0.12));
+      finalDmg = Math.min(finalDmg, maxBossSingleHit);
+    }
+    // Strict boss immunity: boss immune to all stuns and knockbacks except stagger bar
+    e.knockbackTimer = 0;
+    e.knockbackVx = 0;
+    e.knockbackVy = 0;
+    if ((e as any).postureBrokenTimer <= 0) {
+      e.stunTimer = 0;
+    }
   }
 
   e.hp -= finalDmg;
@@ -3968,6 +4153,11 @@ function update(realDt: number) {
               globals.tempoStacks = 0;
             }
           }
+        }
+
+        if (globals.aetherionShootCooldown > 0) {
+          globals.aetherionShootCooldown = Math.max(0, globals.aetherionShootCooldown - realDt);
+          callbacks.updateStanceSwitchButton?.();
         }
 
         // Plasma Tempest Trails Update
@@ -5308,7 +5498,7 @@ function update(realDt: number) {
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(40);
             }
-            e.stunTimer = Math.max(e.stunTimer || 0, 0.5);
+            // Stun removed per balance requirements to prevent spam invulnerability against bosses and aggressive enemies
             e.setState('idle');
             e.knockbackTimer = 0.35;
             e.knockbackVx = dir * 1600;
@@ -5591,16 +5781,18 @@ function update(realDt: number) {
         globals.comboSlashesCount = 0;
       }
 
-      const isAetherionRanged = globals.selectedHero === 'aetherion' && globals.aetherionStance === 'ranged' && attackPower < 1.7;
+      const isAetherionRanged = false; // Dual-wield rework: slash button ALWAYS slashes; shoot button shoots!
 
-      if (isAetherionRanged) {
-        globals.player.setState('shoot');
-      } else {
-        globals.player.setState('attack');
+      if (globals.selectedHero === 'aetherion') {
+        globals.aetherionLastSlashTime = performance.now();
       }
+
+      globals.player.setState('attack');
+      
       // Dynamic pitch crescendo on slash; silenced during Akakage Blood Asura awakening per user request
-      if (isAetherionRanged || (globals.selectedHero === 'aetherion' && attackPower >= 1.7)) {
-        playEnergyBeam(attackPower >= 1.7 ? 1.0 : 0.8);
+      if (globals.selectedHero === 'aetherion') {
+        playSlashSfx(1.2, Math.min(1.45, 1.0 + (globals.combo || 0) * 0.015));
+        playEnergyBeam(attackPower >= 1.7 ? 1.0 : 0.7);
       } else if (globals.selectedHero === 'akakage' && globals.flowState === 'awakened') {
         // Suppress noisy rapid slash SFX during Akakage Blood Asura awakening
       } else {
@@ -5751,14 +5943,27 @@ function update(realDt: number) {
         });
 
       }
+      // Atherion Dash + Slash Combo: CELESTIAL STRIDE CLEAVE!
+      const nowSlash = performance.now();
+      const isAetherionDashSlash = globals.selectedHero === 'aetherion' && (
+        globals.player.state === 'dash' || 
+        (nowSlash - (globals.aetherionLastDashTime || 0) < 420)
+      );
+      if (isAetherionDashSlash) {
+        size *= 2.0;
+        dmg = Math.round(dmg * 2.4);
+        isEnhanced = true;
+        globals.screenShake = Math.max(globals.screenShake, 16);
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "⚔️ CELESTIAL STRIDE CLEAVE! ⚔️", "#38bdf8", 26));
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8', 190));
+        globals.player.dashCooldown = 0; // immediate reset for silky smooth chaining!
+      }
+
       const slashPct = globals.playerStats.slashBonusDmgPct || 0;
       if (slashPct) dmg *= 1 + slashPct;
       
       if (attackPower >= 1.7) {
         fireFullyChargedIaijutsu(angle);
-        if (globals.selectedHero === 'aetherion') {
-          return;
-        }
       }
 
       if (isAetherionRanged) {
@@ -6591,9 +6796,9 @@ function update(realDt: number) {
           const isHeavy = proj.enhancedType === 'astral_heavy_bullet';
           const forwardDist = dx * Math.cos(proj.angle) + dy * Math.sin(proj.angle);
           const lateralDist = Math.abs(-dx * Math.sin(proj.angle) + dy * Math.cos(proj.angle));
-          const maxForward = (isHeavy ? 380 : 140) + enemyHitRadius;
-          const maxLateral = (isHeavy ? 180 : 65) + enemyHitRadius;
-          const minForward = isHeavy ? -60 : -25;
+          const maxForward = (isHeavy ? 520 : 280) + enemyHitRadius;
+          const maxLateral = (isHeavy ? 240 : 135) + enemyHitRadius;
+          const minForward = isHeavy ? -60 : -35;
           isHit = (forwardDist >= minForward && forwardDist <= maxForward && lateralDist <= maxLateral);
         } else if (proj.isDeflected) {
           isHit = (dx * dx + dy * dy < (60 + enemyHitRadius) * (60 + enemyHitRadius));

@@ -48,6 +48,12 @@ export const globals = {
     }
   })() as string[],
   aetherionStance: 'melee' as 'melee' | 'ranged',
+  aetherionShootCooldown: 0,
+  aetherionLastSlashTime: 0,
+  aetherionLastShootTime: 0,
+  aetherionLastDashTime: 0,
+  slashSlideUpActive: false,
+  slashSlideUpTime: 0,
   raijinDashActive: false,
   raijinHitEnemies: new Set<any>(),
   maxLives: 5,

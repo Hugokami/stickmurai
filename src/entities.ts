@@ -1045,7 +1045,7 @@ export class Projectile {
             const frameIndex = Math.min(frames.length - 1, Math.floor(progress * frames.length));
             const frame = frames[frameIndex];
             if (frame && frame.complete && frame.naturalWidth > 0) {
-              const scale = isHeavy ? 10.5 : 4.2;
+              const scale = isHeavy ? 14.0 : 7.2;
               const w = frame.naturalWidth * scale;
               const h = frame.naturalHeight * scale;
               ctx.drawImage(frame, -w / 2, -h / 2, w, h);
@@ -1055,26 +1055,26 @@ export class Projectile {
 
           // Fallback canvas starlight beam if sprite not loaded
           ctx.beginPath();
-          ctx.moveTo(-15, 0);
-          ctx.lineTo(isHeavy ? 260 : 120, 0);
+          ctx.moveTo(-25, 0);
+          ctx.lineTo(isHeavy ? 420 : 220, 0);
           ctx.strokeStyle = 'rgba(56, 189, 248, 0.55)';
-          ctx.lineWidth = isHeavy ? 36 : 18;
+          ctx.lineWidth = isHeavy ? 50 : 28;
           ctx.lineCap = 'round';
           ctx.stroke();
 
           ctx.beginPath();
-          ctx.moveTo(-10, 0);
-          ctx.lineTo(isHeavy ? 250 : 115, 0);
+          ctx.moveTo(-15, 0);
+          ctx.lineTo(isHeavy ? 410 : 210, 0);
           ctx.strokeStyle = '#38bdf8';
-          ctx.lineWidth = isHeavy ? 18 : 9;
+          ctx.lineWidth = isHeavy ? 26 : 14;
           ctx.lineCap = 'round';
           ctx.stroke();
 
           ctx.beginPath();
           ctx.moveTo(-5, 0);
-          ctx.lineTo(isHeavy ? 240 : 110, 0);
+          ctx.lineTo(isHeavy ? 400 : 200, 0);
           ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = isHeavy ? 8 : 4;
+          ctx.lineWidth = isHeavy ? 12 : 7;
           ctx.lineCap = 'round';
           ctx.stroke();
           return;
