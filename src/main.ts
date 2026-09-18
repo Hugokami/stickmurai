@@ -1494,6 +1494,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
 
   if (globals.player.state === 'dash' || globals.flowState === 'awakened') { 
         globals.runStats.perfectDodges++;
+        globals.hitStop = 0.045; // Micro hit-stop crunch (2-3 frames freeze)
         playSynthesizedDodge();
     
         // Bushido Rally: Perfect dodge restores Ghost Heart
@@ -1536,7 +1537,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     }
 
     if (globals.gameMode === 'zen' && enemy && enemy.state !== 'dead') {
-      hitEnemy(enemy, 2);
+      hitEnemy(enemy, Math.max(2, Math.round(getCurrentSlashDamage() * 1.2)));
       globals.slashes.push(Slash.acquire(enemy.x, enemy.y, Math.random() * Math.PI * 2, 1.8, true));
       globals.floatingTexts.push(FloatingText.acquire(enemy.x, enemy.y - 40, "COUNTER!", "#ffd700", 24));
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, '閃', 'neon-#ffd700', 72));
@@ -1575,7 +1576,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     playSynthesizedParry();
     globals.runStats.parries++;
     addCombo();
-    globals.hitStop = 0; 
+    globals.hitStop = 0.045; // Micro hit-stop crunch (2-3 frames freeze)
     globals.screenShake = 14; 
     addFlow(4.0);
     globals.invulnTimer = 0.55;
@@ -1855,7 +1856,7 @@ export function triggerZanFinisher(onComplete: () => void) {
 
   // 2. High-Impact Screen Shake & Hit Stop
   globals.screenShake = Math.max(globals.screenShake, 45);
-  globals.hitStop = 0.25;
+  globals.hitStop = 0;
   globals.invulnTimer = Math.max(globals.invulnTimer, 2.5); // Invincible during victory cinematic
 
   // 3. Magnetic Vacuum: suck all on-screen collectibles at hyper-speed into player
@@ -3007,7 +3008,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
     if (e.burnTickTimer <= 0) e.burnTickTimer = 0.5;
   }
   if (globals.activeFusions.has('plasma_tempest') && e.burnTimer > 0) {
-    const plasmaDmg = Math.round((10 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 1.5) * (1 + (globals.level - 1) * 0.05));
+    const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+    const plasmaDmg = Math.round(((10 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 1.5) * slashPct + getCurrentSlashDamage() * 0.5) * (1 + (globals.level - 1) * 0.05));
     triggerChainLightning(e, plasmaDmg);
   }
   if (globals.frostStanceActive) {
@@ -3191,7 +3193,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
           fireHits++;
           other.burnTimer = Math.max(other.burnTimer || 0, 4.0);
           other.burnDmg = Math.max(other.burnDmg || 0, 2);
-          other.hp -= (18 + 4 * (globals.playerStats.fireStanceLevel || 1));
+          const slashDmg = getCurrentSlashDamage();
+          other.hp -= Math.max(18, Math.round((18 + 4 * (globals.playerStats.fireStanceLevel || 1)) + slashDmg * 1.5));
           if (other.hp <= 0) killEnemy(other);
         }
       }
@@ -3213,7 +3216,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
           other.stunTimer = Math.max(other.stunTimer || 0, 1.8);
           other.isChilled = true;
           other.chillTimer = Math.max(other.chillTimer || 0, 4.0);
-          other.hp -= 16;
+          const slashDmg = getCurrentSlashDamage();
+          other.hp -= Math.max(16, Math.round(16 + slashDmg * 1.4));
           if (other.hp <= 0) killEnemy(other);
         }
       }
@@ -3239,7 +3243,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false) {
           const vDist = Math.sqrt(vDistSq);
           other.vx += (vdx / vDist) * 750;
           other.vy += (vdy / vDist) * 750;
-          other.hp -= 15;
+          const slashDmg = getCurrentSlashDamage();
+          other.hp -= Math.max(15, Math.round(15 + slashDmg * 1.3));
           if (other.hp <= 0) killEnemy(other);
         }
       }
@@ -3411,7 +3416,8 @@ function triggerShatterAoE(x: number, y: number) {
     const dist = Math.hypot(dx, dy);
     if (dist <= 250) {
       other.chillTimer = 3.0;
-      hitEnemy(other, 8);
+      const shatterDmg = Math.max(8, Math.round(10 + getCurrentSlashDamage() * 1.2));
+      hitEnemy(other, shatterDmg);
     }
   });
 }
@@ -3741,9 +3747,12 @@ function update(realDt: number) {
 
   if (globals.gameState === 'levelup' || globals.gameState === 'ultchoice' || globals.gameState === 'paused') return; 
   if (globals.gameState !== 'playing' && (!globals.player || globals.player.state !== 'dead')) return;
-  // Slow-motion and freeze-frame hitStop removed completely to ensure seamless 60fps
   updateCombatPolish(realDt);
-  globals.hitStop = 0;
+  // Option 3: Micro Hit-Stop Crunch (2-3 frame freeze) strictly scoped to dodges and parries
+  if (globals.hitStop > 0) {
+    globals.hitStop = Math.max(0, globals.hitStop - realDt);
+    return;
+  }
 
   if (globals.timerLimit !== 'endless' && globals.gameState === 'playing') {
     globals.timeModeTimeRemaining -= realDt;
@@ -3961,7 +3970,8 @@ function update(realDt: number) {
         const dSq = (en.x - pt.x) ** 2 + (en.y - pt.y) ** 2;
         if (dSq < rSq) {
           en.burnTimer = 3.0;
-          const trailDmg = (6 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 0.6) * realDt;
+          const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+          const trailDmg = ((6 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 0.6) * slashPct) * realDt;
           hitEnemy(en, trailDmg);
         }
       }
@@ -4937,7 +4947,8 @@ function update(realDt: number) {
         const radiusSum = petal.radius + enemyHitRadius;
         if (dx * dx + dy * dy < radiusSum * radiusSum) {
           exploded = true;
-          hitEnemy(e, 1);
+          const petalDmg = Math.max(1, Math.round(getCurrentSlashDamage() * 0.35));
+          hitEnemy(e, petalDmg);
           for (let k = 0; k < 4; k++) {
             const angle = Math.random() * Math.PI * 2;
             const speed = 100 + Math.random() * 150;
@@ -5035,7 +5046,8 @@ function update(realDt: number) {
           const dx = e.x - dome.x;
           const dy = e.y - dome.y;
           if (dx * dx + dy * dy < radius * radius) {
-            hitEnemy(e, 0.5);
+            const sliceDmg = Math.max(0.5, Math.round(getCurrentSlashDamage() * 0.2 * 10) / 10);
+            hitEnemy(e, sliceDmg);
           }
         }
       }
@@ -5128,7 +5140,7 @@ function update(realDt: number) {
           enemy.vx = enemy.knockbackVx;
           enemy.vy = enemy.knockbackVy;
           enemy.setState('idle');
-          hitEnemy(enemy, 5);
+          hitEnemy(enemy, Math.max(15, Math.round(15 + getCurrentSlashDamage() * 1.8)));
         }
       }
     } else if (clash.timer <= 0 || clash.enemy.state === 'dead') {
@@ -5235,8 +5247,89 @@ function update(realDt: number) {
   let parryTriggered = false;
   const isCharging = globals.player.state === 'charge';
   const isFullyCharged = globals.player.chargeTimer >= 0.8;
-  const isParryInput = (isCharging && isFullyCharged && isAttackReleased) || (isAttackPressed && globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0);
   const parryWindowMult = globals.selectedHero === 'default' ? 1.35 : 1.0;
+
+  // Option 2: Counter-Flash / Mikiri Stride (Ronin / Sekiro style)
+  // When an enemy is in crimson danger attack/charge window, tapping Slash triggers forward phased counter-thrust
+  if (!dashAttackTriggered && isAttackPressed && globals.player.state !== 'dash' && globals.player.state !== 'dead') {
+    for (let i = 0; i < globals.enemies.length; i++) {
+      const e = globals.enemies[i];
+      if (e.state === 'dead') continue;
+      const isImminentAttack = (e.state === 'charge' && e.stateTime >= e.chargeTimeMax - (0.32 * parryWindowMult)) ||
+                               (e.state === 'attack' && e.stateTime <= 0.18 * parryWindowMult);
+      if (isImminentAttack) {
+        const dx = e.x - globals.player.x;
+        const dy = e.y - globals.player.y;
+        const distSq = dx * dx + dy * dy;
+        const maxDist = 240 + (e.scaleMult - 1) * 60;
+        if (distSq < maxDist * maxDist) {
+          parryTriggered = true;
+
+          // 1. Phased forward stride through enemy
+          const dir = (e.x >= globals.player.x ? 1 : -1);
+          globals.player.x = e.x + dir * 85;
+          globals.player.y = e.y;
+          globals.player.dir = dir;
+          globals.player.setState('attack');
+
+          // Ground scar & phantom crimson slash trail
+          globals.groundScars.push(new GroundScar(globals.player.x, globals.player.y, dir === 1 ? 0 : Math.PI, 90, '#ef4444'));
+          globals.slashes.push(Slash.acquire(e.x, e.y, dir === 1 ? 0 : Math.PI, 2.2, true, '#ef4444'));
+
+          // 2. High-impact counter damage & posture break
+          const currentSlash = getCurrentSlashDamage();
+          const mikiriDmg = Math.max(30, Math.round(35 + currentSlash * 3.2));
+          hitEnemy(e, mikiriDmg);
+
+          if (typeof (e as any).addPostureDamage === 'function') {
+            (e as any).addPostureDamage(40);
+          }
+          e.stunTimer = Math.max(e.stunTimer || 0, 0.5);
+          e.setState('idle');
+          e.knockbackTimer = 0.35;
+          e.knockbackVx = dir * 1600;
+          e.knockbackVy = 0;
+          e.vx = e.knockbackVx;
+          e.vy = 0;
+
+          // 3. Polish, Hit-Stop (2-3 frame crunch), Audio, Vitals
+          globals.hitStop = 0.045; // 2-3 frames micro freeze
+          globals.screenShake = Math.max(globals.screenShake, 24);
+          globals.shockwaves.push(new Shockwave(e.x, e.y, '#ef4444'));
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 85, globals.currentLang === 'ja' ? '見切り一閃！ ⚡' : 'MIKIRI COUNTER! ⚡', '#ef4444', 32));
+          playSynthesizedPerfectParry();
+          playSlashSfx(1.4, 1.2);
+
+          globals.runStats.parries++;
+          globals.runStats.perfectParries++;
+          globals.consecutiveParries++;
+          addCombo();
+          addCombo();
+          addFlow(6.0);
+          globals.invulnTimer = 0.55;
+
+          // Bushido Rally: Counter restores Ghost Heart
+          if (globals.ghostHeartTimer > 0) {
+            globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+            globals.ghostHeartTimer = 0;
+            globals.ghostHeartSlashes = 0;
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 115, globals.currentLang === 'ja' ? '見切り再生！ ❤️ +1' : 'MIKIRI RALLY! ❤️ +1', '#ffd700', 30));
+            globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+            updateUI();
+          }
+
+          if (globals.activeBounty && globals.activeBounty.type === 'parry') {
+            globals.activeBounty.current++;
+          }
+
+          triggerFlowingCounterReset();
+          break;
+        }
+      }
+    }
+  }
+
+  const isParryInput = (isCharging && isFullyCharged && isAttackReleased) || (isAttackPressed && globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0);
   if (!dashAttackTriggered && isParryInput && globals.player.state !== 'dash' && globals.player.state !== 'dead') {
     globals.enemies.forEach(e => {
       if (!parryTriggered && (e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - (0.15 * parryWindowMult)))) {
@@ -5354,7 +5447,8 @@ function update(realDt: number) {
             }
             addCombo();
             addCombo();
-            globals.hitStop = 0; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 35;
+            globals.hitStop = 0.045; // Micro hit-stop crunch (2-3 frames freeze)
+            globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 35;
             addFlow(8.0);
             globals.invulnTimer = 2.0;
             globals.invertScreenTimer = 0.25;
@@ -5385,7 +5479,8 @@ function update(realDt: number) {
           } else {
             globals.runStats.parries++;
             addCombo();
-            globals.hitStop = 0; globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 25;
+            globals.hitStop = 0.045; // Micro hit-stop crunch (2-3 frames freeze)
+            globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 25;
             addFlow(4.0);
             globals.invulnTimer = 0.8;
             globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
@@ -5608,7 +5703,7 @@ function update(realDt: number) {
       }
       if (globals.activeFusions.has('kamaitachi')) {
         const sSpd = 650;
-        const sickleDmg = Math.round(8 * (1 + (globals.playerStats?.slashBonusDmgPct || 0)) * (1 + Math.min(0.5, (globals.combo || 0) * 0.01)));
+        const sickleDmg = Math.round((8 + dmg * 0.6) * (1 + (globals.playerStats?.slashBonusDmgPct || 0)) * (1 + Math.min(0.5, (globals.combo || 0) * 0.01)));
         globals.bouncingSickles.push({
           x: globals.player.x,
           y: globals.player.y,
@@ -5938,7 +6033,7 @@ function update(realDt: number) {
       }
       
       if (globals.echoLevel > 0) {
-        const echoDmg = Math.max(1, 0.8 * globals.echoLevel);
+        const echoDmg = Math.max(2, Math.round((2.0 + dmg * 0.45) * globals.echoLevel));
         const currentAngle = angle;
         const currentX = globals.player.x;
         const currentY = globals.player.y;
@@ -6154,7 +6249,7 @@ function update(realDt: number) {
         if (vfxAnims.gigapack?.explosion?.length > 0) {
           globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));
         }
-        const cleaveDmg = Math.round((20 + (globals.playerStats?.enhanceBonusDmg || 0) * 3) * (1 + (globals.playerStats?.slashBonusDmgPct || 0)));
+        const cleaveDmg = Math.round(((20 + (globals.playerStats?.enhanceBonusDmg || 0) * 3) + dmg * 1.2) * (1 + (globals.playerStats?.slashBonusDmgPct || 0)));
         globals.enemies.forEach(en => {
           if (en.state === 'dead') return;
           const dist = Math.hypot(en.x - bhX, en.y - bhY);
@@ -6224,7 +6319,8 @@ function update(realDt: number) {
                 let diff = Math.abs(a - angle); if (diff > Math.PI) diff = Math.PI * 2 - diff;
                 const enemyHitRadius = (e.scaleMult - 1) * 60; 
                 if (dist < 280 * cloneSize + enemyHitRadius && diff < Math.PI/1.5) {
-                  hitEnemy(e, 1);
+                  const shadowCloneDmg = Math.max(2, Math.round(dmg * (0.35 + 0.15 * globals.playerStats.shadowClonesLevel)));
+                  hitEnemy(e, shadowCloneDmg);
                 }
               });
             }
@@ -6393,7 +6489,8 @@ function update(realDt: number) {
           proj.vx = Math.cos(angle) * deflectSpeed;
           proj.vy = Math.sin(angle) * deflectSpeed;
           proj.angle = angle;
-          proj.damage = (globals.playerStats.deflectedDmg || 1);
+          const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+          proj.damage = Math.max(4, Math.round(((globals.playerStats.deflectedDmg || 1) + 2) * slashPct + getCurrentSlashDamage() * 0.75));
           
           playSynthesizedParry();
           globals.screenShake = 15;
@@ -6844,7 +6941,9 @@ function triggerLightningExplosion(x: number, y: number) {
     const dy = e.y - y;
     const dist = Math.hypot(dx, dy);
     if (dist <= 160) {
-      hitEnemy(e, (globals.playerStats.deflectedDmg || 1) + 2);
+      const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+      const defAoEDmg = Math.max(4, Math.round(((globals.playerStats.deflectedDmg || 1) + 2) * slashPct + getCurrentSlashDamage() * 0.8));
+      hitEnemy(e, defAoEDmg);
       e.stunTimer = Math.max(e.stunTimer || 0, 0.5);
     }
   });
@@ -6868,7 +6967,8 @@ function triggerElementalExplosion(x: number, y: number, wasChilled: boolean, wa
     if (other.state === 'dead') return;
     const dist = Math.hypot(other.x - x, other.y - y);
     if (dist <= 220) {
-      hitEnemy(other, 5);
+      const expDmg = Math.max(8, Math.round(10 + getCurrentSlashDamage() * 1.2));
+      hitEnemy(other, expDmg);
     }
   });
 }

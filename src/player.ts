@@ -332,6 +332,7 @@ export class Player extends Entity {
 
         if (perfectDodgeTriggered) {
           globals.runStats.perfectDodges++;
+          globals.hitStop = 0.045;
           callbacks.playSynthesizedDodge();
           globals.screenShake = 30;
           callbacks.addFlow(6.0);

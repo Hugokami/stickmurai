@@ -723,7 +723,8 @@ export class Enemy extends Entity {
       this.burnTickTimer -= effectiveDt;
       if (this.burnTickTimer <= 0) {
         this.burnTickTimer = 1.0;
-        const totalBurnDmg = 1 + this.burnBonusDmg;
+        const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+        const totalBurnDmg = Math.max(1, Math.round((1 + this.burnBonusDmg) * (1 + slashPct * 0.5)));
         this.hp -= totalBurnDmg;
         this.hitFlash = 0.15;
         globals.floatingTexts.push(FloatingText.acquire(this.x + (Math.random()-0.5)*20, this.y - 45, `BURN -${totalBurnDmg}`, "#ff5500", 18));
@@ -1728,6 +1729,21 @@ export class Enemy extends Entity {
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
       ctx.lineWidth = 0.8;
       ctx.strokeRect(barX, barY, barW, barH);
+    }
+
+    // Option 2: Counter-Flash / Mikiri Danger telegraph (Ronin / Sekiro style)
+    const isImminentAttack = (this.state === 'charge' && (this.chargeTimeMax - this.stateTime <= 0.35)) ||
+                             (this.state === 'attack' && this.stateTime <= 0.15);
+    if (this.state !== 'dead' && isImminentAttack) {
+      const dangerY = (effectiveRy - headOffset * this.scaleMult - 28) | 0;
+      const pulse = 1 + 0.12 * Math.sin(Date.now() * 0.02);
+      ctx.save();
+      ctx.font = `900 ${Math.round(22 * pulse)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText('危', rx, dangerY);
+      ctx.restore();
     }
 
     // Ground contact shadow (drawn anchored at entity's physical feet baseline)

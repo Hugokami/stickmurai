@@ -786,7 +786,9 @@ export class Projectile {
             p.vx = Math.cos(p.angle) * deflectSpeed;
             p.vy = Math.sin(p.angle) * deflectSpeed;
             p.isDeflected = true;
-            p.damage = (globals.playerStats.deflectedDmg || 1) + 2;
+            const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+            const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
+            p.damage = Math.max(4, Math.round(((globals.playerStats.deflectedDmg || 1) + 2) * slashPct + slashDmg * 0.75));
           }
         }
       });
