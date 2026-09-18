@@ -54,7 +54,7 @@ export function renderStageBriefing(stage: number, anchor: HTMLElement) {
   const targets: Record<number,number>={1:25,2:35,3:45,4:55,6:40,7:50,8:60,9:70};
   const boss=stage%5===0;
   const first=!(globals.clearedStages||[]).includes(stage);
-  const fortune=1+((globals.campaignUpgrades as any)?.infiniteFortune||0)*.02;
+  const fortune=1;
   const reward=Math.round(stage*100*fortune)*(first?3:1);
   const objective=boss ? (ja?'ボスを倒す':'Defeat the boss') : `${ja?'撃破目標':'Eliminate'}: ${targets[stage]||Math.min(90,35+stage*4)}`;
   el.textContent=`${objective} · ${ja?'報酬':'Clear reward'}: ${reward.toLocaleString()} 🔮${first?' (×3 first clear)':''} · ★ ${boss?90:60}s · ★ 20 combo · +300 🔮 ${ja?'初の三つ星':'first 3-star clear'}`;
@@ -69,9 +69,9 @@ export function heroComparison(id:string):string {
 }
 export function permanentPreview(id: string, level: number, max: number, endless: boolean): string {
  const next=endless?level+1:Math.min(max,level+1);
- const effects:Record<string,[string,number,string]>={slashDamage:['Bonus slash damage',1,'%'],iaijutsuPower:['Bonus Iaijutsu damage',1,''],maxLives:['Extra hearts',1,''],dashCooldown:['Dash cooldown reduction',.08,'s'],spiritResonance:['Bonus flow gain',15,'%'],infiniteSharpness:['Bonus slash damage',.5,'%'],infiniteFlow:['Bonus flow gain',1,'%'],infiniteFortune:['Bonus Magatama',2,'%'],infiniteRiposte:['Bonus posture damage',1,'']};
+ const effects:Record<string,[string,number,string]>={slashDamage:['Bonus slash damage',1,'%'],dashCooldown:['Dash cooldown reduction',.08,'s'],ultimateDamage:['Ultimate damage',10,'%'],counterSiphon:['Counter siphon HP/Flow',5,'%'],critMastery:['Crit Chance',10,'%'],infiniteSharpness:['Bonus slash damage',.5,'%']};
  const effect=effects[id];
  if(!effect)return '';
- return `<div>${effect[0]}: ${num(level*effect[1])}${effect[2]} → ${num(next*effect[1])}${effect[2]}${id==='slashDamage'?` · Flat: +${num(level*0.5)} → +${num(next*0.5)}`:''}${id==='infiniteSharpness'?` · Flat: +${num(level*0.2)} → +${num(next*0.2)}`:''}${id==='dashCooldown'?' (cooldown floor 0.4s)':''}${id==='iaijutsuPower'?` · Range: +${level*8}% → +${next*8}%`:''}</div>`;
+ return `<div>${effect[0]}: ${num(level*effect[1])}${effect[2]} → ${num(next*effect[1])}${effect[2]}${id==='slashDamage'?` · Flat: +${num(level*0.5)} → +${num(next*0.5)}`:''}${id==='infiniteSharpness'?` · Flat: +${num(level*0.2)} → +${num(next*0.2)}`:''}${id==='dashCooldown'?' (cooldown floor 0.4s)':''}${id==='critMastery'?' (2.2x crit DMG, micro-stagger)':''}${id==='counterSiphon'?' (100/5 ❤️ & 15 Flow)':''}</div>`;
 }
 

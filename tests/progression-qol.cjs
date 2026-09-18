@@ -22,6 +22,9 @@ test('permanent dash upgrade reports seconds and maximum rank stops increasing',
  assert.match(permanentPreview('dashCooldown',4,5,false),/0.32s → 0.4s/);
  assert.match(permanentPreview('slashDamage',10,10,false),/10% → 10%/);
  assert.match(permanentPreview('slashDamage',10,10,false),/Flat: \+5 → \+5/);
+ assert.match(permanentPreview('ultimateDamage',2,10,false),/20% → 30%/);
+ assert.match(permanentPreview('counterSiphon',1,5,false),/5% → 10%/);
+ assert.match(permanentPreview('critMastery',2,5,false),/20% → 30%/);
  assert.match(permanentPreview('infiniteSharpness',5,999,true),/Flat: \+1 → \+1.2/);
 });
 test('hero comparison uses implemented Satyr modifiers',()=>{

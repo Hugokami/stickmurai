@@ -131,10 +131,6 @@ export function initInput() {
         const dx = touch.clientX - attackTouchStartX;
         const dy = touch.clientY - attackTouchStartY;
         const dist = Math.hypot(dx, dy);
-        if (dy < -20 && Math.abs(dy) > Math.abs(dx) * 0.7) {
-          globals.slashSlideUpActive = true;
-          globals.slashSlideUpTime = performance.now();
-        }
         if (dist > 15) {
           globals.mobileIaijutsuAimAngle = Math.atan2(dy, dx);
           globals.mobileIaijutsuAimActive = true;
@@ -162,7 +158,6 @@ export function initInput() {
     globals.mobileAttackDown = false; 
     globals.mobileAttackReleased = true; 
     globals.mobileIaijutsuAimActive = false;
-    globals.slashSlideUpActive = false;
     attackTouchId = null;
   }, { passive: false });
 
@@ -171,7 +166,6 @@ export function initInput() {
     globals.mobileAttackDown = false; 
     globals.mobileAttackReleased = true; 
     globals.mobileIaijutsuAimActive = false;
-    globals.slashSlideUpActive = false;
     attackTouchId = null;
   }, { passive: false });
 

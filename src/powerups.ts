@@ -71,7 +71,12 @@ export const powerUps: PowerUp[] = [
   { nameKey: "puDimensionalName", descKey: "puDimensionalDesc", isUnique: true, apply: () => { globals.playerStats.iaijutsuRangeMult += 0.45; globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + 0.15; } },
   { nameKey: "puFireName", descKey: "puFireDesc", isUnique: true, apply: () => globals.playerStats.fireStanceLevel = 1 },
   { nameKey: "puClonesName", descKey: "puClonesDesc", isUnique: true, apply: () => globals.playerStats.shadowClonesLevel = 1 },
-  { nameKey: "puStoutHeartName", descKey: "puStoutHeartDesc", apply: () => { globals.maxLives = Math.min(10, Math.max(globals.maxLives + 1, 7)); globals.lives = Math.min(globals.maxLives, globals.lives + 1); } },
+  { nameKey: "puStoutHeartName", descKey: "puStoutHeartDesc", isUnique: true, apply: () => { globals.maxLives = Math.min(10, Math.max(globals.maxLives + 1, 7)); globals.lives = Math.min(globals.maxLives, globals.lives + 1); } },
+  { nameKey: "puJudgementCutName", descKey: "puJudgementCutDesc", isUnique: true, apply: () => { globals.playerStats.judgementCutLevel = 1; } },
+  { skill: "dash", nameKey: "puSakuraBlizzardName", descKey: "puSakuraBlizzardDesc", isUnique: true, apply: () => { globals.playerStats.sakuraBlizzardLevel = 1; } },
+  { skill: "dash", nameKey: "puUnstableOverloadName", descKey: "puUnstableOverloadDesc", isUnique: true, apply: () => { globals.playerStats.unstableOverloadLevel = 1; } },
+  { nameKey: "puMagneticDrawName", descKey: "puMagneticDrawDesc", isUnique: true, apply: () => { globals.playerStats.magneticDrawLevel = 1; } },
+  { nameKey: "puReapersMarkName", descKey: "puReapersMarkDesc", isUnique: true, apply: () => { globals.playerStats.reapersMarkLevel = 1; globals.reapersMarkTimer = 25.0; globals.reapersMarkKills = 0; } },
   { nameKey: "puPetalArmorName", descKey: "puPetalArmorDesc", isUnique: true, apply: () => { globals.petalArmorLevel = 1; if (!globals.petalArmorActive && globals.petalArmorCooldown <= 0) globals.petalArmorActive = true; } },
   { nameKey: "puEchoSlashName", descKey: "puEchoSlashDesc", isUnique: true, apply: () => { globals.echoLevel = 1; } },
   { nameKey: "puTempoMasteryName", descKey: "puTempoMasteryDesc", isUnique: true, apply: () => { globals.tempoMasteryLevel = 1; globals.tempoStacks = 0; } },
@@ -760,6 +765,15 @@ export function getQualityPrice(q: 'common' | 'rare' | 'epic' | 'legendary'): nu
   }
 }
 
+export const attackPotionPowerUp: PowerUp = {
+  nameKey: "puAttackPotionName",
+  descKey: "puAttackPotionDesc",
+  apply: () => {
+    globals.stageAttackPotions = (globals.stageAttackPotions || 0) + 1;
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "+5% SLASH DMG (STAGE)! ⚔️", "#fbbf24", 26));
+  }
+};
+
 function rollSingleShopSlot(existingSlots: ShopSlot[] = []): ShopSlot {
   const available = powerUps.filter(p => {
     if (p.isCorrupted) return false;
@@ -791,7 +805,7 @@ function rollSingleShopSlot(existingSlots: ShopSlot[] = []): ShopSlot {
     return true;
   });
 
-  const p = available[Math.floor(Math.random() * available.length)] || powerUps[0];
+  const p = available.length > 0 ? available[Math.floor(Math.random() * available.length)] : attackPotionPowerUp;
   const q = getPowerQuality(p);
   const origPrice = getQualityPrice(q);
   const hasDiscount = Math.random() < 0.28;
@@ -948,8 +962,8 @@ export function renderShopModal() {
             }).join('')}
           </div>
 
-          <!-- Emergency Field Ration -->
-          <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%;">
+          <!-- Emergency Field Ration & Slash Elixir -->
+          <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%; display: flex; flex-direction: column; gap: 6px;">
             <button id="shop-ration-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
               <div style="display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: #f87171;">
                 <span style="font-size: 12px;">❤️</span>
@@ -957,6 +971,15 @@ export function renderShopModal() {
               </div>
               <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.4); white-space: nowrap;">
                 ${globals.lives >= globals.maxLives ? 'MAX HP' : '◆ 20'}
+              </div>
+            </button>
+            <button id="shop-potion-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 20 ? 'disabled' : ''}>
+              <div style="display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: #fbbf24;">
+                <span style="font-size: 12px;">⚔️</span>
+                <span>Slash Elixir (+5% DMG)</span>
+              </div>
+              <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.4); white-space: nowrap;">
+                ◆ 20
               </div>
             </button>
           </div>
@@ -1160,6 +1183,59 @@ export function renderShopModal() {
     rationBtn.addEventListener('pointerup', stopRationHold);
     rationBtn.addEventListener('pointercancel', stopRationHold);
     rationBtn.addEventListener('pointerleave', stopRationHold);
+  }
+
+  const potionBtn = modal.querySelector('#shop-potion-btn') as HTMLElement;
+  if (potionBtn) {
+    let isHoldingPotion = false;
+    let potionHoldTimer: any = null;
+    let potionRepeatTimer: any = null;
+
+    const buyOnePotion = (): boolean => {
+      if ((globals.stageCurrency || 0) < 20) return false;
+      globals.stageCurrency -= 20;
+      globals.stageAttackPotions = (globals.stageAttackPotions || 0) + 1;
+      callbacks.updateUI();
+      playSound(sfx.magatamaPickup, 1.0);
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "+5% SLASH DMG (STAGE)! ⚔️", "#fbbf24", 26));
+      renderShopModal();
+      return (globals.stageCurrency || 0) >= 20;
+    };
+
+    const stopPotionHold = () => {
+      if (!isHoldingPotion) return;
+      isHoldingPotion = false;
+      if (potionHoldTimer) { clearTimeout(potionHoldTimer); potionHoldTimer = null; }
+      if (potionRepeatTimer) { clearTimeout(potionRepeatTimer); potionRepeatTimer = null; }
+    };
+
+    const schedulePotionRepeat = () => {
+      if (!isHoldingPotion) return;
+      potionRepeatTimer = setTimeout(() => {
+        if (!isHoldingPotion) return;
+        const canContinue = buyOnePotion();
+        if (canContinue) schedulePotionRepeat();
+        else stopPotionHold();
+      }, 90);
+    };
+
+    const startPotionHold = (e: PointerEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (isHoldingPotion) return;
+      isHoldingPotion = true;
+      const canContinue = buyOnePotion();
+      if (!canContinue) { stopPotionHold(); return; }
+      potionHoldTimer = setTimeout(() => {
+        if (!isHoldingPotion) return;
+        schedulePotionRepeat();
+      }, 300);
+    };
+
+    potionBtn.addEventListener('pointerdown', startPotionHold);
+    potionBtn.addEventListener('pointerup', stopPotionHold);
+    potionBtn.addEventListener('pointercancel', stopPotionHold);
+    potionBtn.addEventListener('pointerleave', stopPotionHold);
   }
 
   const refreshBtn = modal.querySelector('#shop-refresh-btn') as HTMLElement;

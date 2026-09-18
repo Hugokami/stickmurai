@@ -11,9 +11,11 @@ function skillDamage(base: number, ratio: number, target?: Enemy): number {
 
 export function getCurrentSlashDamage(): number {
   const baseDmg = 1.0 + (globals.playerStats?.slashFlatDmg || 0) + (globals.playerStats?.reapersMarkLevel || 0) * 2 + (globals.flowState === 'awakened' ? 2.5 : 0) + (globals.playerStats?.enhanceBonusDmg || 0);
-  const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
+  const slashPotionPct = (globals.stageAttackPotions || 0) * 0.05;
+  const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0) + slashPotionPct;
   const comboMult = 1.0 + Math.min(1.5, (globals.combo || 0) * 0.015);
-  return Math.max(1, baseDmg * slashPct * comboMult);
+  const ultMult = globals.flowState === 'awakened' ? (1 + (globals.playerStats?.ultimateDamageBonusPct || 0)) : 1.0;
+  return Math.max(1, baseDmg * slashPct * comboMult * ultMult);
 }
 import { reducedMotion, recordFrameTime } from './comfort';
 import { initJourney, beginJourneyRun, journeyHurt, journeySkill, leaveJourney, updateJourneyHud, isBossRush } from './journey';
@@ -872,6 +874,7 @@ function initGame() {
   globals.zenFieldActiveTimer = 0;
   globals.zenFieldTickTimer = 0;
   globals.stageCurrency = 0;
+  globals.stageAttackPotions = 0;
   globals.shopRefreshCount = 0;
   globals.shopOpen = false;
   resetShop();
@@ -1178,6 +1181,9 @@ function initGame() {
     postureDmgBonus: 0,
     heroCritChance: 0,
     critChanceBonus: 0,
+    ultimateDamageBonusPct: 0,
+    counterSiphonLevel: 0,
+    critMasteryLevel: 0,
     executionLevel: 0
   };
   // One shared balance table drives both run initialization and Dojo comparisons.
@@ -1224,31 +1230,25 @@ function initGame() {
   // Apply Campaign / Ascension Upgrades (Permanent progression)
   if (globals.campaignUpgrades) {
     const cu = globals.campaignUpgrades as any;
-    const slashLvl = cu.slashDamage ?? cu.katana_dmg ?? 0;
-    const iaijutsuLvl = cu.iaijutsuPower ?? cu.iaijutsu_shock ?? 0;
-    const hpLvl = cu.maxLives ?? cu.bushido_hp ?? 0;
-    const dashLvl = cu.dashCooldown ?? cu.phantom_dash ?? 0;
-    const flowLvl = cu.spiritResonance ?? cu.flow_resonance ?? 0;
+    const slashLvl = Math.min(10, cu.slashDamage ?? cu.katana_dmg ?? 0);
+    const dashLvl = Math.min(5, cu.dashCooldown ?? cu.phantom_dash ?? 0);
+    const ultLvl = Math.min(10, cu.ultimateDamage ?? 0);
+    const siphonLvl = Math.min(5, cu.counterSiphon ?? 0);
+    const critLvl = Math.min(5, cu.critMastery ?? 0);
     const infSharpness = cu.infiniteSharpness ?? 0;
-    const infFlow = cu.infiniteFlow ?? 0;
-    const infFortune = cu.infiniteFortune ?? 0;
-    const infRiposte = cu.infiniteRiposte ?? 0;
 
     globals.playerStats.slashFlatDmg = (globals.playerStats.slashFlatDmg || 0) + slashLvl * 0.5 + infSharpness * 0.2;
     globals.playerStats.slashBonusDmgPct = (globals.playerStats.slashBonusDmgPct || 0) + slashLvl * 0.01 + infSharpness * 0.005;
-    globals.playerStats.iaijutsuBonusDmg = (globals.playerStats.iaijutsuBonusDmg || 0) + iaijutsuLvl * 1;
-    globals.playerStats.iaijutsuRangeMult = (globals.playerStats.iaijutsuRangeMult || 1.0) + iaijutsuLvl * 0.08;
-    globals.maxLives += hpLvl;
-    globals.lives = globals.maxLives;
     globals.playerStats.dashCooldownBase = Math.max(0.4, globals.playerStats.dashCooldownBase - dashLvl * 0.08);
-    globals.playerStats.flowGenMult = (globals.playerStats.flowGenMult || 1.0) + flowLvl * 0.15 + infFlow * 0.01;
-    globals.playerStats.fortuneMult = 1.0 + infFortune * 0.02;
-    globals.playerStats.postureDmgBonus = (globals.playerStats.postureDmgBonus || 0) + infRiposte * 1.0;
+    globals.playerStats.ultimateDamageBonusPct = ultLvl * 0.10;
+    globals.playerStats.counterSiphonLevel = siphonLvl;
+    globals.playerStats.critMasteryLevel = critLvl;
   }
 
   // Initialize Stage Mode Objectives & Affixes
   globals.stageKills = 0;
   globals.stageCurrency = 0;
+  globals.stageAttackPotions = 0;
   globals.shopRefreshCount = 0;
   globals.shopOpen = false;
   resetShop();
@@ -2286,9 +2286,13 @@ function triggerAetherionRangedAttack() {
   const now = performance.now();
   if (globals.aetherionShootCooldown > 0) return;
 
-  globals.aetherionShootCooldown = 0.20;
+  globals.aetherionShootCooldown = 0.35;
   const lastSlashDelta = now - (globals.aetherionLastSlashTime || 0);
-  const isComboCrossfire = lastSlashDelta < 480;
+  const crossfireReady = (now - (globals.aetherionLastCrossfireTime || 0) > 1600);
+  const isComboCrossfire = lastSlashDelta < 260 && crossfireReady;
+  if (isComboCrossfire) {
+    globals.aetherionLastCrossfireTime = now;
+  }
 
   let angle = globals.player.dir === 1 ? 0 : Math.PI;
   if (globals.useMobileIaijutsuAimAngle) {
@@ -2426,7 +2430,7 @@ function triggerAetherionPhaseWarp() {
   playEnergyBeam(1.2);
 
   globals.player.invulnerable = true;
-  globals.player.invulnerableTimer = 0.55;
+  globals.player.invulnerableTimer = 0.25;
 
   const baseDmg = getCurrentSlashDamage();
   const shardDmg = Math.round(baseDmg * 1.5);
@@ -2558,19 +2562,35 @@ function executeSwiftCounter() {
     globals.particles.push(Particle.acquire(px, py, '#ffb7c5', 80, 0.45, 2.5 + Math.random() * 2));
   }
   
-  // Damage enemies along the line
+  // Damage enemies along the line & automatically trigger Rising Aerial Cleave!
   const slashDmg = getCurrentSlashDamage();
-    const counterDmg = Math.max(4, Math.round(4 + slashDmg * 1.4));
-    globals.enemies.forEach(e => {
-      if (e.state === 'dead') return;
-      const dist = distToSegment(e.x, e.y, startX, startY, globals.player.x, globals.player.y);
-      if (dist < 100) {
-        hitEnemy(e, counterDmg);
-      for (let j = 0; j < 3; j++) {
-        globals.particles.push(Particle.acquire(e.x, e.y, '#ffb7c5', 200, 0.4, 2));
+  const counterDmg = Math.max(4, Math.round(4 + slashDmg * 1.4));
+  let launchedTarget: Enemy | null = null;
+  globals.enemies.forEach(e => {
+    if (e.state === 'dead') return;
+    const dist = distToSegment(e.x, e.y, startX, startY, globals.player.x, globals.player.y);
+    if (dist < 120) {
+      (e as any).airborneZ = 25;
+      (e as any).airborneVz = 850;
+      (e as any).canAerialCleave = true;
+      (e as any).postureBrokenTimer = Math.max((e as any).postureBrokenTimer || 0, 1.5);
+      (e as any).stunTimer = Math.max(e.stunTimer || 0, 1.5);
+      launchedTarget = e;
+      hitEnemy(e, counterDmg);
+      for (let j = 0; j < 4; j++) {
+        globals.particles.push(Particle.acquire(e.x, e.y, '#38bdf8', 220, 0.45, 2.5));
       }
     }
   });
+
+  if (launchedTarget) {
+    globals.screenShake = Math.max(globals.screenShake, 22);
+    globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, -Math.PI / 2, 2.5, false, '#38bdf8'));
+    globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8', 220));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "🌪️ RISING AERIAL CLEAVE! 🌪️", "neon-#38bdf8", 32));
+    addFlow(10);
+    addCombo();
+  }
 }
 
 function executeThunderclapAndFlash() {
@@ -3217,12 +3237,9 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
   const hasExecutionPerk = Boolean(globals.executionUnlocked || (globals.playerStats.executionLevel && globals.playerStats.executionLevel > 0));
   const isPostureBroken = (e as any).postureBrokenTimer > 0;
   const isExecution = isPostureBroken && hasExecutionPerk;
-  const isSlashSlideUp = globals.slashSlideUpActive || (performance.now() - (globals.slashSlideUpTime || 0) < 350);
-  const isUpwardInput = globals.keys['KeyW'] || globals.keys['ArrowUp'] || isSlashSlideUp;
+  const isUpwardInput = globals.keys['KeyW'] || globals.keys['ArrowUp'] || globals.player.state === 'dash';
 
   if (isPostureBroken && isUpwardInput && !(e as any).airborneZ) {
-    globals.slashSlideUpActive = false;
-    globals.slashSlideUpTime = 0;
     // Option 3: Rising Aerial Launcher
     (e as any).airborneZ = 15;
     (e as any).airborneVz = 820;
@@ -3556,7 +3573,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
     if (stage >= 60) {
       const lateStageDmgRed = Math.min(0.70, 0.45 + (stage - 60) * 0.008);
       finalDmg = Math.max(1, Math.round(finalDmg * (1 - lateStageDmgRed)));
-      const maxBossSingleHit = Math.max(40, Math.round((e.maxHp || 100) * 0.05));
+      const maxBossSingleHit = Math.max(40, Math.round((e.maxHp || 100) * 0.08));
       finalDmg = Math.min(finalDmg, maxBossSingleHit);
     } else {
       const maxBossSingleHit = Math.max(70, Math.round((e.maxHp || 100) * 0.12));
@@ -5521,7 +5538,19 @@ function update(realDt: number) {
           addCombo();
           addCombo();
           addFlow(6.0);
-          globals.invulnTimer = 0.55;
+
+          // Counter Siphon ascension upgrade
+          if ((globals.playerStats?.counterSiphonLevel || 0) > 0) {
+            const lvl = globals.playerStats.counterSiphonLevel;
+            addFlow(15 * lvl);
+            globals.counterSiphonHpProgress = (globals.counterSiphonHpProgress || 0) + 0.05 * lvl;
+            if (globals.counterSiphonHpProgress >= 1.0) {
+              globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+              globals.counterSiphonHpProgress -= 1.0;
+              updateUI();
+            }
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, "+5% ❤️ (100/5) +15 Flow", "#4ade80", 26));
+          }
 
           // Bushido Rally: Counter restores Ghost Heart
           if (globals.ghostHeartTimer > 0) {
@@ -5589,9 +5618,22 @@ function update(realDt: number) {
               globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 90, globals.currentLang === 'ja' ? '見切り再生！ ❤️ +1' : 'PERFECT PARRY RALLY! ❤️ +1', '#ffd700', 32));
               globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
               updateUI();
-                          }
+            }
 
-                          // Tempo Mastery: Gain a tempo stack on perfect parry
+            // Counter Siphon ascension upgrade
+            if ((globals.playerStats?.counterSiphonLevel || 0) > 0) {
+              const lvl = globals.playerStats.counterSiphonLevel;
+              addFlow(15 * lvl);
+              globals.counterSiphonHpProgress = (globals.counterSiphonHpProgress || 0) + 0.05 * lvl;
+              if (globals.counterSiphonHpProgress >= 1.0) {
+                globals.lives = Math.min(globals.maxLives, globals.lives + 1);
+                globals.counterSiphonHpProgress -= 1.0;
+                updateUI();
+              }
+              globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, "+5% ❤️ (100/5) +15 Flow", "#4ade80", 26));
+            }
+
+            // Tempo Mastery: Gain a tempo stack on perfect parry
                           if (globals.tempoMasteryLevel > 0) {
                             globals.tempoStacks = Math.min(5, (globals.tempoStacks || 0) + 1);
                             if (globals.tempoStacks === 5) {
@@ -5943,20 +5985,22 @@ function update(realDt: number) {
         });
 
       }
-      // Atherion Dash + Slash Combo: CELESTIAL STRIDE CLEAVE!
+      // Atherion Dash + Slash Combo: CELESTIAL STRIDE CLEAVE! (nerfed interval & reset)
       const nowSlash = performance.now();
-      const isAetherionDashSlash = globals.selectedHero === 'aetherion' && (
+      const strideCleaveReady = (nowSlash - (globals.aetherionLastStrideCleave || 0) > 2200);
+      const isAetherionDashSlash = globals.selectedHero === 'aetherion' && strideCleaveReady && (
         globals.player.state === 'dash' || 
-        (nowSlash - (globals.aetherionLastDashTime || 0) < 420)
+        (nowSlash - (globals.aetherionLastDashTime || 0) < 260)
       );
       if (isAetherionDashSlash) {
-        size *= 2.0;
-        dmg = Math.round(dmg * 2.4);
+        globals.aetherionLastStrideCleave = nowSlash;
+        size *= 1.5;
+        dmg = Math.round(dmg * 1.6);
         isEnhanced = true;
-        globals.screenShake = Math.max(globals.screenShake, 16);
+        globals.screenShake = Math.max(globals.screenShake, 14);
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "⚔️ CELESTIAL STRIDE CLEAVE! ⚔️", "#38bdf8", 26));
-        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8', 190));
-        globals.player.dashCooldown = 0; // immediate reset for silky smooth chaining!
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8', 180));
+        globals.player.dashCooldown = Math.max(0, (globals.player.dashCooldown || 0) * 0.6);
       }
 
       const slashPct = globals.playerStats.slashBonusDmgPct || 0;

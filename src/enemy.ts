@@ -834,6 +834,9 @@ export class Enemy extends Entity {
         this.setState('idle');
         const phaseCooldownFactor = this.currentPhase >= 3 ? 0.5 : (this.currentPhase >= 2 ? 0.7 : 0.85);
         this.attackCooldownTimer = isBoss(this) ? (0.25 + Math.random() * 0.2) * phaseCooldownFactor : (0.8 + Math.random() * 0.5);
+        if (isBoss(this) && (globals.currentStage || 1) >= 60) {
+          this.attackCooldownTimer *= 0.65;
+        }
       }
       return;
     }
@@ -1066,6 +1069,9 @@ export class Enemy extends Entity {
         if (isBoss(this)) {
           const phaseFactor = this.currentPhase >= 3 ? 0.55 : (this.currentPhase >= 2 ? 0.7 : 0.85);
           this.attackCooldownTimer = (0.26 + Math.random() * 0.20) * phaseFactor;
+          if ((globals.currentStage || 1) >= 60) {
+            this.attackCooldownTimer *= 0.65;
+          }
         } else {
           this.attackCooldownTimer = this.isRanged() ? (0.35 + Math.random() * 0.3) : (1.0 + Math.random() * 0.6);
         }

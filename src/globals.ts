@@ -52,6 +52,12 @@ export const globals = {
   aetherionLastSlashTime: 0,
   aetherionLastShootTime: 0,
   aetherionLastDashTime: 0,
+  aetherionLastCrossfireTime: 0,
+  aetherionLastPhaseWarpTime: 0,
+  aetherionLastDimensionRend: 0,
+  aetherionLastStrideCleave: 0,
+  stageAttackPotions: 0,
+  counterSiphonHpProgress: 0,
   slashSlideUpActive: false,
   slashSlideUpTime: 0,
   raijinDashActive: false,
@@ -145,6 +151,9 @@ export const globals = {
     postureDmgBonus: 0,
     heroCritChance: 0,
     critChanceBonus: 0,
+    ultimateDamageBonusPct: 0,
+    counterSiphonLevel: 0,
+    critMasteryLevel: 0,
     executionLevel: 0
   },
 
@@ -406,15 +415,12 @@ export const globals = {
   satyrEarthshakerCD: 0,
   campaignUpgrades: (() => {
     const defaults = {
-      slashDamage: 0,     // Level 0..10 (+1 DMG per level)
-      iaijutsuPower: 0,   // Level 0..10 (+2 DMG & +10% width per level)
-      maxLives: 0,        // Level 0..5 (+1 max heart per level)
-      dashCooldown: 0,    // Level 0..5 (-10% dash CD & +5% speed per level)
-      spiritResonance: 0, // Level 0..5 (+25% flow gen & +1.5s ult per level)
-      infiniteSharpness: 0, // Uncapped (+0.5 DMG per rank)
-      infiniteFlow: 0,      // Uncapped (+1% flow per rank)
-      infiniteFortune: 0,   // Uncapped (+2% magatama bounty yield per rank)
-      infiniteRiposte: 0    // Uncapped (+1.5 posture break DMG per rank)
+      slashDamage: 0,
+      dashCooldown: 0,
+      ultimateDamage: 0,
+      counterSiphon: 0,
+      critMastery: 0,
+      infiniteSharpness: 0
     };
     try {
       const stored = safeStorage.getItem('stickmurai_campaign_upgrades');
