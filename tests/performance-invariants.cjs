@@ -36,4 +36,9 @@ test('performance optimization invariant tests', () => {
   assert.match(mainSrc, /if \(e\.state === 'dead' \|\| e\.deathHandled\) return;/, 'main.ts must guard killEnemy with deathHandled');
   assert.match(mainSrc, /tickTimer = 0\.25/, 'main.ts plasma trails must use tick timer to prevent per-frame hitEnemy explosion');
   assert.match(mainSrc, /hitTimer = 0\.2/, 'main.ts bouncing sickles must use hit timer to prevent per-frame hitEnemy explosion');
+
+  // UI modal containment & display invariants
+  const styleCss = fs.readFileSync('src/style.css', 'utf8');
+  assert.doesNotMatch(styleCss, /#skill-select-screen\.overlay\s*\{[^}]*display:\s*flex\s*!important/s, 'skill-select-screen.overlay must never force display: flex !important, which breaks inline display:none and traps the player');
+  assert.match(styleCss, /\.overlay\[style\*="display:\s*none"\]/, 'style.css must enforce display: none !important for hidden overlays');
 });

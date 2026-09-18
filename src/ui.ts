@@ -1238,6 +1238,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   // load translation / layout init
   updateStaticText();
   refreshAllMagatamaDisplays();
+  renderSkillChoicesPregame();
 }
 
 export function updatePregameOptionsUI() {

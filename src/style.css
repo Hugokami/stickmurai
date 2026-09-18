@@ -474,6 +474,11 @@ html.crazygames #fullscreen-prompt {
   touch-action: pan-y;
 }
 
+.overlay[style*="display: none"],
+.overlay[style*="display:none"] {
+  display: none !important;
+}
+
 /* Centering content vertically when it fits, but aligning to top and allowing scroll when it overflows */
 .overlay > .menu-box,
 .overlay > .skill-select-box,
@@ -4843,7 +4848,6 @@ html.qol-left #ult-buttons-wrap {
 /* 1. Skill Selection Screen */
 #skill-select-screen.overlay {
   overflow: hidden !important;
-  display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   padding: clamp(8px, 1.5vh, 16px) !important;
