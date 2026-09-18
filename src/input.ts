@@ -2,11 +2,13 @@ import { globals } from './globals';
 import { resumeAudioContext } from './audio';
 import { callbacks } from './callbacks';
 import { safeStorage } from './storage';
+import { AdManager } from './adManager';
 
 /* FIXME: Gamepad events occasionally fail to register on reload in Safari, fallback to empty array */
 export function initInput() {
   // Desktop Input Setup
   window.addEventListener('keydown', e => {
+    if (AdManager.isAdPlaying) return;
     if ((window as any).activeRebindAction) {
       const action = (window as any).activeRebindAction;
       globals.keyMaps[action] = e.code;
@@ -39,16 +41,21 @@ export function initInput() {
     
     globals.keys[e.code] = true;
   });
-  window.addEventListener('keyup', e => globals.keys[e.code] = false);
+  window.addEventListener('keyup', e => {
+    if (AdManager.isAdPlaying) return;
+    globals.keys[e.code] = false;
+  });
   window.addEventListener('mousemove', e => {
     globals.mouse.x = e.clientX;
     globals.mouse.y = e.clientY;
   });
   window.addEventListener('mousedown', () => { 
+    if (AdManager.isAdPlaying) return;
     globals.mouse.down = true; 
     globals.mouse.justPressed = true; 
   });
   window.addEventListener('mouseup', () => { 
+    if (AdManager.isAdPlaying) return;
     globals.mouse.down = false; 
     globals.mouse.justReleased = true; 
   });

@@ -23,6 +23,7 @@ import { initQol, clearGameInputs, actionBuffer, qolSettings } from './qol';
 import { initRuntimeQol, isPractice, practiceStep, recordHurt, resetRunFeedback, showDefeatFeedback, updateThreats } from './runtimeQol';
 import { assetReadiness, retryRequiredAssets, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
 import { safeStorage } from './storage';
+import { AdManager } from './adManager';
 import { globals, getStageAffix } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
 import { i18n, loaderTips, startBackgroundAssetLoading, loadCoreCombatAssetsNow } from './assets';
@@ -151,6 +152,7 @@ export function clearBattlefield() {
 }
 
 export function handleQuitToMainMenu() {
+  AdManager.gameplayStop();
   stopSpawner();
   resetCombatPolish();
   leaveJourney();
@@ -183,6 +185,7 @@ function finishLoading() {
   if (loadingFinished) return;
   if (!assetReadiness().ready) return;
   loadingFinished = true;
+  AdManager.gameLoadingFinished();
   
   if (loaderTimeoutId) {
     clearTimeout(loaderTimeoutId);
@@ -641,6 +644,8 @@ function startApp() {
 
     setupPvpRematchListeners();
 
+    AdManager.init();
+
     // Start audio & unlock handlers as early as loading screen
     initImmediateAudio();
     startBgm();
@@ -843,6 +848,9 @@ function initGame() {
     const cgSdk = (window as any).CrazyGames?.SDK;
     if (cgSdk?.game?.loadingStop) cgSdk.game.loadingStop();
   } catch(e) {}
+
+  AdManager.gameplayStart();
+  AdManager.measure('level', String(globals.currentStage || 1), 'start');
 
   stopSpawner();
   startOrResumeGameLoop();
@@ -2796,6 +2804,8 @@ function triggerChainLightning(startEnemy: Enemy, chainDmg = 2) {
 }
 
 function triggerVictory() {
+  AdManager.gameplayStop();
+  AdManager.measure('level', String(globals.currentStage || 1), 'complete');
   playSynthesizedLevelUp();
   globals.gameState = 'gameover';
   checkAndSaveHighScores();
@@ -2860,6 +2870,8 @@ function checkAndSaveHighScores() {
 
 function triggerGameOver(showTimeLimitExceeded = false) {
   if (isPractice()) return;
+  AdManager.gameplayStop();
+  AdManager.measure('level', String(globals.currentStage || 1), 'fail');
   globals.player.setState('dead');
   globals.gameState = 'gameover';
   checkAndSaveHighScores();
@@ -2875,6 +2887,7 @@ function triggerGameOver(showTimeLimitExceeded = false) {
   if (reviveBtn) {
     if (!globals.hasRevivedThisRun && (globals.gameMode === 'classic' || globals.gameMode === 'level')) {
       reviveBtn.style.display = 'inline-flex';
+      AdManager.measure('rewarded', 'revive', 'visible');
     } else {
       reviveBtn.style.display = 'none';
     }
@@ -2918,6 +2931,7 @@ export function revivePlayer() {
   
   globals.hasRevivedThisRun = true;
   globals.gameState = 'playing';
+  AdManager.gameplayStart();
   globals.lives = 3;
   globals.invulnTimer = 2.0; // 2s invulnerability
   

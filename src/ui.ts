@@ -406,7 +406,9 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       globals.zenFieldActiveTimer = 0;
       globals.zenFieldTickTimer = 0;
       globals.roninResolveCooldown = 0;
-      if (cachedOnPlayCallback) cachedOnPlayCallback();
+      AdManager.showMidrollAd(() => {
+        if (cachedOnPlayCallback) cachedOnPlayCallback();
+      });
     });
   }
 
@@ -425,7 +427,9 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       globals.zenFieldActiveTimer = 0;
       globals.zenFieldTickTimer = 0;
       globals.roninResolveCooldown = 0;
-      if (cachedOnPlayCallback) cachedOnPlayCallback();
+      AdManager.showMidrollAd(() => {
+        if (cachedOnPlayCallback) cachedOnPlayCallback();
+      });
     });
   }
 
@@ -593,7 +597,11 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     });
   }
 
-  bindDualListener(document.getElementById('restart-btn'), onRestartCallback);
+  bindDualListener(document.getElementById('restart-btn'), () => {
+    AdManager.showMidrollAd(() => {
+      if (onRestartCallback) onRestartCallback();
+    });
+  });
 
   // Grimoire & Chronicle screen listeners
   const grimoireScreen = document.getElementById('grimoire-screen');
@@ -921,6 +929,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     if (globals.gameState === 'playing') {
       clearGameInputs();
       globals.gameState = 'paused';
+      AdManager.gameplayStop();
       if (pauseScreen) pauseScreen.style.display = 'flex';
       updatePauseUpgradesList();
     }
@@ -2130,6 +2139,7 @@ export function updateBlessingSelectionUI() {
   const fortuneBtn = document.getElementById('blessing-fortune-btn');
   
   if (swiftBtn) {
+    AdManager.measure('rewarded', 'blessing-swift', 'visible');
     const costText = swiftBtn.querySelector('.blessing-cost-text') as HTMLElement;
     if (globals.activeBlessing === 'swift_strike') {
       swiftBtn.classList.add('active');
@@ -2141,6 +2151,7 @@ export function updateBlessingSelectionUI() {
   }
   
   if (fortuneBtn) {
+    AdManager.measure('rewarded', 'blessing-fortune', 'visible');
     const costText = fortuneBtn.querySelector('.blessing-cost-text') as HTMLElement;
     if (globals.activeBlessing === 'fortune') {
       fortuneBtn.classList.add('active');

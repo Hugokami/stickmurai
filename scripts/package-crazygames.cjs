@@ -554,6 +554,10 @@ with zipfile.ZipFile(src_zip, 'r') as zin, zipfile.ZipFile(target_zip, 'w', zipf
             html_str = re.sub(r'<button[^>]*id="menu-fullscreen-btn"[^>]*>.*?</button>', '', html_str, flags=re.DOTALL)
             html_str = re.sub(r'<button[^>]*id="pause-fullscreen-btn"[^>]*>.*?</button>', '', html_str, flags=re.DOTALL)
             html_str = re.sub(r'<div[^>]*id="setting-fullscreen-row"[^>]*>.*?</div>', '', html_str, flags=re.DOTALL)
+            # Strip Poki SDK script, comments, and listeners for CrazyGames build
+            html_str = re.sub(r'<!--.*?Poki.*?-->', '', html_str, flags=re.DOTALL | re.IGNORECASE)
+            html_str = re.sub(r'<script[^>]*poki-sdk\.js.*?</script>', '', html_str, flags=re.DOTALL | re.IGNORECASE)
+            html_str = re.sub(r'<script>.*?Poki.*?</script>', '', html_str, flags=re.DOTALL | re.IGNORECASE)
             # Inject SDK script and early bridge at the VERY TOP of <head> before any game module scripts
             if '<head>' in html_str:
                 html_str = html_str.replace('<head>', '<head>\\n' + bridge_script, 1)

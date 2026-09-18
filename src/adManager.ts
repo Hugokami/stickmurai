@@ -1,5 +1,6 @@
 import { bgmAudio, setPortalMuted, getPortalMuted } from './audio';
 import { globals } from './globals';
+import { clearGameInputs } from './qol';
 
 export interface AdCallbacks {
   onComplete: () => void;
@@ -11,6 +12,103 @@ export class AdManager {
   private static wasPortalMutedBeforeAd: boolean = false;
   private static lastMidrollTime: number = 0;
   private static readonly MIDROLL_COOLDOWN_MS = 60000;
+  public static isAdPlaying: boolean = false;
+  public static isPokiReady: boolean = false;
+
+  /**
+   * Initializes ad SDKs (Poki SDK & CrazyGames SDK).
+   */
+  public static async init(): Promise<void> {
+    // 1. Check Poki SDK
+    if (typeof window !== 'undefined' && (window as any).PokiSDK?.init) {
+      try {
+        await (window as any).PokiSDK.init();
+        this.isPokiReady = true;
+        console.log("[AdManager] Poki SDK successfully initialized");
+      } catch (err) {
+        console.log("[AdManager] Poki SDK initialized with notice/adblock:", err);
+        this.isPokiReady = false;
+      }
+    }
+
+    // 2. Check CrazyGames SDK
+    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
+    if (cgSdk && typeof cgSdk.init === 'function' && !(window as any).__cgSdkInitialized) {
+      try {
+        await Promise.race([
+          cgSdk.init(),
+          new Promise(resolve => setTimeout(resolve, 2000))
+        ]);
+        (window as any).__cgSdkInitialized = true;
+        console.log("[AdManager] CrazyGames SDK successfully initialized");
+      } catch (e) {
+        console.warn("[AdManager] CrazyGames SDK init error:", e);
+      }
+    }
+  }
+
+  /**
+   * Fired when initial asset loading completes (Poki & CrazyGames lifecycle).
+   */
+  public static gameLoadingFinished(): void {
+    if (typeof window !== 'undefined' && (window as any).PokiSDK?.gameLoadingFinished) {
+      try {
+        (window as any).PokiSDK.gameLoadingFinished();
+        console.log("[AdManager] Poki gameLoadingFinished fired");
+      } catch (e) {}
+    }
+    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
+    if (cgSdk?.game?.loadingStop) {
+      try { cgSdk.game.loadingStop(); } catch (e) {}
+    }
+  }
+
+  /**
+   * Fired when active player gameplay begins or unpauses.
+   */
+  public static gameplayStart(): void {
+    if (typeof window !== 'undefined' && (window as any).PokiSDK?.gameplayStart) {
+      try {
+        (window as any).PokiSDK.gameplayStart();
+        console.log("[AdManager] Poki gameplayStart fired");
+      } catch (e) {}
+    }
+    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
+    if (cgSdk?.game?.gameplayStart) {
+      try { cgSdk.game.gameplayStart(); } catch (e) {}
+    }
+  }
+
+  /**
+   * Fired when gameplay halts (pause, death, gameover, stage clear, quit to menu).
+   */
+  public static gameplayStop(): void {
+    if (typeof window !== 'undefined' && (window as any).PokiSDK?.gameplayStop) {
+      try {
+        (window as any).PokiSDK.gameplayStop();
+        console.log("[AdManager] Poki gameplayStop fired");
+      } catch (e) {}
+    }
+    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
+    if (cgSdk?.game?.gameplayStop) {
+      try { cgSdk.game.gameplayStop(); } catch (e) {}
+    }
+  }
+
+  /**
+   * Custom game event analytics for Poki SDK (sanitizes category/what/action).
+   */
+  public static measure(category: string, what: string, action: string, data?: any): void {
+    if (typeof window !== 'undefined' && (window as any).PokiSDK?.measure) {
+      try {
+        // Poki SDK explicitly forbids '/' and '^' in event identifiers
+        const cleanCat = String(category).replace(/[/^]/g, '_').trim();
+        const cleanWhat = String(what).replace(/[/^]/g, '_').trim();
+        const cleanAction = String(action).replace(/[/^]/g, '_').trim();
+        (window as any).PokiSDK.measure(cleanCat, cleanWhat, cleanAction, data);
+      } catch (e) {}
+    }
+  }
 
   /**
    * Triggers a rewarded ad flow.
@@ -18,7 +116,43 @@ export class AdManager {
    * and uses their SDK. Otherwise, displays the custom premium Japanese Mock Ad overlay.
    */
   public static async showRewardedAd(type: 'revive' | 'blessing', callbacks: AdCallbacks) {
-    // 1. Check for CrazyGames SDK (supports both window.CrazyGames and window.crazygames)
+    // 1. Check for Poki SDK
+    if (typeof window !== 'undefined' && (window as any).PokiSDK?.rewardedBreak) {
+      console.log(`[AdManager] Invoking Poki SDK for rewarded: ${type}`);
+      this.measure('rewarded', type, 'interact');
+      const poki = (window as any).PokiSDK;
+      this.muteSounds();
+      poki.rewardedBreak(() => {
+        this.muteSounds();
+      }).then((withReward: boolean) => {
+        this.unmuteSounds();
+        if (withReward) {
+          console.log("[AdManager] Poki rewarded ad completed successfully.");
+          callbacks.onComplete();
+        } else {
+          console.warn("[AdManager] Poki rewarded ad skipped or unavailable.");
+          // Only fall back to mock ad if running standalone outside Poki
+          const isStandalone = typeof window !== 'undefined' && (window.self === window.top && !window.location.search.includes('poki'));
+          if (isStandalone) {
+            this.showMockAdModal(type, callbacks);
+          } else {
+            callbacks.onFailed("Rewarded ad skipped or unavailable");
+          }
+        }
+      }).catch((err: any) => {
+        this.unmuteSounds();
+        console.warn("[AdManager] Poki rewarded ad error:", err);
+        const isStandalone = typeof window !== 'undefined' && (window.self === window.top && !window.location.search.includes('poki'));
+        if (isStandalone) {
+          this.showMockAdModal(type, callbacks);
+        } else {
+          callbacks.onFailed("Rewarded ad error");
+        }
+      });
+      return;
+    }
+
+    // 2. Check for CrazyGames SDK (supports both window.CrazyGames and window.crazygames)
     const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
     if (cgSdk) {
       // Ensure SDK is initialized before touching any module getters
@@ -97,28 +231,6 @@ export class AdManager {
       }
     }
 
-    // 2. Check for Poki SDK
-    if (typeof window !== 'undefined' && (window as any).PokiSDK) {
-      console.log(`[AdManager] Invoking Poki SDK for: ${type}`);
-      const poki = (window as any).PokiSDK;
-      this.muteSounds();
-      poki.rewardedBreak().then((withReward: boolean) => {
-        this.unmuteSounds();
-        if (withReward) {
-          console.log("[AdManager] Poki rewarded ad completed successfully.");
-          callbacks.onComplete();
-        } else {
-          console.warn("[AdManager] Poki rewarded ad skipped/failed.");
-          this.showMockAdModal(type, callbacks);
-        }
-      }).catch((err: any) => {
-        this.unmuteSounds();
-        console.warn("[AdManager] Poki rewarded ad error, falling back to mock ad:", err);
-        this.showMockAdModal(type, callbacks);
-      });
-      return;
-    }
-
     // 3. Fallback: Display our premium Japanese-themed Mock Ad modal
     console.log(`[AdManager] Showing Mock Ad Modal for: ${type}`);
     this.showMockAdModal(type, callbacks);
@@ -135,6 +247,41 @@ export class AdManager {
       return;
     }
 
+    // 1. Check for Poki SDK commercialBreak
+    if (typeof window !== 'undefined' && (window as any).PokiSDK?.commercialBreak) {
+      this.lastMidrollTime = now;
+      console.log("[AdManager] Invoking Poki commercialBreak");
+      const inGameplay = typeof globals !== 'undefined' && globals.gameState === 'playing';
+      let pausedByAd = false;
+      this.muteSounds();
+      if (inGameplay) {
+        pausedByAd = true;
+        globals.gameState = 'paused';
+        this.gameplayStop();
+      }
+
+      (window as any).PokiSDK.commercialBreak(() => {
+        this.muteSounds();
+      }).then(() => {
+        this.unmuteSounds();
+        if (pausedByAd) {
+          globals.gameState = 'playing';
+          this.gameplayStart();
+        }
+        if (onFinished) onFinished();
+      }).catch((err: any) => {
+        console.warn("[AdManager] Poki commercialBreak error:", err);
+        this.unmuteSounds();
+        if (pausedByAd) {
+          globals.gameState = 'playing';
+          this.gameplayStart();
+        }
+        if (onFinished) onFinished();
+      });
+      return;
+    }
+
+    // 2. Check for CrazyGames SDK
     const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
     if (cgSdk) {
       try {
@@ -212,6 +359,8 @@ export class AdManager {
    * Mute game background music and Web Audio during ads.
    */
   private static muteSounds() {
+    this.isAdPlaying = true;
+    try { clearGameInputs(); } catch(e) {}
     this.wasPortalMutedBeforeAd = typeof getPortalMuted === 'function' ? getPortalMuted() : false;
     if (bgmAudio) {
       this.originalVolume = bgmAudio.volume;
@@ -230,6 +379,8 @@ export class AdManager {
    * Restore game background music and Web Audio after ads.
    */
   private static unmuteSounds() {
+    this.isAdPlaying = false;
+    try { clearGameInputs(); } catch(e) {}
     if (!this.wasPortalMutedBeforeAd && typeof setPortalMuted === 'function') {
       try { setPortalMuted(false); } catch(e) {}
     }

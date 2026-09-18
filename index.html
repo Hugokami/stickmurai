@@ -23,6 +23,19 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <title>Super Samurai Sticky</title>
+    <!-- Poki SDK -->
+    <script src="https://game-cdn.poki.com/scripts/v2/poki-sdk.js"></script>
+    <script>
+      // Poki SDK: Prevent page scroll on game controls
+      window.addEventListener('keydown', function(ev) {
+        if (['ArrowDown', 'ArrowUp', ' '].indexOf(ev.key) !== -1) {
+          var tag = ev.target && ev.target.tagName;
+          if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+          ev.preventDefault();
+        }
+      });
+      window.addEventListener('wheel', function(ev) { ev.preventDefault(); }, { passive: false });
+    </script>
     <!-- Preload Stickmurai loading screen stickman frames -->
     <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0001.png" />
     <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0002.png" />

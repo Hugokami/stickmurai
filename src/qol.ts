@@ -4,6 +4,7 @@ import { ActionBuffer, clamp, SAVE_KEYS, validateSave, type SaveFile } from './q
 import './qol.css';
 import { reducedMotion, setReducedMotion } from './comfort';
 import { bgmAudio } from './audio';
+import { AdManager } from './adManager';
 
 export const actionBuffer = new ActionBuffer();
 type Position = {x:number;y:number};
@@ -38,10 +39,10 @@ function visible(el:HTMLElement|null):el is HTMLElement{return !!el&&!el.hidden&
 export function cancelResume(){resumeToken++;const el=document.getElementById('qol-resume');if(el)el.hidden=true;}
 export function requestResume() {
   if(globals.gameState!=='paused'||document.hidden)return;
-  if(globals.gameMode==='pvp'){globals.gameState='playing';document.getElementById('pause-screen')!.style.display='none';return;}
+  if(globals.gameMode==='pvp'){globals.gameState='playing';AdManager.gameplayStart();document.getElementById('pause-screen')!.style.display='none';return;}
   const token=++resumeToken;clearGameInputs();const panel=document.getElementById('qol-resume')!;panel.hidden=false;
   let count=3;const label=document.getElementById('qol-count')!;label.textContent=String(count);
-  const tick=()=>{if(token!==resumeToken||document.hidden||globals.gameState!=='paused')return;if(--count===0){panel.hidden=true;clearGameInputs();document.getElementById('pause-screen')!.style.display='none';globals.gameState='playing';}else{label.textContent=String(count);window.setTimeout(tick,600);}};
+  const tick=()=>{if(token!==resumeToken||document.hidden||globals.gameState!=='paused')return;if(--count===0){panel.hidden=true;clearGameInputs();document.getElementById('pause-screen')!.style.display='none';globals.gameState='playing';AdManager.gameplayStart();}else{label.textContent=String(count);window.setTimeout(tick,600);}};
   window.setTimeout(tick,600);
 }
 export function handleBack(e?:Event):boolean {

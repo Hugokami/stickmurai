@@ -41,4 +41,20 @@ test('performance optimization invariant tests', () => {
   const styleCss = fs.readFileSync('src/style.css', 'utf8');
   assert.doesNotMatch(styleCss, /#skill-select-screen\.overlay\s*\{[^}]*display:\s*flex\s*!important/s, 'skill-select-screen.overlay must never force display: flex !important, which breaks inline display:none and traps the player');
   assert.match(styleCss, /\.overlay\[style\*="display:\s*none"\]/, 'style.css must enforce display: none !important for hidden overlays');
+
+  // Poki SDK integration invariants
+  const indexHtml = fs.readFileSync('index.html', 'utf8');
+  assert.match(indexHtml, /poki-sdk\.js/, 'index.html must load the Poki SDK script in <head>');
+  assert.match(indexHtml, /Poki SDK: Prevent page scroll/, 'index.html must prevent arrow/space scroll navigation for Poki');
+
+  const adManagerSrc = fs.readFileSync('src/adManager.ts', 'utf8');
+  assert.match(adManagerSrc, /gameLoadingFinished\(\)/, 'adManager.ts must implement gameLoadingFinished()');
+  assert.match(adManagerSrc, /gameplayStart\(\)/, 'adManager.ts must implement gameplayStart()');
+  assert.match(adManagerSrc, /gameplayStop\(\)/, 'adManager.ts must implement gameplayStop()');
+  assert.match(adManagerSrc, /commercialBreak/, 'adManager.ts must implement commercialBreak()');
+  assert.match(adManagerSrc, /rewardedBreak/, 'adManager.ts must implement rewardedBreak()');
+  assert.match(adManagerSrc, /measure\(/, 'adManager.ts must implement measure()');
+
+  const pkgCgSrc = fs.readFileSync('scripts/package-crazygames.cjs', 'utf8');
+  assert.match(pkgCgSrc, /poki-sdk/, 'package-crazygames.cjs must strip poki-sdk for CrazyGames compliance');
 });
