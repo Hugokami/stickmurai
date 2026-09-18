@@ -2404,13 +2404,15 @@ input[type="range"]::-webkit-slider-thumb:hover {
   width: 100%;
 }
 
-#main-menu.overlay {
+#main-menu.overlay,
+#skill-select-screen.overlay,
+#pause-screen.overlay,
+#settings-screen.overlay,
+#pvp-lobby-screen.overlay {
   justify-content: center;
-}
-@media (min-height: 600px) {
-  #main-menu.overlay {
-    overflow-y: hidden;
-  }
+  overflow: hidden !important;
+  touch-action: none;
+  overscroll-behavior: none;
 }
 
 @media (min-width: 900px) and (min-height: 521px) {
@@ -2499,10 +2501,12 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
 
   /* Non-scrollable containers */
-  #main-menu .main-menu-box {
+  #main-menu .main-menu-box,
+  #skill-select-screen .skill-select-box,
+  .pause-menu-box {
     height: auto !important;
     min-height: auto !important;
-    max-height: 96vh !important;
+    max-height: calc(100dvh - 16px) !important;
     overflow: hidden !important;
   }
 
@@ -2536,6 +2540,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
     justify-content: flex-start !important;
     padding: 10px 12px 14px 12px !important;
     gap: 6px !important;
+    overflow: hidden !important;
   }
   
   .settings-grid {
@@ -4836,12 +4841,82 @@ html.qol-left #ult-buttons-wrap {
    ========================================================================== */
 
 /* 1. Skill Selection Screen */
+#skill-select-screen.overlay {
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: clamp(8px, 1.5vh, 16px) !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+#skill-select-screen .skill-select-frame-layout {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  max-height: calc(100dvh - 16px);
+  overflow: hidden;
+}
+
 #skill-select-screen .skill-select-box {
-  background: rgba(6, 6, 10, 0.95) !important;
+  background: rgba(6, 6, 10, 0.96) !important;
   border: 2px solid #d4a24e !important;
   border-radius: 0 !important;
   clip-path: polygon(10px 0, calc(100% - 10px) 0, 100% 10px, 100% calc(100% - 10px), calc(100% - 10px) 100%, 10px 100%, 0 calc(100% - 10px), 0 10px) !important;
   box-shadow: 0 0 35px rgba(212, 162, 78, 0.25), 0 10px 40px rgba(0, 0, 0, 0.8) !important;
+  max-width: 820px !important;
+  width: 94vw !important;
+  max-height: calc(100dvh - 20px) !important;
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  padding: clamp(12px, 2vh, 20px) clamp(14px, 2.5vw, 24px) clamp(10px, 1.5vh, 14px) clamp(14px, 2.5vw, 24px) !important;
+  margin: 0 !important;
+}
+
+.skill-select-header {
+  flex-shrink: 0 !important;
+  width: 100%;
+}
+
+.skill-select-footer {
+  flex-shrink: 0 !important;
+  width: 100%;
+}
+
+.skill-select-scroll-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y !important;
+  overscroll-behavior: contain !important;
+  padding: 4px 6px 8px 4px;
+  width: 100%;
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 162, 78, 0.45) rgba(10, 12, 18, 0.6);
+}
+
+.skill-select-scroll-content::-webkit-scrollbar {
+  width: 6px;
+}
+.skill-select-scroll-content::-webkit-scrollbar-track {
+  background: rgba(8, 10, 15, 0.6);
+}
+.skill-select-scroll-content::-webkit-scrollbar-thumb {
+  background: rgba(212, 162, 78, 0.4);
+  border-radius: 3px;
+}
+.skill-select-scroll-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 162, 78, 0.7);
 }
 
 #skill-select-screen .skill-card {

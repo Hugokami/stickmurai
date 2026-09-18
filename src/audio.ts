@@ -42,9 +42,8 @@ if (typeof window !== 'undefined') {
 
 export const bgmAudio = new Audio();
 export const playlist = [
-  'audio/dark_ambient_reimagining.m4a',
-  'audio/aggressive_cinematic_taiko.m4a',
-  'audio/shadows_of_noh.m4a'
+  'audio/shadows_of_noh.m4a',
+  'audio/aggressive_cinematic_taiko.m4a'
 ];
 
 export let currentBgmIndex = 0;
