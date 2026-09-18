@@ -1,4 +1,4 @@
-import { bgmAudio, setPortalMuted, getPortalMuted } from './audio';
+import { bgmAudio, setPortalMuted, getPortalMuted, resumeAudioContext } from './audio';
 import { globals } from './globals';
 import { clearGameInputs } from './qol';
 
@@ -115,7 +115,7 @@ export class AdManager {
    * Automatically detects if the game is running on a partner portal (CrazyGames/Poki) 
    * and uses their SDK. Otherwise, displays the custom premium Japanese Mock Ad overlay.
    */
-  public static async showRewardedAd(type: 'revive' | 'blessing', callbacks: AdCallbacks) {
+  public static async showRewardedAd(type: 'revive' | 'blessing' | 'blessing-swift' | 'blessing-fortune' | 'double-reward' | string, callbacks: AdCallbacks) {
     // 1. Check for Poki SDK
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.rewardedBreak) {
       console.log(`[AdManager] Invoking Poki SDK for rewarded: ${type}`);
@@ -196,8 +196,8 @@ export class AdManager {
             }
           },
           adFinished: () => {
-            console.log("[AdManager] CrazyGames rewarded ad finished successfully.");
-            if (adDidStart) this.unmuteSounds();
+            console.log("[AdManager] CrazyGames rewarded ad finished successfully. Started:", adDidStart);
+            this.unmuteSounds();
             if (pausedByAd) {
               globals.gameState = 'playing';
               try {
@@ -208,7 +208,7 @@ export class AdManager {
           },
           adError: (error: any) => {
             console.warn("[AdManager] CrazyGames rewarded ad unavailable:", error);
-            if (adDidStart) this.unmuteSounds();
+            this.unmuteSounds();
             if (pausedByAd) {
               globals.gameState = 'playing';
               try {
@@ -311,8 +311,8 @@ export class AdManager {
             }
           },
           adFinished: () => {
-            console.log("[AdManager] CrazyGames midgame ad finished");
-            if (adDidStart) this.unmuteSounds();
+            console.log("[AdManager] CrazyGames midgame ad finished. Started:", adDidStart);
+            this.unmuteSounds();
             if (pausedByAd) {
               globals.gameState = 'playing';
               try { if (cgSdk.game?.gameplayStart) cgSdk.game.gameplayStart(); } catch(e) {}
@@ -321,7 +321,7 @@ export class AdManager {
           },
           adError: (err: any) => {
             console.warn("[AdManager] CrazyGames midgame ad error:", err);
-            if (adDidStart) this.unmuteSounds();
+            this.unmuteSounds();
             if (pausedByAd) {
               globals.gameState = 'playing';
               try { if (cgSdk.game?.gameplayStart) cgSdk.game.gameplayStart(); } catch(e) {}
@@ -359,11 +359,13 @@ export class AdManager {
    * Mute game background music and Web Audio during ads.
    */
   private static muteSounds() {
+    if (this.isAdPlaying) return; // Re-entrance guard: do not re-sample or re-mute if already playing!
     this.isAdPlaying = true;
     try { clearGameInputs(); } catch(e) {}
-    this.wasPortalMutedBeforeAd = typeof getPortalMuted === 'function' ? getPortalMuted() : false;
+    const urlMuted = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('muteAudio') === 'true');
+    this.wasPortalMutedBeforeAd = urlMuted || (typeof getPortalMuted === 'function' ? getPortalMuted() : false);
     if (bgmAudio) {
-      this.originalVolume = bgmAudio.volume;
+      if (bgmAudio.volume > 0) this.originalVolume = bgmAudio.volume;
       bgmAudio.volume = 0;
       bgmAudio.muted = true;
       if (!bgmAudio.paused) {
@@ -381,15 +383,37 @@ export class AdManager {
   private static unmuteSounds() {
     this.isAdPlaying = false;
     try { clearGameInputs(); } catch(e) {}
-    if (!this.wasPortalMutedBeforeAd && typeof setPortalMuted === 'function') {
-      try { setPortalMuted(false); } catch(e) {}
+    const urlMuted = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('muteAudio') === 'true');
+    const wasMuted = this.wasPortalMutedBeforeAd;
+    const shouldMute = urlMuted || wasMuted;
+    this.wasPortalMutedBeforeAd = false;
+    if (typeof setPortalMuted === 'function') {
+      try { setPortalMuted(shouldMute); } catch(e) {}
     }
     if (bgmAudio) {
-      bgmAudio.muted = this.wasPortalMutedBeforeAd;
-      bgmAudio.volume = this.originalVolume;
-      if (!this.wasPortalMutedBeforeAd && bgmAudio.paused) {
+      bgmAudio.muted = shouldMute;
+      bgmAudio.volume = shouldMute ? 0 : (this.originalVolume > 0 ? this.originalVolume : 0.5);
+      if (!shouldMute && bgmAudio.paused) {
         try { bgmAudio.play().catch(() => {}); } catch(e) {}
       }
+    }
+    if (!shouldMute && typeof resumeAudioContext === 'function') {
+      try { resumeAudioContext(); } catch(e) {}
+    }
+
+    // Wake up Web Audio context on the first user interaction after ad completes/closes
+    if (typeof window !== 'undefined' && !shouldMute) {
+      const wakeAudio = () => {
+        try {
+          if (typeof resumeAudioContext === 'function') resumeAudioContext();
+        } catch(e) {}
+        window.removeEventListener('pointerdown', wakeAudio);
+        window.removeEventListener('touchstart', wakeAudio);
+        window.removeEventListener('keydown', wakeAudio);
+      };
+      window.addEventListener('pointerdown', wakeAudio, { once: true, passive: true });
+      window.addEventListener('touchstart', wakeAudio, { once: true, passive: true });
+      window.addEventListener('keydown', wakeAudio, { once: true, passive: true });
     }
   }
 
@@ -402,7 +426,7 @@ export class AdManager {
   /**
    * Renders and animates the traditional Japanese themed mock ad modal.
    */
-  private static showMockAdModal(type: 'revive' | 'blessing', callbacks: AdCallbacks) {
+  private static showMockAdModal(type: 'revive' | 'blessing' | 'blessing-swift' | 'blessing-fortune' | 'double-reward' | string, callbacks: AdCallbacks) {
     this.muteSounds();
 
     // Create container

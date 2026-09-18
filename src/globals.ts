@@ -291,7 +291,13 @@ export const globals = {
   p2Kills: 0,
 
   hasRevivedThisRun: false,
-  activeBlessing: null as 'swift_strike' | 'fortune' | null,
+  activeBlessing: null as 'swift_strike' | 'fortune' | 'both' | null,
+  stageBlessings: {
+    swift_strike: { unlocked: false, active: false },
+    fortune: { unlocked: false, active: false }
+  },
+  stageFortuneMult: 1.0,
+  stageDoubleRewardClaimed: false,
   zenFieldActiveTimer: 0,
   zenFieldTickTimer: 0,
 

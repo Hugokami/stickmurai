@@ -358,6 +358,13 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       globals.maxStageUnlocked = Math.max(globals.maxStageUnlocked || 1, globals.currentStage);
       safeStorage.setItem('stickmurai_current_stage', globals.currentStage.toString());
       safeStorage.setItem('stickmurai_max_stage', globals.maxStageUnlocked.toString());
+      // Reset blessings and bounties once stage advances so new stage can be rewarded
+      globals.stageBlessings.swift_strike = { unlocked: false, active: false };
+      globals.stageBlessings.fortune = { unlocked: false, active: false };
+      globals.stageDoubleRewardClaimed = false;
+      globals.stageFortuneMult = 1.0;
+      globals.activeBlessing = null;
+      updateBlessingSelectionUI();
       globals.runTime = 0;
       globals.dayNightPhase = 'dawn';
       globals.calamityEvent = 'none';
@@ -835,16 +842,25 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const swiftBtn = document.getElementById('blessing-swift-btn');
   if (swiftBtn) {
     swiftBtn.addEventListener('click', () => {
-      if (globals.activeBlessing === 'swift_strike') {
-        globals.activeBlessing = null;
+      // If already unlocked for current stage, toggle active without re-watching ad!
+      if (globals.stageBlessings?.swift_strike?.unlocked) {
+        globals.stageBlessings.swift_strike.active = !globals.stageBlessings.swift_strike.active;
+        globals.activeBlessing = globals.stageBlessings.swift_strike.active 
+          ? (globals.stageBlessings.fortune.active ? 'both' : 'swift_strike')
+          : (globals.stageBlessings.fortune.active ? 'fortune' : null);
         updateBlessingSelectionUI();
+        try { playShrineBlessing(); } catch(e) {}
         return;
       }
       
-      AdManager.showRewardedAd('blessing', {
+      AdManager.showRewardedAd('blessing-swift', {
         onComplete: () => {
-          globals.activeBlessing = 'swift_strike';
+          globals.stageBlessings.swift_strike.unlocked = true;
+          globals.stageBlessings.swift_strike.active = true;
+          globals.activeBlessing = globals.stageBlessings.fortune.active ? 'both' : 'swift_strike';
           updateBlessingSelectionUI();
+          try { playShrineBlessing(); } catch(e) {}
+          showToast(globals.currentLang === 'ja' ? '⚡ 神速の構えが解放されました！' : '⚡ Swift Strike Stance Unlocked!');
         },
         onFailed: (err) => {
           console.warn("[AdManager] Blessing ad failed:", err);
@@ -863,16 +879,25 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const fortuneBtn = document.getElementById('blessing-fortune-btn');
   if (fortuneBtn) {
     fortuneBtn.addEventListener('click', () => {
-      if (globals.activeBlessing === 'fortune') {
-        globals.activeBlessing = null;
+      // If already unlocked for current stage, toggle active without re-watching ad!
+      if (globals.stageBlessings?.fortune?.unlocked) {
+        globals.stageBlessings.fortune.active = !globals.stageBlessings.fortune.active;
+        globals.activeBlessing = globals.stageBlessings.fortune.active 
+          ? (globals.stageBlessings.swift_strike.active ? 'both' : 'fortune')
+          : (globals.stageBlessings.swift_strike.active ? 'swift_strike' : null);
         updateBlessingSelectionUI();
+        try { playShrineBlessing(); } catch(e) {}
         return;
       }
       
-      AdManager.showRewardedAd('blessing', {
+      AdManager.showRewardedAd('blessing-fortune', {
         onComplete: () => {
-          globals.activeBlessing = 'fortune';
+          globals.stageBlessings.fortune.unlocked = true;
+          globals.stageBlessings.fortune.active = true;
+          globals.activeBlessing = globals.stageBlessings.swift_strike.active ? 'both' : 'fortune';
           updateBlessingSelectionUI();
+          try { playSynthesizedSingingBowl(); } catch(e) {}
+          showToast(globals.currentLang === 'ja' ? '🔮 招福の加護が解放されました！' : '🔮 Fortune Blessing Unlocked!');
         },
         onFailed: (err) => {
           console.warn("[AdManager] Blessing ad failed:", err);
@@ -2076,28 +2101,75 @@ export function updatePauseUpgradesList() {
 export function updateBlessingSelectionUI() {
   const swiftBtn = document.getElementById('blessing-swift-btn');
   const fortuneBtn = document.getElementById('blessing-fortune-btn');
+  const isJa = globals.currentLang === 'ja';
   
   if (swiftBtn) {
     AdManager.measure('rewarded', 'blessing-swift', 'visible');
     const costText = swiftBtn.querySelector('.blessing-cost-text') as HTMLElement;
-    if (globals.activeBlessing === 'swift_strike') {
-      swiftBtn.classList.add('active');
-      if (costText) costText.innerText = '✓ ACTIVE';
+    const isUnlocked = !!globals.stageBlessings?.swift_strike?.unlocked;
+    const isActive = !!globals.stageBlessings?.swift_strike?.active || globals.activeBlessing === 'swift_strike' || globals.activeBlessing === 'both';
+    
+    if (isUnlocked) {
+      if (isActive) {
+        swiftBtn.classList.add('active');
+        swiftBtn.style.borderColor = '#38bdf8';
+        swiftBtn.style.background = 'rgba(56, 189, 248, 0.18)';
+        if (costText) {
+          costText.innerText = isJa ? '✓ 有効 (解放済み)' : '✓ ACTIVE (Unlocked)';
+          costText.style.color = '#38bdf8';
+        }
+      } else {
+        swiftBtn.classList.remove('active');
+        swiftBtn.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+        swiftBtn.style.background = 'rgba(12, 13, 18, 0.92)';
+        if (costText) {
+          costText.innerText = isJa ? '装備する (解放済み)' : 'EQUIP (Unlocked)';
+          costText.style.color = '#94a3b8';
+        }
+      }
     } else {
       swiftBtn.classList.remove('active');
-      if (costText) costText.innerText = '(Watch Ad to Unlock)';
+      swiftBtn.style.borderColor = 'rgba(212, 162, 78, 0.4)';
+      swiftBtn.style.background = 'rgba(12, 13, 18, 0.92)';
+      if (costText) {
+        costText.innerText = isJa ? '(広告を見て解放)' : '(Watch Ad to Unlock)';
+        costText.style.color = '#ffd700';
+      }
     }
   }
   
   if (fortuneBtn) {
     AdManager.measure('rewarded', 'blessing-fortune', 'visible');
     const costText = fortuneBtn.querySelector('.blessing-cost-text') as HTMLElement;
-    if (globals.activeBlessing === 'fortune') {
-      fortuneBtn.classList.add('active');
-      if (costText) costText.innerText = '✓ ACTIVE';
+    const isUnlocked = !!globals.stageBlessings?.fortune?.unlocked;
+    const isActive = !!globals.stageBlessings?.fortune?.active || globals.activeBlessing === 'fortune' || globals.activeBlessing === 'both';
+    
+    if (isUnlocked) {
+      if (isActive) {
+        fortuneBtn.classList.add('active');
+        fortuneBtn.style.borderColor = '#ffd700';
+        fortuneBtn.style.background = 'rgba(255, 215, 0, 0.18)';
+        if (costText) {
+          costText.innerText = isJa ? '✓ 有効 (解放済み)' : '✓ ACTIVE (Unlocked)';
+          costText.style.color = '#ffd700';
+        }
+      } else {
+        fortuneBtn.classList.remove('active');
+        fortuneBtn.style.borderColor = 'rgba(255, 215, 0, 0.4)';
+        fortuneBtn.style.background = 'rgba(12, 13, 18, 0.92)';
+        if (costText) {
+          costText.innerText = isJa ? '装備する (解放済み)' : 'EQUIP (Unlocked)';
+          costText.style.color = '#94a3b8';
+        }
+      }
     } else {
       fortuneBtn.classList.remove('active');
-      if (costText) costText.innerText = '(Watch Ad to Unlock)';
+      fortuneBtn.style.borderColor = 'rgba(212, 162, 78, 0.4)';
+      fortuneBtn.style.background = 'rgba(12, 13, 18, 0.92)';
+      if (costText) {
+        costText.innerText = isJa ? '(広告を見て解放)' : '(Watch Ad to Unlock)';
+        costText.style.color = '#ffd700';
+      }
     }
   }
 }
@@ -3172,6 +3244,45 @@ export function triggerStageClear() {
   const magEl = document.getElementById('stage-clear-magatama');
   if (magEl) magEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
 
+  // Double Soul Bounty Rewarded Ad
+  const doubleBtn = document.getElementById('stage-clear-double-btn');
+  if (doubleBtn) {
+    globals.stageDoubleRewardClaimed = false;
+    doubleBtn.removeAttribute('disabled');
+    (doubleBtn as HTMLElement).style.opacity = '1';
+    (doubleBtn as HTMLElement).style.pointerEvents = 'auto';
+    doubleBtn.textContent = isJa ? `+2倍獲得 🔮` : `+DOUBLE 🔮`;
+    
+    // Replace with fresh button to eliminate duplicate event listeners
+    const freshBtn = doubleBtn.cloneNode(true) as HTMLButtonElement;
+    doubleBtn.parentNode?.replaceChild(freshBtn, doubleBtn);
+    
+    freshBtn.addEventListener('click', () => {
+      if (globals.stageDoubleRewardClaimed) return;
+      AdManager.showRewardedAd('double-reward', {
+        onComplete: () => {
+          globals.stageDoubleRewardClaimed = true;
+          globals.magatama = (globals.magatama || 0) + stageReward;
+          safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
+          refreshAllMagatamaDisplays();
+          try { playSynthesizedSingingBowl(); } catch(e) {}
+          freshBtn.setAttribute('disabled', 'true');
+          freshBtn.style.opacity = '0.6';
+          freshBtn.style.pointerEvents = 'none';
+          freshBtn.textContent = isJa ? `✓ 2倍達成！` : `✓ 2× DOUBLED`;
+          if (rewardEl) {
+            rewardEl.innerHTML = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[2× SOUL BOUNTY]</span> +${(stageReward * 2).toLocaleString()} 🔮`;
+          }
+          if (magEl) magEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
+          showToast(isJa ? `🔮 獲得勾玉が2倍になりました！(+${stageReward} 勾玉)` : `🔮 Soul bounty doubled! (+${stageReward} Magatama)`);
+        },
+        onFailed: () => {
+          showToast(isJa ? '広告の準備ができていません。後ほどお試しください。' : 'Ad not available right now. Please try again later.');
+        }
+      });
+    });
+  }
+
   const nextBtn = document.getElementById('stage-clear-next-btn');
   if (nextBtn) {
     const ctaText = nextBtn.querySelector('.cta-text');
@@ -3191,4 +3302,5 @@ callbacks.openShrineCommuneModal = openShrineCommuneModal;
 callbacks.openHermitPactModal = openHermitPactModal;
 callbacks.triggerDawnVictory = triggerDawnVictory;
 callbacks.triggerStageClear = triggerStageClear;
+callbacks.refreshAllMagatamaDisplays = refreshAllMagatamaDisplays;
 

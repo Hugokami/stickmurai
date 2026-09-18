@@ -1205,27 +1205,55 @@ function initGame() {
   });
   globals.levelUpRerollsRemaining = (globals.unlockedSeals && globals.unlockedSeals.includes(5)) ? 1 : 0;
   
-  // Apply pre-game Stance Blessings
-  if (globals.activeBlessing === 'swift_strike') {
-    globals.playerStats.attackCooldownBase *= 0.9; // +10% Attack Speed (90% cooldown)
+  // Apply Stage Stance Blessings (Rewarded Ads - Once per stage)
+  const isJa = globals.currentLang === 'ja';
+  const swiftActive = !!(globals.stageBlessings?.swift_strike?.active || globals.activeBlessing === 'swift_strike' || globals.activeBlessing === 'both');
+  const fortuneActive = !!(globals.stageBlessings?.fortune?.active || globals.activeBlessing === 'fortune' || globals.activeBlessing === 'both');
+
+  if (swiftActive) {
+    globals.playerStats.attackCooldownBase = Math.max(0.12, globals.playerStats.attackCooldownBase * 0.70); // +30% Attack Speed
+    globals.playerStats.moveSpeedMult = Math.min(1.80, globals.playerStats.moveSpeedMult * 1.25); // +25% Move Speed
+    globals.playerStats.dashCooldownBase = Math.max(0.35, globals.playerStats.dashCooldownBase - 0.20); // -0.2s Dash Cooldown
     globals.chosenPowerUps.push('blessingSwiftName');
     globals.delayedActions.push({
-      delay: 0.1,
+      delay: 0.2,
       run: () => {
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, globals.currentLang === 'ja' ? '神速の構え！' : 'Swift Strike Stance!', "#ffd700", 24));
-      }
-    });
-  } else if (globals.activeBlessing === 'fortune') {
-    const grantedUpgradeName = applyRandomStartUpgrade();
-    globals.delayedActions.push({
-      delay: 0.1,
-      run: () => {
-        const text = globals.currentLang === 'ja' ? `招福の加護: ${grantedUpgradeName}!` : `Fortune Blessing: ${grantedUpgradeName}!`;
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, text, "#00ffff", 24));
+        try { playSound(sfx.dash); } catch(e) {}
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, isJa ? '⚡ 神速の構え！(+30% 攻撃速度, +25% 移動, -0.2s 突進)' : '⚡ SWIFT STRIKE STANCE! (+30% Atk Spd, +25% Speed, -0.2s Dash)', "#38bdf8", 24));
       }
     });
   }
-  globals.activeBlessing = null; // Clear so it only applies to the current run
+
+  if (fortuneActive) {
+    // 1. Permanent Treasury Reward (+100 Magatama)
+    globals.magatama = (globals.magatama || 0) + 100;
+    try { safeStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
+    try { callbacks.refreshAllMagatamaDisplays(); } catch(e) {}
+    
+    // 2. Guaranteed Start Upgrades (2 upgrades)
+    const upg1 = applyRandomStartUpgrade();
+    const upg2 = applyRandomStartUpgrade();
+    
+    // 3. Stage Drop Multiplier (+50% Drop Boost)
+    globals.stageFortuneMult = 1.5;
+    globals.playerStats.fortuneMult = 1.5;
+    
+    // 4. Full Vitality & Flow
+    globals.lives = globals.maxLives;
+    globals.flow = 100;
+    
+    globals.delayedActions.push({
+      delay: 0.35,
+      run: () => {
+        try { playSynthesizedParry(); } catch(e) {}
+        const upgText = (upg1 !== 'None' ? upg1 : '') + (upg2 !== 'None' && upg2 !== upg1 ? (', ' + upg2) : '');
+        const text = isJa
+          ? `🔮 招福の加護: +100勾玉 & +150魂通貨 ${upgText ? ('& ' + upgText) : ''}!`
+          : `🔮 FORTUNE BLESSING: +100 🔮 & +150 Gold ${upgText ? ('& ' + upgText) : ''}!`;
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, text, "#ffd700", 24));
+      }
+    });
+  }
 
   // Apply Campaign / Ascension Upgrades (Permanent progression)
   if (globals.campaignUpgrades) {
@@ -1247,7 +1275,7 @@ function initGame() {
 
   // Initialize Stage Mode Objectives & Affixes
   globals.stageKills = 0;
-  globals.stageCurrency = 0;
+  globals.stageCurrency = fortuneActive ? 150 : 0;
   globals.stageAttackPotions = 0;
   globals.shopRefreshCount = 0;
   globals.shopOpen = false;
@@ -3660,7 +3688,8 @@ function killEnemy(e: Enemy) {
   if (isBossKill) {
     globals.stageBossDefeated = true;
   }
-  const currencyYield = isBossKill ? 50 : ((e as any).isElite ? 10 : 2);
+  const currencyFortuneMult = globals.stageFortuneMult || globals.playerStats?.fortuneMult || 1.0;
+  const currencyYield = Math.round((isBossKill ? 50 : ((e as any).isElite ? 10 : 2)) * currencyFortuneMult);
   globals.stageCurrency = (globals.stageCurrency || 0) + currencyYield;
 
   // Flying golden currency shards

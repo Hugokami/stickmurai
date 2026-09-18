@@ -428,7 +428,13 @@ export const resumeAudioContext = () => {
   try {
     const ctx = getAudioContext();
     if (ctx && ctx.state === 'suspended') {
-      ctx.resume();
+      ctx.resume().catch(() => {});
+    }
+    if (masterGain && ctx) {
+      try {
+        masterGain.gain.setValueAtTime(1, ctx.currentTime);
+        masterGain.gain.value = 1;
+      } catch(e) {}
     }
     decodeAllSfx();
   } catch (e) {}
