@@ -3,7 +3,7 @@ import { heroComparison, renderStageBriefing, permanentPreview } from './progres
 import { renderCodex } from './codex';
 import { completeJourneyStage, masteryBadge } from './journey';
 import { requestResume, handleBack, clearGameInputs, showToast } from './qol';
-import { globals, getStageAffix, getAscendantRank } from './globals';
+import { globals, getStageAffix, getAscendantRank, getStageMonReward } from './globals';
 import { safeStorage } from './storage';
 import { i18n, skillsData, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
 import { bgmAudio, pauseBgm } from './audio';
@@ -2141,8 +2141,17 @@ export function updateBlessingSelectionUI() {
   if (fortuneBtn) {
     AdManager.measure('rewarded', 'blessing-fortune', 'visible');
     const costText = fortuneBtn.querySelector('.blessing-cost-text') as HTMLElement;
+    const descText = fortuneBtn.querySelector('p') as HTMLElement;
     const isUnlocked = !!globals.stageBlessings?.fortune?.unlocked;
     const isActive = !!globals.stageBlessings?.fortune?.active || globals.activeBlessing === 'fortune' || globals.activeBlessing === 'both';
+    const monReward = getStageMonReward(globals.currentStage || 1);
+    const isBoss = (globals.currentStage || 1) % 5 === 0;
+    
+    if (descText) {
+      descText.innerHTML = isJa
+        ? `+${monReward.toLocaleString()}文, +150金貨, 2強化, +50%ドロップ${isBoss ? ' <b style="color:#ffd700;">(ボス1.5倍!)</b>' : ''}`
+        : `+${monReward.toLocaleString()} Mon, +150 Gold, 2 Powerups, +50% Drops${isBoss ? ' <b style="color:#ffd700;">(1.5× Boss Bonus!)</b>' : ''}`;
+    }
     
     if (isUnlocked) {
       if (isActive) {
@@ -2167,7 +2176,7 @@ export function updateBlessingSelectionUI() {
       fortuneBtn.style.borderColor = 'rgba(212, 162, 78, 0.4)';
       fortuneBtn.style.background = 'rgba(12, 13, 18, 0.92)';
       if (costText) {
-        costText.innerText = isJa ? '(広告を見て解放)' : '(Watch Ad to Unlock)';
+        costText.innerText = isJa ? `(広告を見て+${monReward.toLocaleString()}文解放)` : `(Watch Ad for +${monReward.toLocaleString()} Mon)`;
         costText.style.color = '#ffd700';
       }
     }
@@ -2379,7 +2388,7 @@ export function refreshAllMagatamaDisplays() {
   const pregameEl = document.getElementById('pregame-magatama-count');
   if (pregameEl) pregameEl.textContent = formatted;
   const stageClearEl = document.getElementById('stage-clear-magatama');
-  if (stageClearEl) stageClearEl.textContent = formatted + ' 🔮';
+  if (stageClearEl) stageClearEl.innerHTML = formatted + ' <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" />';
 }
 
 function processRedeemCode() {
@@ -2567,7 +2576,7 @@ export function populateDojoHeroGrid() {
       actionBtnHtml = `<button class="menu-btn btn-card equip-hero-btn" data-hero="${hero.id}" style="margin: 0; border-color: #d4a24e; color: #ffd700; cursor: pointer;">${isJa ? '装備する' : 'EQUIP HERO'}</button>`;
     } else {
       const canAfford = (globals.magatama || 0) >= hero.cost;
-      actionBtnHtml = `<button class="menu-btn btn-card buy-hero-btn" data-hero="${hero.id}" ${canAfford ? '' : 'disabled'} style="margin: 0; border-color: ${canAfford ? '#d4a24e' : '#64748b'}; color: ${canAfford ? '#ffd700' : '#94a3b8'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 15px rgba(212,162,78,0.25)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'};">${isJa ? `解放: ${hero.cost.toLocaleString()} 🔮` : `UNLOCK: ${hero.cost.toLocaleString()} 🔮`}</button>`;
+      actionBtnHtml = `<button class="menu-btn btn-card buy-hero-btn" data-hero="${hero.id}" ${canAfford ? '' : 'disabled'} style="margin: 0; border-color: ${canAfford ? '#d4a24e' : '#64748b'}; color: ${canAfford ? '#ffd700' : '#94a3b8'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 15px rgba(212,162,78,0.25)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; display: inline-flex; align-items: center; justify-content: center; gap: 4px;">${isJa ? `解放: ${hero.cost.toLocaleString()} 文` : `UNLOCK: ${hero.cost.toLocaleString()} Mon`} <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" /></button>`;
     }
 
     card.innerHTML = `
@@ -2584,7 +2593,7 @@ export function populateDojoHeroGrid() {
       </div>
       ${awakeningHtml}
       <div style="margin-top: auto; padding-top: 8px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0;">
-        ${!isUnlocked && hero.cost > globals.magatama ? `<div class="qol-shortfall">${isJa?'あと':'Need'} ${(hero.cost-globals.magatama).toLocaleString()} 🔮</div>` : ''}
+        ${!isUnlocked && hero.cost > globals.magatama ? `<div class="qol-shortfall" style="display: flex; align-items: center; justify-content: center; gap: 4px;">${isJa?'あと':'Need'} ${(hero.cost-globals.magatama).toLocaleString()} <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" /></div>` : ''}
         ${actionBtnHtml}
         <button class="menu-btn btn-card qol-hero-try" data-hero="${hero.id}">${isJa?'道場で試す':'TRY IN DOJO'}</button>
       </div>
@@ -2622,7 +2631,7 @@ export function populateDojoHeroGrid() {
       if (globals.unlockedHeroes.includes(heroId) || (globals.magatama || 0) < hero.cost) return;
 
       globals.magatama -= hero.cost;
-      window.dispatchEvent(new CustomEvent('qol-toast', { detail: `${isJa ? hero.nameJa : hero.nameEn} · ${isJa?'残高':'Remaining'} ${globals.magatama.toLocaleString()} 🔮` }));
+      window.dispatchEvent(new CustomEvent('qol-toast', { detail: `${isJa ? hero.nameJa : hero.nameEn} · ${isJa?'残高':'Remaining'} ${globals.magatama.toLocaleString()} Mon` }));
       if (!globals.unlockedHeroes.includes(heroId)) {
         globals.unlockedHeroes.push(heroId);
       }
@@ -2834,8 +2843,8 @@ export function triggerDawnVictory(_stats?: any) {
         <span style="color:#f43f5e; font-weight:bold;">${globals.runStats.bossesKilled}</span>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
-        <span>${isJa ? '黄泉の勾玉獲得' : 'Yomi Magatama Dawn Tribute'}:</span>
-        <span style="color:#c084fc; font-weight:bold;">+${dawnReward} 🔮</span>
+        <span>${isJa ? '黄泉の古銭獲得' : 'Ancient Mon Dawn Tribute'}:</span>
+        <span style="color:#ffd700; font-weight:bold; display:inline-flex; align-items:center; gap:4px;">+${dawnReward} <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" /></span>
       </div>
       <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
         <span>${isJa ? '解除した黄泉の封印' : 'Yomi Seals Awakened'}:</span>
@@ -3271,10 +3280,10 @@ export function triggerStageClear() {
           freshBtn.style.pointerEvents = 'none';
           freshBtn.textContent = isJa ? `✓ 2倍達成！` : `✓ 2× DOUBLED`;
           if (rewardEl) {
-            rewardEl.innerHTML = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[2× SOUL BOUNTY]</span> +${(stageReward * 2).toLocaleString()} 🔮`;
+            rewardEl.innerHTML = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[2× MON BOUNTY]</span> +${(stageReward * 2).toLocaleString()} <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" />`;
           }
-          if (magEl) magEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
-          showToast(isJa ? `🔮 獲得勾玉が2倍になりました！(+${stageReward} 勾玉)` : `🔮 Soul bounty doubled! (+${stageReward} Magatama)`);
+          if (magEl) magEl.innerHTML = (globals.magatama || 0).toLocaleString() + ' <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" />';
+          showToast(isJa ? `🪙 獲得文が2倍になりました！(+${stageReward} 文)` : `🪙 Treasury bounty doubled! (+${stageReward} Mon)`);
         },
         onFailed: () => {
           showToast(isJa ? '広告の準備ができていません。後ほどお試しください。' : 'Ad not available right now. Please try again later.');

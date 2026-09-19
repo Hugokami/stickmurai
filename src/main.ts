@@ -26,7 +26,7 @@ import { initRuntimeQol, isPractice, practiceStep, recordHurt, resetRunFeedback,
 import { assetReadiness, retryRequiredAssets, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
 import { safeStorage } from './storage';
 import { AdManager } from './adManager';
-import { globals, getStageAffix } from './globals';
+import { globals, getStageAffix, getStageMonReward } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
 import { i18n, loaderTips, startBackgroundAssetLoading, loadCoreCombatAssetsNow } from './assets';
 import {
@@ -1225,8 +1225,9 @@ function initGame() {
   }
 
   if (fortuneActive) {
-    // 1. Permanent Treasury Reward (+100 Magatama)
-    globals.magatama = (globals.magatama || 0) + 100;
+    // 1. Stage-Scaled Permanent Treasury Reward (+Mon)
+    const monReward = getStageMonReward(globals.currentStage || 1);
+    globals.magatama = (globals.magatama || 0) + monReward;
     try { safeStorage.setItem('stickmurai_magatama', globals.magatama.toString()); } catch(e) {}
     try { callbacks.refreshAllMagatamaDisplays(); } catch(e) {}
     
@@ -1247,9 +1248,10 @@ function initGame() {
       run: () => {
         try { playSynthesizedParry(); } catch(e) {}
         const upgText = (upg1 !== 'None' ? upg1 : '') + (upg2 !== 'None' && upg2 !== upg1 ? (', ' + upg2) : '');
+        const isBoss = (globals.currentStage || 1) % 5 === 0;
         const text = isJa
-          ? `🔮 招福の加護: +100勾玉 & +150魂通貨 ${upgText ? ('& ' + upgText) : ''}!`
-          : `🔮 FORTUNE BLESSING: +100 🔮 & +150 Gold ${upgText ? ('& ' + upgText) : ''}!`;
+          ? `🪙 招福の加護: +${monReward.toLocaleString()}文 & +150金貨 ${isBoss ? '(ボス1.5倍!) ' : ''}${upgText ? ('& ' + upgText) : ''}!`
+          : `🪙 FORTUNE BLESSING: +${monReward.toLocaleString()} Mon & +150 Gold ${isBoss ? '(1.5× Boss Bonus!) ' : ''}${upgText ? ('& ' + upgText) : ''}!`;
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, text, "#ffd700", 24));
       }
     });

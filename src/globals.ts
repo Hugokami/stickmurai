@@ -561,3 +561,20 @@ export function getAscendantRank(maxStage: number): { title: string; titleJa: st
   return { title: 'Ronin Aspirant', titleJa: '孤高の浪人', badge: '🎋', color: '#94a3b8' };
 }
 
+/**
+ * Calculates stage-scaled Mon (treasury currency) reward for rewarded ads.
+ * Scales dynamically so late-game rewarded ads remain relevant against high ascension costs.
+ */
+export function getStageMonReward(stage: number): number {
+  const s = Math.max(1, stage || 1);
+  const base = 100;
+  const linear = (s - 1) * 25;
+  const exp = Math.floor(Math.pow(s, 1.25) * 4);
+  let total = base + linear + exp;
+  if (s % 5 === 0) {
+    total = Math.round(total * 1.5);
+  }
+  return total;
+}
+
+

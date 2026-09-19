@@ -37,6 +37,9 @@ fs.mkdirSync(pokiFolder, { recursive: true });
 
 console.log('\n--- 2. Packaging Poki release for Poki Inspector & Platform ---');
 
+// Whitelist-based packager matching HTML5/CrazyGames standards:
+// Only package essential runtime files so Poki Inspector directory upload and ZIP upload
+// process cleanly without hitting browser file-count limits or missing index.html.
 const pythonScript = `
 import os, zipfile, sys, shutil
 
@@ -47,23 +50,55 @@ poki_folder = sys.argv[3]
 exclude_exts = {'.unitypackage', '.map', '.zip'}
 exclude_names = {'.ds_store', 'thumbs.db'}
 
-with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
-    for root, dirs, files in os.walk(dist_dir):
-        # Exclude sub-target release dirs if any exist inside dist
-        dirs[:] = [d for d in dirs if d.lower() not in {'crazygames', 'poki'}]
-        for file in files:
-            name_lower = file.lower()
-            if name_lower in exclude_names or any(name_lower.endswith(ext) for ext in exclude_exts):
-                continue
-            full_path = os.path.join(root, file)
-            rel_path = os.path.relpath(full_path, dist_dir)
-            
-            zf.write(full_path, rel_path)
-            dest_file = os.path.join(poki_folder, rel_path)
-            os.makedirs(os.path.dirname(dest_file), exist_ok=True)
-            shutil.copy2(full_path, dest_file)
+allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin', 'vite.svg', 'icons.svg'}
+allowed_dirs = {'assets', 'audio', 'fonts', 'fantasy_bg', 'ui', 'icons'}
 
-print(f"Poki ZIP packaged successfully: {zip_path}")
+files_to_pack = []
+
+# 1. Root files (guarantee index.html is top-priority root)
+for rf in allowed_root_files:
+    fp = os.path.join(dist_dir, rf)
+    if os.path.exists(fp):
+        files_to_pack.append((fp, rf))
+
+# 2. Whitelisted subdirectories
+for ad in allowed_dirs:
+    sdir = os.path.join(dist_dir, ad)
+    if os.path.exists(sdir):
+        for root, dirs, files in os.walk(sdir):
+            for f in files:
+                if f.lower() in exclude_names or os.path.splitext(f)[1].lower() in exclude_exts:
+                    continue
+                abs_path = os.path.join(root, f)
+                rel_path = os.path.relpath(abs_path, dist_dir).replace('\\\\', '/')
+                files_to_pack.append((abs_path, rel_path))
+
+# 3. Hero portraits
+portraits_dir = os.path.join(dist_dir, 'sprites', 'portraits')
+if os.path.exists(portraits_dir):
+    for f in os.listdir(portraits_dir):
+        if f.endswith('.png'):
+            fp = os.path.join(portraits_dir, f)
+            files_to_pack.append((fp, f'sprites/portraits/{f}'))
+
+# 4. Loader Character Sprites
+for s in range(1, 9):
+    fn = f'char_run_frame_{s}.png'
+    fp = os.path.join(dist_dir, 'sprites', fn)
+    if os.path.exists(fp):
+        files_to_pack.append((fp, f'sprites/{fn}'))
+
+with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
+    for abs_path, rel_path in files_to_pack:
+        # Write to ZIP with forward slashes for cross-platform compatibility
+        zf.write(abs_path, rel_path)
+        
+        # Write to poki/ folder with index.html at root
+        dest_file = os.path.join(poki_folder, *rel_path.split('/'))
+        os.makedirs(os.path.dirname(dest_file), exist_ok=True)
+        shutil.copy2(abs_path, dest_file)
+
+print(f"Poki ZIP packaged successfully with {len(files_to_pack)} runtime files: {zip_path}")
 `;
 
 const pyScriptPath = path.join(rootDir, '_poki_zip.py');

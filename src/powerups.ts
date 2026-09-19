@@ -13,6 +13,7 @@ import {
 } from './audio';
 import { Slash, FloatingText, Shockwave, Particle, AnimatedEffect } from './entities';
 import { bindDualListener } from './ui';
+import { AdManager } from './adManager';
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
 
@@ -904,8 +905,8 @@ export function renderShopModal() {
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="font-family: 'Orbitron', monospace; font-size: 15px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 14px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4);">
-            ◆ <span id="modal-currency-count">${globals.stageCurrency || 0}</span>
+          <div style="font-family: 'Orbitron', monospace; font-size: 15px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 14px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4); display: flex; align-items: center; gap: 6px;">
+            <img src="icons/stage_gold.png" class="hud-currency-icon" style="width: 17px; height: 17px;" alt="Gold" /> <span id="modal-currency-count">${globals.stageCurrency || 0}</span>
           </div>
         </div>
       </div>
@@ -962,24 +963,33 @@ export function renderShopModal() {
             }).join('')}
           </div>
 
-          <!-- Emergency Field Ration & Slash Elixir -->
+          <!-- Emergency Field Ration, Slash Elixir & Merchant Cache -->
           <div style="margin-top: auto; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); width: 100%; display: flex; flex-direction: column; gap: 6px;">
             <button id="shop-ration-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives ? 'disabled' : ''}>
-              <div style="display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: #f87171;">
-                <span style="font-size: 12px;">❤️</span>
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: #f87171;">
+                <img src="icons/potion_health.png" class="inline-currency-icon" style="width: 18px; height: 18px;" alt="Health Potion" />
                 <span>Field Ration (+1 HP)</span>
               </div>
-              <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.4); white-space: nowrap;">
-                ${globals.lives >= globals.maxLives ? 'MAX HP' : '◆ 20'}
+              <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.4); white-space: nowrap; display: flex; align-items: center; gap: 3px;">
+                ${globals.lives >= globals.maxLives ? 'MAX HP' : '<img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 13px; height: 13px;" /> 20'}
               </div>
             </button>
             <button id="shop-potion-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 20 ? 'disabled' : ''}>
-              <div style="display: flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 700; color: #fbbf24;">
-                <span style="font-size: 12px;">⚔️</span>
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: #fbbf24;">
+                <img src="icons/potion_attack.png" class="inline-currency-icon" style="width: 18px; height: 18px;" alt="Slash Elixir" />
                 <span>Slash Elixir (+5% DMG)</span>
               </div>
-              <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.4); white-space: nowrap;">
-                ◆ 20
+              <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.4); white-space: nowrap; display: flex; align-items: center; gap: 3px;">
+                <img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 13px; height: 13px;" /> 20
+              </div>
+            </button>
+            <button id="shop-ad-gold-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(212, 162, 78, 0.16); border: 1px solid rgba(251, 191, 36, 0.6); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;">
+              <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: #ffd700;">
+                <img src="icons/stage_gold_chest.png" class="inline-currency-icon" style="width: 20px; height: 20px;" alt="Merchant Cache" />
+                <span>Merchant Cache (+150 Gold)</span>
+              </div>
+              <div style="font-family: 'Orbitron', monospace; font-size: 9.5px; font-weight: bold; color: #ffd700; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.4); white-space: nowrap;">
+                AD
               </div>
             </button>
           </div>
@@ -1097,8 +1107,8 @@ export function renderShopModal() {
           ${isFrozen ? '❄️ LOCKED' : '🔒 LOCK'}
         </button>
 
-        <button class="shop-buy-btn" style="background: ${canAfford ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${canAfford ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; color: ${canAfford ? '#fbbf24' : '#64748b'}; border-radius: 4px; padding: 3px 8px; font-size: 10.5px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-family: 'Orbitron', monospace; white-space: nowrap; flex-shrink: 0;" ${canAfford ? '' : 'disabled'}>
-          ${slot.discountPct ? `<span style="text-decoration: line-through; opacity: 0.6; font-size: 8.5px; margin-right: 3px;">◆${slot.originalPrice}</span>` : ''}◆ ${slot.price} <span style="font-size: 8.5px; opacity: 0.7; margin-left: 3px; background: rgba(0,0,0,0.35); padding: 1px 4px; border-radius: 3px; font-family: monospace;">[${idx + 1}]</span>
+        <button class="shop-buy-btn" style="background: ${canAfford ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${canAfford ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; color: ${canAfford ? '#fbbf24' : '#64748b'}; border-radius: 4px; padding: 3px 8px; font-size: 10.5px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-family: 'Orbitron', monospace; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;" ${canAfford ? '' : 'disabled'}>
+          ${slot.discountPct ? `<span style="text-decoration: line-through; opacity: 0.6; font-size: 8.5px; margin-right: 3px;"><img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 10px; height: 10px;" />${slot.originalPrice}</span>` : ''}<img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 12px; height: 12px;" /> ${slot.price} <span style="font-size: 8.5px; opacity: 0.7; margin-left: 3px; background: rgba(0,0,0,0.35); padding: 1px 4px; border-radius: 3px; font-family: monospace;">[${idx + 1}]</span>
         </button>
       </div>
     `;
@@ -1236,6 +1246,24 @@ export function renderShopModal() {
     potionBtn.addEventListener('pointerup', stopPotionHold);
     potionBtn.addEventListener('pointercancel', stopPotionHold);
     potionBtn.addEventListener('pointerleave', stopPotionHold);
+  }
+
+  const adGoldBtn = modal.querySelector('#shop-ad-gold-btn') as HTMLElement;
+  if (adGoldBtn) {
+    bindDualListener(adGoldBtn, () => {
+      AdManager.showRewardedAd('shop-gold-cache', {
+        onComplete: () => {
+          globals.stageCurrency = (globals.stageCurrency || 0) + 150;
+          callbacks.updateUI();
+          playSound(sfx.magatamaPickup, 1.0);
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "+150 GOLD CACHE! 💰", "#ffd700", 26));
+          renderShopModal();
+        },
+        onFailed: (err) => {
+          console.warn("[Shop] Gold Cache Ad failed:", err);
+        }
+      });
+    });
   }
 
   const refreshBtn = modal.querySelector('#shop-refresh-btn') as HTMLElement;
