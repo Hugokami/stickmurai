@@ -92,7 +92,7 @@ let shogunSpawned = false;
 // Import helper modules
 import { initInput, pollGamepad } from './input';
 import { initUI, updateUI, updateEnhanceButton, updateStanceSwitchButton, toggleAetherionStance, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
-import { initRenderer, draw, resetCanvasVisuals } from './renderer';
+import { initRenderer, draw, resetCanvasVisuals, resizeCanvas } from './renderer';
 import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate, openShop, refreshShop } from './powerups';
 import { initFullscreen, isCrazyGames, requestFullscreen } from './fullscreen';
 
@@ -588,6 +588,8 @@ function checkOrientationAndFullscreen() {
         rotateAutoDismissTimer = null;
       }
       rotatePrompt.style.display = 'none';
+      resizeCanvas();
+      if ((callbacks as any).updateUI) (callbacks as any).updateUI();
       if (canGoFullscreen && !isCurrentlyFS && fsApproved) {
         const triggerFSOnGesture = () => {
           const requestFS = docEl.requestFullscreen || 
@@ -637,6 +639,14 @@ function startApp() {
       () => { initGame(); }  // Restart run
     );
     initFullscreen();
+
+    // Multi-stage orientation settling passes for direct mobile landscape boots
+    [20, 60, 150, 300, 600, 1000].forEach(delay => {
+      setTimeout(() => {
+        if (isMobile) checkOrientationAndFullscreen();
+        resizeCanvas();
+      }, delay);
+    });
     initQol(initGame);
     initJourney(initGame,HEROES_DATA);
     initRuntimeQol(initGame);
@@ -1993,7 +2003,7 @@ function triggerVortexShatter(x: number, y: number) {
     const dx = x - e.x;
     const dy = y - e.y;
     const distSq = dx * dx + dy * dy;
-    if (distSq < 350 * 350) {
+    if (distSq < 520 * 520) {
       e.x = x;
       e.y = y;
       hitEnemy(e, Math.max(12, Math.round(getCurrentSlashDamage() * 2.2)));
@@ -2037,7 +2047,7 @@ function triggerLightningDischarge(sx: number, sy: number, ex: number, ey: numbe
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const d = distToSegment(e.x, e.y, sx, sy, ex, ey);
-    if (d < 250) {
+    if (d < 320 || Math.hypot(e.x - sx, e.y - sy) < 240 || Math.hypot(e.x - ex, e.y - ey) < 240) {
       hitEnemy(e, Math.max(16, Math.round(getCurrentSlashDamage() * 2.8)));
       e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
       for (let j = 0; j < 8; j++) {
@@ -2428,13 +2438,15 @@ function triggerAetherionDimensionRend(charge: number) {
   playEnergyBeam(1.2);
   playSynthesizedThunder();
 
-  // Deal dimensional rend damage to all enemies along dash line
+  // Deal dimensional rend damage to all enemies along dash line (buffed hitbox)
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const distToLine = Math.abs((endY - startY) * e.x - (endX - startX) * e.y + endX * startY - endY * startX) / (Math.hypot(endX - startX, endY - startY) || 1);
-    const inBBox = e.x >= Math.min(startX, endX) - 60 && e.x <= Math.max(startX, endX) + 60 &&
-                   e.y >= Math.min(startY, endY) - 60 && e.y <= Math.max(startY, endY) + 60;
-    if (distToLine < 80 && inBBox) {
+    const inBBox = e.x >= Math.min(startX, endX) - 180 && e.x <= Math.max(startX, endX) + 180 &&
+                   e.y >= Math.min(startY, endY) - 180 && e.y <= Math.max(startY, endY) + 180;
+    const dStart = Math.hypot(e.x - startX, e.y - startY);
+    const dEnd = Math.hypot(e.x - endX, e.y - endY);
+    if ((distToLine < 220 && inBBox) || dStart < 240 || dEnd < 240) {
       if (typeof (e as any).addPostureDamage === 'function') {
         (e as any).addPostureDamage(50);
       }
@@ -2450,7 +2462,7 @@ function triggerAetherionDimensionRend(charge: number) {
     globals.delayedActions.push({
       delay: 0.08 * i,
       run: () => {
-        globals.shockwaves.push(new Shockwave(px, py, '#38bdf8', 120));
+        globals.shockwaves.push(new Shockwave(px, py, '#38bdf8', 220));
         for (let p = 0; p < 6; p++) {
           globals.particles.push(Particle.acquire(px, py, '#ffffff', 200, 0.3, 2.5));
         }
@@ -2582,13 +2594,13 @@ function executeSwiftCounter() {
   globals.screenShake += 8;
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 50, "SWIFT COUNTER!", "#ffb7c5", 22));
   
-  // Spawn sakura slash and particles along the path
+  // Spawn sakura slash and particles along the path (buffed visual & hitbox)
   const midX = startX + Math.cos(angle) * 125;
   const midY = startY + Math.sin(angle) * 125;
-  globals.slashes.push(Slash.acquire(midX, midY, angle, 1.3, true, 'sakura', false, globals.player));
+  globals.slashes.push(Slash.acquire(midX, midY, angle, 2.2, true, 'sakura', false, globals.player));
   const dirBlue = (vfxAnims as any).impacts?.directionalBlue;
   if (dirBlue && dirBlue.length > 0) {
-    globals.animatedEffects.push(new AnimatedEffect(midX, midY, dirBlue, 0.32, 1.8, angle));
+    globals.animatedEffects.push(new AnimatedEffect(midX, midY, dirBlue, 0.35, 2.4, angle));
   }
   
   for (let i = 0; i <= 12; i++) {
@@ -2605,7 +2617,9 @@ function executeSwiftCounter() {
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const dist = distToSegment(e.x, e.y, startX, startY, globals.player.x, globals.player.y);
-    if (dist < 120) {
+    const dStart = Math.hypot(e.x - startX, e.y - startY);
+    const dEnd = Math.hypot(e.x - globals.player.x, e.y - globals.player.y);
+    if (dist < 260 || dStart < 220 || dEnd < 220) {
       (e as any).airborneZ = 25;
       (e as any).airborneVz = 850;
       (e as any).canAerialCleave = true;
@@ -2744,13 +2758,15 @@ function executeThunderclapAndFlash() {
     globals.animatedEffects.push(new AnimatedEffect(endX, endY - 20, lStrike, 0.4, 2.2));
   }
 
-  // Hit path enemies
+  // Hit path enemies (buffed hitbox)
   let firstHit: Enemy | null = null;
   const thunderDmg = Math.max(8, Math.round(10 + getCurrentSlashDamage() * 2.2));
   globals.enemies.forEach(e => {
     if (e.state === 'dead') return;
     const dist = distToSegment(e.x, e.y, startX, startY, endX, endY);
-    if (dist < 180) {
+    const dStart = Math.hypot(e.x - startX, e.y - startY);
+    const dEnd = Math.hypot(e.x - endX, e.y - endY);
+    if (dist < 280 || dStart < 240 || dEnd < 240) {
       hitEnemy(e, thunderDmg);
       e.stunTimer = Math.max(e.stunTimer || 0, 1.5);
       if (!firstHit) firstHit = e;

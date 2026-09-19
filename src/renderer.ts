@@ -64,20 +64,63 @@ export function initRenderer(canvasElement: HTMLCanvasElement) {
   resizeCanvas();
   window.addEventListener('resize', debouncedResize);
   window.addEventListener('orientationchange', debouncedResize);
+  window.addEventListener('pageshow', debouncedResize);
+  window.addEventListener('load', debouncedResize);
   
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', debouncedResize);
+    window.visualViewport.addEventListener('scroll', debouncedResize);
   }
   
-  if (screen.orientation) {
+  if (typeof screen !== 'undefined' && screen.orientation) {
     screen.orientation.addEventListener('change', debouncedResize);
   }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(() => {
+      debouncedResize();
+    });
+    ro.observe(document.documentElement);
+    if (document.body) ro.observe(document.body);
+    const appEl = document.getElementById('app');
+    if (appEl) ro.observe(appEl);
+  }
+
+  // Multi-tier delayed resize passes for mobile direct landscape settling
+  [20, 60, 150, 300, 600, 1000].forEach(ms => {
+    setTimeout(debouncedResize, ms);
+  });
 }
 
 export function resizeCanvas() {
   if (!canvas || !ctx) return;
-  globals.width = window.innerWidth;
-  globals.height = window.innerHeight;
+
+  const winW = window.innerWidth || 0;
+  const winH = window.innerHeight || 0;
+  const docW = document.documentElement ? document.documentElement.clientWidth : 0;
+  const docH = document.documentElement ? document.documentElement.clientHeight : 0;
+  const vvW = (window.visualViewport && window.visualViewport.width) ? Math.round(window.visualViewport.width) : 0;
+  const vvH = (window.visualViewport && window.visualViewport.height) ? Math.round(window.visualViewport.height) : 0;
+
+  // Determine physical orientation
+  const isScreenLandscape = (typeof screen !== 'undefined' && screen.orientation && screen.orientation.type)
+    ? screen.orientation.type.includes('landscape')
+    : (typeof window !== 'undefined' && typeof (window as any).orientation === 'number')
+      ? Math.abs((window as any).orientation) === 90
+      : (winW > winH || docW > docH);
+
+  let bestW = Math.max(winW, docW, vvW);
+  let bestH = Math.max(winH, docH, vvH);
+
+  // If device is held in landscape mode but browser reported un-rotated portrait dimensions
+  if (isScreenLandscape && bestW < bestH) {
+    const tmp = bestW;
+    bestW = bestH;
+    bestH = tmp;
+  }
+
+  globals.width = bestW || window.innerWidth || 800;
+  globals.height = bestH || window.innerHeight || 600;
   
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
   const dprCap = (globals.graphicsSettings === 'low' || isTouchDevice) ? 1.0 : 1.25;
@@ -88,10 +131,10 @@ export function resizeCanvas() {
   ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
 
   const targetVW = 1650;
-    const baseZoom = Math.min(1, globals.width / targetVW);
-    globals.gameZoom = baseZoom / (globals.cameraZoomLevel || 1);
-    globals.vw = globals.width / globals.gameZoom;
-    globals.vh = globals.height / globals.gameZoom;
+  const baseZoom = Math.min(1, globals.width / targetVW);
+  globals.gameZoom = baseZoom / (globals.cameraZoomLevel || 1);
+  globals.vw = globals.width / globals.gameZoom;
+  globals.vh = globals.height / globals.gameZoom;
 }
 
 let resizeTimeout: any = null;
@@ -112,7 +155,14 @@ export function debouncedResize() {
 }
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  // 1. Guaranteed Lush Green Base (zero black void, zero gaps)
+  // 1. Guaranteed Full Canvas Lush Green Base (zero black void across physical canvas buffer)
+  ctx.save();
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#527c2f';
+  ctx.fillRect(0, 0, canvas ? canvas.width : globals.width * currentDpr, canvas ? canvas.height : globals.height * currentDpr);
+  ctx.restore();
+
+  // Draw green base across transformed logical dimensions
   ctx.fillStyle = '#527c2f';
   ctx.fillRect(0, 0, globals.width, globals.height);
 

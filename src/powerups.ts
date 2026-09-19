@@ -326,7 +326,7 @@ function applyStatLevelUp() {
   globals.playerStats.moveSpeedMult = Math.min(1.5, (globals.playerStats.moveSpeedMult || 1.0) + 0.02);
 
   const bonusRolls = [
-    { key: 'slashBonusDmgPct', amount: 0.12, label: '+12% Slash DMG' },
+    { key: 'slashBonusDmgPct', amount: 0.12, label: '+12% ATK' },
     { key: 'attackCooldownBase', amount: -0.02, label: '-0.02s Attack CD' },
     { key: 'dashCooldownBase', amount: -0.08, label: '-0.08s Dash CD' },
     { key: 'postureDmgBonus', amount: 3, label: '+3 Posture Break' },
@@ -711,7 +711,7 @@ export interface ShopSlot {
 }
 
 export const SYNERGY_INFO: Record<SynergyType, { label: string; icon: string; color: string; desc2: string; desc4: string }> = {
-  blade: { label: 'Blade Art', icon: '⚔️', color: '#f43f5e', desc2: '+15% Slash DMG', desc4: 'Inflicts Bleed' },
+  blade: { label: 'Blade Art', icon: '⚔️', color: '#f43f5e', desc2: '+15% ATK', desc4: 'Inflicts Bleed' },
   flow: { label: 'Flow Chi', icon: '🌊', color: '#06b6d4', desc2: '+25% Flow Gain', desc4: 'Ult Flow Cost -20%' },
   shadow: { label: 'Shadow Step', icon: '👤', color: '#a855f7', desc2: '-15% Dash CD', desc4: 'Shadow Clones' },
   iron: { label: 'Iron Guard', icon: '🛡️', color: '#eab308', desc2: '+4 Posture Break', desc4: 'Parry Deflects 200%' },
@@ -929,7 +929,7 @@ export function renderShopModal() {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 10px;">
             <div style="color: #94a3b8;">Health: <b style="color: #ef4444;">${globals.lives}/${globals.maxLives} ❤️</b></div>
             <div style="color: #94a3b8;">Level: <b style="color: #ffd700;">LVL ${globals.level}</b></div>
-            <div style="color: #94a3b8;">Slash DMG: <b style="color: #4ade80;">${((callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1).toFixed(1)} (+${Math.round((globals.playerStats.slashBonusDmgPct || 0) * 100)}%)</b></div>
+            <div style="color: #94a3b8;">ATK: <b style="color: #4ade80;">${((callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1).toFixed(1)} (+${Math.round((globals.playerStats.slashBonusDmgPct || 0) * 100)}%)</b></div>
             <div style="color: #94a3b8;">Iaijutsu: <b style="color: #00ffff;">+${globals.playerStats.iaijutsuBonusDmg || 0}</b></div>
             <div style="color: #94a3b8;">Attack CD: <b style="color: #cbd5e1;">${globals.playerStats.attackCooldownBase.toFixed(2)}s</b></div>
             <div style="color: #94a3b8;">Dash CD: <b style="color: #cbd5e1;">${globals.playerStats.dashCooldownBase.toFixed(2)}s</b></div>
@@ -978,7 +978,7 @@ export function renderShopModal() {
             <button id="shop-potion-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 50 ? 'disabled' : ''}>
               <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: #fbbf24;">
                 <img src="icons/potion_attack.png" class="inline-currency-icon" style="width: 18px; height: 18px;" alt="Slash Elixir" />
-                <span>Slash Elixir (+5% DMG)</span>
+                <span>Slash Elixir (+5% ATK)</span>
               </div>
               <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 50 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.4); white-space: nowrap; display: flex; align-items: center; gap: 3px;">
                 <img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 13px; height: 13px;" /> 50

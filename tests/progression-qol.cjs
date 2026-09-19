@@ -31,7 +31,7 @@ test('hero comparison uses implemented Satyr modifiers',()=>{
  const html=heroComparison('satyr');
  assert.match(html,/Attack cooldown ×: 1 → 0.8/);
  assert.match(html,/Move speed ×: 1.05 → 1.18/);
- assert.match(html,/Bonus slash damage: 0% → 50%/);
+ assert.match(html,/Bonus (slash damage|ATK): 0% → 50%/);
  assert.match(html,/Base crit chance: 5% → 21%/);
  assert.match(html,/Skill cooldown ×: 1 → 0.92/);
 });

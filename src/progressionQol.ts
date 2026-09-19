@@ -64,12 +64,12 @@ export function renderStageBriefing(stage: number, anchor: HTMLElement) {
 export function heroComparison(id:string):string {
  const values=(heroId:string)=>{const h=heroBalance(heroId);return [h.slash,h.move,h.attack,h.dash,h.area,h.crit,h.skillCooldown,h.iai]};
  const a=values(id),b=values(globals.selectedHero);
- const labels=['Bonus slash damage','Move speed ×','Attack cooldown ×','Dash cooldown ×','Slash size ×','Base crit chance','Skill cooldown ×','Bonus Iaijutsu damage'];
+ const labels=['Bonus ATK','Move speed ×','Attack cooldown ×','Dash cooldown ×','Slash size ×','Base crit chance','Skill cooldown ×','Bonus Iaijutsu damage'];
  return `<div class="qol-upgrade-details"><strong>${globals.currentLang==='ja'?'装備中 → この英雄':'Equipped → this hero'}</strong>${a.map((n,i)=>`<span>${labels[i]}: ${i===0||i===5?`${num(b[i]*100)}% → ${num(n*100)}%`:`${num(b[i])} → ${num(n)}`}</span>`).join('')}</div>`;
 }
 export function permanentPreview(id: string, level: number, max: number, endless: boolean): string {
  const next=endless?level+1:Math.min(max,level+1);
- const effects:Record<string,[string,number,string]>={slashDamage:['Bonus slash damage',1,'%'],dashCooldown:['Dash cooldown reduction',.08,'s'],ultimateDamage:['Ultimate damage',10,'%'],counterSiphon:['Counter siphon HP/Flow',5,'%'],critMastery:['Crit Chance',10,'%'],infiniteSharpness:['Bonus slash damage',.5,'%']};
+ const effects:Record<string,[string,number,string]>={slashDamage:['Bonus ATK',1,'%'],dashCooldown:['Dash cooldown reduction',.08,'s'],ultimateDamage:['Ultimate damage',10,'%'],counterSiphon:['Counter siphon HP/Flow',5,'%'],critMastery:['Crit Chance',10,'%'],infiniteSharpness:['Bonus ATK',.5,'%']};
  const effect=effects[id];
  if(!effect)return '';
  return `<div>${effect[0]}: ${num(level*effect[1])}${effect[2]} → ${num(next*effect[1])}${effect[2]}${id==='slashDamage'?` · Flat: +${num(level*0.5)} → +${num(next*0.5)}`:''}${id==='infiniteSharpness'?` · Flat: +${num(level*0.2)} → +${num(next*0.2)}`:''}${id==='dashCooldown'?' (cooldown floor 0.4s)':''}${id==='critMastery'?' (2.2x crit DMG, micro-stagger)':''}${id==='counterSiphon'?' (100/5 ❤️ & 15 Flow)':''}</div>`;

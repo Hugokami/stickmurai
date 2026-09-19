@@ -401,10 +401,10 @@ export class Player extends Entity {
         
         // Check for Vortex Shatter (Iaijutsu -> Dash)
         const now = performance.now();
-        if (now - globals.lastIaijutsuFireTime < 350) {
+        if (now - globals.lastIaijutsuFireTime < 600) {
           let angleDiff = Math.abs(angle - globals.lastIaijutsuAngle);
           if (angleDiff > Math.PI) angleDiff = Math.PI * 2 - angleDiff;
-          if (angleDiff < Math.PI / 4) {
+          if (angleDiff < Math.PI * 0.65) {
             const proj = globals.projectiles.find((p: any) => !p.isEnemy && (p.isHuge || p.enhancedType !== '') && p.life > 1.3);
             if (proj) {
               if ((callbacks as any).triggerVortexShatter) {
