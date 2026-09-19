@@ -122,4 +122,5 @@ const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
 console.log(`\n=== POKI PACKAGE READY ===`);
 console.log(`Zip archive: ${zipPath} (${sizeMB} MB)`);
 console.log(`Inspector folder: ${pokiFolder}`);
-console.log(`Tip: Drag '${pokiFolder}' or '${zipPath}' directly into Poki Inspector to verify!`);
+console.log(`Tip: Drag the ZIP file '${zipPath}' directly into Poki Inspector drop area.`);
+console.log(`Note: Do not click 'browse to choose a folder' or drag loose files; Poki's web client has a known bug in its file picker.`);
