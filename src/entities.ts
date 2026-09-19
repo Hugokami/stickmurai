@@ -669,10 +669,34 @@ export class Projectile {
     return new Projectile(x, y, angle, isEnemy, damage, isHuge, isEcho, enhancedType);
   }
 
+  static acquireKunai(x: number, y: number, angle: number, isEnemy = false, damage = 1): Projectile {
+    const p = Projectile.acquire(x, y, angle, isEnemy, damage, false, false, 'kunai');
+    p.projectileType = 'water';
+    return p;
+  }
+
+  static acquireFireball(x: number, y: number, angle: number, isEnemy = false, damage = 1, isHuge = false): Projectile {
+    const p = Projectile.acquire(x, y, angle, isEnemy, damage, isHuge, false, 'fireball');
+    p.projectileType = 'fire_ball';
+    return p;
+  }
+
+  static acquireStarMarkBeam(x: number, y: number, angle: number, isEnemy = false, damage = 1): Projectile {
+    const p = Projectile.acquire(x, y, angle, isEnemy, damage, true, false, 'astral_heavy_bullet');
+    return p;
+  }
+
   static release(inst: Projectile) {
-    if (Projectile.pool.length < 100) {
+    if (Projectile.pool.length < 500) {
       Projectile.pool.push(inst);
     }
+  }
+
+  static releaseAll(list: Projectile[]) {
+    for (let i = 0; i < list.length; i++) {
+      Projectile.release(list[i]);
+    }
+    list.length = 0;
   }
   update(dt: number) {
     if ((this as any).isHoming && globals.player && globals.player.state !== 'dead') {
@@ -2027,28 +2051,72 @@ export class Collectible {
 }
 
 export class LightningBeam {
-  x: number;
-  y: number;
-  startY: number;
+  x!: number;
+  y!: number;
+  startY!: number;
   life = 0.35;
   maxLife = 0.35;
   segments: { x: number, y: number }[] = [];
   branches: { x: number, y: number }[][] = [];
 
   constructor(x: number, y: number) {
+    this.init(x, y);
+  }
+
+  init(x: number, y: number) {
     this.x = x;
     this.y = y;
     this.startY = y - 700;
+    this.life = 0.35;
+    this.maxLife = 0.35;
     this.generatePath();
+  }
+
+  static pool: LightningBeam[] = [];
+
+  static acquire(x: number, y: number): LightningBeam {
+    const inst = LightningBeam.pool.pop();
+    if (inst) {
+      inst.init(x, y);
+      return inst;
+    }
+    return new LightningBeam(x, y);
+  }
+
+  static release(inst: LightningBeam) {
+    if (LightningBeam.pool.length < 100) {
+      LightningBeam.pool.push(inst);
+    }
+  }
+
+  static releaseAll(beams: LightningBeam[]) {
+    for (let i = 0; i < beams.length; i++) {
+      LightningBeam.release(beams[i]);
+    }
+    beams.length = 0;
   }
 
   generatePath() {
     let curX = this.x + (Math.random() - 0.5) * 80;
     let curY = this.startY;
-    this.segments.push({ x: curX, y: curY });
+    
+    let segIdx = 0;
+    const setSegment = (x: number, y: number) => {
+      if (segIdx < this.segments.length) {
+        this.segments[segIdx].x = x;
+        this.segments[segIdx].y = y;
+      } else {
+        this.segments.push({ x, y });
+      }
+      segIdx++;
+    };
+
+    setSegment(curX, curY);
 
     const steps = 25;
     const stepSize = (this.y - this.startY) / steps;
+
+    this.branches.length = 0;
 
     for (let i = 1; i <= steps; i++) {
       curY = this.startY + i * stepSize;
@@ -2057,7 +2125,7 @@ export class LightningBeam {
       } else {
         curX += (Math.random() - 0.5) * 45;
       }
-      this.segments.push({ x: curX, y: curY });
+      setSegment(curX, curY);
 
       // Occasionally generate a side branch
       if (Math.random() < 0.22 && i < steps - 3) {
@@ -2066,7 +2134,7 @@ export class LightningBeam {
         let by = curY;
         branch.push({ x: bx, y: by });
         const branchSteps = 5 + Math.floor(Math.random() * 6);
-        const branchAngle = Math.PI / 2 + (Math.random() - 0.5) * 1.2; // roughly downwards and left/right
+        const branchAngle = Math.PI / 2 + (Math.random() - 0.5) * 1.2;
         const branchLength = 20 + Math.random() * 20;
         for (let j = 0; j < branchSteps; j++) {
           bx += Math.cos(branchAngle) * branchLength + (Math.random() - 0.5) * 15;
@@ -2076,6 +2144,7 @@ export class LightningBeam {
         this.branches.push(branch);
       }
     }
+    this.segments.length = segIdx;
   }
 
   update(dt: number) {

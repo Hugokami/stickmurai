@@ -13,33 +13,6 @@ try {
   }
 } catch (e) {}
 
-if (typeof window !== 'undefined') {
-  const initCgAudioListener = async () => {
-    try {
-      const s = (window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK;
-      if (s) {
-        if (typeof s.init === 'function') {
-          await s.init().catch(() => {});
-        }
-        let g: any = null;
-        try { g = s.game; } catch(e) {}
-        if (g && typeof g.addSettingsChangeListener === 'function') {
-          g.addSettingsChangeListener((settings: any) => {
-            console.log('[CrazyGames Audio] settingsChangeListener:', settings);
-            if (settings && typeof settings.muteAudio === 'boolean') {
-              setPortalMuted(settings.muteAudio);
-            }
-          });
-          if (g.settings && typeof g.settings.muteAudio === 'boolean') {
-            setPortalMuted(g.settings.muteAudio);
-          }
-        }
-      }
-    } catch(e) {}
-  };
-  initCgAudioListener();
-}
-
 export const bgmAudio = new Audio();
 export const playlist = [
   'audio/shadows_of_noh.m4a',

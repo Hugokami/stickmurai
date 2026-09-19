@@ -16,10 +16,9 @@ export class AdManager {
   public static isPokiReady: boolean = false;
 
   /**
-   * Initializes ad SDKs (Poki SDK & CrazyGames SDK).
+   * Initializes Poki SDK if present on the hosting portal.
    */
   public static async init(): Promise<void> {
-    // 1. Check Poki SDK
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.init) {
       try {
         await (window as any).PokiSDK.init();
@@ -30,25 +29,10 @@ export class AdManager {
         this.isPokiReady = false;
       }
     }
-
-    // 2. Check CrazyGames SDK
-    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
-    if (cgSdk && typeof cgSdk.init === 'function' && !(window as any).__cgSdkInitialized) {
-      try {
-        await Promise.race([
-          cgSdk.init(),
-          new Promise(resolve => setTimeout(resolve, 2000))
-        ]);
-        (window as any).__cgSdkInitialized = true;
-        console.log("[AdManager] CrazyGames SDK successfully initialized");
-      } catch (e) {
-        console.warn("[AdManager] CrazyGames SDK init error:", e);
-      }
-    }
   }
 
   /**
-   * Fired when initial asset loading completes (Poki & CrazyGames lifecycle).
+   * Fired when initial asset loading completes (Poki lifecycle).
    */
   public static gameLoadingFinished(): void {
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.gameLoadingFinished) {
@@ -56,10 +40,6 @@ export class AdManager {
         (window as any).PokiSDK.gameLoadingFinished();
         console.log("[AdManager] Poki gameLoadingFinished fired");
       } catch (e) {}
-    }
-    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
-    if (cgSdk?.game?.loadingStop) {
-      try { cgSdk.game.loadingStop(); } catch (e) {}
     }
   }
 
@@ -73,10 +53,6 @@ export class AdManager {
         console.log("[AdManager] Poki gameplayStart fired");
       } catch (e) {}
     }
-    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
-    if (cgSdk?.game?.gameplayStart) {
-      try { cgSdk.game.gameplayStart(); } catch (e) {}
-    }
   }
 
   /**
@@ -89,10 +65,6 @@ export class AdManager {
         console.log("[AdManager] Poki gameplayStop fired");
       } catch (e) {}
     }
-    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
-    if (cgSdk?.game?.gameplayStop) {
-      try { cgSdk.game.gameplayStop(); } catch (e) {}
-    }
   }
 
   /**
@@ -101,22 +73,18 @@ export class AdManager {
   public static measure(category: string, what: string, action: string, data?: any): void {
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.measure) {
       try {
-        // Poki SDK explicitly forbids '/' and '^' in event identifiers
-        const cleanCat = String(category).replace(/[/^]/g, '_').trim();
-        const cleanWhat = String(what).replace(/[/^]/g, '_').trim();
-        const cleanAction = String(action).replace(/[/^]/g, '_').trim();
-        (window as any).PokiSDK.measure(cleanCat, cleanWhat, cleanAction, data);
+        const safeCat = (category || 'game').replace(/[\/\^]/g, '_').substring(0, 32);
+        const safeWhat = (what || 'event').replace(/[\/\^]/g, '_').substring(0, 32);
+        const safeAction = (action || 'action').replace(/[\/\^]/g, '_').substring(0, 32);
+        (window as any).PokiSDK.measure(safeCat, safeWhat, safeAction, data);
       } catch (e) {}
     }
   }
 
   /**
-   * Triggers a rewarded ad flow.
-   * Automatically detects if the game is running on a partner portal (CrazyGames/Poki) 
-   * and uses their SDK. Otherwise, displays the custom premium Japanese Mock Ad overlay.
+   * Displays rewarded ad via Poki SDK if present, or displays the custom premium Japanese Mock Ad overlay.
    */
   public static async showRewardedAd(type: 'revive' | 'blessing' | 'blessing-swift' | 'blessing-fortune' | 'double-reward' | string, callbacks: AdCallbacks) {
-    // 1. Check for Poki SDK
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.rewardedBreak) {
       console.log(`[AdManager] Invoking Poki SDK for rewarded: ${type}`);
       this.measure('rewarded', type, 'interact');
@@ -131,7 +99,6 @@ export class AdManager {
           callbacks.onComplete();
         } else {
           console.warn("[AdManager] Poki rewarded ad skipped or unavailable.");
-          // Only fall back to mock ad if running standalone outside Poki
           const isStandalone = typeof window !== 'undefined' && (window.self === window.top && !window.location.search.includes('poki'));
           if (isStandalone) {
             this.showMockAdModal(type, callbacks);
@@ -152,93 +119,13 @@ export class AdManager {
       return;
     }
 
-    // 2. Check for CrazyGames SDK (supports both window.CrazyGames and window.crazygames)
-    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
-    if (cgSdk) {
-      // Ensure SDK is initialized before touching any module getters
-      try {
-        if (typeof cgSdk.init === 'function' && !(window as any).__cgSdkInitialized) {
-          await Promise.race([
-            cgSdk.init(),
-            new Promise(resolve => setTimeout(resolve, 2000))
-          ]);
-          (window as any).__cgSdkInitialized = true;
-        }
-      } catch(e) {
-        console.warn("[AdManager] CrazyGames SDK init error:", e);
-      }
-
-      let adModule: any = null;
-      try {
-        adModule = cgSdk.ad;
-      } catch (e) {
-        adModule = null;
-      }
-
-      if (adModule && typeof adModule.requestAd === 'function') {
-        console.log(`[AdManager] Invoking CrazyGames SDK for: ${type}`);
-
-        const inGameplay = typeof globals !== 'undefined' && globals.gameState === 'playing';
-        let pausedByAd = false;
-        let adDidStart = false;
-
-        const adCallbacks = {
-          adStarted: () => {
-            adDidStart = true;
-            console.log("[AdManager] CrazyGames rewarded ad started.");
-            this.muteSounds();
-            if (inGameplay) {
-              pausedByAd = true;
-              globals.gameState = 'paused';
-              try {
-                if (cgSdk.game && typeof cgSdk.game.gameplayStop === 'function') cgSdk.game.gameplayStop();
-              } catch(e) {}
-            }
-          },
-          adFinished: () => {
-            console.log("[AdManager] CrazyGames rewarded ad finished successfully. Started:", adDidStart);
-            this.unmuteSounds();
-            if (pausedByAd) {
-              globals.gameState = 'playing';
-              try {
-                if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
-              } catch(e) {}
-            }
-            callbacks.onComplete();
-          },
-          adError: (error: any) => {
-            console.warn("[AdManager] CrazyGames rewarded ad unavailable:", error);
-            this.unmuteSounds();
-            if (pausedByAd) {
-              globals.gameState = 'playing';
-              try {
-                if (cgSdk.game && typeof cgSdk.game.gameplayStart === 'function') cgSdk.game.gameplayStart();
-              } catch(e) {}
-            }
-            // CrazyGames owns ad UI. Basic Launch, QA, adblock, and no-fill can all call adError.
-            // Never replace that flow with a fake ad or grant reward on failure.
-            callbacks.onFailed(this.describeAdError(error));
-          }
-        };
-
-        try {
-          adModule.requestAd("rewarded", adCallbacks);
-        } catch (err: any) {
-          console.warn("[AdManager] CrazyGames requestAd exception:", err);
-          callbacks.onFailed(this.describeAdError(err));
-        }
-        return;
-      }
-    }
-
-    // 3. Fallback: Display our premium Japanese-themed Mock Ad modal
+    // Standalone fallback: Display our premium Japanese-themed Mock Ad modal
     console.log(`[AdManager] Showing Mock Ad Modal for: ${type}`);
     this.showMockAdModal(type, callbacks);
   }
 
   /**
    * Triggers a midgame (interstitial) ad flow.
-   * Can happen between levels, on restart after death, etc.
    */
   public static async showMidrollAd(onFinished?: () => void) {
     const now = Date.now();
@@ -247,20 +134,21 @@ export class AdManager {
       return;
     }
 
-    // 1. Check for Poki SDK commercialBreak
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.commercialBreak) {
       this.lastMidrollTime = now;
       console.log("[AdManager] Invoking Poki commercialBreak");
+      this.measure('commercial', 'midroll', 'trigger');
+      const poki = (window as any).PokiSDK;
+      this.muteSounds();
       const inGameplay = typeof globals !== 'undefined' && globals.gameState === 'playing';
       let pausedByAd = false;
-      this.muteSounds();
       if (inGameplay) {
         pausedByAd = true;
         globals.gameState = 'paused';
         this.gameplayStop();
       }
 
-      (window as any).PokiSDK.commercialBreak(() => {
+      poki.commercialBreak(() => {
         this.muteSounds();
       }).then(() => {
         this.unmuteSounds();
@@ -281,77 +169,13 @@ export class AdManager {
       return;
     }
 
-    // 2. Check for CrazyGames SDK
-    const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
-    if (cgSdk) {
-      try {
-        if (typeof cgSdk.init === 'function' && !(window as any).__cgSdkInitialized) {
-          await cgSdk.init();
-          (window as any).__cgSdkInitialized = true;
-        }
-      } catch(e) {}
-
-      let adModule: any = null;
-      try { adModule = cgSdk.ad; } catch(e) {}
-      if (adModule && typeof adModule.requestAd === 'function') {
-        this.lastMidrollTime = now;
-        const inGameplay = typeof globals !== 'undefined' && globals.gameState === 'playing';
-        let pausedByAd = false;
-        let adDidStart = false;
-
-        const adCallbacks = {
-          adStarted: () => {
-            adDidStart = true;
-            console.log("[AdManager] CrazyGames midgame ad started");
-            this.muteSounds();
-            if (inGameplay) {
-              pausedByAd = true;
-              globals.gameState = 'paused';
-              try { if (cgSdk.game?.gameplayStop) cgSdk.game.gameplayStop(); } catch(e) {}
-            }
-          },
-          adFinished: () => {
-            console.log("[AdManager] CrazyGames midgame ad finished. Started:", adDidStart);
-            this.unmuteSounds();
-            if (pausedByAd) {
-              globals.gameState = 'playing';
-              try { if (cgSdk.game?.gameplayStart) cgSdk.game.gameplayStart(); } catch(e) {}
-            }
-            if (onFinished) onFinished();
-          },
-          adError: (err: any) => {
-            console.warn("[AdManager] CrazyGames midgame ad error:", err);
-            this.unmuteSounds();
-            if (pausedByAd) {
-              globals.gameState = 'playing';
-              try { if (cgSdk.game?.gameplayStart) cgSdk.game.gameplayStart(); } catch(e) {}
-            }
-            if (onFinished) onFinished();
-          }
-        };
-
-        try {
-          adModule.requestAd('midgame', adCallbacks);
-          return;
-        } catch(e) {
-          console.warn('[AdManager] Midgame requestAd error:', e);
-        }
-      }
-    }
-
     if (onFinished) onFinished();
   }
 
   /**
-   * Adblock detection using CrazyGames SDK v3
+   * Adblock detection stub.
    */
   public static async hasAdblock(): Promise<boolean> {
-    try {
-      const cgSdk = typeof window !== 'undefined' ? ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) : null;
-      if (cgSdk?.ad && typeof cgSdk.ad.hasAdblock === 'function') {
-        return await cgSdk.ad.hasAdblock();
-      }
-    } catch(e) {}
     return false;
   }
 
@@ -359,7 +183,7 @@ export class AdManager {
    * Mute game background music and Web Audio during ads.
    */
   private static muteSounds() {
-    if (this.isAdPlaying) return; // Re-entrance guard: do not re-sample or re-mute if already playing!
+    if (this.isAdPlaying) return;
     this.isAdPlaying = true;
     try { clearGameInputs(); } catch(e) {}
     const urlMuted = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('muteAudio') === 'true');
@@ -401,7 +225,6 @@ export class AdManager {
       try { resumeAudioContext(); } catch(e) {}
     }
 
-    // Wake up Web Audio context on the first user interaction after ad completes/closes
     if (typeof window !== 'undefined' && !shouldMute) {
       const wakeAudio = () => {
         try {
@@ -417,10 +240,10 @@ export class AdManager {
     }
   }
 
-  private static describeAdError(error: any): string {
-    if (!error) return 'CrazyGames ad unavailable';
+  public static describeAdError(error: any): string {
+    if (!error) return 'Ad unavailable';
     if (typeof error === 'string') return error;
-    return error.message || error.code || 'CrazyGames ad unavailable';
+    return error.message || error.code || 'Ad unavailable';
   }
 
   /**
@@ -485,7 +308,7 @@ export class AdManager {
     `;
     box.appendChild(title);
 
-    // Subtitle / Ad Partner notice
+    // Subtitle
     const subtitle = document.createElement('div');
     subtitle.innerText = '修業中 (COMMERCIAL BREAK)';
     subtitle.style.cssText = `
@@ -511,7 +334,6 @@ export class AdManager {
       margin: 10px 0;
     `;
 
-    // Glowing circle SVG
     progressWrapper.innerHTML = `
       <svg width="80" height="80" viewBox="0 0 80 80" style="transform: rotate(-90deg);">
         <circle cx="40" cy="40" r="34" stroke="rgba(255, 255, 255, 0.05)" stroke-width="6" fill="none" />
@@ -559,19 +381,17 @@ export class AdManager {
     overlay.appendChild(box);
     document.body.appendChild(overlay);
 
-    // Animation & Countdown logic (5 seconds mock duration)
     let secondsLeft = 5;
     const totalDuration = 5;
     const circle = overlay.querySelector('#ad-progress-circle') as SVGCircleElement;
     const countText = overlay.querySelector('#ad-countdown-text') as HTMLDivElement;
-    const totalDash = 213.6; // 2 * PI * r (2 * 3.14159 * 34)
+    const totalDash = 213.6;
 
     const interval = setInterval(() => {
       secondsLeft -= 0.1;
       const displaySeconds = Math.max(0, Math.ceil(secondsLeft));
       countText.innerText = displaySeconds.toString();
 
-      // Update progress stroke offset
       const progressPercent = secondsLeft / totalDuration;
       const offset = totalDash * (1 - progressPercent);
       if (circle) circle.setAttribute('stroke-dashoffset', offset.toString());
@@ -579,7 +399,6 @@ export class AdManager {
       if (secondsLeft <= 0) {
         clearInterval(interval);
         
-        // Unlock button
         actionBtn.disabled = false;
         actionBtn.innerText = 'CLAIM REWARD';
         actionBtn.style.cssText = `

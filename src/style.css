@@ -467,14 +467,6 @@ canvas.inverted {
   box-shadow: 0 0 14px rgba(251, 191, 36, 0.25), 0 4px 10px rgba(0, 0, 0, 0.6);
 }
 
-/* Strict CrazyGames Fullscreen & Prompt Suppression */
-html.crazygames #fullscreen-hud-btn,
-html.crazygames #pause-fullscreen-btn,
-html.crazygames #menu-fullscreen-btn,
-html.crazygames #setting-fullscreen-row,
-html.crazygames #fullscreen-prompt {
-  display: none !important;
-}
 
 /* overlay menus (game over, pause, settings, choices) */
 .flash-overlay {
@@ -1817,7 +1809,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
     right: max(42px, calc(env(safe-area-inset-right) + 34px));
   }
 
-  html:not(.crazygames) #magatama-display {
+  #magatama-display {
     right: max(78px, calc(env(safe-area-inset-right) + 70px)) !important;
   }
 

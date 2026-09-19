@@ -55,6 +55,7 @@ test('performance optimization invariant tests', () => {
   assert.match(adManagerSrc, /rewardedBreak/, 'adManager.ts must implement rewardedBreak()');
   assert.match(adManagerSrc, /measure\(/, 'adManager.ts must implement measure()');
 
-  const pkgCgSrc = fs.readFileSync('scripts/package-crazygames.cjs', 'utf8');
-  assert.match(pkgCgSrc, /poki-sdk/, 'package-crazygames.cjs must strip poki-sdk for CrazyGames compliance');
+  const buildPortalSrc = fs.readFileSync('scripts/build-portal.cjs', 'utf8');
+  assert.match(buildPortalSrc, /--target=/, 'build-portal.cjs must support --target flag');
+  assert.match(buildPortalSrc, /poki-sdk/, 'build-portal.cjs must handle poki-sdk injection and stripping');
 });

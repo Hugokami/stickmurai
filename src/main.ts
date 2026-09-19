@@ -56,8 +56,7 @@ import {
   playTeleportSfx,
   playAffixAlert,
   getConsecutiveParries,
-  playSynthesizedSheathe,
-  setPortalMuted
+  playSynthesizedSheathe
 } from './audio';
 import {
   Afterimage,
@@ -94,7 +93,9 @@ import { initInput, pollGamepad } from './input';
 import { initUI, updateUI, updateEnhanceButton, updateStanceSwitchButton, toggleAetherionStance, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
 import { initRenderer, draw, resetCanvasVisuals, resizeCanvas } from './renderer';
 import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate, openShop, refreshShop } from './powerups';
-import { initFullscreen, isCrazyGames, requestFullscreen } from './fullscreen';
+import { initFullscreen, requestFullscreen } from './fullscreen';
+import { handleBossHit } from './bosses';
+import { distToSegment } from './collision';
 
 // register callbacks
 callbacks.t = t;
@@ -134,13 +135,13 @@ callbacks.triggerElementalExplosion = triggerElementalExplosion;
 export function clearBattlefield() {
   globals.enemies = [];
   globals.slashes = [];
-  globals.projectiles = [];
+  if (globals.projectiles) Projectile.releaseAll(globals.projectiles);
   globals.particles = [];
   globals.afterimages = [];
   globals.shockwaves = [];
   globals.floatingTexts = [];
   globals.animatedEffects = [];
-  globals.lightningBeams = [];
+  if (globals.lightningBeams) LightningBeam.releaseAll(globals.lightningBeams);
   globals.sakuraPetals = [];
   globals.collectibles = [];
   globals.judgementDomes = [];
@@ -354,10 +355,6 @@ function updateLoaderProgress() {
 function t(key: string): string { return i18n[globals.currentLang]?.[key] || key; }
 
 function tryEnterFullscreen(onComplete: () => void) {
-  if (isCrazyGames()) {
-    onComplete();
-    return;
-  }
   requestFullscreen().finally(() => {
     onComplete();
   });
@@ -709,36 +706,6 @@ function startApp() {
 
     startLoaderStickmanAnimation();
 
-    // Initialize CrazyGames SDK v3 early during loading screen
-    try {
-      const cgSdk = (window as any).CrazyGames?.SDK;
-      if (cgSdk && typeof cgSdk.init === 'function') {
-        cgSdk.init().then(() => {
-          console.log('[CrazyGames] SDK v3 initialized in main.ts');
-          // Notify loading started
-          try { cgSdk.game?.loadingStart?.(); } catch(e) {}
-          // Apply initial mute settings
-          try {
-            if (cgSdk.game?.settings?.muteAudio === true) {
-              setPortalMuted(true);
-            }
-            // Listen for future mute changes
-            if (typeof cgSdk.game?.addSettingsChangeListener === 'function') {
-              cgSdk.game.addSettingsChangeListener((settings: any) => {
-                if (settings && typeof settings.muteAudio === 'boolean') {
-                  setPortalMuted(settings.muteAudio);
-                }
-              });
-            }
-          } catch(e) {}
-          // Store init flag so adManager doesn't re-init
-          (window as any).__cgSdkInitialized = true;
-        }).catch((err: any) => {
-          console.warn('[CrazyGames] SDK init error:', err);
-        });
-      }
-    } catch(e) {}
-
     startBackgroundAssetLoading();
     setTimeout(updateLoaderProgress, 0);
     // Offer recovery for stalled requests; elapsed time never unlocks play.
@@ -860,12 +827,6 @@ function initGame() {
     loader.style.display = 'none';
   }
   loadingFinished = true;
-
-  // Notify CrazyGames SDK that loading is complete
-  try {
-    const cgSdk = (window as any).CrazyGames?.SDK;
-    if (cgSdk?.game?.loadingStop) cgSdk.game.loadingStop();
-  } catch(e) {}
 
   AdManager.gameplayStart();
   AdManager.measure('level', String(globals.currentStage || 1), 'start');
@@ -1104,7 +1065,7 @@ function initGame() {
   globals.sakuraPetals = [];
   globals.collectibles = [];
   globals.judgementDomes = [];
-  globals.lightningBeams = [];
+  if (globals.lightningBeams) LightningBeam.releaseAll(globals.lightningBeams);
 
   globals.frostStanceActive = false;
   globals.voidStanceActive = false;
@@ -1837,7 +1798,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
 }
 
 export function triggerStormGodLightning(x: number, y: number) {
-  globals.lightningBeams.push(new LightningBeam(x, y));
+  globals.lightningBeams.push(LightningBeam.acquire(x, y));
   if (vfxAnims.gigapack?.lightning?.length > 0) {
     globals.animatedEffects.push(new AnimatedEffect(x, y - 20, vfxAnims.gigapack.lightning, 0.45, 2.2));
   }
@@ -1982,16 +1943,6 @@ export function triggerZanFinisher(onComplete: () => void) {
   }
 }
 
-function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
-  const dx = x2 - x1;
-  const dy = y2 - y1;
-  const lenSq = dx * dx + dy * dy;
-  if (lenSq === 0) return Math.hypot(px - x1, py - y1);
-  let t = ((px - x1) * dx + (py - y1) * dy) / lenSq;
-  t = Math.max(0, Math.min(1, t));
-  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
-}
-
 function triggerVortexShatter(x: number, y: number) {
   globals.shockwaves.push(new Shockwave(x, y, '#a855f7', 200));
   globals.screenShake += 15;
@@ -2035,7 +1986,7 @@ function triggerLightningDischarge(sx: number, sy: number, ex: number, ey: numbe
     const t = i / steps;
     const px = sx + dx * t;
     const py = sy + dy * t;
-    globals.lightningBeams.push(new LightningBeam(px, py));
+    globals.lightningBeams.push(LightningBeam.acquire(px, py));
   }
   
   globals.floatingTexts.push(FloatingText.acquire(ex, ey - 80, "LIGHTNING DISCHARGE!", "#fbbf24", 28));
@@ -2067,15 +2018,12 @@ function fireFullyChargedIaijutsu(angle: number) {
   if (globals.selectedHero === 'aetherion') {
     const slashDmg = getCurrentSlashDamage();
     const heavyBulletDmg = Math.round(9 * slashDmg);
-    const heavyBullet = Projectile.acquire(
+    const heavyBullet = Projectile.acquireStarMarkBeam(
       globals.player.x + Math.cos(angle) * 50,
       globals.player.y + Math.sin(angle) * 50,
       angle,
       false,
-      heavyBulletDmg,
-      true,
-      false,
-      'astral_heavy_bullet'
+      heavyBulletDmg
     );
     heavyBullet.isHuge = true;
     const bulletSpeed = 1900;
@@ -2703,7 +2651,7 @@ function executeThunderclapAndFlash() {
     const muzzleX = globals.player.x + Math.cos(aimAngle) * 50;
     const muzzleY = globals.player.y + Math.sin(aimAngle) * 50;
 
-    const heavyBeam = Projectile.acquire(muzzleX, muzzleY, aimAngle, false, beamDmg, true, false, 'astral_heavy_bullet');
+    const heavyBeam = Projectile.acquireStarMarkBeam(muzzleX, muzzleY, aimAngle, false, beamDmg);
     heavyBeam.isHuge = true;
     heavyBeam.vx = Math.cos(aimAngle) * 2200;
     heavyBeam.vy = Math.sin(aimAngle) * 2200;
@@ -2711,7 +2659,7 @@ function executeThunderclapAndFlash() {
     (heavyBeam as any).maxLife = 1.0;
     globals.projectiles.push(heavyBeam);
 
-    globals.lightningBeams.push(new LightningBeam(muzzleX + Math.cos(aimAngle) * 200, muzzleY + Math.sin(aimAngle) * 200));
+    globals.lightningBeams.push(LightningBeam.acquire(muzzleX + Math.cos(aimAngle) * 200, muzzleY + Math.sin(aimAngle) * 200));
 
     for (let i = 0; i < 20; i++) {
       globals.particles.push(Particle.acquire(
@@ -2748,7 +2696,7 @@ function executeThunderclapAndFlash() {
   const midX = startX + (endX - startX) / 2;
   const midY = startY + (endY - startY) / 2;
   globals.slashes.push(Slash.acquire(midX, midY, angle, 2.0, true, '#fbbf24', false, globals.player));
-  globals.lightningBeams.push(new LightningBeam(endX, endY));
+  globals.lightningBeams.push(LightningBeam.acquire(endX, endY));
   const lBurst = (vfxAnims as any).skills?.lightningBurst;
   if (lBurst && lBurst.length > 0) {
     globals.animatedEffects.push(new AnimatedEffect(endX, endY, lBurst, 0.35, 2.0));
@@ -3228,17 +3176,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
     }
     return;
   }
-  // Skeleton Warlord Guard Stance Parry & Counter-Thrust
-  if (e.subType === 'skeleton_warlord' && e.state === 'react') {
-    globals.screenShake = Math.max(globals.screenShake, 18);
-    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 60, globals.currentLang === 'ja' ? '骨刃受け流し！ 🛡️' : 'BONE DEFLECTION! 🛡️', '#cbd5e1', 26));
-    globals.shockwaves.push(new Shockwave(e.x, e.y, '#f59e0b'));
-    e.setState('attack');
-    e.targetAngle = Math.atan2(globals.player.y - e.y, globals.player.x - e.x);
-    e.lungeCos = Math.cos(e.targetAngle);
-    e.lungeSin = Math.sin(e.targetAngle);
-    e.vx = e.lungeCos * e.lungeSpeed;
-    e.vy = e.lungeSin * e.lungeSpeed;
+  // Boss hit reaction / defensive maneuvers
+  if (handleBossHit(e, dmg)) {
     return;
   }
   if ((e as any).isPvpRemote && pvpManager.subMode === 'insane_survival') return;
@@ -4138,7 +4077,7 @@ function update(realDt: number) {
             if (rem.length > 0) targets.push(rem[Math.floor(Math.random() * rem.length)]);
           }
           for (const t of targets) {
-            globals.lightningBeams.push(new LightningBeam(t.x, t.y));
+            globals.lightningBeams.push(LightningBeam.acquire(t.x, t.y));
             globals.shockwaves.push(new Shockwave(t.x, t.y, '#38bdf8'));
             callbacks.hitEnemy(t, 8, false, true);
             globals.floatingTexts.push(FloatingText.acquire(t.x, t.y - 40, "⚡ GALE STRIKE", "#38bdf8", 18));
@@ -7780,7 +7719,7 @@ function initPvpGame() {
 async function startPvpRound() {
   pvpManager.matchState = 'banner';
   globals.pvpShockwaves = [];
-  globals.lightningBeams = [];
+  if (globals.lightningBeams) LightningBeam.releaseAll(globals.lightningBeams);
   globals.pvpStormWarningTarget = null;
   globals.pvpStormWarningTimer = 0;
 
@@ -8262,7 +8201,7 @@ function runPvpStep(realDt: number) {
         const targetX = target === 'left' ? 300 : 1100;
         
         // Spawn vertical lightning hazard beam
-        globals.lightningBeams.push(new LightningBeam(targetX, 350));
+        globals.lightningBeams.push(LightningBeam.acquire(targetX, 350));
         playSynthesizedThunder();
         
         // Check deflection / hit on the target player
@@ -8483,8 +8422,17 @@ function runPvpStep(realDt: number) {
   globals.shockwaves.length = shockwaveWriteIndex;
 
   if (globals.lightningBeams) {
-    globals.lightningBeams.forEach(lb => lb.update(realDt));
-    globals.lightningBeams = globals.lightningBeams.filter(lb => lb.life > 0);
+    let lbWriteIndex = 0;
+    for (let i = 0; i < globals.lightningBeams.length; i++) {
+      const lb = globals.lightningBeams[i];
+      lb.update(realDt);
+      if (lb.life > 0) {
+        globals.lightningBeams[lbWriteIndex++] = lb;
+      } else {
+        LightningBeam.release(lb);
+      }
+    }
+    globals.lightningBeams.length = lbWriteIndex;
   }
 
   let particleWriteIndex = 0;

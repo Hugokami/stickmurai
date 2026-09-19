@@ -1,25 +1,16 @@
 import { globals } from './globals';
 
 /**
- * Checks if the current environment is CrazyGames portal / iframe / SDK wrapper.
- * Fullscreen is strictly disallowed inside CrazyGames to avoid iframe violations.
+ * Legacy portal check — CrazyGames deployment is discontinued.
  */
 export function isCrazyGames(): boolean {
-  if (typeof window === 'undefined') return false;
-  if ((window as any).isCrazyGames) return true;
-  if ((window as any).CrazyGames?.SDK || (window as any).crazygames?.SDK) return true;
-  if (typeof document !== 'undefined' && document.documentElement?.classList?.contains('crazygames')) return true;
-  const host = window.location?.hostname?.toLowerCase() || '';
-  const search = window.location?.search?.toLowerCase() || '';
-  const ref = (typeof document !== 'undefined' ? document.referrer : '').toLowerCase();
-  return host.includes('crazygames') || search.includes('crazygames') || ref.includes('crazygames');
+  return false;
 }
 
 /**
  * Checks whether the browser supports standard or vendor-prefixed Fullscreen API.
  */
 export function isFullscreenSupported(): boolean {
-  if (isCrazyGames()) return false;
   if (typeof document === 'undefined') return false;
   const doc = document as any;
   const docEl = document.documentElement as any;
@@ -53,7 +44,7 @@ export function isFullscreenActive(): boolean {
  * Requests fullscreen on documentElement with optional landscape orientation lock.
  */
 export async function requestFullscreen(): Promise<boolean> {
-  if (isCrazyGames() || isFullscreenActive()) return false;
+  if (isFullscreenActive()) return false;
   try {
     const docEl = document.documentElement as any;
     const req = docEl.requestFullscreen ||
@@ -83,7 +74,7 @@ export async function requestFullscreen(): Promise<boolean> {
  * Exits fullscreen mode.
  */
 export async function exitFullscreen(): Promise<boolean> {
-  if (isCrazyGames() || !isFullscreenActive()) return false;
+  if (!isFullscreenActive()) return false;
   try {
     const doc = document as any;
     const exit = doc.exitFullscreen ||
@@ -120,22 +111,13 @@ export async function toggleFullscreen(): Promise<boolean> {
  */
 export function updateFullscreenUI(): void {
   if (typeof document === 'undefined') return;
-  const isCg = isCrazyGames();
   const hudBtn = document.getElementById('fullscreen-hud-btn');
   const pauseBtn = document.getElementById('pause-fullscreen-btn');
   const menuBtn = document.getElementById('menu-fullscreen-btn');
   const settingsBtn = document.getElementById('settings-fullscreen-btn');
-  const settingsRow = document.getElementById('setting-fullscreen-row');
 
   // In-game HUD fullscreen button is removed from battlefield
   if (hudBtn) hudBtn.style.display = 'none';
-
-  if (isCg) {
-    if (pauseBtn) pauseBtn.style.display = 'none';
-    if (menuBtn) menuBtn.style.display = 'none';
-    if (settingsRow) settingsRow.style.display = 'none';
-    return;
-  }
 
   const active = isFullscreenActive();
   const isJa = globals.currentLang === 'ja';
@@ -174,12 +156,6 @@ export function updateFullscreenUI(): void {
 export function initFullscreen(): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  if (isCrazyGames()) {
-    document.documentElement.classList.add('crazygames');
-    updateFullscreenUI();
-    return;
-  }
-
   const bindBtn = (id: string) => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -206,7 +182,6 @@ export function initFullscreen(): void {
 
   // Keyboard shortcut: F11 or Alt+Enter toggles fullscreen
   window.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (isCrazyGames()) return;
     if (e.key === 'F11' || (e.altKey && e.key === 'Enter')) {
       e.preventDefault();
       toggleFullscreen();
