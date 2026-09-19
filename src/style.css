@@ -874,6 +874,68 @@ canvas.inverted {
   flex-shrink: 0;
 }
 
+.btn-hero-rpg-box {
+  width: 28px;
+  height: 28px;
+  border-color: rgba(255, 30, 39, 0.6) !important;
+  box-shadow: 0 0 10px rgba(255, 30, 39, 0.4) !important;
+  background: rgba(18, 10, 12, 0.88) !important;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.grid-btn-rpg-box {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.neo-grid-btn:hover .grid-btn-rpg-box {
+  transform: scale(1.12);
+}
+
+.dojo-btn .grid-btn-rpg-box {
+  border-color: rgba(192, 132, 252, 0.5) !important;
+  box-shadow: 0 0 8px rgba(192, 132, 252, 0.3) !important;
+}
+
+.upgrades-btn .grid-btn-rpg-box {
+  border-color: rgba(250, 204, 21, 0.5) !important;
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.3) !important;
+}
+
+.grimoire-btn .grid-btn-rpg-box {
+  border-color: rgba(251, 146, 60, 0.5) !important;
+  box-shadow: 0 0 8px rgba(251, 146, 60, 0.3) !important;
+}
+
+.chronicle-btn .grid-btn-rpg-box {
+  border-color: rgba(45, 212, 191, 0.5) !important;
+  box-shadow: 0 0 8px rgba(45, 212, 191, 0.3) !important;
+}
+
+.codex-btn .grid-btn-rpg-box {
+  border-color: rgba(56, 189, 248, 0.5) !important;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.3) !important;
+}
+
+.settings-btn .grid-btn-rpg-box {
+  border-color: rgba(148, 163, 184, 0.5) !important;
+  box-shadow: 0 0 8px rgba(148, 163, 184, 0.25) !important;
+}
+
+.fullscreen-btn .grid-btn-rpg-box {
+  border-color: rgba(212, 162, 78, 0.5) !important;
+  box-shadow: 0 0 8px rgba(212, 162, 78, 0.3) !important;
+}
+
+
 .btn-hero-text {
   display: flex;
   flex-direction: column;

@@ -41,3 +41,15 @@ test('RPG Icons Invariants: CSS defines .rpg-icon-box and opacity controls', () 
   assert.match(css, /--rpg-icon-opacity/, 'style.css defines --rpg-icon-opacity variable');
   assert.match(css, /\.rpg-text-upperlayer/, 'style.css defines upperlayer text protection');
 });
+
+test('RPG Icons Invariants: Main menu cards reference curated RPG fantasy icons', () => {
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  assert.match(html, /icons\/rpg\/fc1038\.png/, 'Hero button references fc1038 flaming blade');
+  assert.match(html, /icons\/rpg\/fc38\.png/, 'Dojo button references fc38 shrine pavilion');
+  assert.match(html, /icons\/rpg\/fc1044\.png/, 'Upgrades button references fc1044 golden spark hammer');
+  assert.match(html, /icons\/rpg\/fc292\.png/, 'Grimoire button references fc292 celestial star tome');
+  assert.match(html, /icons\/rpg\/fc110\.png/, 'Chronicle button references fc110 red-bound scroll');
+  assert.match(html, /icons\/rpg\/fc1295\.png/, 'Codex button references fc1295 reptilian eye tile');
+  assert.match(html, /icons\/rpg\/fc2\.png/, 'Settings button references fc2 clockwork gear');
+});
+

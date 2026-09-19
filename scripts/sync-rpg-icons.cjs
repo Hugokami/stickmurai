@@ -5,7 +5,11 @@ const SOURCE_DIR = 'C:\\Users\\lyan1\\Desktop\\game assets\\Free - Raven Fantasy
 const DEST_DIR = path.resolve(__dirname, '../public/icons/rpg');
 
 const REQUIRED_ICONS = [
+  'fc2.png',
   'fc20.png',
+  'fc38.png',
+  'fc110.png',
+  'fc292.png',
   'fc543.png',
   'fc888.png',
   'fc894.png',
@@ -13,6 +17,7 @@ const REQUIRED_ICONS = [
   'fc1031.png',
   'fc1038.png',
   'fc1043.png',
+  'fc1044.png',
   'fc1052.png',
   'fc1064.png',
   'fc1101.png',
@@ -33,6 +38,7 @@ const REQUIRED_ICONS = [
   'fc1237.png',
   'fc1267.png',
   'fc1276.png',
+  'fc1295.png',
   'fc1328.png',
   'fc1388.png'
 ];
