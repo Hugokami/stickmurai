@@ -16,10 +16,10 @@ const entries = [
   ['barrel_bomber','Barrel Bomber','Explosive','Keep your distance from the explosion.'],
   ['orc_brute','Orc Brute','Heavy','Dodge its windup and punish the recovery.'],
   ['toaster_bot','Toaster Bot','Ranged','Cross its firing line rather than standing still.'],
-  ['oni_boss','Oni Overlord','Boss','Dodge the lunge. Below 66% HP, move out of marked impact circles.'],
-  ['agis_colossus','Agis Colossus','Boss','Watch the slam. Later phases add rings with a safe center.'],
-  ['skeleton_warlord','Skeleton Warlord','Boss','Attack during recovery for bonus damage. Later phases add three impact zones.'],
-  ['shogun_boss','Supreme Shogun','Boss','Bait a committed attack, then punish recovery. Later rings have safe centers.']
+  ['oni_boss','Oni Overlord','Boss','Hellfire stomps erupt with fiery fissures; radial magma fireballs can be deflected. Sidestep enraged charges at <=50% HP.'],
+  ['agis_colossus','Agis Colossus','Boss','Titanic Apocalypse Slam generates cascading seismic shockwaves. Break through its kinetic orbital shield ring before unleashing heavy slashes.'],
+  ['skeleton_warlord','Skeleton Warlord','Boss','360° whirlwind cleaves shred adjacent areas. Bait bone deflection stance before striking, and cleave through summoned skeleton minions.'],
+  ['shogun_boss','Divine Shogun','Boss','Shadow dashes and 4-way / 8-way fan blade barrages. Deflect blade bursts back to shatter posture; do not strike into his parry stance.']
 ] as const;
 type RecordEntry = { stages: number[]; phases: number[] };
 let seen: Record<string, RecordEntry> = {};
@@ -51,7 +51,7 @@ export function renderCodex(grid:HTMLElement) {
   summary.innerHTML=`<h2>Field Grimoire</h2><p>${count}/${entries.length} discoveries · ${Math.round(count/entries.length*100)}% complete</p><p>Encounter enemies to record their stages and counterplay. Rewards are claimed once.</p>`;
   const bosses=entries.filter(e=>e[2]==='Boss'&&seen[e[0]]).length;
   for(const [id,label,ready,reward] of [['families','Discover 7 enemy types',count>=7,500],['bosses','Discover all 4 bosses',bosses===4,1000],['complete','Complete the field codex',count===entries.length,2000]] as const){
-    const button=document.createElement('button');button.textContent=claimed.includes(id)?`${label} · Claimed`:`${label} · ${reward} 🔮`;button.disabled=!ready||claimed.includes(id);
+    const button=document.createElement('button');button.textContent=claimed.includes(id)?`${label} · Claimed`:`${label} · ${reward} 🪙`;button.disabled=!ready||claimed.includes(id);
     button.onclick=()=>{if(!ready||claimed.includes(id))return;claimed.push(id);globals.magatama+=reward;save();safeStorage.setItem('stickmurai_magatama',String(globals.magatama));grid.replaceChildren();renderCodex(grid);};summary.append(button);
   }
   grid.append(summary);

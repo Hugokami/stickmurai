@@ -28,4 +28,5 @@ graphify-out/
 release/
 *.zip
 *.bin
+.hermes/
 

@@ -639,14 +639,43 @@
           <!-- Codex Filter Tabs Header -->
           <div id="codex-nav-tabs" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">
             <button class="codex-tab-btn active" data-tab="all" style="background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; color: #38bdf8; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace; font-weight: bold;">⚔️ ALL</button>
+            <button class="codex-tab-btn" data-tab="bosses" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">👹 BOSSES</button>
             <button class="codex-tab-btn" data-tab="combos" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">🌪️ COMBOS</button>
-            <button class="codex-tab-btn" data-tab="skills" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">🔮 SKILLS & AWAKENINGS</button>
+            <button class="codex-tab-btn" data-tab="skills" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">⚡ SKILLS & AWAKENINGS</button>
             <button class="codex-tab-btn" data-tab="heroes" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">👑 HEROES & STANCES</button>
             <button class="codex-tab-btn" data-tab="powerups" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">💎 POWERUPS</button>
             <button class="codex-tab-btn" data-tab="mechanics" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.15); color: #cbd5e1; border-radius: 6px; padding: 5px 12px; font-size: 11px; cursor: pointer; font-family: 'Space Mono', monospace;">🛡️ COMBAT MECHANICS</button>
           </div>
 
           <div class="guide-tabs-container" id="codex-cards-container" style="display: flex; flex-direction: column; gap: 14px; font-size: 13px; color: #cbd5e1; line-height: 1.6;">
+            <!-- Category: Bosses & Nemeses -->
+            <div class="guide-card" data-section="bosses" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(239, 68, 68, 0.35); border-radius: 8px; padding: 14px;">
+              <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #f87171; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span>👹</span> <span>BOSSES & SUPREME ARCH-NEMESES</span>
+                </div>
+                <span style="font-family: 'Space Mono', monospace; font-size: 11px; color: #fca5a5; background: rgba(239, 68, 68, 0.15); padding: 2px 8px; border-radius: 4px;">TACTICAL PROTOCOLS</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 10px;">
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ef4444;">
+                  <strong style="color: #fca5a5;">👹 Oni Overlord (鬼王)</strong>: <span>[HP: 35,000 | Speed: 320 | Posture: 1800]</span><br>
+                  <span style="font-size: 12px;">• <strong>Hellfire Stomp</strong>: Heavy spiked club slam erupting in radiating fiery shockwaves. Roll or jump outwards.<br>• <strong>Magma Projectiles</strong>: Sweeping fan of magma fireballs. Perfect parry deflects them to shatter his posture.<br>• <strong>Enraged Charge (&le;50% HP)</strong>: Roaring forward thrust with hyper-armor. Sidestep late and punish recovery.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #a855f7;">
+                  <strong style="color: #d8b4fe;">⚔️ Divine Shogun of Yomi (黄泉の神将)</strong>: <span>[HP: 42,000 | Speed: 340 | Posture: 2000]</span><br>
+                  <span style="font-size: 12px;">• <strong>Blade Fan Barrage</strong>: Fires 4-way and 8-way spinning blade projectiles. Deflect with parry to deal heavy posture damage.<br>• <strong>Shadow Clone Flurry</strong>: Teleports into mist, leaving shadow clones that slash sequentially before a downward plunge.<br>• <strong>Parry Counter Stance</strong>: Twin katanas flash with defensive barrier. DO NOT strike into his guard; bait the recovery!</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #06b6d4;">
+                  <strong style="color: #67e8f9;">🗿 Agis Astrum Colossus (星海巨神)</strong>: <span>[HP: 55,000 | Speed: 240 | Posture: 2400]</span><br>
+                  <span style="font-size: 12px;">• <strong>Titanic Apocalypse Crush</strong>: Dual-fist ground rupture creating multi-phase seismic ripples across the battlefield.<br>• <strong>Orbital Shield Barrier</strong>: Kinetic rotating runes absorb light slashes. Use heavy piercing skills to shatter outer plates.<br>• <strong>Celestial Meteor Drops</strong>: Track shadow circles on the ground; sprint or dash clear before stone shrapnel bursts.</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #eab308;">
+                  <strong style="color: #fef08a;">💀 Skeleton Warlord (骸骨将軍)</strong>: <span>[HP: 48,000 | Speed: 270 | Posture: 2200]</span><br>
+                  <span style="font-size: 12px;">• <strong>360° Dread Cleave</strong>: Massive greatsword spin covering a 320px radius. Time invulnerability dash through blade arc.<br>• <strong>Minion Legion Summon</strong>: Calls undead skeleton warriors. Sweep through them with Dragon's Fury to harvest Flow & Mon.<br>• <strong>Bone Deflection Stance</strong>: Guards with hardened skeletal shield before an instant armor-piercing lunging thrust.</span>
+                </div>
+              </div>
+            </div>
+
             <!-- Category 1: Combos & Maneuvers -->
             <div class="guide-card" data-section="combos" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 14px;">
               <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #38bdf8; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
@@ -696,31 +725,31 @@
             <div class="guide-card" data-section="skills" style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(234, 179, 8, 0.25); border-radius: 8px; padding: 14px;">
               <div style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: 15px; color: #ffd700; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
                 <div style="display: flex; align-items: center; gap: 6px;">
-                  <span>🔮</span> <span>ACTIVE SKILLS & DIVINE AWAKENINGS</span>
+                  <span>⚡</span> <span>ACTIVE SKILLS & DIVINE AWAKENINGS</span>
                 </div>
-                <span style="font-family: 'Space Mono', monospace; font-size: 11px; color: #fde047; background: rgba(234, 179, 8, 0.15); padding: 2px 8px; border-radius: 4px;">MAGATAMA ARSENAL</span>
+                <span style="font-family: 'Space Mono', monospace; font-size: 11px; color: #fde047; background: rgba(234, 179, 8, 0.15); padding: 2px 8px; border-radius: 4px;">MON ARSENAL & SKILLS</span>
               </div>
               <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #fde047;">
-                  <strong style="color: #fde047;">Tier 1 • Dragon's Fury (0 🔮)</strong>: <span>Blade size +80%, +3 Flat Slash DMG, and sword swings unleash piercing purple crescent waves (100% Slash DMG). Iaijutsu fires twin blazing dragons (300% Slash DMG). Duration 10s. Cooldown 12s.</span>
+                  <strong style="color: #fde047;">Tier 1 • Dragon's Fury (0 Mon)</strong>: <span>Blade size +80%, +3 Flat Slash DMG, and sword swings unleash piercing purple crescent waves (100% Slash DMG). Iaijutsu fires twin blazing dragons (300% Slash DMG). Duration 10s. Cooldown 12s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #38bdf8;">
-                  <strong style="color: #38bdf8;">Tier 2 • Raijin Step (5,000 🔮)</strong>: <span>Ultra-snappy lightning hyper-dash (0.9s CD, 0.45s invuln). Slashes through enemies for 20 + 150% Slash DMG and 1.2s stun with twin sky strikes.</span>
+                  <strong style="color: #38bdf8;">Tier 2 • Raijin Step (5,000 Mon)</strong>: <span>Ultra-snappy lightning hyper-dash (0.9s CD, 0.45s invuln). Slashes through enemies for 20 + 150% Slash DMG and 1.2s stun with twin sky strikes.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #4ade80;">
-                  <strong style="color: #4ade80;">Tier 3 • Wind Aegis (7,500 🔮)</strong>: <span>4.5s tempest barrier. Deflects enemy projectiles at 3x speed, pulsing every 0.6s for 18 + 220% Slash DMG with vacuum pull. Cooldown 10s.</span>
+                  <strong style="color: #4ade80;">Tier 3 • Wind Aegis (7,500 Mon)</strong>: <span>4.5s tempest barrier. Deflects enemy projectiles at 3x speed, pulsing every 0.6s for 18 + 220% Slash DMG with vacuum pull. Cooldown 10s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #fbbf24;">
-                  <strong style="color: #fbbf24;">Tier 4 • Parry Master (10,000 🔮)</strong>: <span>4.0s golden focus stance with +50% parry window. Riposte deals guaranteed 2.5x critical damage, breaks 40 enemy posture & grants +15 Flow. Cooldown 9s.</span>
+                  <strong style="color: #fbbf24;">Tier 4 • Parry Master (10,000 Mon)</strong>: <span>4.0s golden focus stance with +50% parry window. Riposte deals guaranteed 2.5x critical damage, breaks 40 enemy posture & grants +15 Flow. Cooldown 9s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #fb923c;">
-                  <strong style="color: #fb923c;">Tier 5 • Inferno Sweep / Firewheel (12,500 🔮)</strong>: <span>6.0s spinning blade ring dealing continuous burn damage (2 + 24% Slash DMG every 0.25s) & fires 4 rotating fire projectiles every 0.45s (80% Slash DMG). Ends in a 300px Inferno Supernova (250% Slash DMG + burn). Cooldown 11s.</span>
+                  <strong style="color: #fb923c;">Tier 5 • Inferno Sweep / Firewheel (12,500 Mon)</strong>: <span>6.0s spinning blade ring dealing continuous burn damage (2 + 24% Slash DMG every 0.25s) & fires 4 rotating fire projectiles every 0.45s (80% Slash DMG). Ends in a 300px Inferno Supernova (250% Slash DMG + burn). Cooldown 11s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #c084fc;">
-                  <strong style="color: #c084fc;">Tier 6 • Void Rupture / Phantom Slicer (35,000 🔮)</strong>: <span>Instant 320px supersonic dimensional blink slicing all enemies in path for 110 + 950% Slash DMG + 75 posture break and 0.7s stun. For 6s, enters void phase with afterimages and homing void blades (135% Slash DMG). Cooldown 12s.</span>
+                  <strong style="color: #c084fc;">Tier 6 • Void Rupture / Phantom Slicer (35,000 Mon)</strong>: <span>Instant 320px supersonic dimensional blink slicing all enemies in path for 110 + 950% Slash DMG + 75 posture break and 0.7s stun. For 6s, enters void phase with afterimages and homing void blades (135% Slash DMG). Cooldown 12s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #e879f9;">
-                  <strong style="color: #e879f9;">Apex Tier • Raijin's Cataclysm / Heavenly Judgement (50,000 🔮)</strong>: <span>Obliterates ALL on-screen enemy projectiles on cast! Calls down a 550px celestial thunderbolt dealing 140 + 1250% Slash DMG + 120 posture break and 0.75s stun. Slashes chain violet lightning to 5 enemies (250% Slash DMG) for 7s. Cooldown 10s.</span>
+                  <strong style="color: #e879f9;">Apex Tier • Raijin's Cataclysm / Heavenly Judgement (50,000 Mon)</strong>: <span>Obliterates ALL on-screen enemy projectiles on cast! Calls down a 550px celestial thunderbolt dealing 140 + 1250% Slash DMG + 120 posture break and 0.75s stun. Slashes chain violet lightning to 5 enemies (250% Slash DMG) for 7s. Cooldown 10s.</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border-left: 3px solid #ef4444; margin-top: 4px;">
                   <strong style="color: #fca5a5;">⚡ Divine Awakenings (Flow 100 / L-Shift)</strong>: 
@@ -817,7 +846,18 @@
                   <strong style="color: #fde68a;">🛡️ Sekiro Deflection & Posture Gauge</strong>: <span>Holding and releasing LMB on impact deflects attacks, dealing posture damage to enemies. Consecutive parries raise musical pitch and upgrade sparks from Amber ➔ Gold ➔ Cyan ➔ White-Blue radial burst!</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #ef4444;">
-                  <strong style="color: #fca5a5;">💥 Stagger Break & Execution Window</strong>: <span>Filling an enemy or boss's orange Posture gauge triggers [STAGGER BREAK!]. Strike immediately to execute for devastating lethal damage, Magatama bounty, and stance synergy detonations!</span>
+                  <strong style="color: #fca5a5;">💥 Stagger Break & Execution Window</strong>: <span>Filling an enemy or boss's orange Posture gauge triggers [STAGGER BREAK!]. Strike immediately to execute for devastating lethal damage, Mon bounty, and stance synergy detonations!</span>
+                </div>
+                <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #4ade80;">
+                  <strong style="color: #86efac;">🆙 Level-Up Stat Progression & Growth Mechanics</strong>: <span>Gaining EXP and reaching new levels yields substantial mathematical character scaling:<br>
+                  • <strong>Base Damage Scaling</strong>: <strong>+10% ATK per Level</strong> permanently increases all sword strikes, wave arcs, and Iaijutsu slashes (<code style="color:#4ade80;">(Level - 1) × 10%</code>).<br>
+                  • <strong>Vitality Restoration</strong>: Restores <strong>+1 Heart</strong> immediately on level up.<br>
+                  • <strong>Dynamic Stat Rolls</strong>: Every level awards 1 random permanent mastery bonus:<br>
+                  &nbsp;&nbsp;&bull; <em>-0.02s Attack Cooldown</em> (snappier combo chaining, down to 0.16s hard cap)<br>
+                  &nbsp;&nbsp;&bull; <em>-0.08s Dash Cooldown</em> (rapid repositioning and invulnerability uptime, down to 0.65s)<br>
+                  &nbsp;&nbsp;&bull; <em>+3 Posture Damage</em> (heavier guard pressure on strikes and deflections)<br>
+                  &nbsp;&nbsp;&bull; <em>+2 Iaijutsu Damage</em> (flat boost to charged quick-draw slashes)<br>
+                  &nbsp;&nbsp;&bull; <em>+4% Critical Strike Chance</em> (greater frequency of 2.0x / 2.5x critical burst strikes)</span>
                 </div>
                 <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; border-left: 3px solid #38bdf8;">
                   <strong style="color: #7dd3fc;">🛑 Wall-Clock Hitstop & Whiff Recovery Lag</strong>: <span>Connecting slashes produces tactile hitstop freeze for razor-sharp combat weight. Missing a slash incurs 0.28s recovery lag; rhythmic hits cancel into snappy 0.16s recovery.</span>
@@ -1196,10 +1236,10 @@
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(212, 162, 78, 0.25); padding-bottom: 10px; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; padding-right: 36px;">
             <div class="upgrades-header-titles">
               <h2 class="upgrades-title" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: #ffd700; margin: 0 0 4px 0; text-shadow: 0 0 15px rgba(212, 162, 78, 0.4); font-size: 20px;">⚡ ASCENSION &amp; UPGRADES (神格昇華)</h2>
-              <p class="upgrades-subtitle" style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0; letter-spacing: 0.5px;">Enhance your katana, constitution, and phantom arts permanently with Yomi Magatama.</p>
+              <p class="upgrades-subtitle" style="color: #cbd5e1; font-family: 'Space Mono', monospace; font-size: 11px; margin: 0; letter-spacing: 0.5px;">Enhance your katana, constitution, and phantom arts permanently with Yomi Mon.</p>
             </div>
             <div style="background: rgba(12, 13, 18, 0.92); border: 1.5px solid #d4a24e; border-radius: 0; clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px); padding: 6px 16px; font-family: 'Orbitron', monospace; font-size: 15px; color: #fef08a; font-weight: bold; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 12px rgba(212, 162, 78, 0.2);">
-              <span style="font-size: 18px;">🔮</span> <span id="menu-upgrades-magatama-count">0</span>
+              <img src="icons/mon_coin.png" class="hud-currency-icon" alt="Mon" /> <span id="menu-upgrades-magatama-count">0</span>
             </div>
           </div>
           
@@ -1288,7 +1328,7 @@
       </div>
 
       <!-- Stage Clear & Ascension Upgrade Shrine Modal -->
-      <div id="stage-clear-modal" class="overlay" style="display:none; z-index: 9700; background: rgba(8, 10, 18, 0.95);">
+      <div id="stage-clear-modal" class="overlay" style="display:none; z-index: 9999; background: rgba(6, 8, 14, 0.98); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);">
         <div class="menu-box stage-clear-menu-box" style="max-width: 820px; width: min(820px, 94vw); max-height: 94dvh; position: relative; display: flex; flex-direction: column; border-color: #ffd700; box-shadow: 0 0 45px rgba(255, 215, 0, 0.35); padding: clamp(10px, 2.2vh, 16px) clamp(12px, 2.8vw, 20px); overflow: hidden;">
           <button id="close-stage-clear-x-btn" class="modal-close-x" aria-label="Close" style="border-color: #ffd700; color: #ffd700;">✕</button>
 
@@ -1310,12 +1350,12 @@
               <span id="stage-clear-time" style="font-family: 'Orbitron', monospace; font-size: 13px; color: #38bdf8; font-weight: bold;">0:00</span>
             </div>
             <div class="bento-stat-pill" style="background: rgba(12, 13, 18, 0.92); border: 1.5px solid rgba(212, 162, 78, 0.4); border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); padding: 4px 6px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
-              <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: #94a3b8; text-transform: uppercase;">🔮 REWARD</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: #94a3b8; text-transform: uppercase;">🪙 REWARD</span>
               <span id="stage-clear-reward" style="font-family: 'Orbitron', monospace; font-size: 12px; color: #ffd700; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">+100</span>
             </div>
             <div class="bento-stat-pill" style="background: rgba(12, 13, 18, 0.92); border: 1.5px solid rgba(74, 222, 128, 0.4); border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); padding: 4px 6px; text-align: center; display: flex; flex-direction: column; justify-content: center;">
-              <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: #94a3b8; text-transform: uppercase;">💰 TREASURY</span>
-              <span id="stage-clear-magatama" style="font-family: 'Orbitron', monospace; font-size: 12px; color: #4ade80; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">0 🔮</span>
+              <span style="font-family: 'Space Mono', monospace; font-size: 9px; color: #94a3b8; text-transform: uppercase;">🪙 TREASURY</span>
+              <span id="stage-clear-magatama" style="font-family: 'Orbitron', monospace; font-size: 12px; color: #4ade80; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">0 🪙</span>
             </div>
           </div>
 
@@ -1334,7 +1374,7 @@
               <span id="star-text-3">Combo (20+)</span>
             </div>
             <div id="star-bounty-badge" style="display: none; background: rgba(212, 162, 78, 0.2); border: 1px solid #d4a24e; border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); padding: 2px 8px; color: #ffd700; font-weight: bold; font-family: 'Orbitron', monospace; font-size: 10px; box-shadow: 0 0 10px rgba(212, 162, 78, 0.3); white-space: nowrap; flex-shrink: 0; align-items: center; gap: 4px;">
-              ✨ +300 <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" />
+              ✨ +300 🪙
             </div>
           </div>
 

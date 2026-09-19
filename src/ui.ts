@@ -718,7 +718,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
         YOMI_SEALS[sealId]?.applyPermanentReward();
         playSynthesizedSealShatter();
         globals.screenShake = Math.max(globals.screenShake, 42);
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? `⛩️ 封印砕散！ +${sealReward} 🔮` : `⛩️ SEAL SHATTERED! +${sealReward} 🔮`, '#ffd700', 34));
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? `⛩️ 封印砕散！ +${sealReward} 🪙` : `⛩️ SEAL SHATTERED! +${sealReward} 🪙`, '#ffd700', 34));
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
       }
@@ -887,7 +887,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
           globals.activeBlessing = globals.stageBlessings.swift_strike.active ? 'both' : 'fortune';
           updateBlessingSelectionUI();
           try { playSynthesizedSingingBowl(); } catch(e) {}
-          showToast(globals.currentLang === 'ja' ? '🔮 招福の加護が解放されました！' : '🔮 Fortune Blessing Unlocked!');
+          showToast(globals.currentLang === 'ja' ? '🪙 招福の加護が解放されました！' : '🪙 Fortune Blessing Unlocked!');
         },
         onFailed: (err) => {
           console.warn("[AdManager] Blessing ad failed:", err);
@@ -1299,7 +1299,7 @@ export function renderSkillChoicesPregame() {
       const canAfford = (globals.magatama || 0) >= cost;
       lockContent = `
         <button class="skill-lock-btn" ${canAfford ? '' : 'disabled'}>
-          🔒 ${isJa ? '解放' : 'UNLOCK'}: ${cost.toLocaleString()} 🔮
+          🔒 ${isJa ? '解放' : 'UNLOCK'}: ${cost.toLocaleString()} 🪙
         </button>
       `;
     }
@@ -2408,12 +2408,12 @@ function processRedeemCode() {
     globals.screenShake = Math.max(globals.screenShake, 35);
     const px = globals.player ? globals.player.x : 0;
     const py = globals.player ? globals.player.y - 80 : 0;
-    globals.floatingTexts.push(FloatingText.acquire(px, py, '🎉 MASTER CODE! +50M 🔮', '#ffd700', 42));
+    globals.floatingTexts.push(FloatingText.acquire(px, py, '🎉 MASTER CODE! +50M 🪙', '#ffd700', 42));
 
     msgEl.style.color = '#10b981';
     msgEl.textContent = globals.currentLang === 'ja' 
-      ? '🎉 マスターコード認証！ +50,000,000 勾玉獲得！' 
-      : '🎉 MASTER CODE ACTIVATED! +50,000,000 MAGATAMA!';
+      ? '🎉 マスターコード認証！ +50,000,000 文獲得！' 
+      : '🎉 MASTER CODE ACTIVATED! +50,000,000 MON!';
     inputEl.value = '';
     return;
   }
@@ -2430,23 +2430,23 @@ function processRedeemCode() {
   switch(rawCode) {
     case 'STICKMURAI':
       rewardMagatama = 100000;
-      rewardTitle = 'STICKMURAI TRIBUTE (+100,000 🔮)';
+      rewardTitle = 'STICKMURAI TRIBUTE (+100,000 🪙)';
       break;
     case 'NIGHTBORNE':
       rewardMagatama = 200000;
-      rewardTitle = 'NIGHTBORNE SOVEREIGN (+200,000 🔮)';
+      rewardTitle = 'NIGHTBORNE SOVEREIGN (+200,000 🪙)';
       break;
     case 'SOVEREIGN':
       rewardMagatama = 300000;
-      rewardTitle = 'SATYR SOVEREIGN (+300,000 🔮)';
+      rewardTitle = 'SATYR SOVEREIGN (+300,000 🪙)';
       break;
     case 'CHAMPION':
       rewardMagatama = 500000;
-      rewardTitle = 'GRAND CHAMPION BOUNTY (+500,000 🔮)';
+      rewardTitle = 'GRAND CHAMPION BOUNTY (+500,000 🪙)';
       break;
     case 'SAMURAI2026':
       rewardMagatama = 150000;
-      rewardTitle = 'KENSEI TREASURE (+150,000 🔮)';
+      rewardTitle = 'KENSEI TREASURE (+150,000 🪙)';
       break;
     default:
       msgEl.style.color = '#ef4444';
@@ -2547,7 +2547,7 @@ export function populateDojoHeroGrid() {
             </div>
             <div style="font-size: 10px; color: #94a3b8; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
             <button class="menu-btn btn-card buy-awakening-btn" data-hero="${hero.id}" ${canAffordAwk ? '' : 'disabled'} style="margin-top: 4px; padding: 4px 10px !important; min-height: 28px !important; font-size: 11px !important; border-color: ${canAffordAwk ? '#d4a24e' : '#64748b'}; color: ${canAffordAwk ? '#ffd700' : '#94a3b8'}; cursor: ${canAffordAwk ? 'pointer' : 'not-allowed'};">
-              ${isJa ? `覚醒習得: ${awk.cost.toLocaleString()} 🔮` : `AWAKEN: ${awk.cost.toLocaleString()} 🔮`}
+              ${isJa ? `覚醒習得: ${awk.cost.toLocaleString()} 🪙` : `AWAKEN: ${awk.cost.toLocaleString()} 🪙`}
             </button>
           </div>
         `;
@@ -2858,7 +2858,7 @@ export function populateAscensionUpgrades() {
 
   // Sync all treasury count elements
   const stageClearTreasury = document.getElementById('stage-clear-magatama');
-  if (stageClearTreasury) stageClearTreasury.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
+  if (stageClearTreasury) stageClearTreasury.textContent = (globals.magatama || 0).toLocaleString() + ' 🪙';
   const menuTreasury = document.getElementById('menu-upgrades-magatama-count');
   if (menuTreasury) menuTreasury.textContent = (globals.magatama || 0).toLocaleString();
   const dojoTreasury = document.getElementById('dojo-magatama-count');
@@ -2937,7 +2937,7 @@ export function populateAscensionUpgrades() {
             <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;">✓ MASTERED</button>
           ` : `
             <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; touch-action: manipulation; user-select: none;">
-              <div>${isJa ? `強化: ${cost.toLocaleString()} 🔮` : `UPGRADE: ${cost.toLocaleString()} 🔮`}</div>
+              <div>${isJa ? `強化: ${cost.toLocaleString()} 🪙` : `UPGRADE: ${cost.toLocaleString()} 🪙`}</div>
               <div style="font-size: 8px; opacity: 0.75; font-weight: normal; letter-spacing: 0.3px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
             </button>
           `}
@@ -2979,7 +2979,7 @@ export function populateAscensionUpgrades() {
 
           // Treasury counter sync
           const stageClearTreasury = document.getElementById('stage-clear-magatama');
-          if (stageClearTreasury) stageClearTreasury.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
+          if (stageClearTreasury) stageClearTreasury.textContent = (globals.magatama || 0).toLocaleString() + ' 🪙';
           const menuTreasury = document.getElementById('menu-upgrades-magatama-count');
           if (menuTreasury) menuTreasury.textContent = (globals.magatama || 0).toLocaleString();
           const dojoTreasury = document.getElementById('dojo-magatama-count');
@@ -3021,7 +3021,7 @@ export function populateAscensionUpgrades() {
             return false;
           } else {
             buyBtn.innerHTML = `
-              <div>${isJa ? `強化: ${nextCost.toLocaleString()} 🔮` : `UPGRADE: ${nextCost.toLocaleString()} 🔮`}</div>
+              <div>${isJa ? `強化: ${nextCost.toLocaleString()} 🪙` : `UPGRADE: ${nextCost.toLocaleString()} 🪙`}</div>
               <div style="font-size: 8px; opacity: 0.75; font-weight: normal; letter-spacing: 0.3px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
             `;
             if (!canAffordNext) {
@@ -3057,7 +3057,7 @@ export function populateAscensionUpgrades() {
             safeStorage.setItem('stickmurai_campaign_upgrades', JSON.stringify(globals.campaignUpgrades));
             const finalLvl = ((globals.campaignUpgrades as any)[u.id]) || 0;
             window.dispatchEvent(new CustomEvent('qol-toast', {
-              detail: `${isJa ? u.nameJa : u.name} Lv. ${finalLvl} (${upgradesDone > 1 ? `+${upgradesDone} ` : ''}▲) · ${isJa ? '残高' : 'Remaining'} ${globals.magatama.toLocaleString()} 🔮`
+              detail: `${isJa ? u.nameJa : u.name} Lv. ${finalLvl} (${upgradesDone > 1 ? `+${upgradesDone} ` : ''}▲) · ${isJa ? '残高' : 'Remaining'} ${globals.magatama.toLocaleString()} 🪙`
             }));
             populateAscensionUpgrades();
           }
@@ -3115,6 +3115,8 @@ export function triggerStageClear() {
   if (levelUpModal) levelUpModal.style.display = 'none';
   const ultModal = document.getElementById('ult-screen');
   if (ultModal) ultModal.style.display = 'none';
+  const uiLayer = document.getElementById('ui-layer');
+  if (uiLayer) uiLayer.style.display = 'none';
   const modal = document.getElementById('stage-clear-modal');
   if (!modal) return;
 
@@ -3160,7 +3162,8 @@ export function triggerStageClear() {
     masteryBounty = 300;
   }
 
-  globals.magatama = (globals.magatama || 0) + stageReward + masteryBounty;
+  const previousTreasury = globals.magatama || 0;
+  globals.magatama = previousTreasury + stageReward + masteryBounty;
   safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
 
   // Unlock next stage (Endless progression)
@@ -3219,13 +3222,13 @@ export function triggerStageClear() {
   if (bountyBadge) {
     bountyBadge.style.display = masteryBounty > 0 ? 'inline-block' : 'none';
     if (masteryBounty > 0) {
-      bountyBadge.textContent = isJa ? '✨ +300 🔮 完全制覇' : '✨ +300 🔮';
+      bountyBadge.textContent = isJa ? '✨ +300 🪙 完全制覇' : '✨ +300 🪙';
     }
   }
 
   const rewardEl = document.getElementById('stage-clear-reward');
   if (rewardEl) {
-    let rewardText = `+${stageReward.toLocaleString()} 🔮`;
+    let rewardText = `+${stageReward.toLocaleString()} 🪙`;
     if (isFirstClear) {
       rewardText = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[FIRST 3×]</span> ` + rewardText;
     }
@@ -3236,7 +3239,36 @@ export function triggerStageClear() {
   }
 
   const magEl = document.getElementById('stage-clear-magatama');
-  if (magEl) magEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🔮';
+  if (magEl) {
+    magEl.textContent = previousTreasury.toLocaleString() + ' 🪙';
+    
+    // Smooth currency queue count-up animation
+    const animStartTime = performance.now() + 350;
+    const animDuration = 1000;
+    const stepCount = (now: number) => {
+      if (now < animStartTime) {
+        requestAnimationFrame(stepCount);
+        return;
+      }
+      const elapsed = now - animStartTime;
+      const progress = Math.min(1, elapsed / animDuration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const cur = Math.round(previousTreasury + (globals.magatama - previousTreasury) * eased);
+      magEl.textContent = cur.toLocaleString() + ' 🪙';
+      magEl.style.color = '#ffd700';
+      magEl.style.transform = progress < 1 ? 'scale(1.08)' : 'scale(1)';
+      magEl.style.transition = 'transform 0.06s ease';
+      if (progress < 1) {
+        requestAnimationFrame(stepCount);
+      } else {
+        magEl.textContent = (globals.magatama || 0).toLocaleString() + ' 🪙';
+        magEl.style.color = '#4ade80';
+        magEl.style.transform = 'scale(1)';
+        refreshAllMagatamaDisplays();
+      }
+    };
+    requestAnimationFrame(stepCount);
+  }
 
   // Double Soul Bounty Rewarded Ad
   const doubleBtn = document.getElementById('stage-clear-double-btn');
@@ -3245,7 +3277,7 @@ export function triggerStageClear() {
     doubleBtn.removeAttribute('disabled');
     (doubleBtn as HTMLElement).style.opacity = '1';
     (doubleBtn as HTMLElement).style.pointerEvents = 'auto';
-    doubleBtn.textContent = isJa ? `+2倍獲得 🔮` : `+DOUBLE 🔮`;
+    doubleBtn.textContent = isJa ? `+2倍獲得 🪙` : `+DOUBLE 🪙`;
     
     // Replace with fresh button to eliminate duplicate event listeners
     const freshBtn = doubleBtn.cloneNode(true) as HTMLButtonElement;
@@ -3256,18 +3288,40 @@ export function triggerStageClear() {
       AdManager.showRewardedAd('double-reward', {
         onComplete: () => {
           globals.stageDoubleRewardClaimed = true;
-          globals.magatama = (globals.magatama || 0) + stageReward;
+          const doubleStart = globals.magatama || 0;
+          const doubleTarget = doubleStart + stageReward;
+          globals.magatama = doubleTarget;
           safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-          refreshAllMagatamaDisplays();
           try { playSynthesizedSingingBowl(); } catch(e) {}
           freshBtn.setAttribute('disabled', 'true');
           freshBtn.style.opacity = '0.6';
           freshBtn.style.pointerEvents = 'none';
           freshBtn.textContent = isJa ? `✓ 2倍達成！` : `✓ 2× DOUBLED`;
           if (rewardEl) {
-            rewardEl.innerHTML = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[2× MON BOUNTY]</span> +${(stageReward * 2).toLocaleString()} <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" />`;
+            rewardEl.innerHTML = `<span style="color: #ffd700; font-size: 11px; margin-right: 4px;">[2× MON BOUNTY]</span> +${(stageReward * 2).toLocaleString()} 🪙`;
           }
-          if (magEl) magEl.innerHTML = (globals.magatama || 0).toLocaleString() + ' <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" />';
+          if (magEl) {
+            const dStart = performance.now();
+            const dDur = 800;
+            const stepDouble = (now: number) => {
+              const elap = now - dStart;
+              const prog = Math.min(1, elap / dDur);
+              const e = 1 - Math.pow(1 - prog, 3);
+              const cur = Math.round(doubleStart + stageReward * e);
+              magEl.textContent = cur.toLocaleString() + ' 🪙';
+              magEl.style.color = '#ffd700';
+              magEl.style.transform = prog < 1 ? 'scale(1.08)' : 'scale(1)';
+              if (prog < 1) {
+                requestAnimationFrame(stepDouble);
+              } else {
+                magEl.textContent = doubleTarget.toLocaleString() + ' 🪙';
+                magEl.style.color = '#4ade80';
+                magEl.style.transform = 'scale(1)';
+                refreshAllMagatamaDisplays();
+              }
+            };
+            requestAnimationFrame(stepDouble);
+          }
           showToast(isJa ? `🪙 獲得文が2倍になりました！(+${stageReward} 文)` : `🪙 Treasury bounty doubled! (+${stageReward} Mon)`);
         },
         onFailed: () => {

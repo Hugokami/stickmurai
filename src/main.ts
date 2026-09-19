@@ -3292,14 +3292,14 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
     const execMag = Math.round((isBoss ? 15 : 3) * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
     globals.magatama = (globals.magatama || 0) + execMag;
     safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-    globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🔮`, '#c084fc', 22));
+    globals.floatingTexts.push(FloatingText.acquire(e.x + 25, e.y - 85, `+${execMag} 🪙`, '#ffd700', 22));
 
     // Nightborne Sovereign execution passive: Soul Siphon restores +1 Heart and siphons +35 extra Magatama
     if (globals.selectedHero === 'nightborne') {
       globals.lives = Math.min(globals.maxLives, globals.lives + 1);
       globals.magatama = (globals.magatama || 0) + 35;
       safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "+1 ❤️ SOUL SIPHON! (+35 🔮)", "#c084fc", 26));
+      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "+1 ❤️ SOUL SIPHON! (+35 🪙)", "#ffd700", 26));
       globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#c084fc'));
     }
 
@@ -3802,7 +3802,7 @@ function killEnemy(e: Enemy) {
   globals.magatama = (globals.magatama || 0) + earnedMagatama;
   safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
   if (isBossEnemy || Math.random() < 0.35) {
-    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `+${earnedMagatama} 🔮`, '#c084fc', isBossEnemy ? 26 : 18));
+    globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 45, `+${earnedMagatama} 🪙`, '#ffd700', isBossEnemy ? 26 : 18));
   }
 
 
@@ -3889,8 +3889,8 @@ function addCombo() {
     globals.floatingTexts.push(FloatingText.acquire(
       globals.player.x,
       globals.player.y - 140,
-      globals.currentLang === 'ja' ? `🔥 ${globals.combo}連撃ボーナス: +${comboBounty} 🔮` : `🔥 ${globals.combo} COMBO BOUNTY: +${comboBounty} 🔮`,
-      'neon-#ffd700',
+      globals.currentLang === 'ja' ? `🔥 ${globals.combo}連撃ボーナス: +${comboBounty} 🪙` : `🔥 ${globals.combo} COMBO BOUNTY: +${comboBounty} 🪙`,
+      '#ffd700',
       30
     ));
     try { playSynthesizedParry(); } catch(err) {}
@@ -5645,7 +5645,7 @@ function update(realDt: number) {
             const parryMag = Math.round(2 * (globals.playerStats?.fortuneMult || 1.0) * bloodSurgeMult);
             globals.magatama = (globals.magatama || 0) + parryMag;
             safeStorage.setItem('stickmurai_magatama', globals.magatama.toString());
-            globals.floatingTexts.push(FloatingText.acquire(globals.player.x + 35, globals.player.y - 85, `+${parryMag} 🔮`, '#c084fc', 20));
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x + 35, globals.player.y - 85, `+${parryMag} 🪙`, '#ffd700', 20));
             globals.stageCurrency += 2;
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x - 35, globals.player.y - 85, '+2 ◆', '#fbbf24', 18));
 

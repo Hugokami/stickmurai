@@ -14,6 +14,7 @@ import {
 import { Slash, FloatingText, Shockwave, Particle, AnimatedEffect } from './entities';
 import { bindDualListener } from './ui';
 import { AdManager } from './adManager';
+import { showToast } from './qol';
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
 
@@ -340,6 +341,13 @@ function applyStatLevelUp() {
     : current + roll.amount;
   
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 65, `⚡ LVL UP: ${roll.label}`, '#4ade80', 22));
+  
+  const isJa = globals.currentLang === 'ja';
+  const levelDmgBonus = Math.max(0, (globals.level - 1) * 10);
+  showToast(isJa 
+    ? `🆙 Lv.${globals.level} 到達! [${roll.label}] 獲得 (基礎攻撃力 +${levelDmgBonus}%, 体力+1回復)` 
+    : `🆙 LV.${globals.level} REACHED! [${roll.label}] acquired (+${levelDmgBonus}% Base ATK, +1 Heart Healed)`
+  );
 }
 
 export function triggerLevelUp() {

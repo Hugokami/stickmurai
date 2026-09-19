@@ -57,7 +57,7 @@ export function renderStageBriefing(stage: number, anchor: HTMLElement) {
   const fortune=1;
   const reward=Math.round(stage*100*fortune)*(first?3:1);
   const objective=boss ? (ja?'ボスを倒す':'Defeat the boss') : `${ja?'撃破目標':'Eliminate'}: ${targets[stage]||Math.min(90,35+stage*4)}`;
-  el.textContent=`${objective} · ${ja?'報酬':'Clear reward'}: ${reward.toLocaleString()} 🔮${first?' (×3 first clear)':''} · ★ ${boss?90:60}s · ★ 20 combo · +300 🔮 ${ja?'初の三つ星':'first 3-star clear'}`;
+  el.textContent=`${objective} · ${ja?'報酬':'Clear reward'}: ${reward.toLocaleString()} 🪙${first?' (×3 first clear)':''} · ★ ${boss?90:60}s · ★ 20 combo · +300 🪙 ${ja?'初の三つ星':'first 3-star clear'}`;
   try { const best=JSON.parse(safeStorage.getItem('stickmurai_stage_bests')||'{}')[stage]; if(best && [best.time,best.damage,best.combo].every(Number.isFinite)) { const p=document.createElement('div'); p.textContent=`${ja?'自己ベスト':'Personal best'}: ${num(best.time)}s · ${best.damage} ${ja?'被ダメージ':'damage taken'} · ${best.combo} combo`; el.append(p); } } catch { /* Invalid optional records never block stage selection. */ }
 }
 

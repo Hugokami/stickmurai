@@ -643,15 +643,22 @@ canvas.inverted {
 
 .game-title {
   color: #fff;
-  font-size: clamp(32px, 5.5vw, 52px);
-  letter-spacing: 4px;
-  line-height: 1.1;
+  font-size: clamp(20px, 4.2vw, 44px);
+  letter-spacing: clamp(1px, 0.35vw, 3px);
+  line-height: 1.15;
   margin: 0;
+  padding: 2px 8px;
+  max-width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(180deg, #ffd200 20%, #ff6b35 60%, #ff1e27 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 18px rgba(255, 30, 39, 0.65));
+  filter: drop-shadow(0 3px 14px rgba(255, 30, 39, 0.65));
   font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;
+  white-space: nowrap;
+  text-align: center;
+  overflow: visible;
+  display: inline-block;
 }
 
 .game-subtitle-bar {
@@ -2443,7 +2450,15 @@ input[type="range"]::-webkit-slider-thumb:hover {
   width: 100%;
 }
 
-#main-menu.overlay,
+#main-menu.overlay {
+  justify-content: center;
+  align-items: center;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior: contain;
+}
+
 #skill-select-screen.overlay,
 #pause-screen.overlay,
 #settings-screen.overlay,
@@ -2540,7 +2555,14 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
 
   /* Non-scrollable containers */
-  #main-menu .main-menu-box,
+  #main-menu .main-menu-box {
+    height: auto !important;
+    min-height: auto !important;
+    max-height: calc(100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 8px) !important;
+    overflow-y: auto !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
   #skill-select-screen .skill-select-box,
   .pause-menu-box {
     height: auto !important;
@@ -2609,11 +2631,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
 
   .menu-left {
     flex: 1.1;
-    height: 100% !important; /* Force full height of parent */
+    height: 100% !important;
     justify-content: center;
     align-items: center;
-    gap: 8px !important;
-    overflow: visible;
+    gap: 4px !important;
+    overflow-y: auto !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .menu-left::-webkit-scrollbar,
+  .main-menu-box::-webkit-scrollbar {
+    display: none;
   }
   
   .menu-right {
@@ -2627,9 +2656,26 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
   
   .menu-left .game-title {
-    font-size: clamp(14px, 5vh, 22px) !important;
+    font-size: clamp(14px, 4.4vh, 22px) !important;
+    letter-spacing: clamp(1px, 0.3vw, 2.5px) !important;
     line-height: 1.1 !important;
-    margin: 0 0 3px 0 !important;
+    margin: 0 !important;
+    padding: 0 4px !important;
+    white-space: nowrap !important;
+  }
+
+  .menu-left .game-title-wrap {
+    margin-bottom: 2px !important;
+    gap: 2px !important;
+  }
+
+  .menu-left .game-subtitle-bar {
+    display: none !important;
+  }
+
+  .menu-left .katana-divider-bar {
+    margin: 2px auto 6px auto !important;
+    max-width: 220px !important;
   }
 
   .menu-left h2 {
@@ -2668,22 +2714,55 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
   
   .menu-buttons {
-    flex-direction: row !important;
-    flex-wrap: wrap;
-    justify-content: center;
-    width: 100%;
-    gap: 5px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 4px !important;
     overflow: visible;
   }
-  
-  .menu-btn {
-    flex: 1 1 auto;
-    padding: 6px 10px !important;
-    font-size: clamp(9px, 2.2vh, 11.5px) !important;
-    min-width: 80px !important;
-    max-width: none !important;
+
+  .menu-btn-hero {
+    min-height: clamp(34px, 6.2vh, 44px) !important;
+    padding: clamp(4px, 1vh, 8px) 14px !important;
+    width: 100% !important;
     margin: 0 !important;
-    white-space: nowrap;
+  }
+
+  .menu-grid-2x4 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: clamp(3px, 0.8vh, 6px) !important;
+    width: 100% !important;
+  }
+
+  .neo-grid-btn {
+    min-height: clamp(28px, 5vh, 36px) !important;
+    padding: clamp(2px, 0.6vh, 4px) clamp(6px, 1.2vw, 10px) !important;
+    gap: 6px !important;
+  }
+
+  .neo-grid-btn .grid-btn-icon {
+    width: clamp(13px, 2.2vh, 16px) !important;
+    height: clamp(13px, 2.2vh, 16px) !important;
+  }
+
+  .neo-grid-btn .grid-btn-title {
+    font-size: clamp(9px, 1.6vh, 11px) !important;
+  }
+
+  .neo-grid-btn .grid-btn-sub {
+    font-size: clamp(7px, 1.2vh, 8.5px) !important;
+  }
+
+  .fullscreen-btn {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+    min-height: clamp(26px, 4.8vh, 34px) !important;
+    padding: clamp(2px, 0.6vh, 4px) 10px !important;
+    margin-top: 1px !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
   
   #skill-select-screen h2 {
@@ -5403,6 +5482,48 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
 @media (min-width: 960px) {
   .samurai-ribbon-pillar {
     display: block;
+  }
+}
+
+/* Ensure Main Menu Title & Fullscreen Button Are Wholly Visible on Mobile Screens */
+@media (max-width: 640px) {
+  .main-menu-box {
+    max-width: 95vw !important;
+    width: 95vw !important;
+    padding: clamp(10px, 1.8vh, 16px) clamp(10px, 2.5vw, 16px) !important;
+    max-height: calc(100dvh - 14px) !important;
+    overflow-y: auto !important;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .main-menu-box::-webkit-scrollbar {
+    display: none;
+  }
+  .game-title {
+    font-size: clamp(18px, 6vw, 30px) !important;
+    letter-spacing: clamp(1px, 0.35vw, 2.5px) !important;
+    padding: 2px 4px !important;
+    white-space: nowrap !important;
+  }
+  .katana-divider-bar {
+    max-width: 240px !important;
+    margin: 4px auto 8px auto !important;
+  }
+  .menu-grid-2x4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+  .neo-grid-btn {
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+  }
+  .fullscreen-btn {
+    grid-column: 1 / -1 !important;
+    min-height: 38px !important;
+    margin-top: 2px !important;
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 }
 
