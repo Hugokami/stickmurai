@@ -36,7 +36,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleEn: 'Blade God Revelation',
     titleJa: '刀神の啓示',
     cost: 10000,
-    icon: '⚡',
+    icon: 'icons/rpg/fc1038.png',
     descEn: 'Perfect parrying slows time for 1.2s and discharges 4 phantom counter-slashes seeking all nearby foes for 150% slash damage.',
     descJa: '完璧な弾きで1.2秒間時間を遅延させ、周囲の敵へ150%ダメージの幻影斬撃4発を自動追尾で放つ。'
   },
@@ -47,7 +47,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleEn: 'Lunar Ascension',
     titleJa: '月華の昇華',
     cost: 20000,
-    icon: '🌙',
+    icon: 'icons/rpg/fc1191.png',
     descEn: 'Iaijutsu splits into a dual-crescent cross cutting all dimensions. Hits summon radiant lunar beams dealing heavy continuous damage.',
     descJa: '抜刀術が縦横二連の十文字月華斬に分裂。命中時に天から月光柱が降り注ぎ継続大ダメージを与える。'
   },
@@ -58,7 +58,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleEn: 'Wraith Mirage',
     titleJa: '幽幻の蜃気楼',
     cost: 30000,
-    icon: '👤',
+    icon: 'icons/rpg/fc543.png',
     descEn: 'Dashing leaves behind a lethal shadow clone that mirrors your slashes and taunts enemies for 3.5s, detonating into a flash smoke stun.',
     descJa: '瞬歩後に斬撃を模倣し敵を引きつける影分身を生成（3.5秒）。消滅時に煙幕閃光が炸裂し周囲を気絶させる。'
   },
@@ -69,7 +69,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleEn: 'Unbroken Dragon Poise',
     titleJa: '不撓の竜威',
     cost: 60000,
-    icon: '🐉',
+    icon: 'icons/rpg/fc1328.png',
     descEn: 'Parries erupt into a golden dragon wave shredding 120 enemy posture instantly and granting 3 seconds of Hyper Armor (50% DR + unflinching).',
     descJa: '弾き成功時に金龍の衝撃波が咆哮し敵の体幹を一気に120削る。さらに3秒間ハイパーアーマー（被ダメ半減・無硬直）。'
   },
@@ -80,7 +80,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleEn: 'Void Sovereign Core',
     titleJa: '虚無の特異核',
     cost: 100000,
-    icon: '🌌',
+    icon: 'icons/rpg/fc1052.png',
     descEn: 'Executions and Awakening trigger a black hole vortex for 4s, crushing enemies together, dealing dark pulses, and siphoning player health.',
     descJa: '処刑および覚醒時に4秒間ブラックホールが出現。周囲の敵を吸い寄せ、暗黒パルスで体力を吸収する。'
   },
@@ -91,7 +91,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleEn: 'Primal Tremor',
     titleJa: '原初の激震',
     cost: 150000,
-    icon: '🌋',
+    icon: 'icons/rpg/fc1237.png',
     descEn: 'Every 3rd slash fractures the ground in a cone, erupting jagged stone pillars that propel enemies airborne and increase incoming damage by +40%.',
     descJa: '3連撃ごとに大地を叩き割る地割れが発生。隆起した巨岩が敵を打ち上げ、被ダメージを+40%増加させる。'
   },
@@ -102,7 +102,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleEn: 'Crimson Carnage',
     titleJa: '紅蓮の大虐殺',
     cost: 240000,
-    icon: '🩸',
+    icon: 'icons/rpg/fc1220.png',
     descEn: 'Crits spawn spinning blood scythe boomerangs (max 2 active, 0.4s cooldown, 4 pierces). Kills during Flow Awakening extend duration by +0.7s (max +3.5s).',
     descJa: '会心時に血の大鎌を射出（最大2枚・0.4秒CD・最大4体貫通）。覚醒中の討伐で覚醒時間を+0.7秒延長（最大+3.5秒まで）。'
   },
@@ -113,7 +113,7 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleEn: 'Celestial Convergence',
     titleJa: '星辰の収束',
     cost: 720000,
-    icon: '🌌',
+    icon: 'icons/rpg/fc1276.png',
     descEn: 'Railgun fires 3-way piercing starbeam cone. Basic slashes unleash dual homing crescent blades. 100% crit chance on targets marked with Star Brand.',
     descJa: 'レールガンが3方向の貫通光線を放射。通常斬撃で追尾する二重の三日月刃を射出。星の刻印を持つ敵に確定会心。'
   }

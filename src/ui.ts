@@ -87,7 +87,7 @@ export const ASCENSION_UPGRADES = [
     id: 'slashDamage',
     name: 'Katana Sharpness',
     nameJa: '刃の研鑽',
-    icon: '🗡️',
+    icon: 'icons/rpg/fc1170.png',
     max: 10,
     desc: '+0.5 Flat DMG & +1% ATK per level',
     descJa: '基礎斬撃+0.5 & ATK倍率+1%/Lv',
@@ -98,7 +98,7 @@ export const ASCENSION_UPGRADES = [
     id: 'dashCooldown',
     name: 'Phantom Stride',
     nameJa: '瞬歩・神速',
-    icon: '⚡',
+    icon: 'icons/rpg/fc888.png',
     max: 5,
     desc: '-0.08s Dash cooldown per level (0.4s minimum)',
     descJa: 'ダッシュCT-0.08秒（最低0.4秒）',
@@ -109,7 +109,7 @@ export const ASCENSION_UPGRADES = [
     id: 'ultimateDamage',
     name: 'Heavenly Cataclysm',
     nameJa: '天変地異',
-    icon: '💥',
+    icon: 'icons/rpg/fc1267.png',
     max: 10,
     desc: '+10% Ultimate damage per level',
     descJa: '奥義ダメージ+10%/Lv',
@@ -120,7 +120,7 @@ export const ASCENSION_UPGRADES = [
     id: 'counterSiphon',
     name: 'Blood Riposte',
     nameJa: '血の返礼',
-    icon: '🩸',
+    icon: 'icons/rpg/fc1220.png',
     max: 5,
     desc: 'Parry & Mikiri restore 5% Max HP (100/5 ❤️) + 15 Flow',
     descJa: '見切り＆パリィ時 最大HP5% (100/5 ❤️) 回復 + 15気力',
@@ -131,7 +131,7 @@ export const ASCENSION_UPGRADES = [
     id: 'critMastery',
     name: 'Deathstrike Sutra',
     nameJa: '必殺の教条',
-    icon: '🎯',
+    icon: 'icons/rpg/fc1228.png',
     max: 5,
     desc: '+10% Crit Chance, 2.2x Crit DMG & micro-stagger',
     descJa: '会心率+10%/Lv、会心倍率2.2倍、小怯み付与',
@@ -143,7 +143,7 @@ export const ASCENSION_UPGRADES = [
     id: 'infiniteSharpness',
     name: 'Endless Edge',
     nameJa: '無限の真剣',
-    icon: '✨',
+    icon: 'icons/rpg/fc1132.png',
     max: 999,
     isEndless: true,
     desc: '+0.2 Flat DMG & +0.5% ATK per rank (Uncapped)',
@@ -1338,7 +1338,7 @@ export function renderSkillChoicesPregame() {
     
     card.classList.add(`category-${category}`);
     
-    const icon = skill.icon || '⚔️';
+    const icon = skill.icon || 'icons/rpg/fc1170.png';
     const cost = skill.cost || 0;
 
     let lockContent = '';
@@ -1361,17 +1361,27 @@ export function renderSkillChoicesPregame() {
     };
     const hankoSrc = hankoMap[category] || 'ui/hanko_bushi.png';
 
+    const skillIconHtml = icon.startsWith('icons/')
+      ? `<div class="rpg-icon-box" style="width: 26px; height: 26px;"><img src="${icon}" class="rpg-icon-img" alt="${t(skill.nameKey)}" /></div>`
+      : `<span style="font-size: 16px;">${icon}</span>`;
+    const skillWatermark = icon.startsWith('icons/')
+      ? `<img src="${icon}" class="rpg-card-backdrop-icon" alt="" aria-hidden="true" style="width: 44px; height: 44px; opacity: 0.16;" />`
+      : '';
+
     card.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-        <span class="skill-category-badge">${category}</span>
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <img src="${hankoSrc}" alt="${category} seal" style="width: 22px; height: 22px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(220, 38, 38, 0.5)); vertical-align: middle;" />
-          <span style="font-size: 16px;">${icon}</span>
+      ${skillWatermark}
+      <div style="position: relative; z-index: 2;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span class="skill-category-badge rpg-text-upperlayer">${category}</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <img src="${hankoSrc}" alt="${category} seal" style="width: 22px; height: 22px; object-fit: contain; filter: drop-shadow(0 0 5px rgba(220, 38, 38, 0.5)); vertical-align: middle;" />
+            ${skillIconHtml}
+          </div>
         </div>
+        <h3 class="rpg-text-upperlayer">${t(skill.nameKey)}</h3>
+        <p class="rpg-text-upperlayer">${t(skill.descKey)}</p>
+        ${lockContent}
       </div>
-      <h3>${t(skill.nameKey)}</h3>
-      <p>${t(skill.descKey)}</p>
-      ${lockContent}
     `;
 
     if (isUnlocked) {
@@ -1719,6 +1729,21 @@ export function updateCooldownsUI() {
     (bar as HTMLElement).style.height = `${flowPct}%`;
   });
 
+  const setUltIcon = (container: Element | null, srcOrEmoji: string, alt: string) => {
+    if (!container) return;
+    if (srcOrEmoji.startsWith('icons/')) {
+      const img = container.querySelector('img');
+      if (img) {
+        img.src = srcOrEmoji;
+        img.alt = alt;
+      } else {
+        container.innerHTML = `<img src="${srcOrEmoji}" class="rpg-icon-img" alt="${alt}" />`;
+      }
+    } else {
+      container.textContent = srcOrEmoji;
+    }
+  };
+
   // Dynamic Zen Mode label on omnislash button
   const omniBtnEl = document.getElementById('btn-ult-omni');
   if (omniBtnEl) {
@@ -1727,11 +1752,11 @@ export function updateCooldownsUI() {
     if (textEl && iconEl) {
       if (globals.gameMode === 'zen') {
         textEl.textContent = 'ZEN';
-        iconEl.textContent = '🌀';
+        setUltIcon(iconEl, 'icons/rpg/fc1150.png', 'Zen Sanctuary');
         omniBtnEl.title = 'Zen Sanctuary (Press 2 / F)';
       } else {
         textEl.textContent = 'OMNI';
-        iconEl.textContent = '⚔️';
+        setUltIcon(iconEl, 'icons/rpg/fc1267.png', 'Omnislash');
         omniBtnEl.title = 'Omnislash (Press 2 / F)';
       }
     }
@@ -1745,18 +1770,18 @@ export function updateCooldownsUI() {
     if (textEl && iconEl) {
       const hero = (globals as any).selectedHero || 'default';
       const heroUlts: Record<string, { label: string; icon: string; title: string }> = {
-        default: { label: 'KENSEI', icon: '⚔️', title: 'Kensei Domain (Press 1)' },
-        luneblade: { label: 'LUNAR', icon: '🌙', title: 'Crescent Moonfall (Press 1)' },
-        ninja: { label: 'MIRAGE', icon: '👤', title: 'Wraith Mirage (Press 1)' },
-        samurai: { label: 'DRAGON', icon: '🐉', title: 'Dragon Roar (Press 1)' },
-        nightborne: { label: 'ABYSS', icon: '🌌', title: 'Abyssal Singularity (Press 1)' },
-        satyr: { label: 'TITAN', icon: '🌋', title: 'Titan Cataclysm (Press 1)' },
-        akakage: { label: 'ASURA', icon: '🩸', title: 'Blood Asura Frenzy (Press 1)' },
-        aetherion: { label: 'ASTRAL', icon: '🌌', title: 'Astral Singularity (Press 1)' },
+        default: { label: 'KENSEI', icon: 'icons/rpg/fc1038.png', title: 'Kensei Domain (Press 1)' },
+        luneblade: { label: 'LUNAR', icon: 'icons/rpg/fc1191.png', title: 'Crescent Moonfall (Press 1)' },
+        ninja: { label: 'MIRAGE', icon: 'icons/rpg/fc543.png', title: 'Wraith Mirage (Press 1)' },
+        samurai: { label: 'DRAGON', icon: 'icons/rpg/fc1328.png', title: 'Dragon Roar (Press 1)' },
+        nightborne: { label: 'ABYSS', icon: 'icons/rpg/fc1052.png', title: 'Abyssal Singularity (Press 1)' },
+        satyr: { label: 'TITAN', icon: 'icons/rpg/fc1237.png', title: 'Titan Cataclysm (Press 1)' },
+        akakage: { label: 'ASURA', icon: 'icons/rpg/fc1220.png', title: 'Blood Asura Frenzy (Press 1)' },
+        aetherion: { label: 'ASTRAL', icon: 'icons/rpg/fc1276.png', title: 'Astral Singularity (Press 1)' },
       };
       const info = heroUlts[hero] || heroUlts.default;
       textEl.textContent = info.label;
-      iconEl.textContent = info.icon;
+      setUltIcon(iconEl, info.icon, info.label);
       shadowBtnEl.title = info.title;
     }
   }
@@ -2228,11 +2253,11 @@ export function populateGrimoireGrid() {
   const isJa = globals.currentLang === 'ja';
 
   const recipeIcons: Record<string, string> = {
-    plasma_tempest: 'icons/release_v1.2-single_38.png',
-    singularity_cleave: 'icons/release_v1.2-single_15.png',
-    hundred_phantoms: 'icons/release_v1.2-single_77.png',
-    kamaitachi: 'icons/release_v1.2-single_5.png',
-    asura_storm: 'icons/release_v1.2-single_88.png'
+    plasma_tempest: 'icons/rpg/fc1223.png',
+    singularity_cleave: 'icons/rpg/fc1120.png',
+    hundred_phantoms: 'icons/rpg/fc1388.png',
+    kamaitachi: 'icons/rpg/fc1155.png',
+    asura_storm: 'icons/rpg/fc1207.png'
   };
 
   renderCodex(grid);
@@ -2250,6 +2275,8 @@ export function populateGrimoireGrid() {
     card.style.flexDirection = 'column';
     card.style.gap = '8px';
     card.style.boxShadow = isDiscovered ? '0 0 18px rgba(212, 162, 78, 0.25)' : 'none';
+    card.style.position = 'relative';
+    card.style.overflow = 'hidden';
     
     // Live Run Synergy Calculation
     let req1Met = false;
@@ -2273,33 +2300,38 @@ export function populateGrimoireGrid() {
     }
 
     const synergyPct = ((req1Met ? 1 : 0) + (req2Met ? 1 : 0)) * 50;
-    const iconSrc = recipeIcons[recipe.key] || 'icons/release_v1.2-single_1.png';
+    const iconSrc = recipeIcons[recipe.key] || 'icons/rpg/fc1267.png';
 
     if (isDiscovered) {
       card.innerHTML = `
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <img src="${iconSrc}" alt="icon" style="width:28px; height:28px; image-rendering:pixelated; border-radius:4px; border:1px solid #ffd700;" />
-            <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">${isJa ? recipe.nameJa : recipe.nameEn}</span>
+        <img src="${iconSrc}" class="rpg-card-backdrop-icon" alt="" aria-hidden="true" style="width: 56px; height: 56px; opacity: 0.18;" />
+        <div style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 8px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div class="rpg-icon-box" style="width:28px; height:28px;">
+                <img src="${iconSrc}" class="rpg-icon-img" alt="icon" />
+              </div>
+              <span class="rpg-text-upperlayer" style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">${isJa ? recipe.nameJa : recipe.nameEn}</span>
+            </div>
+            <span class="rpg-text-upperlayer" style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e;">${isJa ? '解読済' : 'DISCOVERED'}</span>
           </div>
-          <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e;">${isJa ? '解読済' : 'DISCOVERED'}</span>
-        </div>
-        <div style="font-size:13px; color:#e2e8f0; line-height:1.4;">${isJa ? recipe.descJa : recipe.descEn}</div>
-        
-        <div style="margin-top:4px; display:flex; flex-direction:column; gap:3px;">
-          <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;">
-            <span>${isJa ? '出撃中の共鳴度' : 'Active Run Synergy'}: <strong style="color:${synergyPct === 100 ? '#22c55e' : (synergyPct > 0 ? '#ffd700' : '#64748b')};">${synergyPct}%</strong></span>
-            <span style="color:${synergyPct === 100 ? '#22c55e' : '#ffd700'}; font-weight:bold;">${synergyPct === 100 ? (isJa ? '⚡ 融合準備完了！' : '⚡ READY TO FORGE!') : (synergyPct === 50 ? (isJa ? '素材1つ獲得済' : '1/2 Acquired') : '')}</span>
+          <div class="rpg-text-upperlayer" style="font-size:13px; color:#e2e8f0; line-height:1.4;">${isJa ? recipe.descJa : recipe.descEn}</div>
+          
+          <div style="margin-top:4px; display:flex; flex-direction:column; gap:3px;">
+            <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;">
+              <span class="rpg-text-upperlayer">${isJa ? '出撃中の共鳴度' : 'Active Run Synergy'}: <strong style="color:${synergyPct === 100 ? '#22c55e' : (synergyPct > 0 ? '#ffd700' : '#64748b')};">${synergyPct}%</strong></span>
+              <span class="rpg-text-upperlayer" style="color:${synergyPct === 100 ? '#22c55e' : '#ffd700'}; font-weight:bold; display: inline-flex; align-items: center; gap: 4px;">${synergyPct === 100 ? (isJa ? '<div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> 融合準備完了！' : '<div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> READY TO FORGE!') : (synergyPct === 50 ? (isJa ? '素材1つ獲得済' : '1/2 Acquired') : '')}</span>
+            </div>
+            <div style="width:100%; height:5px; background:#0f172a; border-radius:3px; overflow:hidden; border:1px solid #334155;">
+              <div style="width:${synergyPct}%; height:100%; background:${synergyPct === 100 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : 'linear-gradient(90deg, #f59e0b, #ffd700)'};"></div>
+            </div>
           </div>
-          <div style="width:100%; height:5px; background:#0f172a; border-radius:3px; overflow:hidden; border:1px solid #334155;">
-            <div style="width:${synergyPct}%; height:100%; background:${synergyPct === 100 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : 'linear-gradient(90deg, #f59e0b, #ffd700)'};"></div>
-          </div>
-        </div>
 
-        <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #334155; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#94a3b8;">
-          <span style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req1Met ? '#86efac' : '#cbd5e1'};">⚔️ ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
-          <span>+</span>
-          <span style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req2Met ? '#86efac' : '#cbd5e1'};">⚡ ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
+          <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #334155; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#94a3b8;">
+            <span class="rpg-text-upperlayer" style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req1Met ? '#86efac' : '#cbd5e1'}; display:inline-flex; align-items:center; gap:4px;"><div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1170.png" class="rpg-icon-img" /></div> ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
+            <span>+</span>
+            <span class="rpg-text-upperlayer" style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req2Met ? '#86efac' : '#cbd5e1'}; display:inline-flex; align-items:center; gap:4px;"><div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1038.png" class="rpg-icon-img" /></div> ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
+          </div>
         </div>
       `;
     } else {
@@ -2574,26 +2606,34 @@ export function populateDojoHeroGrid() {
     const hasAwakening = ((globals as any).unlockedHeroAwakenings || []).includes(hero.id);
     let awakeningHtml = '';
     if (awk) {
+      const awkIconHtml = awk.icon.startsWith('icons/')
+        ? `<div class="rpg-icon-box" style="width: 18px; height: 18px; display: inline-flex; vertical-align: middle;"><img src="${awk.icon}" class="rpg-icon-img" alt="${awk.nameEn}" /></div>`
+        : awk.icon;
+      const awkBackdrop = awk.icon.startsWith('icons/')
+        ? `<img src="${awk.icon}" class="rpg-card-backdrop-icon" alt="" aria-hidden="true" style="width: 42px; height: 42px; opacity: 0.15;" />`
+        : '';
       if (hasAwakening) {
         awakeningHtml = `
-          <div style="margin-top: 4px; padding: 6px 8px; border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); background: rgba(212, 162, 78, 0.12); border: 1.5px solid #d4a24e; display: flex; flex-direction: column; gap: 3px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 11px; font-weight: bold; color: #ffd700;">⚡ ${isJa ? '覚醒スキル習得済み' : 'AWAKENING ACQUIRED'}</span>
-              <span style="font-size: 10px; color: #ffd700; font-family: monospace;">${awk.icon} ${isJa ? awk.nameJa : awk.nameEn}</span>
+          <div style="position: relative; overflow: hidden; margin-top: 4px; padding: 6px 8px; border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); background: rgba(212, 162, 78, 0.12); border: 1.5px solid #d4a24e; display: flex; flex-direction: column; gap: 3px;">
+            ${awkBackdrop}
+            <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center;">
+              <span class="rpg-text-upperlayer" style="font-size: 11px; font-weight: bold; color: #ffd700; display: inline-flex; align-items: center; gap: 4px;"><div class="rpg-icon-box" style="width: 14px; height: 14px; border: none; background: transparent; box-shadow: none;"><img src="icons/rpg/fc1038.png" class="rpg-icon-img" /></div> ${isJa ? '覚醒スキル習得済み' : 'AWAKENING ACQUIRED'}</span>
+              <span class="rpg-text-upperlayer" style="font-size: 10px; color: #ffd700; font-family: monospace; display: inline-flex; align-items: center; gap: 4px;">${awkIconHtml} <span>${isJa ? awk.nameJa : awk.nameEn}</span></span>
             </div>
-            <div style="font-size: 10px; color: #fef08a; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
+            <div class="rpg-text-upperlayer" style="font-size: 10px; color: #fef08a; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
           </div>
         `;
       } else if (isUnlocked) {
         const canAffordAwk = (globals.magatama || 0) >= awk.cost;
         awakeningHtml = `
-          <div style="margin-top: 4px; padding: 6px 8px; border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); background: rgba(15, 23, 42, 0.85); border: 1px dashed rgba(212, 162, 78, 0.4); display: flex; flex-direction: column; gap: 3px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-size: 11px; font-weight: bold; color: #ffd700;">⚡ ${isJa ? '追加覚醒スキル' : 'AWAKENING SKILL'}</span>
-              <span style="font-size: 10px; color: #f59e0b; font-family: monospace;">${awk.icon} ${isJa ? awk.nameJa : awk.nameEn}</span>
+          <div style="position: relative; overflow: hidden; margin-top: 4px; padding: 6px 8px; border-radius: 0; clip-path: polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px); background: rgba(15, 23, 42, 0.85); border: 1px dashed rgba(212, 162, 78, 0.4); display: flex; flex-direction: column; gap: 3px;">
+            ${awkBackdrop}
+            <div style="position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: center;">
+              <span class="rpg-text-upperlayer" style="font-size: 11px; font-weight: bold; color: #ffd700; display: inline-flex; align-items: center; gap: 4px;"><div class="rpg-icon-box" style="width: 14px; height: 14px; border: none; background: transparent; box-shadow: none;"><img src="icons/rpg/fc1038.png" class="rpg-icon-img" /></div> ${isJa ? '追加覚醒スキル' : 'AWAKENING SKILL'}</span>
+              <span class="rpg-text-upperlayer" style="font-size: 10px; color: #f59e0b; font-family: monospace; display: inline-flex; align-items: center; gap: 4px;">${awkIconHtml} <span>${isJa ? awk.nameJa : awk.nameEn}</span></span>
             </div>
-            <div style="font-size: 10px; color: #94a3b8; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
-            <button class="menu-btn btn-card buy-awakening-btn" data-hero="${hero.id}" ${canAffordAwk ? '' : 'disabled'} style="margin-top: 4px; padding: 4px 10px !important; min-height: 28px !important; font-size: 11px !important; border-color: ${canAffordAwk ? '#d4a24e' : '#64748b'}; color: ${canAffordAwk ? '#ffd700' : '#94a3b8'}; cursor: ${canAffordAwk ? 'pointer' : 'not-allowed'};">
+            <div class="rpg-text-upperlayer" style="font-size: 10px; color: #94a3b8; line-height: 1.3;">${isJa ? awk.descJa : awk.descEn}</div>
+            <button class="menu-btn btn-card buy-awakening-btn" data-hero="${hero.id}" ${canAffordAwk ? '' : 'disabled'} style="position: relative; z-index: 2; margin-top: 4px; padding: 4px 10px !important; min-height: 28px !important; font-size: 11px !important; border-color: ${canAffordAwk ? '#d4a24e' : '#64748b'}; color: ${canAffordAwk ? '#ffd700' : '#94a3b8'}; cursor: ${canAffordAwk ? 'pointer' : 'not-allowed'};">
               ${isJa ? `覚醒習得: ${awk.cost.toLocaleString()} 🪙` : `AWAKEN: ${awk.cost.toLocaleString()} 🪙`}
             </button>
           </div>
@@ -2962,32 +3002,42 @@ export function populateAscensionUpgrades() {
         box-shadow: ${isEndless ? '0 0 12px rgba(212, 162, 78, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.4)'};
       `;
 
+      const iconHtml = u.icon.startsWith('icons/')
+        ? `<div class="rpg-icon-box" style="width: 20px; height: 20px; display: inline-flex;"><img src="${u.icon}" class="rpg-icon-img" alt="${u.name}" /></div>`
+        : `<span>${u.icon}</span>`;
+      const watermarkHtml = u.icon.startsWith('icons/')
+        ? `<img src="${u.icon}" class="rpg-card-backdrop-icon" alt="" aria-hidden="true" />`
+        : '';
+
       card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 4px; flex-wrap: wrap;">
-          <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 11.5px; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
-            <span>${u.icon}</span> ${isJa ? u.nameJa : u.name}
-          </span>
-          <span class="ascension-level-display" style="font-family: 'Orbitron', monospace; font-size: 10px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold; white-space: nowrap;">
-            ${isEndless ? `Rank ${curLevel} (∞)` : (isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`)}
-          </span>
-        </div>
-        <div class="ascension-pips" style="font-family: monospace; font-size: 9px; color: #a855f7; letter-spacing: 0.5px; word-break: break-all; line-height: 1;">
-          ${pips}
-        </div>
-        <div class="ascension-level-info" style="font-family: 'Outfit', sans-serif; font-size: 10px; color: #cbd5e1; line-height: 1.25;">
-          <strong>${isJa ? '永続強化' : 'PERMANENT'}</strong> · ${isJa ? u.descJa : u.desc}
-          ${permanentPreview(u.id, curLevel, u.max, isEndless)}
-          <div style="font-size: 9px; opacity: 0.85; margin-top: 2px;">${isJa ? 'レベル' : 'Level'} ${curLevel} → ${isMax ? curLevel : curLevel + 1} · ${isJa?'上限':'Cap'} ${isEndless?'∞':u.max}</div>
-        </div>
-        <div style="margin-top: 4px;">
-          ${isMax ? `
-            <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 10px; min-height: 28px; padding: 2px 6px;">✓ MASTERED</button>
-          ` : `
-            <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 28px; font-size: 10px; padding: 3px 6px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; touch-action: manipulation; user-select: none; white-space: normal; word-break: keep-all; line-height: 1.15;">
-              <div>${isJa ? `強化: ${cost.toLocaleString()} 🪙` : `UPGRADE: ${cost.toLocaleString()} 🪙`}</div>
-              <div style="font-size: 7.5px; opacity: 0.75; font-weight: normal; letter-spacing: 0.2px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
-            </button>
-          `}
+        ${watermarkHtml}
+        <div style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 4px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 4px; flex-wrap: wrap;">
+            <span class="rpg-text-upperlayer" style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 11.5px; display: flex; align-items: center; gap: 6px; line-height: 1.2;">
+              ${iconHtml} <span class="rpg-text-upperlayer">${isJa ? u.nameJa : u.name}</span>
+            </span>
+            <span class="ascension-level-display rpg-text-upperlayer" style="font-family: 'Orbitron', monospace; font-size: 10px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold; white-space: nowrap;">
+              ${isEndless ? `Rank ${curLevel} (∞)` : (isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`)}
+            </span>
+          </div>
+          <div class="ascension-pips rpg-text-upperlayer" style="font-family: monospace; font-size: 9px; color: #a855f7; letter-spacing: 0.5px; word-break: break-all; line-height: 1;">
+            ${pips}
+          </div>
+          <div class="ascension-level-info rpg-text-upperlayer" style="font-family: 'Outfit', sans-serif; font-size: 10px; color: #cbd5e1; line-height: 1.25;">
+            <strong>${isJa ? '永続強化' : 'PERMANENT'}</strong> · ${isJa ? u.descJa : u.desc}
+            ${permanentPreview(u.id, curLevel, u.max, isEndless)}
+            <div style="font-size: 9px; opacity: 0.85; margin-top: 2px;">${isJa ? 'レベル' : 'Level'} ${curLevel} → ${isMax ? curLevel : curLevel + 1} · ${isJa?'上限':'Cap'} ${isEndless?'∞':u.max}</div>
+          </div>
+          <div style="margin-top: 4px;">
+            ${isMax ? `
+              <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 10px; min-height: 28px; padding: 2px 6px;">✓ MASTERED</button>
+            ` : `
+              <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 28px; font-size: 10px; padding: 3px 6px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; touch-action: manipulation; user-select: none; white-space: normal; word-break: keep-all; line-height: 1.15;">
+                <div>${isJa ? `強化: ${cost.toLocaleString()} 🪙` : `UPGRADE: ${cost.toLocaleString()} 🪙`}</div>
+                <div style="font-size: 7.5px; opacity: 0.75; font-weight: normal; letter-spacing: 0.2px; margin-top: 1px; display: inline-flex; align-items: center; gap: 3px;"><div class="rpg-icon-box" style="width: 9px; height: 9px; border: none; background: transparent; box-shadow: none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
+              </button>
+            `}
+          </div>
         </div>
       `;
 
@@ -3069,7 +3119,7 @@ export function populateAscensionUpgrades() {
           } else {
             buyBtn.innerHTML = `
               <div>${isJa ? `強化: ${nextCost.toLocaleString()} 🪙` : `UPGRADE: ${nextCost.toLocaleString()} 🪙`}</div>
-              <div style="font-size: 7.5px; opacity: 0.75; font-weight: normal; letter-spacing: 0.2px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
+              <div style="font-size: 7.5px; opacity: 0.75; font-weight: normal; letter-spacing: 0.2px; margin-top: 1px; display: inline-flex; align-items: center; gap: 3px;"><div class="rpg-icon-box" style="width: 9px; height: 9px; border: none; background: transparent; box-shadow: none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
             `;
             if (!canAffordNext) {
               buyBtn.setAttribute('disabled', 'true');

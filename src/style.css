@@ -42,6 +42,110 @@
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
+:root {
+  --rpg-icon-box-size: 32px;
+  --rpg-icon-opacity: 0.88;
+  --rpg-card-backdrop-opacity: 0.16;
+}
+
+.rpg-icon-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--rpg-icon-box-size);
+  height: var(--rpg-icon-box-size);
+  background: rgba(10, 14, 23, 0.75);
+  border: 1px solid rgba(212, 162, 78, 0.35);
+  border-radius: 6px;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.8), 0 2px 6px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+.rpg-icon-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: var(--rpg-icon-opacity);
+  image-rendering: pixelated;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.rpg-icon-box:hover .rpg-icon-img {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.rpg-card-backdrop-icon {
+  position: absolute;
+  right: 6px;
+  bottom: 4px;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  opacity: var(--rpg-card-backdrop-opacity);
+  pointer-events: none;
+  z-index: 0;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.9));
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ascension-card:hover .rpg-card-backdrop-icon,
+.shop-power-card:hover .rpg-card-backdrop-icon,
+.skill-card:hover .rpg-card-backdrop-icon {
+  opacity: 0.28;
+  transform: scale(1.06);
+}
+
+.rpg-text-upperlayer {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 8px rgba(0, 0, 0, 0.8);
+}
+
+.ult-rpg-box {
+  width: clamp(20px, 3.8vh, 26px);
+  height: clamp(20px, 3.8vh, 26px);
+  background: rgba(10, 12, 18, 0.6);
+  border: 1px solid rgba(212, 162, 78, 0.4);
+  border-radius: 4px;
+  box-shadow: none;
+  margin-bottom: 2px;
+  z-index: 2;
+}
+
+.technique-rpg-box {
+  width: 26px;
+  height: 26px;
+}
+
+.technique-diagram-rpg {
+  width: 56px !important;
+  height: 56px !important;
+  object-fit: contain !important;
+  image-rendering: pixelated;
+  filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.4));
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.card-movement:hover .technique-diagram-rpg {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 14px rgba(56, 189, 248, 0.7));
+}
+
+.card-slash:hover .technique-diagram-rpg {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 14px rgba(255, 30, 39, 0.7));
+}
+
+.card-parry:hover .technique-diagram-rpg {
+  transform: scale(1.1);
+  filter: drop-shadow(0 0 14px rgba(255, 210, 0, 0.7));
+}
+
 /* super samurai sticky - global styles & reset */
 * {
   box-sizing: border-box;

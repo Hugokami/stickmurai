@@ -719,11 +719,11 @@ export interface ShopSlot {
 }
 
 export const SYNERGY_INFO: Record<SynergyType, { label: string; icon: string; color: string; desc2: string; desc4: string }> = {
-  blade: { label: 'Blade Art', icon: '⚔️', color: '#f43f5e', desc2: '+15% ATK', desc4: 'Inflicts Bleed' },
-  flow: { label: 'Flow Chi', icon: '🌊', color: '#06b6d4', desc2: '+25% Flow Gain', desc4: 'Ult Flow Cost -20%' },
-  shadow: { label: 'Shadow Step', icon: '👤', color: '#a855f7', desc2: '-15% Dash CD', desc4: 'Shadow Clones' },
-  iron: { label: 'Iron Guard', icon: '🛡️', color: '#eab308', desc2: '+4 Posture Break', desc4: 'Parry Deflects 200%' },
-  element: { label: 'Elemental', icon: '🔥', color: '#f97316', desc2: '+2 Skill DMG', desc4: 'Skills Chain Lightning' },
+  blade: { label: 'Blade Art', icon: 'icons/rpg/fc1267.png', color: '#f43f5e', desc2: '+15% ATK', desc4: 'Inflicts Bleed' },
+  flow: { label: 'Flow Chi', icon: 'icons/rpg/fc20.png', color: '#06b6d4', desc2: '+25% Flow Gain', desc4: 'Ult Flow Cost -20%' },
+  shadow: { label: 'Shadow Step', icon: 'icons/rpg/fc543.png', color: '#a855f7', desc2: '-15% Dash CD', desc4: 'Shadow Clones' },
+  iron: { label: 'Iron Guard', icon: 'icons/rpg/fc1043.png', color: '#eab308', desc2: '+4 Posture Break', desc4: 'Parry Deflects 200%' },
+  element: { label: 'Elemental', icon: 'icons/rpg/fc1221.png', color: '#f97316', desc2: '+2 Skill DMG', desc4: 'Skills Chain Lightning' },
 };
 
 export function getPowerSynergy(p: PowerUp): SynergyType {
@@ -950,8 +950,9 @@ export function renderShopModal() {
           </div>
 
           <!-- Active Synergies -->
-          <div style="font-family: 'Orbitron', sans-serif; font-size: 10.5px; font-weight: bold; color: #a855f7; letter-spacing: 1px; margin-top: 2px; border-bottom: 1px solid rgba(168, 85, 247, 0.25); padding-bottom: 4px;">
-            🌀 ACTIVE DISCIPLINES
+          <div style="font-family: 'Orbitron', sans-serif; font-size: 10.5px; font-weight: bold; color: #a855f7; letter-spacing: 1px; margin-top: 2px; border-bottom: 1px solid rgba(168, 85, 247, 0.25); padding-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+            <div class="rpg-icon-box" style="width: 14px; height: 14px; display: inline-flex; border: none; background: transparent; box-shadow: none; vertical-align: middle;"><img src="icons/rpg/fc20.png" class="rpg-icon-img" alt="Disciplines" /></div>
+            <span class="rpg-text-upperlayer">ACTIVE DISCIPLINES</span>
           </div>
           <div style="display: flex; flex-direction: column; gap: 5px; font-size: 10px;">
             ${(Object.keys(SYNERGY_INFO) as SynergyType[]).map(synKey => {
@@ -961,12 +962,15 @@ export function renderShopModal() {
               const is4Active = count >= 4;
               const statusText = is4Active ? info.desc4 : (is2Active ? info.desc2 : 'Inactive');
               const activeColor = is2Active ? info.color : '#64748b';
+              const synIconHtml = info.icon.startsWith('icons/')
+                ? `<div class="rpg-icon-box" style="width: 15px; height: 15px; display: inline-flex; border: none; background: transparent; box-shadow: none; vertical-align: middle;"><img src="${info.icon}" class="rpg-icon-img" alt="${info.label}" /></div>`
+                : info.icon;
               return `
                 <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 3px 6px; border-radius: 5px; border-left: 3px solid ${activeColor};">
-                  <div>
-                    <span style="color: ${activeColor}; font-weight: bold;">${info.icon} ${info.label} (${count})</span>
+                  <div style="display: flex; align-items: center; gap: 4px;">
+                    <span class="rpg-text-upperlayer" style="color: ${activeColor}; font-weight: bold; display: flex; align-items: center; gap: 4px;">${synIconHtml} <span>${info.label} (${count})</span></span>
                   </div>
-                  <div style="font-size: 9px; color: ${is2Active ? '#e2e8f0' : '#64748b'};">
+                  <div class="rpg-text-upperlayer" style="font-size: 9px; color: ${is2Active ? '#e2e8f0' : '#64748b'};">
                     ${statusText}
                   </div>
                 </div>
@@ -1060,62 +1064,71 @@ export function renderShopModal() {
       overflow: hidden;
     `;
 
+    const cardWatermark = synInfo.icon.startsWith('icons/')
+      ? `<img src="${synInfo.icon}" class="rpg-card-backdrop-icon" alt="" aria-hidden="true" />`
+      : '';
+    const cardSynIconEl = synInfo.icon.startsWith('icons/')
+      ? `<div class="rpg-icon-box" style="width: 14px; height: 14px; display: inline-flex; border: none; background: transparent; box-shadow: none; vertical-align: middle;"><img src="${synInfo.icon}" class="rpg-icon-img" alt="${synInfo.label}" /></div>`
+      : synInfo.icon;
+
     card.innerHTML = `
-      <div>
+      ${cardWatermark}
+      <div style="position: relative; z-index: 2;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; flex-wrap: wrap; gap: 3px;">
           <div style="display: flex; align-items: center; gap: 3px; flex-wrap: wrap;">
-            <span style="font-size: 8.5px; font-weight: 900; letter-spacing: 0.5px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 5px; border-radius: 5px;">
+            <span class="rpg-text-upperlayer" style="font-size: 8.5px; font-weight: 900; letter-spacing: 0.5px; color: ${qColor}; text-transform: uppercase; border: 1px solid ${qColor}66; padding: 1px 5px; border-radius: 5px;">
               ${slot.quality}
             </span>
             ${slot.power.isUnique ? `
-              <span style="font-size: 8px; font-weight: 900; color: #fbbf24; background: rgba(251, 191, 36, 0.2); border: 1px solid #fbbf24; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.3px;">
-                ⚡ UNIQUE
+              <span class="rpg-text-upperlayer" style="font-size: 8px; font-weight: 900; color: #fbbf24; background: rgba(251, 191, 36, 0.2); border: 1px solid #fbbf24; padding: 1px 4px; border-radius: 4px; letter-spacing: 0.3px; display: inline-flex; align-items: center; gap: 3px;">
+                <div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex; vertical-align: middle;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> <span>UNIQUE</span>
               </span>
             ` : ''}
             ${slot.power.skill && slot.power.skill === globals.selectedSkill ? `
-              <span style="font-size: 8px; font-weight: 900; color: #38bdf8; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; padding: 1px 4px; border-radius: 4px;">
-                ⚡ SYNERGY
+              <span class="rpg-text-upperlayer" style="font-size: 8px; font-weight: 900; color: #38bdf8; background: rgba(56, 189, 248, 0.2); border: 1px solid #38bdf8; padding: 1px 4px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;">
+                <div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex; vertical-align: middle;"><img src="icons/rpg/fc1157.png" class="rpg-icon-img" /></div> <span>SYNERGY</span>
               </span>
             ` : ''}
           </div>
-          <span style="font-size: 8.5px; font-weight: bold; color: ${synInfo.color}; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 5px;">
-            ${synInfo.icon} ${synInfo.label}
+          <span class="rpg-text-upperlayer" style="font-size: 8.5px; font-weight: bold; color: ${synInfo.color}; background: rgba(0,0,0,0.5); padding: 1px 5px; border-radius: 5px; display: inline-flex; align-items: center; gap: 3px;">
+            ${cardSynIconEl} <span>${synInfo.label}</span>
           </span>
         </div>
 
         ${(() => {
           let badges = '';
           if (slot.discountPct) {
-            badges += `<div style="display: inline-block; background: #ef4444; color: #ffffff; font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">🔥 -${slot.discountPct}% SALE</div>`;
+            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: #ef4444; color: #ffffff; font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1221.png" class="rpg-icon-img" /></div> -${slot.discountPct}% SALE</div>`;
           }
           const name = slot.power.nameKey;
           if (!globals.activeFusions.has('plasma_tempest') && (name.includes('Fire') || name.includes('Thunder') || name.includes('Feather'))) {
-            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">⚡ PLASMA</div>`;
+            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1223.png" class="rpg-icon-img" /></div> PLASMA</div>`;
           } else if (!globals.activeFusions.has('singularity_cleave') && (name.includes('Cataclysm') || name.includes('Lethal') || name.includes('Giant') || name.includes('Void'))) {
-            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">🌌 SINGULARITY</div>`;
+            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1120.png" class="rpg-icon-img" /></div> SINGULARITY</div>`;
           } else if (!globals.activeFusions.has('hundred_phantoms') && (name.includes('Rupture') || name.includes('Clones') || name.includes('Cursed'))) {
-            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">👥 PHANTOMS</div>`;
+            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1388.png" class="rpg-icon-img" /></div> PHANTOMS</div>`;
           } else if (!globals.activeFusions.has('kamaitachi') && (name.includes('Wind') || name.includes('Gale') || name.includes('Deflect') || name.includes('Echo'))) {
-            badges += `<div style="display: inline-block; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;">🌪️ KAMAITACHI</div>`;
+            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1155.png" class="rpg-icon-img" /></div> KAMAITACHI</div>`;
           }
           const curSyn = activeSyn[slot.synergy] || 0;
           if (curSyn === 1 || curSyn === 3) {
-            badges += `<div style="display: inline-block; background: rgba(34, 197, 94, 0.25); color: #bbf7d0; border: 1px solid #22c55e; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px;">🔥 UNLOCK (${curSyn + 1})</div>`;
+            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(34, 197, 94, 0.25); color: #bbf7d0; border: 1px solid #22c55e; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1221.png" class="rpg-icon-img" /></div> UNLOCK (${curSyn + 1})</div>`;
           }
           return badges;
         })()}
 
-        <h3 style="font-size: 11.5px; margin: 0 0 3px 0; color: #f8fafc; font-family: 'Shojumaru', sans-serif; word-break: break-word;">
+        <h3 class="rpg-text-upperlayer" style="font-size: 11.5px; margin: 0 0 3px 0; color: #f8fafc; font-family: 'Shojumaru', sans-serif; word-break: break-word;">
           ${t(slot.power.nameKey)}
         </h3>
-        <p style="font-size: 9.5px; color: #cbd5e1; margin: 0; line-height: 1.35; font-family: 'Space Mono', monospace;">
+        <p class="rpg-text-upperlayer" style="font-size: 9.5px; color: #cbd5e1; margin: 0; line-height: 1.35; font-family: 'Space Mono', monospace;">
           ${t(slot.power.descKey)}
         </p>
       </div>
 
-      <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 4px;">
-        <button class="shop-freeze-btn" style="background: ${isFrozen ? '#0284c7' : 'rgba(0,0,0,0.5)'}; border: 1px solid ${isFrozen ? '#38bdf8' : 'rgba(255,255,255,0.2)'}; color: ${isFrozen ? '#ffffff' : '#94a3b8'}; border-radius: 4px; padding: 2px 5px; font-size: 9px; cursor: pointer; display: flex; align-items: center; gap: 2px; white-space: nowrap; flex-shrink: 0;">
-          ${isFrozen ? '❄️ LOCKED' : '🔒 LOCK'}
+      <div style="position: relative; z-index: 2; margin-top: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; gap: 4px;">
+        <button class="shop-freeze-btn" style="background: ${isFrozen ? '#0284c7' : 'rgba(0,0,0,0.5)'}; border: 1px solid ${isFrozen ? '#38bdf8' : 'rgba(255,255,255,0.2)'}; color: ${isFrozen ? '#ffffff' : '#94a3b8'}; border-radius: 4px; padding: 2px 5px; font-size: 9px; cursor: pointer; display: flex; align-items: center; gap: 4px; white-space: nowrap; flex-shrink: 0;">
+          <div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1191.png" class="rpg-icon-img" /></div>
+          <span>${isFrozen ? 'LOCKED' : 'LOCK'}</span>
         </button>
 
         <button class="shop-buy-btn" style="background: ${canAfford ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)'}; border: 1px solid ${canAfford ? '#fbbf24' : 'rgba(255,255,255,0.2)'}; color: ${canAfford ? '#fbbf24' : '#64748b'}; border-radius: 4px; padding: 3px 8px; font-size: 10.5px; font-weight: bold; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; font-family: 'Orbitron', monospace; white-space: nowrap; flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;" ${canAfford ? '' : 'disabled'}>
