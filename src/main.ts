@@ -828,7 +828,10 @@ function initGame() {
   }
   loadingFinished = true;
 
-  AdManager.gameplayStart();
+  // Poki SDK: Defer gameplayStart if first-start tutorial has not been completed
+  if (safeStorage.getItem('stickmurai_tutorial_completed') === 'true') {
+    AdManager.gameplayStart();
+  }
   AdManager.measure('level', String(globals.currentStage || 1), 'start');
 
   stopSpawner();

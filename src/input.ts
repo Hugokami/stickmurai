@@ -9,6 +9,12 @@ export function initInput() {
   // Desktop Input Setup
   window.addEventListener('keydown', e => {
     if (AdManager.isAdPlaying) return;
+    if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code) || [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
+        e.preventDefault();
+      }
+    }
     if ((window as any).activeRebindAction) {
       const action = (window as any).activeRebindAction;
       globals.keyMaps[action] = e.code;

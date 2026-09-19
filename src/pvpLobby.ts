@@ -24,6 +24,21 @@ const isFriendOnline = (friend: any) => {
   return diffMs < 120000; // 2 minutes threshold to robustly handle clock drifts
 };
 
+const PROFANITY_PATTERN = /\b(fuck|shit|bitch|asshole|cunt|nigger|nigga|faggot|dick|pussy|whore|slut|retard|hitler|nazi)\b/i;
+
+export function containsProfanity(name: string): boolean {
+  if (!name) return false;
+  const clean = name.toLowerCase().replace(/[@$1!035]/g, m => {
+    const map: Record<string, string> = { '@': 'a', '$': 's', '1': 'i', '!': 'i', '0': 'o', '3': 'e', '5': 's' };
+    return map[m] || m;
+  });
+  return PROFANITY_PATTERN.test(clean);
+}
+
+export function sanitizeDisplayName(name: string): string {
+  return name.trim().slice(0, 16);
+}
+
 async function updatePresence(status: string, extraFields: Record<string, any> = {}) {
   if (!userUid) return;
   try {
@@ -459,10 +474,15 @@ export function initPvPLobby(onStartMatch: () => void) {
   }
 
   async function saveProfileName(newName: string) {
-    if (!userUid || !newName.trim()) return;
+    const sanitized = sanitizeDisplayName(newName);
+    if (!userUid || !sanitized) return;
+    if (containsProfanity(sanitized)) {
+      alert("Please choose an appropriate samurai name.");
+      return;
+    }
     const { error } = await supabase
       .from('profiles')
-      .update({ display_name: newName.trim() })
+      .update({ display_name: sanitized })
       .eq('id', userUid);
     if (error) {
       alert(t('alertFailedUpdateName') + error.message);

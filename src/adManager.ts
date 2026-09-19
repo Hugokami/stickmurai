@@ -14,6 +14,7 @@ export class AdManager {
   private static readonly MIDROLL_COOLDOWN_MS = 60000;
   public static isAdPlaying: boolean = false;
   public static isPokiReady: boolean = false;
+  private static isGameplayActive: boolean = false;
 
   /**
    * Initializes Poki SDK if present on the hosting portal.
@@ -47,6 +48,8 @@ export class AdManager {
    * Fired when active player gameplay begins or unpauses.
    */
   public static gameplayStart(): void {
+    if (this.isGameplayActive) return; // Prevent duplicate gameplayStart()
+    this.isGameplayActive = true;
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.gameplayStart) {
       try {
         (window as any).PokiSDK.gameplayStart();
@@ -59,6 +62,8 @@ export class AdManager {
    * Fired when gameplay halts (pause, death, gameover, stage clear, quit to menu).
    */
   public static gameplayStop(): void {
+    if (!this.isGameplayActive) return; // Prevent duplicate gameplayStop()
+    this.isGameplayActive = false;
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.gameplayStop) {
       try {
         (window as any).PokiSDK.gameplayStop();
@@ -185,6 +190,11 @@ export class AdManager {
   private static muteSounds() {
     if (this.isAdPlaying) return;
     this.isAdPlaying = true;
+    try {
+      if (typeof document !== 'undefined' && document.pointerLockElement) {
+        document.exitPointerLock();
+      }
+    } catch (e) {}
     try { clearGameInputs(); } catch(e) {}
     const urlMuted = typeof window !== 'undefined' && (new URLSearchParams(window.location.search).get('muteAudio') === 'true');
     this.wasPortalMutedBeforeAd = urlMuted || (typeof getPortalMuted === 'function' ? getPortalMuted() : false);

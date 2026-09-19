@@ -5527,6 +5527,52 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
   }
 }
 
+/* First-Start Combat Initiation Tutorial Modal */
+#first-start-tutorial-modal {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+#first-start-tutorial-modal .tutorial-box {
+  animation: tutorialModalFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tutorialModalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.tutorial-card {
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.tutorial-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 215, 0, 0.5) !important;
+}
+
+@media (max-width: 640px) {
+  #first-start-tutorial-modal .tutorial-box {
+    padding: 14px 14px !important;
+    width: 95vw !important;
+  }
+  .tutorial-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+}
+
+
 
 
 

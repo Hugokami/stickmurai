@@ -28,7 +28,7 @@
     <script>
       // Poki SDK: Prevent page scroll on game controls
       window.addEventListener('keydown', function(ev) {
-        if (['ArrowDown', 'ArrowUp', ' '].indexOf(ev.key) !== -1) {
+        if (['ArrowDown', 'ArrowUp', 'ArrowLeft', 'ArrowRight', ' ', 'Space'].indexOf(ev.key) !== -1 || ev.code === 'Space') {
           var tag = ev.target && ev.target.tagName;
           if (tag === 'INPUT' || tag === 'TEXTAREA') return;
           ev.preventDefault();
@@ -335,6 +335,75 @@
         </div>
       </div>
       
+      <!-- First-Start Combat Initiation Tutorial Modal -->
+      <div id="first-start-tutorial-modal" class="overlay" style="display: none; z-index: 9998; background: rgba(6, 8, 14, 0.96); backdrop-filter: blur(10px); justify-content: center; align-items: center;">
+        <div class="menu-box tutorial-box" style="max-width: 680px; width: 92vw; max-height: 90vh; overflow-y: auto; padding: 20px 24px; border: 1px solid rgba(212, 162, 78, 0.5); box-shadow: 0 0 35px rgba(212, 162, 78, 0.2);">
+          <div style="text-align: center; margin-bottom: 16px;">
+            <div style="font-family: 'Space Mono', monospace; font-size: 11px; color: #ffd700; letter-spacing: 2px;">// COMBAT INITIATION //</div>
+            <h2 style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; font-size: clamp(20px, 3.5vw, 28px); color: #fff; margin: 4px 0 6px 0; text-shadow: 0 0 12px rgba(255, 215, 0, 0.4);">WAY OF THE KATANA</h2>
+            <p style="font-size: 12px; color: #94a3b8; margin: 0; font-family: 'Outfit', sans-serif;">Master fundamental techniques before challenging the underworld of Yomi.</p>
+          </div>
+          
+          <div class="tutorial-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            <div class="tutorial-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 12px;">
+              <div style="font-weight: 700; color: #38bdf8; font-size: 13px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <span>🕹️</span> MOVEMENT & AGILITY
+              </div>
+              <div style="font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+                <strong>Desktop:</strong> <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">W</kbd><kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">A</kbd><kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">S</kbd><kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">D</kbd> or <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">Arrows</kbd><br>
+                <strong>Mobile:</strong> Drag the Virtual Joystick on the left.<br>
+                <em>Keep moving to evade surrounding enemy swarms and hazard zones.</em>
+              </div>
+            </div>
+
+            <div class="tutorial-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 12px;">
+              <div style="font-weight: 700; color: #f87171; font-size: 13px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <span>⚔️</span> IAIJUTSU SLASH & COMBOS
+              </div>
+              <div style="font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+                <strong>Desktop:</strong> <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">LMB</kbd> or <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">Space</kbd><br>
+                <strong>Mobile:</strong> Tap the Red Blade Action Button.<br>
+                <em>Chain 3 slashes for a wide 180° sweep with +50% bonus damage.</em>
+              </div>
+            </div>
+
+            <div class="tutorial-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(234, 179, 8, 0.3); border-radius: 8px; padding: 12px;">
+              <div style="font-weight: 700; color: #facc15; font-size: 13px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <span>💨</span> SHADOW DASH & I-FRAMES
+              </div>
+              <div style="font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+                <strong>Desktop:</strong> <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">Shift</kbd> or <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">RMB</kbd><br>
+                <strong>Mobile:</strong> Tap the Yellow Dash Action Button.<br>
+                <em>Grants 0.3s invulnerability frames (I-frames) to phase safely through attacks!</em>
+              </div>
+            </div>
+
+            <div class="tutorial-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 12px;">
+              <div style="font-weight: 700; color: #c084fc; font-size: 13px; display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+                <span>🛡️</span> ZEN PARRY & REFLECTION
+              </div>
+              <div style="font-size: 12px; color: #cbd5e1; line-height: 1.5;">
+                <strong>Desktop:</strong> <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">F</kbd>, <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">E</kbd>, or <kbd style="background:#1e293b;padding:2px 6px;border-radius:4px;border:1px solid #475569;font-size:11px;">MMB</kbd><br>
+                <strong>Mobile:</strong> Tap the Blue Shield Action Button.<br>
+                <em>Reflects enemy ranged bullets back at shooters and staggers melee attackers!</em>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: rgba(255, 215, 0, 0.08); border-left: 3px solid #ffd700; padding: 10px 14px; border-radius: 6px; margin-bottom: 20px; font-size: 12px; color: #e2e8f0; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 20px;">🪙</span>
+            <div>
+              <strong>PROGRESSION & REWARDS:</strong> Slay enemies to harvest <strong>Mon 🪙</strong> and XP. Level up during battle to choose game-changing perks and awaken your ultimate katana!
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button id="tutorial-skip-btn" class="menu-btn" style="padding: 10px 18px; margin: 0; font-size: 12px; background: rgba(30, 41, 59, 0.8); border-color: rgba(148, 163, 184, 0.4); color: #cbd5e1;">⏩ SKIP</button>
+            <button id="tutorial-start-game-btn" class="menu-btn" style="padding: 10px 24px; margin: 0; font-size: 13px; border-color: #ffd700; color: #ffd700; background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(220, 38, 38, 0.25)); box-shadow: 0 0 18px rgba(255, 215, 0, 0.25);">⚔️ ENTER BATTLEFIELD</button>
+          </div>
+        </div>
+      </div>
+
       <!-- Fullscreen Prompt Overlay -->
       <div id="fullscreen-prompt" class="overlay" style="display:none; z-index: 10000; background: rgba(9, 10, 15, 0.95); flex-direction: column; justify-content: center; align-items: center; gap: 20px;">
         <div class="menu-box" style="text-align: center; max-width: 400px; width: 90vw; border-color: #ffd700; box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);">
@@ -967,6 +1036,7 @@
             <div class="menu-buttons">
               <button id="resume-btn" class="menu-btn" data-i18n="resume">Resume Game</button>
               <button id="pause-fullscreen-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8;">⛶ Fullscreen</button>
+              <button id="pause-tutorial-btn" class="menu-btn" style="border-color: #38bdf8; color: #38bdf8;">📖 Tutorial Guide</button>
               <button id="pause-grimoire-btn" class="menu-btn" style="border-color: #ffd700; color: #ffd700; box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);">📜 Grimoire (秘伝書)</button>
               <button id="pause-settings-btn" class="menu-btn" data-i18n="settings">Settings</button>
               <button id="quit-btn" class="menu-btn exit-btn" data-i18n="quit">Quit to Menu</button>

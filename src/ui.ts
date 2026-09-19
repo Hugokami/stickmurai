@@ -460,14 +460,60 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     updateBlessingSelectionUI();
   });
 
+  const tutorialModal = document.getElementById('first-start-tutorial-modal');
+  const tutorialStartBtn = document.getElementById('tutorial-start-game-btn');
+  const tutorialSkipBtn = document.getElementById('tutorial-skip-btn');
+  const pauseTutorialBtn = document.getElementById('pause-tutorial-btn');
+
+  const showTutorialModal = (onDone?: () => void, isReplay = false) => {
+    if (!tutorialModal) {
+      if (onDone) onDone();
+      return;
+    }
+    if (tutorialStartBtn) {
+      tutorialStartBtn.innerText = isReplay ? 'RETURN' : '⚔️ ENTER BATTLEFIELD';
+    }
+    if (tutorialSkipBtn) {
+      tutorialSkipBtn.style.display = isReplay ? 'none' : 'inline-block';
+    }
+    tutorialModal.style.display = 'flex';
+
+    const handleDismiss = () => {
+      safeStorage.setItem('stickmurai_tutorial_completed', 'true');
+      tutorialModal.style.display = 'none';
+      if (tutorialStartBtn) tutorialStartBtn.onclick = null;
+      if (tutorialSkipBtn) tutorialSkipBtn.onclick = null;
+      if (onDone) onDone();
+    };
+
+    if (tutorialStartBtn) tutorialStartBtn.onclick = handleDismiss;
+    if (tutorialSkipBtn) tutorialSkipBtn.onclick = handleDismiss;
+  };
+
+  if (pauseTutorialBtn) {
+    bindDualListener(pauseTutorialBtn, () => {
+      if (pauseScreen) pauseScreen.style.display = 'none';
+      showTutorialModal(() => {
+        if (pauseScreen) pauseScreen.style.display = 'flex';
+      }, true);
+    });
+  }
+
   bindDualListener(document.getElementById('start-run-btn'), () => {
     if (skillSelectScreen) skillSelectScreen.style.display = 'none';
     loadHeroAssets(globals.selectedHero || 'default');
     preloadStageEnemyAssets(globals.currentStage || 1);
-    if (globals.gameMode === 'zen') {
-      onZenPlayCallback();
+    const proceedWithStart = () => {
+      if (globals.gameMode === 'zen') {
+        onZenPlayCallback();
+      } else {
+        onPlayCallback();
+      }
+    };
+    if (safeStorage.getItem('stickmurai_tutorial_completed') !== 'true') {
+      showTutorialModal(proceedWithStart, false);
     } else {
-      onPlayCallback();
+      proceedWithStart();
     }
   });
 
@@ -942,6 +988,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       if (globals.gameState === 'playing') {
         clearGameInputs();
         globals.gameState = 'paused';
+        AdManager.gameplayStop();
         if (pauseScreen) pauseScreen.style.display = 'flex';
         updatePauseUpgradesList();
       } else if (globals.gameState === 'paused') {
@@ -3111,6 +3158,7 @@ export function populateAscensionUpgrades() {
 export function triggerStageClear() {
   if (completeJourneyStage()) return;
   globals.gameState = 'paused';
+  AdManager.gameplayStop();
   const levelUpModal = document.getElementById('level-up-screen');
   if (levelUpModal) levelUpModal.style.display = 'none';
   const ultModal = document.getElementById('ult-screen');

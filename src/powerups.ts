@@ -854,6 +854,7 @@ export function refreshShop(isNewWave = false) {
 export function openShop() {
   if (globals.gameState !== 'playing') return;
   globals.gameState = 'paused';
+  AdManager.gameplayStop();
   globals.shopOpen = true;
   if (currentShopInventory.length === 0) {
     currentShopInventory = rollShopInventory(true);
@@ -866,6 +867,7 @@ export function closeShop() {
   const modal = document.getElementById('shop-modal');
   if (modal) modal.style.display = 'none';
   globals.gameState = 'playing';
+  AdManager.gameplayStart();
   if (globals.waveState === 'shop') {
     globals.waveState = 'active';
     callbacks.advanceToNextWave();
