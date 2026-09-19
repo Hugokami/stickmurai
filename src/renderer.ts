@@ -892,132 +892,281 @@ export function draw() {
     globals.weatherEngine.draw(ctx, globals.camera.x, globals.camera.y);
   }
 
-  // dash aim preview
+  // Directional Aim Visuals: Polished Reticle & Compass Helpers
+  const drawAimReticle = (
+    tx: number,
+    ty: number,
+    angle: number,
+    primaryColor: string,
+    accentColor: string,
+    size: number = 18,
+    isStarReticle: boolean = false
+  ) => {
+    ctx.save();
+    ctx.translate(tx, ty);
+    ctx.rotate(angle);
+
+    // Aerodynamic dual forward chevrons
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(-size * 0.8, -size * 0.7);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(-size * 0.8, size * 0.7);
+    ctx.stroke();
+
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-size * 1.3, -size * 0.5);
+    ctx.lineTo(-size * 0.5, 0);
+    ctx.lineTo(-size * 1.3, size * 0.5);
+    ctx.stroke();
+
+    if (isStarReticle) {
+      // 4-pointed celestial star core
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.55);
+      ctx.lineTo(size * 0.25, 0);
+      ctx.lineTo(0, size * 0.55);
+      ctx.lineTo(-size * 0.25, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Outer cosmic targeting diamond brackets
+      ctx.strokeStyle = accentColor;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-size * 0.6, -size * 0.6, size * 1.2, size * 1.2);
+    } else {
+      // Center lock-on diamond
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(0, -3.5);
+      ctx.lineTo(3.5, 0);
+      ctx.lineTo(0, 3.5);
+      ctx.lineTo(-3.5, 0);
+      ctx.closePath();
+      ctx.fill();
+
+      // Precision cross ticks
+      ctx.strokeStyle = primaryColor;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.8);
+      ctx.lineTo(0, -size * 0.3);
+      ctx.moveTo(0, size * 0.3);
+      ctx.lineTo(0, size * 0.8);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  };
+
+  const drawAimCompass = (
+    px: number,
+    py: number,
+    angle: number,
+    outerColor: string,
+    accentColor: string,
+    radius: number = 28
+  ) => {
+    ctx.save();
+    ctx.setLineDash([]);
+    
+    // Soft outer ring
+    ctx.strokeStyle = outerColor;
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.arc(px, py + 10, radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Directional forward arc
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 3.2;
+    ctx.beginPath();
+    ctx.arc(px, py + 10, radius + 3, angle - Math.PI / 4, angle + Math.PI / 4);
+    ctx.stroke();
+
+    // Forward aim notch
+    const notchX = px + Math.cos(angle) * (radius + 7);
+    const notchY = py + 10 + Math.sin(angle) * (radius + 7);
+    ctx.fillStyle = accentColor;
+    ctx.beginPath();
+    ctx.arc(notchX, notchY, 3, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  };
+
+  // Dash Aim Preview
   if (globals.mobileDashAimActive && globals.player && globals.player.state !== 'dead' && globals.player.dashCooldown <= 0) {
     ctx.save();
     const px = globals.player.x - globals.camera.x + globals.vw/2;
     const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
     const angle = globals.mobileDashAimAngle;
     const length = 440;
-    
-    // Draw the preview path line
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
-    ctx.lineWidth = 5;
-    ctx.setLineDash([10, 8]);
-    ctx.beginPath();
-    ctx.moveTo(px, py);
     const targetX = px + Math.cos(angle) * length;
     const targetY = py + Math.sin(angle) * length;
+    
+    // Soft translucent energy corridor
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.14)';
+    ctx.lineWidth = 18;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
     ctx.lineTo(targetX, targetY);
     ctx.stroke();
-    
-    // Draw outer glow/indicator ring at player feet
-    ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.85)';
-    ctx.lineWidth = 3;
-    // Removed shadowBlur to prevent lag
+
+    // Core crisp electric beam
+    ctx.strokeStyle = '#00e5ff';
+    ctx.lineWidth = 3.5;
+    ctx.setLineDash([12, 8]);
     ctx.beginPath();
-    ctx.arc(px, py + 10, 26, 0, Math.PI * 2);
+    ctx.moveTo(px, py);
+    ctx.lineTo(targetX, targetY);
     ctx.stroke();
-    
-    // Draw arrowhead at target
-    ctx.fillStyle = '#00ffff';
-    ctx.beginPath();
-    ctx.moveTo(targetX, targetY);
-    const arrowSize = 14;
-    ctx.lineTo(
-      targetX - arrowSize * Math.cos(angle - Math.PI / 6),
-      targetY - arrowSize * Math.sin(angle - Math.PI / 6)
-    );
-    ctx.lineTo(
-      targetX - arrowSize * Math.cos(angle + Math.PI / 6),
-      targetY - arrowSize * Math.sin(angle + Math.PI / 6)
-    );
-    ctx.closePath();
-    ctx.fill();
-    
+
+    // In-flight speed chevrons along path
+    ctx.setLineDash([]);
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+    ctx.lineWidth = 2;
+    [0.3, 0.6].forEach(ratio => {
+      const sx = px + (targetX - px) * ratio;
+      const sy = py + (targetY - py) * ratio;
+      ctx.save();
+      ctx.translate(sx, sy);
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(-8, -6);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(-8, 6);
+      ctx.stroke();
+      ctx.restore();
+    });
+
+    drawAimCompass(px, py, angle, 'rgba(0, 229, 255, 0.35)', '#00e5ff', 26);
+    drawAimReticle(targetX, targetY, angle, '#00e5ff', '#ffffff', 18);
     ctx.restore();
   }
 
-  // Iaijutsu mobile aim preview
+  // Iaijutsu Mobile Aim Preview
   if (globals.mobileIaijutsuAimActive && globals.player && globals.player.state !== 'dead') {
     ctx.save();
     const px = globals.player.x - globals.camera.x + globals.vw/2;
     const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
     const angle = globals.mobileIaijutsuAimAngle;
     const length = 600 * (globals.playerStats.iaijutsuRangeMult || 1.0);
-    
-    // Color depends on whether fully charged (chargeTimer >= 0.8)
-    const isFullyCharged = globals.player.chargeTimer >= 0.8;
-    const color = isFullyCharged ? '#00ffff' : 'rgba(0, 255, 255, 0.45)';
-    
-    ctx.strokeStyle = color;
-    ctx.lineWidth = isFullyCharged ? 4 : 2;
-    ctx.setLineDash([15, 10]);
-    ctx.beginPath();
-    ctx.moveTo(px, py);
     const targetX = px + Math.cos(angle) * length;
     const targetY = py + Math.sin(angle) * length;
+    
+    const isFullyCharged = globals.player.chargeTimer >= 0.8;
+    const primaryColor = isFullyCharged ? '#00f0ff' : 'rgba(56, 189, 248, 0.7)';
+    const corridorColor = isFullyCharged ? 'rgba(0, 240, 255, 0.18)' : 'rgba(56, 189, 248, 0.10)';
+    
+    // Outer corridor
+    ctx.strokeStyle = corridorColor;
+    ctx.lineWidth = isFullyCharged ? 20 : 12;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(targetX, targetY);
+    ctx.stroke();
+
+    // Razor line
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = isFullyCharged ? 4 : 2.5;
+    ctx.setLineDash([14, 8]);
+    ctx.beginPath();
+    ctx.moveTo(px, py);
     ctx.lineTo(targetX, targetY);
     ctx.stroke();
     
-    // Draw small crescent preview at player feet facing the aim direction
+    // Crescent blade arc at player feet
     ctx.setLineDash([]);
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = primaryColor;
+    ctx.lineWidth = isFullyCharged ? 4 : 2.5;
     ctx.beginPath();
-    ctx.arc(px, py, 40, angle - Math.PI/4, angle + Math.PI/4);
+    ctx.arc(px, py, 42, angle - Math.PI/4, angle + Math.PI/4);
     ctx.stroke();
 
+    drawAimCompass(px, py, angle, 'rgba(56, 189, 248, 0.35)', primaryColor, 30);
+    drawAimReticle(targetX, targetY, angle, primaryColor, '#ffffff', isFullyCharged ? 20 : 16);
     ctx.restore();
   }
 
-  // raijin aim preview
+  // Atherion Astral Ranged Aim Preview
+  if (globals.mobileAetherionAimActive && globals.player && globals.player.state !== 'dead') {
+    ctx.save();
+    const px = globals.player.x - globals.camera.x + globals.vw/2;
+    const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
+    const angle = globals.mobileAetherionAimAngle;
+    const length = 750;
+    const targetX = px + Math.cos(angle) * length;
+    const targetY = py + Math.sin(angle) * length;
+
+    // Cosmic violet/magenta energy corridor
+    ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
+    ctx.lineWidth = 22;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(targetX, targetY);
+    ctx.stroke();
+
+    // Starlight core laser
+    ctx.strokeStyle = '#c084fc';
+    ctx.lineWidth = 3.5;
+    ctx.setLineDash([14, 8]);
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(targetX, targetY);
+    ctx.stroke();
+
+    // Floating celestial diamonds along trajectory
+    ctx.setLineDash([]);
+    [0.33, 0.66].forEach(ratio => {
+      const dx = px + (targetX - px) * ratio;
+      const dy = py + (targetY - py) * ratio;
+      ctx.save();
+      ctx.translate(dx, dy);
+      ctx.rotate(angle + Math.PI / 4);
+      ctx.fillStyle = '#f472b6';
+      ctx.fillRect(-3, -3, 6, 6);
+      ctx.restore();
+    });
+
+    drawAimCompass(px, py, angle, 'rgba(168, 85, 247, 0.4)', '#c084fc', 28);
+    drawAimReticle(targetX, targetY, angle, '#c084fc', '#f472b6', 22, true);
+    ctx.restore();
+  }
+
+  // Raijin Aim Preview
   if (globals.mobileRaijinAimActive && globals.player && globals.player.state !== 'dead' && globals.enhanceCooldown <= 0) {
     ctx.save();
     const px = globals.player.x - globals.camera.x + globals.vw/2;
     const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
     const angle = globals.mobileRaijinAimAngle;
-    
-    // Dynamically calculate Raijin Step range based on dashRangeLevel
     const length = 600 * (1 + 0.30 * (globals.playerStats.dashRangeLevel || 0));
+    const targetX = px + Math.cos(angle) * length;
+    const targetY = py + Math.sin(angle) * length;
     
-    // Draw the preview path line (gold/yellow lightning-themed dash)
-    ctx.strokeStyle = 'rgba(255, 215, 0, 0.6)';
-    ctx.lineWidth = 6;
+    // Gold lightning corridor
+    ctx.strokeStyle = 'rgba(255, 215, 0, 0.18)';
+    ctx.lineWidth = 20;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(targetX, targetY);
+    ctx.stroke();
+
+    // Core amber dashed beam
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 4;
     ctx.setLineDash([12, 6]);
     ctx.beginPath();
     ctx.moveTo(px, py);
-    const targetX = px + Math.cos(angle) * length;
-    const targetY = py + Math.sin(angle) * length;
     ctx.lineTo(targetX, targetY);
     ctx.stroke();
     
-    // Draw outer glow/indicator ring at player feet (gold)
-    ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(255, 215, 0, 0.9)';
-    ctx.lineWidth = 3.5;
-    // Removed shadowBlur to prevent lag
-    ctx.beginPath();
-    ctx.arc(px, py + 10, 28, 0, Math.PI * 2);
-    ctx.stroke();
-    
-    // Draw arrowhead at target
-    ctx.fillStyle = '#ffd700';
-    ctx.beginPath();
-    ctx.moveTo(targetX, targetY);
-    const arrowSize = 16;
-    ctx.lineTo(
-      targetX - arrowSize * Math.cos(angle - Math.PI / 6),
-      targetY - arrowSize * Math.sin(angle - Math.PI / 6)
-    );
-    ctx.lineTo(
-      targetX - arrowSize * Math.cos(angle + Math.PI / 6),
-      targetY - arrowSize * Math.sin(angle + Math.PI / 6)
-    );
-    ctx.closePath();
-    ctx.fill();
-    
+    drawAimCompass(px, py, angle, 'rgba(255, 215, 0, 0.4)', '#ffd700', 28);
+    drawAimReticle(targetX, targetY, angle, '#ffd700', '#ffffff', 20);
     ctx.restore();
   }
 

@@ -319,14 +319,14 @@ export const FUSION_RECIPES: FusionRecipe[] = [
 ];
 
 function applyStatLevelUp() {
-  // Guaranteed stat gains on every level
-  globals.playerStats.slashBonusDmgPct += 0.05;
+  // Guaranteed stat gains on every level - scales slash damage noticeably with each stage level
+  globals.playerStats.slashBonusDmgPct += 0.10;
   globals.playerStats.iaijutsuBonusDmg += 1;
   globals.playerStats.flowGenMult += 0.03;
   globals.playerStats.moveSpeedMult = Math.min(1.5, (globals.playerStats.moveSpeedMult || 1.0) + 0.02);
 
   const bonusRolls = [
-    { key: 'slashBonusDmgPct', amount: 0.08, label: '+8% Slash DMG' },
+    { key: 'slashBonusDmgPct', amount: 0.12, label: '+12% Slash DMG' },
     { key: 'attackCooldownBase', amount: -0.02, label: '-0.02s Attack CD' },
     { key: 'dashCooldownBase', amount: -0.08, label: '-0.08s Dash CD' },
     { key: 'postureDmgBonus', amount: 3, label: '+3 Posture Break' },
@@ -357,7 +357,8 @@ export function triggerLevelUp() {
     playSynthesizedLevelUp();
   }
 
-  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `⚔️ LEVEL ${globals.level}!`, '#ffd700', 36));
+  const levelDmgBonus = Math.max(0, (globals.level - 1) * 10);
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `⚔️ LEVEL ${globals.level}! (+${levelDmgBonus}% DMG)`, '#ffd700', 36));
   globals.screenShake = Math.max(globals.screenShake, 14);
   globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
   callbacks.updateUI();
@@ -974,13 +975,13 @@ export function renderShopModal() {
                 ${globals.lives >= globals.maxLives ? 'MAX HP' : '<img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 13px; height: 13px;" /> 20'}
               </div>
             </button>
-            <button id="shop-potion-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 20 ? 'disabled' : ''}>
+            <button id="shop-potion-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${(globals.stageCurrency || 0) < 50 ? 'disabled' : ''}>
               <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: #fbbf24;">
                 <img src="icons/potion_attack.png" class="inline-currency-icon" style="width: 18px; height: 18px;" alt="Slash Elixir" />
                 <span>Slash Elixir (+5% DMG)</span>
               </div>
-              <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 20 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.4); white-space: nowrap; display: flex; align-items: center; gap: 3px;">
-                <img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 13px; height: 13px;" /> 20
+              <div style="font-family: 'Orbitron', monospace; font-size: 10.5px; font-weight: bold; color: ${(globals.stageCurrency || 0) >= 50 ? '#ffd700' : '#ef4444'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.4); white-space: nowrap; display: flex; align-items: center; gap: 3px;">
+                <img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 13px; height: 13px;" /> 50
               </div>
             </button>
             <button id="shop-ad-gold-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(212, 162, 78, 0.16); border: 1px solid rgba(251, 191, 36, 0.6); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;">
@@ -1202,14 +1203,14 @@ export function renderShopModal() {
     let potionRepeatTimer: any = null;
 
     const buyOnePotion = (): boolean => {
-      if ((globals.stageCurrency || 0) < 20) return false;
-      globals.stageCurrency -= 20;
+      if ((globals.stageCurrency || 0) < 50) return false;
+      globals.stageCurrency -= 50;
       globals.stageAttackPotions = (globals.stageAttackPotions || 0) + 1;
       callbacks.updateUI();
       playSound(sfx.magatamaPickup, 1.0);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "+5% SLASH DMG (STAGE)! ⚔️", "#fbbf24", 26));
       renderShopModal();
-      return (globals.stageCurrency || 0) >= 20;
+      return (globals.stageCurrency || 0) >= 50;
     };
 
     const stopPotionHold = () => {

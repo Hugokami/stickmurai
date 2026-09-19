@@ -12,7 +12,8 @@ function skillDamage(base: number, ratio: number, target?: Enemy): number {
 export function getCurrentSlashDamage(): number {
   const baseDmg = 1.0 + (globals.playerStats?.slashFlatDmg || 0) + (globals.playerStats?.reapersMarkLevel || 0) * 2 + (globals.flowState === 'awakened' ? 2.5 : 0) + (globals.playerStats?.enhanceBonusDmg || 0);
   const slashPotionPct = (globals.stageAttackPotions || 0) * 0.05;
-  const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0) + slashPotionPct;
+  const stageLevelPct = Math.max(0, (globals.level || 1) - 1) * 0.10;
+  const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0) + slashPotionPct + stageLevelPct;
   const comboMult = 1.0 + Math.min(1.5, (globals.combo || 0) * 0.015);
   const ultMult = globals.flowState === 'awakened' ? (1 + (globals.playerStats?.ultimateDamageBonusPct || 0)) : 1.0;
   return Math.max(1, baseDmg * slashPct * comboMult * ultMult);
@@ -659,6 +660,7 @@ function startApp() {
     const loaderScreen = document.getElementById('loader-screen');
     if (loaderScreen) {
       const earlySkip = () => {
+        bgmAudio.muted = false;
         resumeAudioContext();
         startBgm();
         if (assetReadiness().ready) finishLoading();
@@ -666,6 +668,7 @@ function startApp() {
       loaderScreen.addEventListener('click', earlySkip);
       loaderScreen.addEventListener('touchstart', earlySkip, { passive: true });
       loaderScreen.addEventListener('pointerdown', earlySkip, { passive: true });
+      loaderScreen.addEventListener('mousedown', earlySkip, { passive: true });
     }
 
     // Setup loader video events and programmatically trigger play
@@ -2319,13 +2322,16 @@ function triggerAetherionRangedAttack() {
   globals.aetherionShootCooldown = 0.35;
   const lastSlashDelta = now - (globals.aetherionLastSlashTime || 0);
   const crossfireReady = (now - (globals.aetherionLastCrossfireTime || 0) > 1600);
-  const isComboCrossfire = lastSlashDelta < 260 && crossfireReady;
+  const isComboCrossfire = lastSlashDelta < 650 && crossfireReady;
   if (isComboCrossfire) {
     globals.aetherionLastCrossfireTime = now;
   }
 
   let angle = globals.player.dir === 1 ? 0 : Math.PI;
-  if (globals.useMobileIaijutsuAimAngle) {
+  if (globals.useMobileAetherionAimAngle) {
+    angle = globals.mobileAetherionAimAngle;
+    globals.useMobileAetherionAimAngle = false;
+  } else if (globals.useMobileIaijutsuAimAngle) {
     angle = globals.mobileIaijutsuAimAngle;
   } else if (globals.joystickActive && (Math.abs(globals.joystickVector.x) > 0.1 || Math.abs(globals.joystickVector.y) > 0.1)) {
     angle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
@@ -5512,7 +5518,12 @@ function update(realDt: number) {
 
   // Option 2: Counter-Flash / Mikiri Stride (Ronin / Sekiro style)
   // When an enemy is in crimson danger attack/charge window, tapping Slash triggers forward phased counter-thrust
-  if (!dashAttackTriggered && isAttackPressed && globals.player.state !== 'dash' && globals.player.state !== 'dead') {
+  // Internal cooldown (1.8s) prevents infinite counter-flash invulnerability spam against bosses
+  const nowMikiri = performance.now();
+  const mikiriCooldownMs = 1800;
+  const mikiriReady = (nowMikiri - (globals.lastMikiriStrideTime || 0)) >= mikiriCooldownMs;
+
+  if (!dashAttackTriggered && isAttackPressed && globals.player.state !== 'dash' && globals.player.state !== 'dead' && mikiriReady) {
     for (let i = 0; i < globals.enemies.length; i++) {
       const e = globals.enemies[i];
       if (e.state === 'dead') continue;
@@ -5525,6 +5536,7 @@ function update(realDt: number) {
         const maxDist = 240 + (e.scaleMult - 1) * 60;
         if (distSq < maxDist * maxDist) {
           parryTriggered = true;
+          globals.lastMikiriStrideTime = nowMikiri;
 
           // 1. Phased forward stride through enemy
           const dir = (e.x >= globals.player.x ? 1 : -1);
@@ -6016,12 +6028,12 @@ function update(realDt: number) {
         });
 
       }
-      // Atherion Dash + Slash Combo: CELESTIAL STRIDE CLEAVE! (nerfed interval & reset)
+      // Atherion Dash + Slash Combo: CELESTIAL STRIDE CLEAVE! (generous 650ms buffer window)
       const nowSlash = performance.now();
       const strideCleaveReady = (nowSlash - (globals.aetherionLastStrideCleave || 0) > 2200);
       const isAetherionDashSlash = globals.selectedHero === 'aetherion' && strideCleaveReady && (
         globals.player.state === 'dash' || 
-        (nowSlash - (globals.aetherionLastDashTime || 0) < 260)
+        (nowSlash - (globals.aetherionLastDashTime || 0) < 650)
       );
       if (isAetherionDashSlash) {
         globals.aetherionLastStrideCleave = nowSlash;
@@ -6243,6 +6255,12 @@ function update(realDt: number) {
       // Grim Harvest: Spectral Soul Cleave on 3rd combo strike
       if (globals.grimHarvestActive && (globals.grimHarvestSouls || 0) >= 3 && attackPower < 1.7 && globals.comboSlashesCount >= 3) {
         executeSpectralSoulCleave(angle);
+      }
+
+      // Aetherion passive weave: 3rd combo strike auto-unleashes Celestial Crossfire beam burst
+      if (globals.selectedHero === 'aetherion' && globals.comboSlashesCount >= 3 && attackPower < 1.7) {
+        globals.comboSlashesCount = 0;
+        triggerAetherionRangedAttack();
       }
 
       // Grandmaster Samurai passive: Kensei 360-degree cross-cleave on every 3rd strike

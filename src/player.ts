@@ -282,17 +282,17 @@ export class Player extends Entity {
         globals.aetherionLastDashTime = nowDash;
 
         if (globals.selectedHero === 'aetherion') {
-          // Dash + Iaijutsu combo: Starlight Dimension Rend (nerfed interval & threshold)
+          // Dash + Iaijutsu combo: Starlight Dimension Rend (smooth mobile trigger threshold)
           const canDimensionRend = (nowDash - (globals.aetherionLastDimensionRend || 0) > 2500);
-          if (wasCharging && previousCharge >= 0.35 && canDimensionRend) {
+          if (wasCharging && previousCharge >= 0.20 && canDimensionRend) {
             globals.aetherionLastDimensionRend = nowDash;
             callbacks.triggerAetherionDimensionRend?.(previousCharge);
           } else {
-            // Slash + Ranged + Dash combo: Astral Phase Warp (nerfed interval & window)
+            // Slash/Ranged + Dash combo: Astral Phase Warp (generous 650ms mobile buffer window)
             const slashDelta = nowDash - (globals.aetherionLastSlashTime || 0);
             const shootDelta = nowDash - (globals.aetherionLastShootTime || 0);
-            const canPhaseWarp = (nowDash - (globals.aetherionLastPhaseWarpTime || 0) > 2800);
-            if (slashDelta < 320 && shootDelta < 320 && canPhaseWarp) {
+            const canPhaseWarp = (nowDash - (globals.aetherionLastPhaseWarpTime || 0) > 2200);
+            if ((slashDelta < 650 || shootDelta < 650) && canPhaseWarp) {
               globals.aetherionLastPhaseWarpTime = nowDash;
               callbacks.triggerAetherionPhaseWarp?.();
             }

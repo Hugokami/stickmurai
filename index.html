@@ -34,7 +34,19 @@
           ev.preventDefault();
         }
       });
-      window.addEventListener('wheel', function(ev) { ev.preventDefault(); }, { passive: false });
+      // Poki SDK: Prevent page scroll on game controls while allowing inner modal scrolling
+      window.addEventListener('wheel', function(ev) {
+        var target = ev.target;
+        while (target && target !== document.body && target !== document.documentElement) {
+          var style = window.getComputedStyle(target);
+          var overflowY = style.overflowY;
+          if ((overflowY === 'auto' || overflowY === 'scroll') && target.scrollHeight > target.clientHeight) {
+            return; // Allow scrolling inside scrollable containers (shop, skill select, settings, etc.)
+          }
+          target = target.parentElement;
+        }
+        ev.preventDefault();
+      }, { passive: false });
     </script>
     <!-- Preload Stickmurai loading screen stickman frames -->
     <link rel="preload" as="image" href="sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0001.png" />

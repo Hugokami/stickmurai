@@ -84,13 +84,74 @@ export function initInput() {
   const btnStanceSwitch = document.getElementById('btn-stance-switch');
 
   if (btnStanceSwitch) {
-    const handleAetherionShoot = (e: Event) => {
+    let aetherionTouchId: number | null = null;
+    let aetherionTouchStartX = 0;
+    let aetherionTouchStartY = 0;
+    let aetherionHasDragged = false;
+
+    btnStanceSwitch.addEventListener('touchstart', (e: TouchEvent) => {
       e.preventDefault();
       e.stopPropagation();
+      const touch = e.changedTouches[0];
+      aetherionTouchId = touch.identifier;
+      aetherionTouchStartX = touch.clientX;
+      aetherionTouchStartY = touch.clientY;
+      aetherionHasDragged = false;
+      globals.mobileAetherionAimActive = false;
+      globals.mobileAetherionAimAngle = globals.player?.dir === -1 ? Math.PI : 0;
+    }, { passive: false });
+
+    btnStanceSwitch.addEventListener('touchmove', (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (aetherionTouchId === null) return;
+      for (let i = 0; i < e.touches.length; i++) {
+        const touch = e.touches[i];
+        if (touch.identifier === aetherionTouchId) {
+          const dx = touch.clientX - aetherionTouchStartX;
+          const dy = touch.clientY - aetherionTouchStartY;
+          const dist = Math.hypot(dx, dy);
+          if (dist > 15) {
+            globals.mobileAetherionAimAngle = Math.atan2(dy, dx);
+            globals.mobileAetherionAimActive = true;
+            aetherionHasDragged = true;
+          } else {
+            globals.mobileAetherionAimActive = false;
+          }
+          break;
+        }
+      }
+    }, { passive: false });
+
+    btnStanceSwitch.addEventListener('touchend', (e: TouchEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (aetherionTouchId === null) return;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const touch = e.changedTouches[i];
+        if (touch.identifier === aetherionTouchId) {
+          if (aetherionHasDragged) {
+            globals.useMobileAetherionAimAngle = true;
+          }
+          break;
+        }
+      }
+      globals.mobileAetherionAimActive = false;
+      aetherionTouchId = null;
       callbacks.triggerAetherionRangedAttack?.();
-    };
-    btnStanceSwitch.addEventListener('touchstart', handleAetherionShoot, { passive: false });
-    btnStanceSwitch.addEventListener('click', handleAetherionShoot);
+    }, { passive: false });
+
+    btnStanceSwitch.addEventListener('touchcancel', (e: TouchEvent) => {
+      e.preventDefault();
+      aetherionTouchId = null;
+      globals.mobileAetherionAimActive = false;
+      globals.useMobileAetherionAimAngle = false;
+    }, { passive: false });
+
+    btnStanceSwitch.addEventListener('click', (e: MouseEvent) => {
+      e.preventDefault();
+      callbacks.triggerAetherionRangedAttack?.();
+    });
   }
 
   let joystickActive = false;

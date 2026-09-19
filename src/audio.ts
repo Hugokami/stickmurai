@@ -828,15 +828,17 @@ export function startBgm() {
     bgmStarted = false;
     return;
   }
-  if (bgmStarted && !bgmAudio.paused) return;
-  bgmStarted = true;
-  
+
+  bgmAudio.muted = false;
   const bgmVolumeSlider = typeof document !== 'undefined' ? document.getElementById('bgm-volume') as HTMLInputElement : null;
   if (bgmVolumeSlider) {
     bgmAudio.volume = parseFloat(bgmVolumeSlider.value);
   } else {
     bgmAudio.volume = 0.5;
   }
+
+  if (bgmStarted && !bgmAudio.paused) return;
+  bgmStarted = true;
 
   try {
     bgmAudio.loop = playlist.length <= 1;
@@ -861,27 +863,16 @@ export function startBgm() {
 export function initImmediateAudio() {
   if (typeof window === 'undefined') return;
 
-  // Immediate attempt on boot / loading screen
+  // Immediate eager attempt with unmuted sound
   try {
     startBgm();
   } catch (_) {}
 
-  // Fallback: If unmuted play failed or was blocked, attempt muted play to prime audio pipeline
-  if (bgmAudio.paused) {
-    try {
-      bgmAudio.muted = true;
-      const p = bgmAudio.play();
-      if (p !== undefined) p.catch(() => {});
-    } catch (_) {}
-  }
-
   // Instant unlock listeners on any early gesture anywhere on screen
-  const unlockEvents = ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'];
+  const unlockEvents = ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'keydown', 'click', 'wheel'];
   const unlockHandler = () => {
+    bgmAudio.muted = false;
     resumeAudioContext();
-    if (bgmAudio.muted) {
-      bgmAudio.muted = false;
-    }
     startBgm();
     setTimeout(() => {
       if (!bgmAudio.paused) {
@@ -890,7 +881,7 @@ export function initImmediateAudio() {
           document.removeEventListener(evt, unlockHandler, true);
         });
       }
-    }, 150);
+    }, 100);
   };
 
   unlockEvents.forEach(evt => {

@@ -1,52 +1,161 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 88" width="160" height="88" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 154" width="280" height="154">
   <defs>
-    <linearGradient id="crimsonSlash" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#ff1744"/>
-      <stop offset="60%" stop-color="#ff5252"/>
-      <stop offset="100%" stop-color="#ffd200"/>
+    <!-- Background Gradient -->
+    <linearGradient id="slaBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#140306"/>
+      <stop offset="55%" stop-color="#22060b"/>
+      <stop offset="100%" stop-color="#0c0103"/>
     </linearGradient>
-    <filter id="crimsonGlow" x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feMerge>
-        <feMergeNode in="blur"/>
-        <feMergeNode in="SourceGraphic"/>
-      </feMerge>
-    </filter>
+
+    <!-- Radial Crimson Shockwave -->
+    <radialGradient id="slaCrimsonGlow" cx="62%" cy="50%" r="65%">
+      <stop offset="0%" stop-color="#ff1744" stop-opacity="0.38"/>
+      <stop offset="40%" stop-color="#ef4444" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#7f1d1d" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Crescent Blade Arc Gradient -->
+    <linearGradient id="slaBladeArc" x1="0%" y1="100%" x2="80%" y2="0%">
+      <stop offset="0%" stop-color="#dc2626" stop-opacity="0.1"/>
+      <stop offset="25%" stop-color="#ff1744" stop-opacity="0.75"/>
+      <stop offset="60%" stop-color="#ff6b00" stop-opacity="0.95"/>
+      <stop offset="88%" stop-color="#ffd000" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="1"/>
+    </linearGradient>
+
+    <!-- Inner Incandescent Razor Core -->
+    <linearGradient id="slaCoreGlow" x1="0%" y1="80%" x2="100%" y2="20%">
+      <stop offset="0%" stop-color="#ff1744" stop-opacity="0"/>
+      <stop offset="40%" stop-color="#ff5252" stop-opacity="0.8"/>
+      <stop offset="85%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <!-- Floor Perspective Horizon -->
+    <linearGradient id="slaFloorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0"/>
+      <stop offset="35%" stop-color="#ef4444" stop-opacity="0.4"/>
+      <stop offset="85%" stop-color="#f59e0b" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Katana Steel Reflection -->
+    <linearGradient id="slaSteelGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#64748b"/>
+      <stop offset="50%" stop-color="#e2e8f0"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
   </defs>
-  <!-- Background Card -->
-  <rect width="160" height="88" rx="6" fill="#0e0709"/>
-  <rect width="158" height="86" x="1" y="1" rx="5" fill="none" stroke="rgba(255, 30, 39, 0.25)" stroke-width="1"/>
-  
-  <!-- Ground Line -->
-  <line x1="8" y1="74" x2="152" y2="74" stroke="rgba(255, 30, 39, 0.25)" stroke-width="1" stroke-dasharray="4,3"/>
 
-  <!-- Sweeping Crescent Blade Arc -->
-  <path d="M 88 10 C 138 14 156 46 122 74 C 144 50 132 24 88 10 Z" fill="url(#crimsonSlash)" filter="url(#crimsonGlow)"/>
-  <path d="M 82 14 C 130 18 148 48 116 72" fill="none" stroke="#ff1744" stroke-width="2.5" filter="url(#crimsonGlow)"/>
-  <path d="M 94 8 C 142 14 160 46 126 76" fill="none" stroke="#ff8a80" stroke-width="1.2"/>
+  <!-- Card Background -->
+  <rect width="280" height="154" rx="8" fill="url(#slaBgGrad)"/>
+  <rect width="280" height="154" rx="8" fill="url(#slaCrimsonGlow)"/>
 
-  <!-- Flying Embers / Sparks -->
-  <circle cx="144" cy="28" r="1.8" fill="#ffd200" filter="url(#crimsonGlow)"/>
-  <circle cx="138" cy="54" r="1.5" fill="#ff1744"/>
-  <circle cx="150" cy="42" r="2" fill="#ff5252" filter="url(#crimsonGlow)"/>
-  <circle cx="128" cy="18" r="1.5" fill="#ffd200"/>
-  <circle cx="108" cy="76" r="1.2" fill="#ff8a80"/>
+  <!-- Floor Perspective Grid -->
+  <path d="M 0 128 L 280 128" stroke="url(#slaFloorGrad)" stroke-width="1"/>
+  <path d="M 20 154 L 65 128" stroke="#ef4444" stroke-width="0.8" stroke-opacity="0.2"/>
+  <path d="M 80 154 L 115 128" stroke="#ef4444" stroke-width="0.8" stroke-opacity="0.2"/>
+  <path d="M 145 154 L 160 128" stroke="#ef4444" stroke-width="0.8" stroke-opacity="0.25"/>
+  <path d="M 210 154 L 200 128" stroke="#ef4444" stroke-width="0.8" stroke-opacity="0.2"/>
+  <path d="M 265 154 L 240 128" stroke="#ef4444" stroke-width="0.8" stroke-opacity="0.2"/>
 
-  <!-- Stickman Lunging Slasher -->
-  <!-- Head -->
-  <circle cx="68" cy="32" r="6" fill="#ffffff"/>
-  <!-- Torso (deep forward combat lunge) -->
-  <line x1="68" y1="38" x2="80" y2="54" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-  <!-- Sword Arm swinging forward -->
-  <line x1="72" y1="42" x2="94" y2="38" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-  <line x1="94" y1="38" x2="114" y2="34" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
-  <line x1="94" y1="38" x2="132" y2="28" stroke="#f1f5f9" stroke-width="2" stroke-linecap="round" filter="url(#crimsonGlow)"/>
-  <!-- Off Hand back -->
-  <line x1="72" y1="42" x2="56" y2="48" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
-  <!-- Front Leg deep knee bend -->
-  <line x1="80" y1="54" x2="100" y2="62" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-  <line x1="100" y1="62" x2="114" y2="74" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-  <!-- Back Extended Leg -->
-  <line x1="80" y1="54" x2="58" y2="64" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
-  <line x1="58" y1="64" x2="38" y2="74" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <!-- Kinetic Air Cut Speed Streaks -->
+  <g stroke="#ff1744" stroke-linecap="round" opacity="0.45">
+    <line x1="45" y1="26" x2="160" y2="26" stroke-width="1" stroke-dasharray="8 12"/>
+    <line x1="20" y1="52" x2="180" y2="52" stroke-width="1.5" stroke-dasharray="20 10"/>
+    <line x1="120" y1="138" x2="250" y2="138" stroke-width="1.6" stroke-dasharray="16 8"/>
+    <line x1="160" y1="144" x2="270" y2="144" stroke-width="1"/>
+  </g>
+
+  <!-- Master Samurai: Low Wide Battōjutsu Stance -->
+  <g transform="translate(68, 52)">
+    <!-- Motion Shadow of Swing -->
+    <path d="M 32 30 Q 15 18 -4 32 Q 10 44 32 38 Z" fill="#ef4444" opacity="0.25"/>
+
+    <!-- Flowing Hakama / Samurai Robes (Wide Low Stance) -->
+    <!-- Rear Leg & Foot -->
+    <path d="M 10 50 L -22 68 L -14 74 L 16 58 Z" fill="#0f172a"/>
+    <path d="M -22 68 L -32 72 L -28 75 L -14 74 Z" fill="#334155"/>
+
+    <!-- Front Leg & Foot (Deep Knee Bend) -->
+    <path d="M 24 46 L 42 62 L 48 74 L 36 75 L 28 62 L 16 50 Z" fill="#0f172a"/>
+    <path d="M 40 73 L 54 73 L 52 76 L 36 76 Z" fill="#ef4444"/>
+
+    <!-- Torso Twist in Power Swing -->
+    <path d="M 12 18 L 30 42 L 18 64 L 6 60 L 8 36 Z" fill="#0f172a"/>
+    <path d="M 14 20 L 26 40 L 20 56 L 12 36 Z" fill="#1e293b"/>
+
+    <!-- Samurai Head, Topknot / Headband Ribbon -->
+    <circle cx="26" cy="11" r="7.5" fill="#0f172a"/>
+    <path d="M 20 9 L 34 9 L 33 13 L 19 13 Z" fill="#ef4444"/>
+    <!-- Flowing Red Headband Tails -->
+    <path d="M 19 11 Q 5 6 -14 12 Q 2 15 18 14 Z" fill="#ef4444"/>
+    <!-- Intense Focused Eye Glint -->
+    <line x1="28" y1="11" x2="33" y2="11" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Two-Handed Grip Arms Extending Forward in Release -->
+    <path d="M 22 26 L 46 32 L 48 38 L 22 34 Z" fill="#0f172a"/>
+    <path d="M 28 32 L 42 42 L 38 46 L 24 38 Z" fill="#1e293b"/>
+
+    <!-- Katana Hilt (Tsuka) & Gold Tsuba -->
+    <line x1="44" y1="36" x2="56" y2="39" stroke="#b91c1c" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- Diamond Wrap Ito on Hilt -->
+    <circle cx="47" cy="37" r="1" fill="#ffd000"/>
+    <circle cx="51" cy="38" r="1" fill="#ffd000"/>
+    <circle cx="55" cy="39" r="1" fill="#ffd000"/>
+    <!-- Gold Tsuba (Guard) -->
+    <ellipse cx="56" cy="39.5" rx="2" ry="5.5" fill="#ffd000"/>
+
+    <!-- Katana Steel Blade -->
+    <path d="M 57 39.5 L 102 44 L 100 46 L 57 41 Z" fill="url(#slaSteelGrad)"/>
+    <line x1="58" y1="40" x2="102" y2="44" stroke="#ffffff" stroke-width="1"/>
+  </g>
+
+  <!-- BREATHTAKING CRESCENT SLASH ARC (Directional Crescent Geometry) -->
+  <g>
+    <!-- Outer Crimson/Orange Energy Shockwave -->
+    <path d="M 130 134 Q 215 118 244 56 Q 248 36 238 20 Q 254 38 248 64 Q 220 128 130 134 Z" fill="url(#slaBladeArc)" opacity="0.85"/>
+
+    <!-- Inner Razor Crescent Wave (Pure Incandescent Cutting Arc) -->
+    <path d="M 142 126 Q 212 110 236 58 Q 240 40 232 26 Q 244 42 238 64 Q 214 116 142 126 Z" fill="url(#slaCoreGlow)"/>
+
+    <!-- Searing White Cutting Edge (Razor Sharp Filament) -->
+    <path d="M 152 120 Q 212 104 233 58 Q 236 44 228 32" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+
+    <!-- Trailing Molten Ember Mist on Outer Rim -->
+    <path d="M 125 137 Q 195 126 230 85" fill="none" stroke="#ff4500" stroke-width="1.8" stroke-dasharray="6 8" opacity="0.75"/>
+  </g>
+
+  <!-- Impact Flash & Explosive Slash Sparks (Where Blade Slices Air) -->
+  <!-- Central Burst Star at Apex of Arc -->
+  <g transform="translate(233, 48)">
+    <line x1="-18" y1="0" x2="18" y2="0" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="0" y1="-18" x2="0" y2="18" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="-10" y1="-10" x2="10" y2="10" stroke="#ffd000" stroke-width="1.8"/>
+    <line x1="10" y1="-10" x2="-10" y2="10" stroke="#ffd000" stroke-width="1.8"/>
+    <circle cx="0" cy="0" r="4.5" fill="#ffffff"/>
+  </g>
+
+  <!-- Dynamic Flying Spark Embers -->
+  <g fill="#ffd000">
+    <circle cx="218" cy="24" r="1.8"/>
+    <circle cx="246" cy="28" r="2.2"/>
+    <circle cx="258" cy="46" r="1.6"/>
+    <circle cx="252" cy="72" r="2"/>
+    <circle cx="242" cy="94" r="1.8"/>
+    <circle cx="226" cy="116" r="2.2"/>
+    <circle cx="188" cy="132" r="1.5"/>
+    <circle cx="160" cy="136" r="1.8"/>
+  </g>
+  <g fill="#ff1744">
+    <circle cx="238" cy="16" r="1.2"/>
+    <circle cx="262" cy="38" r="1.5"/>
+    <circle cx="265" cy="62" r="1.8"/>
+    <circle cx="248" cy="84" r="1.4"/>
+    <circle cx="236" cy="108" r="1.6"/>
+    <circle cx="212" cy="126" r="1.4"/>
+  </g>
+
+  <!-- Outer Card Frame Border -->
+  <rect width="278" height="152" x="1" y="1" rx="7" fill="none" stroke="#ef4444" stroke-width="1" stroke-opacity="0.35"/>
 </svg>

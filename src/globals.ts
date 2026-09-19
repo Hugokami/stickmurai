@@ -255,6 +255,9 @@ export const globals = {
   mobileIaijutsuAimActive: false,
   mobileIaijutsuAimAngle: 0,
   useMobileIaijutsuAimAngle: false,
+  mobileAetherionAimActive: false,
+  mobileAetherionAimAngle: 0,
+  useMobileAetherionAimAngle: false,
   mobileUltJustPressed: false,
   mobileEnhanceJustPressed: false,
 
@@ -275,6 +278,7 @@ export const globals = {
   // Combo Moves tracking
   comboSlashesCount: 0,
   lastBasicSlashTime: 0,
+  lastMikiriStrideTime: 0,
   lastIaijutsuFireTime: 0,
   lastIaijutsuAngle: 0,
   lightningDischargeActive: false,
