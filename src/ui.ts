@@ -91,8 +91,8 @@ export const ASCENSION_UPGRADES = [
     max: 10,
     desc: '+0.5 Flat DMG & +1% ATK per level',
     descJa: '基礎斬撃+0.5 & ATK倍率+1%/Lv',
-    baseCost: 100,
-    costMult: 100,
+    baseCost: 800,
+    costMult: 800,
   },
   {
     id: 'dashCooldown',
@@ -102,8 +102,8 @@ export const ASCENSION_UPGRADES = [
     max: 5,
     desc: '-0.08s Dash cooldown per level (0.4s minimum)',
     descJa: 'ダッシュCT-0.08秒（最低0.4秒）',
-    baseCost: 250,
-    costMult: 250,
+    baseCost: 2000,
+    costMult: 2000,
   },
   {
     id: 'ultimateDamage',
@@ -113,8 +113,8 @@ export const ASCENSION_UPGRADES = [
     max: 10,
     desc: '+10% Ultimate damage per level',
     descJa: '奥義ダメージ+10%/Lv',
-    baseCost: 200,
-    costMult: 150,
+    baseCost: 1600,
+    costMult: 1200,
   },
   {
     id: 'counterSiphon',
@@ -124,8 +124,8 @@ export const ASCENSION_UPGRADES = [
     max: 5,
     desc: 'Parry & Mikiri restore 5% Max HP (100/5 ❤️) + 15 Flow',
     descJa: '見切り＆パリィ時 最大HP5% (100/5 ❤️) 回復 + 15気力',
-    baseCost: 250,
-    costMult: 200,
+    baseCost: 2000,
+    costMult: 1600,
   },
   {
     id: 'critMastery',
@@ -135,8 +135,8 @@ export const ASCENSION_UPGRADES = [
     max: 5,
     desc: '+10% Crit Chance, 2.2x Crit DMG & micro-stagger',
     descJa: '会心率+10%/Lv、会心倍率2.2倍、小怯み付与',
-    baseCost: 300,
-    costMult: 250,
+    baseCost: 2400,
+    costMult: 2000,
   },
   // Infinite / Paragon Upgrades (Endless Bushido Progression)
   {
