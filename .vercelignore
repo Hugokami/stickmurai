@@ -10,6 +10,7 @@ space_background_pack/
 # Local Dev & Build Outputs
 node_modules/
 dist/
+release/
 .vercel/
 .git/
 .antigravitycli/
