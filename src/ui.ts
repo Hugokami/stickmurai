@@ -2954,38 +2954,38 @@ export function populateAscensionUpgrades() {
         border: 1.5px solid ${isMax ? 'rgba(34, 197, 94, 0.5)' : (isEndless ? 'rgba(212, 162, 78, 0.6)' : (canAfford ? 'rgba(212, 162, 78, 0.5)' : 'rgba(255, 255, 255, 0.12)'))};
         border-radius: 0;
         clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
-        padding: 10px 12px;
+        padding: 8px 10px;
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 4px;
         transition: all 0.2s ease;
         box-shadow: ${isEndless ? '0 0 12px rgba(212, 162, 78, 0.2)' : '0 2px 8px rgba(0, 0, 0, 0.4)'};
       `;
 
       card.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 13px; display: flex; align-items: center; gap: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 4px; flex-wrap: wrap;">
+          <span style="font-family: 'Shojumaru', 'Noto Sans JP', sans-serif; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#ffd700')}; font-size: 11.5px; display: flex; align-items: center; gap: 4px; line-height: 1.2;">
             <span>${u.icon}</span> ${isJa ? u.nameJa : u.name}
           </span>
-          <span class="ascension-level-display" style="font-family: 'Orbitron', monospace; font-size: 11px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold;">
+          <span class="ascension-level-display" style="font-family: 'Orbitron', monospace; font-size: 10px; color: ${isMax ? '#4ade80' : (isEndless ? '#fbbf24' : '#38bdf8')}; font-weight: bold; white-space: nowrap;">
             ${isEndless ? `Rank ${curLevel} (∞)` : (isMax ? 'MAX' : `Lv. ${curLevel}/${u.max}`)}
           </span>
         </div>
-        <div class="ascension-pips" style="font-family: monospace; font-size: 10px; color: #a855f7; letter-spacing: 1px;">
+        <div class="ascension-pips" style="font-family: monospace; font-size: 9px; color: #a855f7; letter-spacing: 0.5px; word-break: break-all; line-height: 1;">
           ${pips}
         </div>
-        <div class="ascension-level-info" style="font-family: 'Outfit', sans-serif; font-size: 11px; color: #cbd5e1; line-height: 1.3;">
+        <div class="ascension-level-info" style="font-family: 'Outfit', sans-serif; font-size: 10px; color: #cbd5e1; line-height: 1.25;">
           <strong>${isJa ? '永続強化' : 'PERMANENT'}</strong> · ${isJa ? u.descJa : u.desc}
           ${permanentPreview(u.id, curLevel, u.max, isEndless)}
-          <div>${isJa ? 'レベル' : 'Level'} ${curLevel} → ${isMax ? curLevel : curLevel + 1} · ${isJa?'上限':'Cap'} ${isEndless?'∞':u.max}</div>
+          <div style="font-size: 9px; opacity: 0.85; margin-top: 2px;">${isJa ? 'レベル' : 'Level'} ${curLevel} → ${isMax ? curLevel : curLevel + 1} · ${isJa?'上限':'Cap'} ${isEndless?'∞':u.max}</div>
         </div>
         <div style="margin-top: 4px;">
           ${isMax ? `
-            <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;">✓ MASTERED</button>
+            <button class="menu-btn btn-card" disabled style="margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 10px; min-height: 28px; padding: 2px 6px;">✓ MASTERED</button>
           ` : `
-            <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 32px; font-size: 11px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; touch-action: manipulation; user-select: none;">
+            <button class="menu-btn btn-card buy-ascension-btn" data-upgrade="${u.id}" data-cost="${cost}" ${canAfford ? '' : 'disabled'} style="margin: 0; min-height: 28px; font-size: 10px; padding: 3px 6px; border-color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#475569'}; color: ${canAfford ? (isEndless ? '#fbbf24' : '#ffd700') : '#64748b'}; opacity: ${canAfford ? '1' : '0.6'}; box-shadow: ${canAfford ? '0 0 10px rgba(255,215,0,0.2)' : 'none'}; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; touch-action: manipulation; user-select: none; white-space: normal; word-break: keep-all; line-height: 1.15;">
               <div>${isJa ? `強化: ${cost.toLocaleString()} 🪙` : `UPGRADE: ${cost.toLocaleString()} 🪙`}</div>
-              <div style="font-size: 8px; opacity: 0.75; font-weight: normal; letter-spacing: 0.3px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
+              <div style="font-size: 7.5px; opacity: 0.75; font-weight: normal; letter-spacing: 0.2px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
             </button>
           `}
         </div>
@@ -3038,7 +3038,7 @@ export function populateAscensionUpgrades() {
           const levelEl = card.querySelector('.ascension-level-display');
           if (levelEl) {
             levelEl.textContent = isEndlessUpgrade ? `Rank ${nextLvl} (∞)` : (isNowMax ? 'MAX' : `Lv. ${nextLvl}/${u.max}`);
-            levelEl.setAttribute('style', `font-family: 'Orbitron', monospace; font-size: 11px; color: ${isNowMax ? '#4ade80' : (isEndlessUpgrade ? '#fbbf24' : '#38bdf8')}; font-weight: bold;`);
+            levelEl.setAttribute('style', `font-family: 'Orbitron', monospace; font-size: 10px; color: ${isNowMax ? '#4ade80' : (isEndlessUpgrade ? '#fbbf24' : '#38bdf8')}; font-weight: bold; white-space: nowrap;`);
           }
 
           const pipsEl = card.querySelector('.ascension-pips');
@@ -3055,21 +3055,21 @@ export function populateAscensionUpgrades() {
             infoEl.innerHTML = `
               <strong>${isJa ? '永続強化' : 'PERMANENT'}</strong> · ${isJa ? u.descJa : u.desc}
               ${permanentPreview(u.id, nextLvl, u.max, isEndlessUpgrade)}
-              <div>${isJa ? 'レベル' : 'Level'} ${nextLvl} → ${isNowMax ? nextLvl : nextLvl + 1} · ${isJa?'上限':'Cap'} ${isEndlessUpgrade?'∞':u.max}</div>
+              <div style="font-size: 9px; opacity: 0.85; margin-top: 2px;">${isJa ? 'レベル' : 'Level'} ${nextLvl} → ${isNowMax ? nextLvl : nextLvl + 1} · ${isJa?'上限':'Cap'} ${isEndlessUpgrade?'∞':u.max}</div>
             `;
           }
 
           if (isNowMax) {
             buyBtn.setAttribute('disabled', 'true');
             buyBtn.className = 'menu-btn btn-card';
-            buyBtn.setAttribute('style', 'margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 11px; min-height: 32px;');
+            buyBtn.setAttribute('style', 'margin: 0; background: #14532d; border-color: #22c55e; color: #86efac; cursor: default; font-size: 10px; min-height: 28px; padding: 2px 6px;');
             buyBtn.innerHTML = '✓ MASTERED';
             card.style.borderColor = 'rgba(34, 197, 94, 0.4)';
             return false;
           } else {
             buyBtn.innerHTML = `
               <div>${isJa ? `強化: ${nextCost.toLocaleString()} 🪙` : `UPGRADE: ${nextCost.toLocaleString()} 🪙`}</div>
-              <div style="font-size: 8px; opacity: 0.75; font-weight: normal; letter-spacing: 0.3px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
+              <div style="font-size: 7.5px; opacity: 0.75; font-weight: normal; letter-spacing: 0.2px; margin-top: 1px;">⚡ ${isJa ? '長押しで連続強化' : 'HOLD TO RAPID UPGRADE'}</div>
             `;
             if (!canAffordNext) {
               buyBtn.setAttribute('disabled', 'true');
