@@ -874,6 +874,32 @@ export function closeShop() {
   }
 }
 
+function renderShopBadges(slot: ShopSlot, activeSyn: Record<string, number>): string {
+  const badges: string[] = [];
+
+  if (slot.discountPct) {
+    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: #ef4444; color: #ffffff; font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1221.png" class="rpg-icon-img" /></div> -${slot.discountPct}% SALE</div>`);
+  }
+
+  const name = slot.power.nameKey;
+  if (!globals.activeFusions.has('plasma_tempest') && (name.includes('Fire') || name.includes('Thunder') || name.includes('Feather'))) {
+    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1223.png" class="rpg-icon-img" /></div> PLASMA</div>`);
+  } else if (!globals.activeFusions.has('singularity_cleave') && (name.includes('Cataclysm') || name.includes('Lethal') || name.includes('Giant') || name.includes('Void'))) {
+    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1120.png" class="rpg-icon-img" /></div> SINGULARITY</div>`);
+  } else if (!globals.activeFusions.has('hundred_phantoms') && (name.includes('Rupture') || name.includes('Clones') || name.includes('Cursed'))) {
+    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1388.png" class="rpg-icon-img" /></div> PHANTOMS</div>`);
+  } else if (!globals.activeFusions.has('kamaitachi') && (name.includes('Wind') || name.includes('Gale') || name.includes('Deflect') || name.includes('Echo'))) {
+    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1155.png" class="rpg-icon-img" /></div> KAMAITACHI</div>`);
+  }
+
+  const curSyn = activeSyn[slot.synergy] || 0;
+  if (curSyn === 1 || curSyn === 3) {
+    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(34, 197, 94, 0.25); color: #bbf7d0; border: 1px solid #22c55e; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1221.png" class="rpg-icon-img" /></div> UNLOCK (${curSyn + 1})</div>`);
+  }
+
+  return badges.join('');
+}
+
 export function renderShopModal() {
   let modal = document.getElementById('shop-modal');
   const prevScrollTop = modal?.querySelector('.shop-modal-box')?.scrollTop ?? 0;
@@ -1095,27 +1121,7 @@ export function renderShopModal() {
           </span>
         </div>
 
-        ${(() => {
-          let badges = '';
-          if (slot.discountPct) {
-            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: #ef4444; color: #ffffff; font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1221.png" class="rpg-icon-img" /></div> -${slot.discountPct}% SALE</div>`;
-          }
-          const name = slot.power.nameKey;
-          if (!globals.activeFusions.has('plasma_tempest') && (name.includes('Fire') || name.includes('Thunder') || name.includes('Feather'))) {
-            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1223.png" class="rpg-icon-img" /></div> PLASMA</div>`;
-          } else if (!globals.activeFusions.has('singularity_cleave') && (name.includes('Cataclysm') || name.includes('Lethal') || name.includes('Giant') || name.includes('Void'))) {
-            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1120.png" class="rpg-icon-img" /></div> SINGULARITY</div>`;
-          } else if (!globals.activeFusions.has('hundred_phantoms') && (name.includes('Rupture') || name.includes('Clones') || name.includes('Cursed'))) {
-            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1388.png" class="rpg-icon-img" /></div> PHANTOMS</div>`;
-          } else if (!globals.activeFusions.has('kamaitachi') && (name.includes('Wind') || name.includes('Gale') || name.includes('Deflect') || name.includes('Echo'))) {
-            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1155.png" class="rpg-icon-img" /></div> KAMAITACHI</div>`;
-          }
-          const curSyn = activeSyn[slot.synergy] || 0;
-          if (curSyn === 1 || curSyn === 3) {
-            badges += `<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(34, 197, 94, 0.25); color: #bbf7d0; border: 1px solid #22c55e; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1221.png" class="rpg-icon-img" /></div> UNLOCK (${curSyn + 1})</div>`;
-          }
-          return badges;
-        })()}
+        ${renderShopBadges(slot, activeSyn)}
 
         <h3 class="rpg-text-upperlayer" style="font-size: 11.5px; margin: 0 0 3px 0; color: #f8fafc; font-family: 'Shojumaru', sans-serif; word-break: break-word;">
           ${t(slot.power.nameKey)}

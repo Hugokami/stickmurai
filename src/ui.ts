@@ -82,7 +82,20 @@ export const STAGES = [
   { id: 10, name: 'SANCTUM OF OBLIVION', nameJa: '忘却の聖域', desc: 'FINAL BOSS // Colossus Agis & Divine Shogun' }
 ];
 
-export const ASCENSION_UPGRADES = [
+export interface AscensionUpgrade {
+  id: string;
+  name: string;
+  nameJa: string;
+  icon: string;
+  max: number;
+  desc: string;
+  descJa: string;
+  baseCost: number;
+  costMult: number;
+  isEndless?: boolean;
+}
+
+export const ASCENSION_UPGRADES: AscensionUpgrade[] = [
   {
     id: 'slashDamage',
     name: 'Katana Sharpness',
@@ -2972,8 +2985,8 @@ export function populateAscensionUpgrades() {
     container.innerHTML = slashStatBadge;
 
     ASCENSION_UPGRADES.forEach(u => {
-      const curLevel = (upgrades as any)[u.id] || 0;
-      const isEndless = (u as any).isEndless || u.max >= 999;
+      const curLevel = upgrades[u.id] || 0;
+      const isEndless = Boolean(u.isEndless || u.max >= 999);
       const isMax = !isEndless && curLevel >= u.max;
       const cost = isMax ? 0 : u.baseCost + curLevel * u.costMult;
       const canAfford = !isMax && (globals.magatama || 0) >= cost;
@@ -3050,9 +3063,9 @@ export function populateAscensionUpgrades() {
         let upgradesDone = 0;
 
         const performOneUpgrade = (): boolean => {
-          const upgradesState = globals.campaignUpgrades || (globals.campaignUpgrades = {} as any);
-          const currentLvl = (upgradesState as any)[u.id] || 0;
-          const isEndlessUpgrade = (u as any).isEndless || u.max >= 999;
+          const upgradesState = globals.campaignUpgrades || (globals.campaignUpgrades = {});
+          const currentLvl = upgradesState[u.id] || 0;
+          const isEndlessUpgrade = Boolean(u.isEndless || u.max >= 999);
           const isMaxUpgrade = !isEndlessUpgrade && currentLvl >= u.max;
           if (isMaxUpgrade) return false;
 
@@ -3061,7 +3074,7 @@ export function populateAscensionUpgrades() {
 
           globals.magatama -= currentCost;
           const nextLvl = currentLvl + 1;
-          (upgradesState as any)[u.id] = nextLvl;
+          upgradesState[u.id] = nextLvl;
           upgradesDone++;
 
           const pitch = 1.0 + Math.min(0.85, upgradesDone * 0.05);

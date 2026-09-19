@@ -54,3 +54,28 @@ export function validateSave(text: string): SaveFile {
   if (Number(data.stickmurai_current_stage || 1) > Number(data.stickmurai_max_stage || 1)) throw Error('Selected stage exceeds unlocked stage.');
   return {game: 'stickmurai', version: 1, savedAt: file.savedAt, data};
 }
+
+export function humanizeString(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/^[\s_-]+|[\s_-]+$/g, '')
+    .replace(/[_\s-]+/g, ' ')
+    .replace(/^[a-z]/, m => m.toUpperCase());
+}
+
+export function formatDurationSeconds(totalSeconds: number): string {
+  const sec = Math.max(0, Math.floor(totalSeconds));
+  const mins = Math.floor(sec / 60);
+  const remainingSecs = sec % 60;
+  if (mins === 0) return `${remainingSecs}s`;
+  const hours = Math.floor(mins / 60);
+  const remainingMins = mins % 60;
+  if (hours === 0) return `${mins}m ${remainingSecs}s`;
+  return `${hours}h ${remainingMins}m`;
+}
+
+export function formatQuantity(count: number, singular: string, plural?: string): string {
+  const form = count === 1 ? singular : (plural || `${singular}s`);
+  return `${count} ${form}`;
+}
+
