@@ -48,6 +48,7 @@ export class AdManager {
    * Fired when active player gameplay begins or unpauses.
    */
   public static gameplayStart(): void {
+    if (this.isAdPlaying) return; // Disallow SDK events during midrolls or rewarded ads
     if (this.isGameplayActive) return; // Prevent duplicate gameplayStart()
     this.isGameplayActive = true;
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.gameplayStart) {
@@ -62,6 +63,7 @@ export class AdManager {
    * Fired when gameplay halts (pause, death, gameover, stage clear, quit to menu).
    */
   public static gameplayStop(): void {
+    if (this.isAdPlaying) return; // Disallow SDK events during midrolls or rewarded ads
     if (!this.isGameplayActive) return; // Prevent duplicate gameplayStop()
     this.isGameplayActive = false;
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.gameplayStop) {
@@ -76,6 +78,7 @@ export class AdManager {
    * Custom game event analytics for Poki SDK (sanitizes category/what/action).
    */
   public static measure(category: string, what: string, action: string, data?: any): void {
+    if (this.isAdPlaying) return; // Disallow SDK events during midrolls or rewarded ads
     if (typeof window !== 'undefined' && (window as any).PokiSDK?.measure) {
       try {
         const safeCat = (category || 'game').replace(/[\/\^]/g, '_').substring(0, 32);

@@ -1951,6 +1951,16 @@ input[type="range"]::-webkit-slider-thumb:hover {
   }
 }
 
+/* Poki requirement: Force mobile control schemes on tablets and touch devices */
+html.is-touch-device #left-touch-zone,
+html.is-touch-device #joystick-base {
+  display: block !important;
+}
+html.is-touch-device #mobile-controls {
+  display: block !important;
+  pointer-events: auto !important;
+}
+
 /* short landscape screen adjustments (e.g. mobile phones) */
 @media (max-height: 450px) {
   #ui-layer {

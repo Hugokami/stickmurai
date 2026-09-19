@@ -51,7 +51,7 @@ exclude_exts = {'.unitypackage', '.map', '.zip'}
 exclude_names = {'.ds_store', 'thumbs.db'}
 
 allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin', 'vite.svg', 'icons.svg'}
-allowed_dirs = {'assets', 'audio', 'fonts', 'fantasy_bg', 'ui', 'icons'}
+allowed_dirs = {'audio', 'fonts', 'fantasy_bg', 'ui', 'icons', 'vfx'}
 
 files_to_pack = []
 
@@ -61,7 +61,21 @@ for rf in allowed_root_files:
     if os.path.exists(fp):
         files_to_pack.append((fp, rf))
 
-# 2. Whitelisted subdirectories
+# 2. Active assets referenced by index.html (eliminates stale duplicate builds)
+index_html_path = os.path.join(dist_dir, 'index.html')
+if os.path.exists(index_html_path):
+    with open(index_html_path, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    import re
+    asset_matches = set(re.findall(r'(?:./)?assets/([a-zA-Z0-9_.-]+)', html_content))
+    for af in asset_matches:
+        if af.lower() in exclude_names or os.path.splitext(af)[1].lower() in exclude_exts:
+            continue
+        fp = os.path.join(dist_dir, 'assets', af)
+        if os.path.exists(fp):
+            files_to_pack.append((fp, f'assets/{af}'))
+
+# 3. Whitelisted subdirectories
 for ad in allowed_dirs:
     sdir = os.path.join(dist_dir, ad)
     if os.path.exists(sdir):

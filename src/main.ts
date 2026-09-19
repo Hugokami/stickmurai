@@ -416,7 +416,16 @@ export function showFullscreenPrompt(onComplete: () => void) {
   btnNo?.addEventListener('pointerdown', handleNo);
 }
 
-const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+const isTouchDevice = typeof window !== 'undefined' && (
+  'ontouchstart' in window ||
+  (Boolean(navigator.maxTouchPoints) && navigator.maxTouchPoints > 0) ||
+  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|Tablet|Silk/i.test(navigator.userAgent || '') ||
+  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+);
+const isMobile = isTouchDevice;
+if (isTouchDevice && typeof document !== 'undefined') {
+  document.documentElement.classList.add('is-touch-device');
+}
 let rotatePromptDismissed = safeStorage.getItem('stickmurai_rotate_dismissed') === 'true';
 let rotateAutoDismissTimer: any = null;
 

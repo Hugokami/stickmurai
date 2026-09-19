@@ -1032,8 +1032,8 @@ export function renderShopModal() {
                 <img src="icons/stage_gold_chest.png" class="inline-currency-icon" style="width: 20px; height: 20px;" alt="Merchant Cache" />
                 <span>Merchant Cache (+150 Gold)</span>
               </div>
-              <div style="font-family: 'Orbitron', monospace; font-size: 9.5px; font-weight: bold; color: #ffd700; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.4); white-space: nowrap;">
-                AD
+              <div style="font-family: 'Orbitron', monospace; font-size: 9.5px; font-weight: bold; color: #ffd700; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.4); white-space: nowrap; display: flex; align-items: center; gap: 4px;">
+                <span>🎬</span> <span>REWARD</span>
               </div>
             </button>
           </div>

@@ -996,7 +996,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
         return;
       }
     }
-    if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+    if (e.key === 'Escape' || e.key === 'p' || e.key === 'P' || (e.code === 'Space' && globals.gameState === 'paused')) {
       if (globals.gameMode === 'pvp') return; // Disable pausing in PvP
       if (globals.gameState === 'playing') {
         clearGameInputs();
@@ -3317,7 +3317,7 @@ export function triggerStageClear() {
     doubleBtn.removeAttribute('disabled');
     (doubleBtn as HTMLElement).style.opacity = '1';
     (doubleBtn as HTMLElement).style.pointerEvents = 'auto';
-    doubleBtn.textContent = isJa ? `+2倍獲得 🪙` : `+DOUBLE 🪙`;
+    doubleBtn.textContent = isJa ? `🎬 +2倍獲得 🪙` : `🎬 +DOUBLE 🪙`;
     
     // Replace with fresh button to eliminate duplicate event listeners
     const freshBtn = doubleBtn.cloneNode(true) as HTMLButtonElement;

@@ -42,7 +42,7 @@ export function requestResume() {
   if(globals.gameMode==='pvp'){globals.gameState='playing';AdManager.gameplayStart();document.getElementById('pause-screen')!.style.display='none';return;}
   const token=++resumeToken;clearGameInputs();const panel=document.getElementById('qol-resume')!;panel.hidden=false;
   let count=3;const label=document.getElementById('qol-count')!;label.textContent=String(count);
-  const tick=()=>{if(token!==resumeToken||document.hidden||globals.gameState!=='paused')return;if(--count===0){panel.hidden=true;clearGameInputs();document.getElementById('pause-screen')!.style.display='none';globals.gameState='playing';AdManager.gameplayStart();}else{label.textContent=String(count);window.setTimeout(tick,600);}};
+  const tick=()=>{if(token!==resumeToken||document.hidden||globals.gameState!=='paused')return;if(--count===0){panel.hidden=true;clearGameInputs();document.getElementById('pause-screen')!.style.display='none';AdManager.showMidrollAd(()=>{globals.gameState='playing';AdManager.gameplayStart();});}else{label.textContent=String(count);window.setTimeout(tick,600);}};
   window.setTimeout(tick,600);
 }
 export function handleBack(e?:Event):boolean {
