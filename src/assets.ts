@@ -1270,6 +1270,7 @@ export const skillsData = [
 ];
 
 export const vfxAnims = {
+  levelUp: loadVfxFrames('vfx/level_up/frame_{N}.png', 12, 1, 2, false),
   custom: {
     slash: loadVfxFrames('vfx/Frames/Slash_color5_frame{N}.png', 9, 1, 0, true),
     dragonFury: loadVfxFrames('vfx/Dragon_fury/Slash_color4_frame{N}.png', 9, 1, 0, true),

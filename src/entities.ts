@@ -160,7 +160,7 @@ export class Entity {
     } else if (this.type === 'heroakakage') {
       scale *= 4.8;
     } else if (this.type === 'heroaetherion') {
-      scale *= 7.8;
+      scale *= 9.4;
     } else if (this.type === 'toaster_bot') {
       scale *= 3.2;
     }

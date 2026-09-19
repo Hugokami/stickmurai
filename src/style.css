@@ -1760,6 +1760,23 @@ input[type="range"]::-webkit-slider-thumb:hover {
   z-index: 12;
 }
 
+.action-btn-rpg-box {
+  width: clamp(22px, 3.6vh, 28px);
+  height: clamp(22px, 3.6vh, 28px);
+  position: relative;
+  z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.action-btn-rpg-box .rpg-icon-img {
+  width: clamp(18px, 3.0vh, 24px);
+  height: clamp(18px, 3.0vh, 24px);
+  image-rendering: pixelated;
+}
+
 .action-btn .btn-text {
   font-size: clamp(7.5px, 1.4vh, 9.5px);
   margin-top: 1px;

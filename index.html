@@ -187,58 +187,32 @@
         </div>
         <div id="action-buttons">
           <button id="btn-dash" class="action-btn" aria-label="Dash">
-            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-              <path d="M2 17c4-1 8-4 12-4c5 0 8 2 8 2" stroke-width="2"/>
-              <path d="M4 12c5-2 10-5 15-3c3 1 4 2.5 4 2.5" stroke-width="2"/>
-              <path d="M3 6c6-3 12-4 17 0" stroke-width="1.5"/>
-              <path d="M1 9h3" stroke-width="2"/>
-              <path d="M8 15h4" stroke-width="1.5"/>
-            </svg>
-            <span class="btn-text" data-i18n="btnDash">DASH</span>
-            <span class="hotkey">SPACE</span>
+            <span class="rpg-icon-box action-btn-rpg-box"><img src="icons/rpg/fc888.png" class="rpg-icon-img" alt="Dash" /></span>
+            <span class="btn-text rpg-text-upperlayer" data-i18n="btnDash">DASH</span>
+            <span class="hotkey rpg-text-upperlayer">SPACE</span>
             <div class="cooldown-overlay" id="dash-cooldown-overlay"></div>
             <div class="cooldown-text" id="dash-cooldown-text"></div>
           </button>
           
           <button id="btn-attack" class="action-btn" aria-label="Attack">
-            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 19A9 9 0 1 1 20 8" stroke="currentColor" stroke-width="2.5" stroke-dasharray="0.5 0.5" opacity="0.3"/>
-              <path d="M5 17A8 8 0 0 1 17 5" stroke="currentColor" stroke-width="3"/>
-              <line x1="2" y1="22" x2="22" y2="2" stroke="currentColor" stroke-width="2"/>
-              <circle cx="7" cy="17" r="2" fill="currentColor"/>
-              <path d="M20 4l2-2" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-            <span class="btn-text" data-i18n="btnSlash">SLASH</span>
-            <span class="hotkey">LMB</span>
+            <span class="rpg-icon-box action-btn-rpg-box"><img src="icons/rpg/fc1038.png" class="rpg-icon-img" alt="Attack" /></span>
+            <span class="btn-text rpg-text-upperlayer" data-i18n="btnSlash">SLASH</span>
+            <span class="hotkey rpg-text-upperlayer">LMB</span>
             <div class="cooldown-overlay" id="attack-cooldown-overlay"></div>
           </button>
           
           <button id="btn-enhance" class="action-btn" aria-label="Special Ability">
-            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-              <g transform="translate(12,12) scale(0.9)">
-                <path d="M0,0 C2,-4 6,-4 6,0 C6,4 2,6 -2,6 C-6,6 -8,2 -8,0" fill="currentColor"/>
-                <path d="M0,0 C-4,2 -4,6 0,6 C4,6 6,2 6,-2 C6,-6 2,-8 0,-8" fill="currentColor" transform="rotate(120)"/>
-                <path d="M0,0 C-2,-4 -6,-4 -6,0 C-6,4 -2,6 2,6 C6,6 8,2 8,0" fill="currentColor" transform="rotate(240)"/>
-              </g>
-            </svg>
-            <span class="btn-text">ENHANCE</span>
-            <span class="hotkey">E</span>
+            <span class="rpg-icon-box action-btn-rpg-box" id="enhance-btn-rpg-box"><img src="icons/rpg/fc1328.png" class="rpg-icon-img" id="enhance-btn-rpg-img" alt="Special Ability" /></span>
+            <span class="btn-text rpg-text-upperlayer" id="enhance-btn-text">ENHANCE</span>
+            <span class="hotkey rpg-text-upperlayer">E</span>
             <div class="cooldown-overlay" id="enhance-cooldown-overlay"></div>
             <div class="cooldown-text" id="enhance-cooldown-text"></div>
           </button>
 
           <button id="btn-stance-switch" class="action-btn" style="display:none;" title="Astral Shot (Press R / RMB)" aria-label="Astral Shot">
-            <svg class="skill-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
-              <line x1="12" y1="3" x2="12" y2="7" stroke="currentColor" stroke-width="2"/>
-              <line x1="12" y1="17" x2="12" y2="21" stroke="currentColor" stroke-width="2"/>
-              <line x1="3" y1="12" x2="7" y2="12" stroke="currentColor" stroke-width="2"/>
-              <line x1="17" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"/>
-              <circle cx="12" cy="12" r="2.5" fill="currentColor"/>
-            </svg>
-            <span class="btn-text" id="stance-switch-text">SHOOT</span>
-            <span class="hotkey">R</span>
+            <span class="rpg-icon-box action-btn-rpg-box"><img src="icons/rpg/fc1142.png" class="rpg-icon-img" alt="Astral Shot" /></span>
+            <span class="btn-text rpg-text-upperlayer" id="stance-switch-text">SHOOT</span>
+            <span class="hotkey rpg-text-upperlayer">R</span>
             <div class="cooldown-overlay" id="shoot-cooldown-overlay"></div>
           </button>
         </div>

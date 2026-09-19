@@ -1445,7 +1445,7 @@ export function updateEnhanceButton() {
   if (!btn) return;
   
   const textSpan = btn.querySelector('.btn-text');
-  const iconSvg = btn.querySelector('.skill-icon');
+  const imgEl = document.getElementById('enhance-btn-rpg-img') as HTMLImageElement | null;
   
   if (globals.gameMode === 'zen') {
     if (textSpan) textSpan.innerHTML = t('btnRestricted');
@@ -1455,71 +1455,34 @@ export function updateEnhanceButton() {
   
   btn.style.opacity = '1';
   
+  const skillIcons: Record<string, string> = {
+    enhance: 'icons/rpg/fc1328.png',
+    shield: 'icons/rpg/fc1043.png',
+    dash: 'icons/rpg/fc888.png',
+    firewheel: 'icons/rpg/fc1221.png',
+    gravity: 'icons/rpg/fc1031.png',
+    parry_master: 'icons/rpg/fc1101.png',
+    decoy_illusion: 'icons/rpg/fc1120.png',
+  };
+
+  if (imgEl) {
+    imgEl.src = skillIcons[globals.selectedSkill] || 'icons/rpg/fc1328.png';
+  }
+
   if (globals.selectedSkill === 'enhance') {
     if (textSpan) textSpan.innerHTML = t('btnEnhance');
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
-        <g transform="translate(12,12) scale(0.9)">
-          <path d="M0,0 C2,-4 6,-4 6,0 C6,4 2,6 -2,6 C-6,6 -8,2 -8,0" fill="currentColor"/>
-          <path d="M0,0 C-4,2 -4,6 0,6 C4,6 6,2 6,-2 C6,-6 2,-8 0,-8" fill="currentColor" transform="rotate(120)"/>
-          <path d="M0,0 C-2,-4 -6,-4 -6,0 C-6,4 -2,6 2,6 C6,6 8,2 8,0" fill="currentColor" transform="rotate(240)"/>
-        </g>
-      `;
-    }
   } else if (globals.selectedSkill === 'shield') {
     if (textSpan) textSpan.innerHTML = t('btnShield');
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <path d="M5 3h14M6 3v12c0 4 3 6 6 6s6-2 6-6V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M9 7h6M12 7v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M12 2v2" stroke="currentColor" stroke-width="2"/>
-      `;
-    }
   } else if (globals.selectedSkill === 'dash') {
     if (textSpan) textSpan.innerHTML = t('btnFlash');
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <path d="M17 2L6 13h6l-3 7L20 9h-6z" stroke="currentColor" stroke-width="2" fill="none" stroke-linejoin="round"/>
-        <path d="M3 5l2 2M3 17l2-2M19 17l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      `;
-    }
   } else if (globals.selectedSkill === 'firewheel') {
     if (textSpan) textSpan.innerHTML = t('btnFirewheel');
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 2"/>
-        <path d="M12 3c1 2 2 4 0 6c-2 2-4 1-5-1c-1-2 1-4 3-5z" fill="currentColor"/>
-        <path d="M12 3c1 2 2 4 0 6c-2 2-4 1-5-1c-1-2 1-4 3-5z" fill="currentColor" transform="rotate(90 12 12)"/>
-        <path d="M12 3c1 2 2 4 0 6c-2 2-4 1-5-1c-1-2 1-4 3-5z" fill="currentColor" transform="rotate(180 12 12)"/>
-        <path d="M12 3c1 2 2 4 0 6c-2 2-4 1-5-1c-1-2 1-4 3-5z" fill="currentColor" transform="rotate(270 12 12)"/>
-      `;
-    }
   } else if (globals.selectedSkill === 'gravity') {
     if (textSpan) textSpan.innerHTML = t('btnGravity');
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="currentColor"/>
-      `;
-    }
   } else if (globals.selectedSkill === 'parry_master') {
     if (textSpan) textSpan.innerHTML = t('btnParryMaster');
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <line x1="4" y1="20" x2="20" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <line x1="20" y1="20" x2="4" y2="4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        <circle cx="8" cy="16" r="1.5" fill="currentColor"/>
-        <circle cx="16" cy="16" r="1.5" fill="currentColor"/>
-        <path d="M12 6v4M12 14v4M6 12h4M14 12h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-      `;
-    }
   } else if (globals.selectedSkill === 'decoy_illusion') {
     if (textSpan) textSpan.innerHTML = t('btnDecoy');
-    if (iconSvg) {
-      iconSvg.innerHTML = `
-        <path d="M4 4l16 16M20 4l-16 16M12 2v20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      `;
-    }
   }
   updateStanceSwitchButton();
 }
@@ -2276,18 +2239,17 @@ export function populateGrimoireGrid() {
   renderCodex(grid);
 
   FUSION_RECIPES.forEach(recipe => {
-    const isDiscovered = globals.discoveredFusions.includes(recipe.key) || globals.activeFusions.has(recipe.key);
     const card = document.createElement('div');
-    card.className = 'grimoire-card' + (isDiscovered ? ' discovered' : ' locked');
-    card.style.background = isDiscovered ? 'linear-gradient(135deg, rgba(20, 24, 35, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%)' : 'rgba(12, 14, 20, 0.95)';
-    card.style.border = isDiscovered ? '1.5px solid #d4a24e' : '1px solid rgba(255, 255, 255, 0.1)';
+    card.className = 'grimoire-card discovered';
+    card.style.background = 'linear-gradient(135deg, rgba(20, 24, 35, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%)';
+    card.style.border = '1.5px solid #d4a24e';
     card.style.borderRadius = '0';
     card.style.clipPath = 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)';
     card.style.padding = '16px';
     card.style.display = 'flex';
     card.style.flexDirection = 'column';
     card.style.gap = '8px';
-    card.style.boxShadow = isDiscovered ? '0 0 18px rgba(212, 162, 78, 0.25)' : 'none';
+    card.style.boxShadow = '0 0 18px rgba(212, 162, 78, 0.25)';
     card.style.position = 'relative';
     card.style.overflow = 'hidden';
     
@@ -2315,70 +2277,37 @@ export function populateGrimoireGrid() {
     const synergyPct = ((req1Met ? 1 : 0) + (req2Met ? 1 : 0)) * 50;
     const iconSrc = recipeIcons[recipe.key] || 'icons/rpg/fc1267.png';
 
-    if (isDiscovered) {
-      card.innerHTML = `
-        <img src="${iconSrc}" class="rpg-card-backdrop-icon" alt="" aria-hidden="true" style="width: 56px; height: 56px; opacity: 0.18;" />
-        <div style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 8px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="display:flex; align-items:center; gap:8px;">
-              <div class="rpg-icon-box" style="width:28px; height:28px;">
-                <img src="${iconSrc}" class="rpg-icon-img" alt="icon" />
-              </div>
-              <span class="rpg-text-upperlayer" style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">${isJa ? recipe.nameJa : recipe.nameEn}</span>
-            </div>
-            <span class="rpg-text-upperlayer" style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e;">${isJa ? '解読済' : 'DISCOVERED'}</span>
-          </div>
-          <div class="rpg-text-upperlayer" style="font-size:13px; color:#e2e8f0; line-height:1.4;">${isJa ? recipe.descJa : recipe.descEn}</div>
-          
-          <div style="margin-top:4px; display:flex; flex-direction:column; gap:3px;">
-            <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;">
-              <span class="rpg-text-upperlayer">${isJa ? '出撃中の共鳴度' : 'Active Run Synergy'}: <strong style="color:${synergyPct === 100 ? '#22c55e' : (synergyPct > 0 ? '#ffd700' : '#64748b')};">${synergyPct}%</strong></span>
-              <span class="rpg-text-upperlayer" style="color:${synergyPct === 100 ? '#22c55e' : '#ffd700'}; font-weight:bold; display: inline-flex; align-items: center; gap: 4px;">${synergyPct === 100 ? (isJa ? '<div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> 融合準備完了！' : '<div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> READY TO FORGE!') : (synergyPct === 50 ? (isJa ? '素材1つ獲得済' : '1/2 Acquired') : '')}</span>
-            </div>
-            <div style="width:100%; height:5px; background:#0f172a; border-radius:3px; overflow:hidden; border:1px solid #334155;">
-              <div style="width:${synergyPct}%; height:100%; background:${synergyPct === 100 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : 'linear-gradient(90deg, #f59e0b, #ffd700)'};"></div>
-            </div>
-          </div>
-
-          <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #334155; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#94a3b8;">
-            <span class="rpg-text-upperlayer" style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req1Met ? '#86efac' : '#cbd5e1'}; display:inline-flex; align-items:center; gap:4px;"><div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1170.png" class="rpg-icon-img" /></div> ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
-            <span>+</span>
-            <span class="rpg-text-upperlayer" style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req2Met ? '#86efac' : '#cbd5e1'}; display:inline-flex; align-items:center; gap:4px;"><div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1038.png" class="rpg-icon-img" /></div> ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
-          </div>
-        </div>
-      `;
-    } else {
-      card.innerHTML = `
+    card.innerHTML = `
+      <img src="${iconSrc}" class="rpg-card-backdrop-icon" alt="" aria-hidden="true" style="width: 56px; height: 56px; opacity: 0.18;" />
+      <div style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 8px;">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <div style="width:28px; height:28px; background:#1e293b; border-radius:4px; border:1px dashed #475569; display:flex; justify-content:center; align-items:center; color:#64748b; font-size:14px;">?</div>
-            <span style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#64748b;">??? [${isJa ? '未解読の奥義' : 'LOCKED FUSION'}]</span>
+            <div class="rpg-icon-box" style="width:28px; height:28px;">
+              <img src="${iconSrc}" class="rpg-icon-img" alt="icon" />
+            </div>
+            <span class="rpg-text-upperlayer" style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">${isJa ? recipe.nameJa : recipe.nameEn}</span>
           </div>
-          <span style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(148,163,184,0.1); color:#64748b; border:1px solid #475569;">${isJa ? '未修得' : 'LOCKED'}</span>
+          <span class="rpg-text-upperlayer" style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e;">${isJa ? '解読済' : 'DISCOVERED'}</span>
         </div>
-        <div style="font-size:13px; color:#475569; font-style:italic; line-height:1.4;">
-          ${isJa 
-            ? '二つの異なる流派の極致を同時に極めし時、この禁断の秘奥義は開眼する…' 
-            : 'When two opposing disciplines reach their zenith in a single battle, this secret art shall awaken...'}
-        </div>
+        <div class="rpg-text-upperlayer" style="font-size:13px; color:#e2e8f0; line-height:1.4;">${isJa ? recipe.descJa : recipe.descEn}</div>
         
         <div style="margin-top:4px; display:flex; flex-direction:column; gap:3px;">
-          <div style="display:flex; justify-content:space-between; font-size:11px; color:#64748b;">
-            <span>${isJa ? '出撃中の共鳴度' : 'Active Run Synergy'}: <strong style="color:${synergyPct > 0 ? '#ffd700' : '#475569'};">${synergyPct}%</strong></span>
-            <span style="color:#ffd700; font-weight:bold;">${synergyPct === 100 ? (isJa ? '⚡ 融合準備完了！' : '⚡ READY TO FORGE!') : (synergyPct === 50 ? (isJa ? '素材1つ獲得済' : '1/2 Acquired') : '')}</span>
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;">
+            <span class="rpg-text-upperlayer">${isJa ? '出撃中の共鳴度' : 'Active Run Synergy'}: <strong style="color:${synergyPct === 100 ? '#22c55e' : (synergyPct > 0 ? '#ffd700' : '#64748b')};">${synergyPct}%</strong></span>
+            <span class="rpg-text-upperlayer" style="color:${synergyPct === 100 ? '#22c55e' : '#ffd700'}; font-weight:bold; display: inline-flex; align-items: center; gap: 4px;">${synergyPct === 100 ? (isJa ? '<div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> 融合準備完了！' : '<div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> READY TO FORGE!') : (synergyPct === 50 ? (isJa ? '素材1つ獲得済' : '1/2 Acquired') : '')}</span>
           </div>
-          <div style="width:100%; height:5px; background:#090d16; border-radius:3px; overflow:hidden; border:1px solid #1e293b;">
+          <div style="width:100%; height:5px; background:#0f172a; border-radius:3px; overflow:hidden; border:1px solid #334155;">
             <div style="width:${synergyPct}%; height:100%; background:${synergyPct === 100 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : 'linear-gradient(90deg, #f59e0b, #ffd700)'};"></div>
           </div>
         </div>
 
-        <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #1e293b; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#475569;">
-          <span style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#090d16'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #1e293b'}; color:${req1Met ? '#86efac' : '#64748b'};">📜 ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
+        <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #334155; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#94a3b8;">
+          <span class="rpg-text-upperlayer" style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req1Met ? '#86efac' : '#cbd5e1'}; display:inline-flex; align-items:center; gap:4px;"><div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1170.png" class="rpg-icon-img" /></div> ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
           <span>+</span>
-          <span style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#090d16'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #1e293b'}; color:${req2Met ? '#86efac' : '#64748b'};">📜 ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
+          <span class="rpg-text-upperlayer" style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req2Met ? '#86efac' : '#cbd5e1'}; display:inline-flex; align-items:center; gap:4px;"><div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1038.png" class="rpg-icon-img" /></div> ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
         </div>
-      `;
-    }
+      </div>
+    `;
     grid.appendChild(card);
   });
 }

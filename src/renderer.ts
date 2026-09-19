@@ -43,7 +43,7 @@ function getEntityFootY(e: Entity): number {
     case 'herosamurai': baseFoot = 56; break;
     case 'herosatyr': baseFoot = 46; break;
     case 'heroakakage': baseFoot = 52; break;
-    case 'heroaetherion': baseFoot = 85; break;
+    case 'heroaetherion': baseFoot = 102; break;
     case 'toaster_bot': baseFoot = 20; break;
     case 'sword':
     default:
@@ -155,7 +155,6 @@ export function debouncedResize() {
 }
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  // 1. Guaranteed Full Canvas Lush Green Base (zero black void across physical canvas buffer)
   ctx.save();
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#527c2f';
@@ -207,6 +206,9 @@ export function resetCanvasVisuals() {
   ctx.restore();
 }
 
+let cachedBossLocator: HTMLElement | null = null;
+let cachedVignette: HTMLElement | null = null;
+
 export function draw() {
   if (!canvas || !ctx) return;
   
@@ -251,7 +253,10 @@ export function draw() {
 
   // Boss locator: keep the player oriented during boss stages without darkening the scene.
   const boss = globals.enemies.find(e => e.state !== 'dead' && ['oni_boss','shogun_boss','agis_colossus','skeleton_warlord'].includes(e.subType));
-  const locator = document.getElementById('boss-location-indicator');
+  if (!cachedBossLocator && typeof document !== 'undefined') {
+    cachedBossLocator = document.getElementById('boss-location-indicator');
+  }
+  const locator = cachedBossLocator;
   if (locator) {
     if (boss && globals.gameState === 'playing') {
       const dx = boss.x - globals.player.x, dy = boss.y - globals.player.y;
@@ -272,7 +277,10 @@ export function draw() {
   drawCombatHazards(ctx);
   
   // Softened low-health red border vignette
-  const vignette = document.getElementById('vignette-overlay');
+  if (!cachedVignette && typeof document !== 'undefined') {
+    cachedVignette = document.getElementById('vignette-overlay');
+  }
+  const vignette = cachedVignette;
   if (vignette) {
     if (globals.lives === 1 && globals.gameState === 'playing' && globals.player && globals.player.state !== 'dead') {
       const pulse = Math.abs(Math.sin(performance.now() / 200));

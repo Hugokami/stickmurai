@@ -23,6 +23,7 @@ const REQUIRED_ICONS = [
   'fc1101.png',
   'fc1120.png',
   'fc1132.png',
+  'fc1142.png',
   'fc1150.png',
   'fc1155.png',
   'fc1170.png',
@@ -65,3 +66,28 @@ for (const icon of REQUIRED_ICONS) {
 }
 
 console.log(`Successfully synced ${copied} RPG fantasy icons to ${DEST_DIR}`);
+
+// Sync Level Up VFX Frames
+const VFX_SOURCE_DIR = 'C:\\Users\\lyan1\\Downloads\\Level Up Effect\\Level Up Effect\\Frames';
+const VFX_DEST_DIR = path.resolve(__dirname, '../public/vfx/level_up');
+
+if (fs.existsSync(VFX_SOURCE_DIR)) {
+  if (!fs.existsSync(VFX_DEST_DIR)) {
+    fs.mkdirSync(VFX_DEST_DIR, { recursive: true });
+  }
+  let vfxCopied = 0;
+  for (let i = 1; i <= 12; i++) {
+    const srcName = `Level Up Effect Frame${i}.png`;
+    const destName = `frame_${String(i).padStart(2, '0')}.png`;
+    const srcPath = path.join(VFX_SOURCE_DIR, srcName);
+    const destPath = path.join(VFX_DEST_DIR, destName);
+    if (fs.existsSync(srcPath)) {
+      fs.copyFileSync(srcPath, destPath);
+      vfxCopied++;
+    } else {
+      console.warn(`Missing VFX source frame: ${srcPath}`);
+    }
+  }
+  console.log(`Successfully synced ${vfxCopied} level up VFX frames to ${VFX_DEST_DIR}`);
+}
+

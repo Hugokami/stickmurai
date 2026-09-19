@@ -366,9 +366,12 @@ export function triggerLevelUp() {
   }
 
   const levelDmgBonus = Math.max(0, (globals.level - 1) * 10);
-  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `⚔️ LEVEL ${globals.level}! (+${levelDmgBonus}% DMG)`, '#ffd700', 36));
-  globals.screenShake = Math.max(globals.screenShake, 14);
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, `LVL ${globals.level}! (+${levelDmgBonus}% DMG)`, '#ffd700', 22));
+  globals.screenShake = Math.max(globals.screenShake, 10);
   globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+  if (vfxAnims.levelUp && vfxAnims.levelUp.length > 0) {
+    globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y - 25, vfxAnims.levelUp, 0.65, 1.8));
+  }
   callbacks.updateUI();
 }
 
