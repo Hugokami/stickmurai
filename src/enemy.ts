@@ -448,7 +448,7 @@ export class Enemy extends Entity {
       if (isBoss) {
         this.isBoss = true;
         (this as any).isBoss = true;
-        this.totalPhases = stage < 5 ? 2 : 3;
+        this.totalPhases = stage <= 5 ? 1 : (stage < 10 ? 2 : 3);
         this.currentPhase = 1;
         this.phaseTransitionTimer = 0;
       }

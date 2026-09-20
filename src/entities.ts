@@ -1552,8 +1552,10 @@ export class Slash {
       } else if (this.colorTint.includes('251, 191, 36') || this.colorTint.includes('#fbbf24')) {
         col1 = 'rgba(251, 191, 36, '; edgeCol = '#f59e0b';
       }
+    } else if (globals.flowState === 'omnislash') {
+      col1 = 'rgba(255, 215, 0, '; edgeCol = '#ffe066'; coreCol = '#ffffff';
     } else if (globals.flowState === 'awakened') {
-      col1 = 'rgba(34, 211, 238, '; edgeCol = '#00ffff';
+      col1 = 'rgba(34, 211, 238, '; edgeCol = '#00ffff'; coreCol = '#ffffff';
     } else if (globals.flowState === 'storm_god') {
       col1 = 'rgba(251, 191, 36, '; edgeCol = '#f59e0b';
     } else if (this.isEnhanced) {
@@ -1627,9 +1629,11 @@ export class Slash {
       ctx.closePath();
 
       const grad = ctx.createRadialGradient(0, 0, Math.max(1, midRadius - halfWidth), 0, 0, midRadius + halfWidth);
+      const isUltraState = globals.flowState === 'awakened' || globals.flowState === 'omnislash';
+      const opacityMult = isUltraState ? 1.0 : 0.9;
       grad.addColorStop(0, col1 + '0)');
-      grad.addColorStop(0.4, col1 + (easeInQuad * 0.9) + ')');
-      grad.addColorStop(0.7, col2 + (easeInQuad * 0.95) + ')');
+      grad.addColorStop(0.35, col1 + (easeInQuad * opacityMult) + ')');
+      grad.addColorStop(0.7, col2 + (easeInQuad * Math.min(1.0, opacityMult * 1.05)) + ')');
       grad.addColorStop(1, col1 + '0)');
       ctx.fillStyle = grad;
       ctx.fill();
@@ -1644,7 +1648,7 @@ export class Slash {
         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
       ctx.strokeStyle = coreCol;
-      ctx.lineWidth = Math.max(1.5, 3.5 * easeInQuad * safeMult);
+      ctx.lineWidth = Math.max(isUltraState ? 2.5 : 1.5, (isUltraState ? 5.2 : 3.5) * easeInQuad * safeMult);
       ctx.lineCap = 'round';
       ctx.stroke();
 
@@ -1659,7 +1663,7 @@ export class Slash {
         if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
       }
       ctx.strokeStyle = edgeCol;
-      ctx.lineWidth = Math.max(1.0, 2.0 * easeInQuad * safeMult);
+      ctx.lineWidth = Math.max(isUltraState ? 1.8 : 1.0, (isUltraState ? 3.2 : 2.0) * easeInQuad * safeMult);
       ctx.stroke();
 
       // 5. Hero-specific slash effect animation sprite overlay, carefully centered along the attack vector
@@ -1693,7 +1697,7 @@ export class Slash {
         const img = frames[frameIdx];
         if (img && img.complete && img.naturalWidth > 0) {
           ctx.save();
-          ctx.globalAlpha = Math.min(1.0, easeInQuad * 1.15);
+          ctx.globalAlpha = Math.min(1.0, easeInQuad * (isUltraState ? 1.4 : 1.15));
           if (heroKey === 'herosatyr' || heroKey === 'herosamurai' || globals.selectedHero === 'satyr' || globals.selectedHero === 'samurai') {
             // Revert back only Primal Satyr Sovereign and Grandmaster Samurai to exact previous version
             const sScale = Math.min(4.8, 3.8 * safeMult);

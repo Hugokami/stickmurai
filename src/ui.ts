@@ -6,7 +6,7 @@ import { requestResume, handleBack, clearGameInputs, showToast } from './qol';
 import { globals, getStageAffix, getAscendantRank, getStageMonReward } from './globals';
 import { safeStorage } from './storage';
 import { i18n, skillsData, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
-import { bgmAudio, pauseBgm } from './audio';
+import { bgmAudio, pauseBgm, triggerBgmGestureUnlock } from './audio';
 import { callbacks } from './callbacks';
 import { pvpManager } from './pvpIaijutsuManager';
 import { AdManager } from './adManager';
@@ -277,12 +277,14 @@ export function bindDualListener(el: HTMLElement | null | undefined, handler: (e
   const safeHandler = (e: Event) => {
     e.stopPropagation();
     const now = Date.now();
-    if (now - lastTriggerTime < 300) return;
+    if (now - lastTriggerTime < 250) return;
     lastTriggerTime = now;
+    triggerBgmGestureUnlock();
     handler(e);
   };
   el.addEventListener('pointerdown', safeHandler);
   el.addEventListener('click', safeHandler);
+  el.addEventListener('touchstart', safeHandler, { passive: true });
 }
 
 export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void, onRestartCallback: () => void) {
@@ -965,6 +967,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       AdManager.gameplayStop();
       if (pauseScreen) pauseScreen.style.display = 'flex';
       updatePauseUpgradesList();
+    } else if (globals.gameState === 'paused') {
+      requestResume();
     }
   });
 

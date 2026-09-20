@@ -9,6 +9,7 @@
     "package:portal": "node scripts/build-portal.cjs",
     "package:poki": "node scripts/package-poki.cjs",
     "package:html5": "node scripts/build-portal.cjs --target=html5",
+    "package:itch": "node scripts/build-portal.cjs --target=html5",
     "preview": "vite preview",
     "build:android": "npm run build && powershell -Command \"if (Test-Path android/app/src/main/assets) { Remove-Item -Recurse -Force android/app/src/main/assets } ; New-Item -ItemType Directory -Path android/app/src/main/assets ; Copy-Item -Path dist/* -Destination android/app/src/main/assets -Recurse -Force\"",
     "build:apk:debug": "npm run build:android && powershell -Command \"cd android ; .\\gradlew assembleDebug\"",

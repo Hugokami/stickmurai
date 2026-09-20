@@ -279,7 +279,7 @@ canvas.inverted {
   padding-left: max(16px, env(safe-area-inset-left));
   padding-right: max(16px, env(safe-area-inset-right));
   padding-top: max(16px, env(safe-area-inset-top));
-  z-index: 10;
+  z-index: 60;
 }
 
 /* HUD Neo-Japanese Lacquer Plate */
@@ -478,14 +478,15 @@ canvas.inverted {
   border: 1.5px solid #d4a24e;
   color: #d4a24e;
   clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
-  pointer-events: auto;
+  pointer-events: auto !important;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 255, 255, 0.1);
-  z-index: 20;
+  z-index: 70;
+  touch-action: manipulation;
 }
 
 #pause-btn:hover, .hud-pause-btn:hover {
@@ -1958,7 +1959,7 @@ html.is-touch-device #joystick-base {
 }
 html.is-touch-device #mobile-controls {
   display: block !important;
-  pointer-events: auto !important;
+  pointer-events: none !important;
 }
 
 /* short landscape screen adjustments (e.g. mobile phones) */
@@ -4909,10 +4910,11 @@ html.qol-left:not(.qol-touch-custom) #action-buttons > button { scale: -1 1; }
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  pointer-events: auto;
-  z-index: 15;
+  pointer-events: auto !important;
+  z-index: 70;
   box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
   transition: transform 0.15s ease, background 0.15s ease;
+  touch-action: manipulation;
 }
 .hud-shop-btn:hover {
   background: rgba(251, 191, 36, 0.2);

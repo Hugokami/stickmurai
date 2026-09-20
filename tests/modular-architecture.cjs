@@ -66,6 +66,6 @@ test('scripts/build-portal.cjs provides unified build matrix for poki and html5'
   const scriptSrc = fs.readFileSync('scripts/build-portal.cjs', 'utf8');
   assert.match(scriptSrc, /--target=poki/, 'must support poki target');
   assert.match(scriptSrc, /--target=html5/, 'must support html5 target');
-  assert.match(scriptSrc, /stickmurai-\$\{target\}\.zip/, 'must output target zip archive');
+  assert.match(scriptSrc, /(?:muramasa-\$\{target\}\.zip|MURAMASA\.EXE\.zip)/, 'must output target zip archive');
   assert.match(scriptSrc, /pokiTag/, 'must inject poki-sdk for poki target');
 });

@@ -43,9 +43,26 @@ if (fs.existsSync(bgDir)) {
 // 3. Pack EVERYTHING in icons/
 const iconDir = path.join(sourceDir, 'icons');
 if (fs.existsSync(iconDir)) {
-  for (const f of fs.readdirSync(iconDir)) {
+  function scanIcons(dir) {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        scanIcons(full);
+      } else if (entry.name.endsWith('.png') || entry.name.endsWith('.svg')) {
+        const rel = path.relative(sourceDir, full).replace(/\\/g, '/');
+        filesToPack.add(rel);
+      }
+    }
+  }
+  scanIcons(iconDir);
+}
+
+// 3b. Pack EVERYTHING in ui/
+const uiDir = path.join(sourceDir, 'ui');
+if (fs.existsSync(uiDir)) {
+  for (const f of fs.readdirSync(uiDir)) {
     if (f.endsWith('.png') || f.endsWith('.svg')) {
-      const rel = path.relative(sourceDir, path.join(iconDir, f)).replace(/\\/g, '/');
+      const rel = path.relative(sourceDir, path.join(uiDir, f)).replace(/\\/g, '/');
       filesToPack.add(rel);
     }
   }

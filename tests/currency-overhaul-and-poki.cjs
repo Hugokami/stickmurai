@@ -57,12 +57,12 @@ test('poki package: output contains root index.html and clean runtime bundle', (
   const indexHtmlPath = path.join(releasePokiDir, 'index.html');
   assert.ok(fs.existsSync(indexHtmlPath), 'release/poki/index.html must exist at the root of the folder');
 
-  const zipPath = path.join(__dirname, '..', 'release', 'stickmurai-poki.zip');
-  assert.ok(fs.existsSync(zipPath), 'release/stickmurai-poki.zip must exist');
+  const zipPath = path.join(__dirname, '..', 'release', 'muramasa-poki.zip');
+  assert.ok(fs.existsSync(zipPath), 'release/muramasa-poki.zip must exist');
 
   // Verify that index.html is at the root of the zip archive
-  const zipListing = execSync(`python3 -c "import zipfile; z = zipfile.ZipFile('${zipPath.replace(/\\/g, '/')}'); print([n for n in z.namelist() if n == 'index.html'])"`).toString();
-  assert.match(zipListing, /'index\.html'/, 'index.html must be present at root level inside stickmurai-poki.zip');
+  const zipListing = execSync(`python -c "import zipfile; z = zipfile.ZipFile('${zipPath.replace(/\\/g, '/')}'); print([n for n in z.namelist() if n == 'index.html'])"`).toString();
+  assert.match(zipListing, /'index\.html'/, 'index.html must be present at root level inside muramasa-poki.zip');
 });
 
 test('HTML and UI templates ban coins/chests for non-currency powerup ads', () => {

@@ -5,8 +5,8 @@ const { execSync } = require('child_process');
 const rootDir = path.resolve(__dirname, '..');
 const distDir = path.join(rootDir, 'dist');
 const releaseDir = path.join(rootDir, 'release');
-const zipPath = path.join(releaseDir, 'stickmurai-poki.zip');
-const distZipPath = path.join(distDir, 'stickmurai-poki.zip');
+const zipPath = path.join(releaseDir, 'muramasa-poki.zip');
+const distZipPath = path.join(distDir, 'muramasa-poki.zip');
 const pokiFolder = path.join(releaseDir, 'poki');
 
 const args = process.argv.slice(2);
@@ -50,8 +50,9 @@ poki_folder = sys.argv[3]
 exclude_exts = {'.unitypackage', '.map', '.zip'}
 exclude_names = {'.ds_store', 'thumbs.db'}
 
+# 'vfx' runtime assets are bundled into assets.bin to eliminate Poki Inspector unoptimized file warnings
 allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin', 'vite.svg', 'icons.svg'}
-allowed_dirs = {'audio', 'fonts', 'fantasy_bg', 'ui', 'icons', 'vfx'}
+allowed_dirs = {'audio', 'fonts', 'fantasy_bg', 'ui', 'icons'}
 
 files_to_pack = []
 

@@ -50,7 +50,7 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
 const RELEASE_ROOT = path.join(ROOT_DIR, 'release');
 const TARGET_RELEASE_DIR = path.join(RELEASE_ROOT, target);
-const ZIP_NAME = `stickmurai-${target}.zip`;
+const ZIP_NAME = target === 'html5' ? 'MURAMASA.EXE.zip' : `muramasa-${target}.zip`;
 const ZIP_PATH = path.join(RELEASE_ROOT, ZIP_NAME);
 
 // Step 1: Ensure dist build exists and is up to date
@@ -72,14 +72,40 @@ fs.mkdirSync(TARGET_RELEASE_DIR, { recursive: true });
 // Step 3: Copy core files
 console.log('[3/5] Copying distribution assets...');
 const distFiles = fs.readdirSync(DIST_DIR);
-for (const file of distFiles) {
-  const src = path.join(DIST_DIR, file);
-  const dest = path.join(TARGET_RELEASE_DIR, file);
-  const stat = fs.statSync(src);
-  if (stat.isDirectory()) {
-    fs.cpSync(src, dest, { recursive: true });
-  } else {
-    fs.copyFileSync(src, dest);
+
+if (target === 'html5') {
+  // Standalone HTML5 / Itch.io package whitelist:
+  // Itch.io has a strict platform limit of 1,000 files per project zip (error: "Too many files in zip (6107 > 1000)").
+  // All character sprites, enemy frames, VFX animations, and backgrounds are bundled in assets.bin (25 MB),
+  // which is unpacked into in-memory object URL blobs at startup by ensurePackedAssets().
+  // Loose unbundled raw frame directories (vfx: 4,779 files, sprites: 1,166 files) are excluded.
+  const allowedDirs = new Set(['assets', 'audio', 'fonts', 'icons', 'ui', 'fantasy_bg']);
+  const allowedFiles = new Set(['index.html', 'favicon.svg', 'manifest.json', 'sw.js', 'assets.bin']);
+
+  for (const file of distFiles) {
+    const src = path.join(DIST_DIR, file);
+    const dest = path.join(TARGET_RELEASE_DIR, file);
+    const stat = fs.statSync(src);
+    if (stat.isDirectory()) {
+      if (allowedDirs.has(file)) {
+        fs.cpSync(src, dest, { recursive: true });
+      }
+    } else {
+      if (allowedFiles.has(file) || file.endsWith('.json') || file.endsWith('.svg') || file.endsWith('.bin') || file.endsWith('.ico') || file.endsWith('.html')) {
+        fs.copyFileSync(src, dest);
+      }
+    }
+  }
+} else {
+  for (const file of distFiles) {
+    const src = path.join(DIST_DIR, file);
+    const dest = path.join(TARGET_RELEASE_DIR, file);
+    const stat = fs.statSync(src);
+    if (stat.isDirectory()) {
+      fs.cpSync(src, dest, { recursive: true });
+    } else {
+      fs.copyFileSync(src, dest);
+    }
   }
 }
 
@@ -124,6 +150,25 @@ fs.writeFileSync(indexPath, html, 'utf8');
 
 // Step 5: Archive into zip bundle using Python zipfile for speed and cross-platform reliability
 console.log(`[5/5] Packaging ${ZIP_NAME}...`);
+
+// Count files in TARGET_RELEASE_DIR
+let totalFiles = 0;
+function countFiles(dir) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory()) {
+      countFiles(path.join(dir, entry.name));
+    } else {
+      totalFiles++;
+    }
+  }
+}
+countFiles(TARGET_RELEASE_DIR);
+console.log(`      Total files in release bundle: ${totalFiles} (itch.io limit: < 1000)`);
+if (target === 'html5' && totalFiles > 1000) {
+  console.error(`[build-portal] ERROR: Package contains ${totalFiles} files, exceeding itch.io's hard limit of 1,000 files!`);
+  process.exit(1);
+}
+
 if (fs.existsSync(ZIP_PATH)) {
   fs.unlinkSync(ZIP_PATH);
 }
@@ -175,5 +220,20 @@ console.log(`  BUILD SUCCESSFUL: ${target.toUpperCase()}`);
 console.log(`  Directory: ${TARGET_RELEASE_DIR}`);
 if (stats) {
   console.log(`  Package:   ${ZIP_PATH} (${zipSizeMb} MB)`);
+  if (target === 'html5') {
+    const itchZipPath = path.join(RELEASE_ROOT, 'muramasa-itch.zip');
+    fs.copyFileSync(ZIP_PATH, itchZipPath);
+    const html5ZipPath = path.join(RELEASE_ROOT, 'muramasa-html5.zip');
+    fs.copyFileSync(ZIP_PATH, html5ZipPath);
+    const rawExePath = path.join(RELEASE_ROOT, 'MURAMASA.EXE');
+    try { fs.copyFileSync(ZIP_PATH, rawExePath); } catch {}
+    const muramasaFolder = path.join(RELEASE_ROOT, 'MURAMASA.EXE_dir');
+    try {
+      if (fs.existsSync(muramasaFolder)) fs.rmSync(muramasaFolder, { recursive: true, force: true });
+      fs.cpSync(TARGET_RELEASE_DIR, muramasaFolder, { recursive: true });
+    } catch {}
+    console.log(`  MURAMASA.EXE: ${ZIP_PATH} (${zipSizeMb} MB)`);
+    console.log(`  Itch Zip:     ${itchZipPath} (${zipSizeMb} MB)`);
+  }
 }
 console.log(`========================================\n`);

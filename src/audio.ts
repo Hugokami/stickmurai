@@ -805,31 +805,50 @@ export function startBgm() {
   bgmAudio.muted = false;
   const bgmVolumeSlider = typeof document !== 'undefined' ? document.getElementById('bgm-volume') as HTMLInputElement : null;
   if (bgmVolumeSlider) {
-    bgmAudio.volume = parseFloat(bgmVolumeSlider.value);
+    const val = parseFloat(bgmVolumeSlider.value);
+    bgmAudio.volume = !isNaN(val) ? Math.max(0.01, Math.min(1.0, val)) : 0.5;
   } else {
     bgmAudio.volume = 0.5;
   }
 
+  if (typeof document !== 'undefined' && document.body && !document.body.contains(bgmAudio)) {
+    bgmAudio.style.display = 'none';
+    try { document.body.appendChild(bgmAudio); } catch (_) {}
+  }
+
   if (bgmStarted && !bgmAudio.paused) return;
-  bgmStarted = true;
 
   try {
     bgmAudio.loop = playlist.length <= 1;
-    if (!bgmAudio.src) {
-      bgmAudio.src = playlist[currentBgmIndex];
-    }
-    if (bgmAudio.readyState === 0) {
+    const targetSrc = playlist[currentBgmIndex];
+    if (!bgmAudio.src || bgmAudio.error || bgmAudio.networkState === 3) {
+      bgmAudio.src = targetSrc;
+      bgmAudio.load();
+    } else if (bgmAudio.readyState === 0) {
       bgmAudio.load();
     }
   } catch (e) {
     console.warn('Failed BGM load call:', e);
   }
+
+  bgmStarted = true;
   const playPromise = bgmAudio.play();
   if (playPromise !== undefined) {
-    playPromise.catch(() => {
+    playPromise.then(() => {
+      bgmStarted = true;
+    }).catch(() => {
       // Browser autoplay policy prevented playback before interaction
       bgmStarted = false;
     });
+  }
+}
+
+export function triggerBgmGestureUnlock() {
+  if (isPortalMuted) return;
+  resumeAudioContext();
+  if (bgmAudio.muted) bgmAudio.muted = false;
+  if (!bgmStarted || bgmAudio.paused) {
+    startBgm();
   }
 }
 
@@ -841,8 +860,17 @@ export function initImmediateAudio() {
     startBgm();
   } catch (_) {}
 
+  // Fallback muted play attempt to buffer pipeline early
+  if (bgmAudio.paused) {
+    try {
+      bgmAudio.muted = true;
+      const mutedPromise = bgmAudio.play();
+      if (mutedPromise) mutedPromise.catch(() => {});
+    } catch (_) {}
+  }
+
   // Instant unlock listeners on any early gesture anywhere on screen
-  const unlockEvents = ['pointerdown', 'pointerup', 'touchstart', 'mousedown', 'keydown', 'click', 'wheel'];
+  const unlockEvents = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'keydown', 'click', 'wheel'];
   const unlockHandler = () => {
     bgmAudio.muted = false;
     resumeAudioContext();
@@ -852,14 +880,18 @@ export function initImmediateAudio() {
         unlockEvents.forEach(evt => {
           window.removeEventListener(evt, unlockHandler, true);
           document.removeEventListener(evt, unlockHandler, true);
+          window.removeEventListener(evt, unlockHandler, false);
+          document.removeEventListener(evt, unlockHandler, false);
         });
       }
-    }, 100);
+    }, 80);
   };
 
   unlockEvents.forEach(evt => {
     window.addEventListener(evt, unlockHandler, { capture: true, passive: true });
     document.addEventListener(evt, unlockHandler, { capture: true, passive: true });
+    window.addEventListener(evt, unlockHandler, { capture: false, passive: true });
+    document.addEventListener(evt, unlockHandler, { capture: false, passive: true });
   });
 }
 

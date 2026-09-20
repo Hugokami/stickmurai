@@ -269,6 +269,7 @@ export const globals = {
   bladeEchoesActive: false,
   comboFinisherReady: false,
   riposteTimer: 0,
+  parryWindowTimer: 0,
   decoyInvisibilityTimer: 0,
   decoyCritPrimed: false,
   reapersMarkTimer: 25.0,

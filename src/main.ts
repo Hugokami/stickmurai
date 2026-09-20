@@ -56,7 +56,8 @@ import {
   playTeleportSfx,
   playAffixAlert,
   getConsecutiveParries,
-  playSynthesizedSheathe
+  playSynthesizedSheathe,
+  triggerBgmGestureUnlock
 } from './audio';
 import {
   Afterimage,
@@ -231,6 +232,7 @@ function finishLoading() {
       loaderScreen.removeEventListener('pointerdown', onContinue);
       
       // Guaranteed immediate audio start on this user gesture
+      triggerBgmGestureUnlock();
       resumeAudioContext();
       if (bgmAudio.muted) {
         bgmAudio.muted = false;
@@ -676,6 +678,7 @@ function startApp() {
     const loaderScreen = document.getElementById('loader-screen');
     if (loaderScreen) {
       const earlySkip = () => {
+        triggerBgmGestureUnlock();
         bgmAudio.muted = false;
         resumeAudioContext();
         startBgm();
@@ -1599,7 +1602,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   }
   
   const isParryMasterActive = globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0;
-  if ((globals.player.state === 'attack' && globals.player.stateTime < 0.3 && isParryMasterActive)) {
+  if ((globals.player.state === 'attack' && globals.player.stateTime < 0.3 && isParryMasterActive) || globals.parryWindowTimer > 0) {
     playSynthesizedParry();
     globals.runStats.parries++;
     addCombo();
@@ -2020,16 +2023,17 @@ function triggerLightningDischarge(sx: number, sy: number, ex: number, ey: numbe
   });
 }
 
-function fireFullyChargedIaijutsu(angle: number) {
+function fireFullyChargedIaijutsu(angle: number, chargeScale = 1.0) {
   globals.lastIaijutsuFireTime = performance.now();
   globals.lastIaijutsuAngle = angle;
   globals.invertScreenTimer = 0.25;
 
-  globals.screenShake = Math.max(globals.screenShake, 20 * 1.8);
+  const safeScale = Math.min(1.5, Math.max(0.4, chargeScale));
+  globals.screenShake = Math.max(globals.screenShake, 20 * 1.8 * safeScale);
 
   if (globals.selectedHero === 'aetherion') {
     const slashDmg = getCurrentSlashDamage();
-    const heavyBulletDmg = Math.round(9 * slashDmg);
+    const heavyBulletDmg = Math.round(9 * slashDmg * safeScale);
     const heavyBullet = Projectile.acquireStarMarkBeam(
       globals.player.x + Math.cos(angle) * 50,
       globals.player.y + Math.sin(angle) * 50,
@@ -2073,14 +2077,14 @@ function fireFullyChargedIaijutsu(angle: number) {
 
   if (globals.decoyInvisibilityTimer > 0) {
     const slashDmg = getCurrentSlashDamage();
-    executeMirrorStrike(angle, Math.max(20, Math.round(25 + slashDmg * 3.5)));
+    executeMirrorStrike(angle, Math.max(20, Math.round((25 + slashDmg * 3.5) * safeScale)));
   } else {
     let enhancedType = '';
     const slashDmg = getCurrentSlashDamage();
-    const iaiBonus = globals.playerStats?.iaijutsuBonusDmg || 0;
-    let projDmg = Math.max(12, Math.round(15 + slashDmg * 3.0)) + iaiBonus;
+    const iaiBonus = Math.round((globals.playerStats?.iaijutsuBonusDmg || 0) * safeScale);
+    let projDmg = Math.round((Math.max(12, Math.round(15 + slashDmg * 3.0)) + (globals.playerStats?.iaijutsuBonusDmg || 0)) * safeScale);
     let txtColor = '#00ffff';
-    let txtLabel = t('iaijutsuText');
+    let txtLabel = safeScale < 0.9 ? '⚔️ IAI PARRY COUNTER! ⚔️' : t('iaijutsuText');
     
     if (globals.flowState === 'awakened') {
       enhancedType = 'shadow_awakening';
@@ -3139,8 +3143,54 @@ export function revivePlayer() {
     globals.player.deathProgress = 0;
   }
   
-  // Clear any existing enemies around the player to give them breathing room
-  globals.enemies = []; 
+  // Repel all active enemies away from player to grant breathing room without discarding boss or wave state
+  const isBossRushMode = typeof isBossRush === 'function' ? isBossRush() : false;
+  const isBossStage = isBossRushMode || ((globals.currentStage || 1) % 5 === 0);
+  const isFinalWave = isBossRushMode || ((globals.currentWave || 1) >= (globals.totalWaves || 1));
+
+  if (globals.enemies && globals.enemies.length > 0) {
+    globals.enemies = globals.enemies.filter(e => e && e.state !== 'dead');
+    for (const e of globals.enemies) {
+      const isBossMob = Boolean(
+        e.subType === 'oni_boss' ||
+        e.subType === 'shogun_boss' ||
+        e.subType === 'agis_colossus' ||
+        e.subType === 'skeleton_warlord' ||
+        (e as any).isBoss ||
+        (e as any).isSupremeShogun ||
+        e.subType?.includes('boss')
+      );
+      const dx = e.x - globals.player.x;
+      const dirX = dx !== 0 ? Math.sign(dx) : (Math.random() < 0.5 ? 1 : -1);
+      const pushDist = isBossMob ? 520 : 650;
+      e.x = globals.player.x + dirX * pushDist;
+      e.vx = dirX * (isBossMob ? 450 : 700);
+      e.vy = -200;
+      e.stunTimer = Math.max(e.stunTimer || 0, 1.8);
+      if (isBossMob) {
+        e.state = 'idle';
+        e.attackCooldownTimer = Math.max(e.attackCooldownTimer || 0, 2.5);
+      }
+    }
+  }
+
+  // Safety: if in a boss wave and no living boss is present, respawn the boss so the fight can continue
+  const bossAlive = globals.enemies.some(e => e && e.state !== 'dead' && (
+    e.subType === 'oni_boss' ||
+    e.subType === 'shogun_boss' ||
+    e.subType === 'agis_colossus' ||
+    e.subType === 'skeleton_warlord' ||
+    (e as any).isBoss ||
+    (e as any).isSupremeShogun ||
+    e.subType?.includes('boss')
+  ));
+  if (isBossStage && isFinalWave && !globals.stageBossDefeated && !bossAlive) {
+    globals.stageBossSpawned = false;
+    if ((globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 10)) {
+      globals.waveEnemiesSpawned = Math.max(0, (globals.waveEnemiesTotal || 10) - 1);
+    }
+    spawnEnemy();
+  }
   
   // Hide Game Over screen
   document.getElementById('game-over')!.style.display = 'none';
@@ -3148,6 +3198,8 @@ export function revivePlayer() {
   // Trigger a screen flash & play sfx
   globals.screenShake = 15;
   playSynthesizedAwaken();
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700', 320));
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffffff', 200));
   
   // Create flash particles
   for (let i = 0; i < 40; i++) {
@@ -4336,6 +4388,7 @@ function update(realDt: number) {
 
   if (globals.invertScreenTimer > 0) globals.invertScreenTimer -= realDt;
   if (globals.invulnTimer > 0) globals.invulnTimer -= realDt;
+  if (globals.parryWindowTimer > 0) globals.parryWindowTimer -= realDt;
   
   if (globals.petalArmorLevel > 0 && !globals.petalArmorActive) {
     globals.petalArmorCooldown -= realDt;
@@ -5480,7 +5533,6 @@ function update(realDt: number) {
 
   let parryTriggered = false;
   const isCharging = globals.player.state === 'charge';
-  const isFullyCharged = globals.player.chargeTimer >= 0.8;
   const parryWindowMult = globals.selectedHero === 'default' ? 1.35 : 1.0;
 
   // Option 2: Counter-Flash / Mikiri Stride (Ronin / Sekiro style)
@@ -5583,35 +5635,57 @@ function update(realDt: number) {
     }
   }
 
-  const isParryInput = (isCharging && isFullyCharged && isAttackReleased) || (isAttackPressed && globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0);
+  const isParryInput = (isCharging && isAttackReleased) || (isAttackPressed && globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0);
   if (!dashAttackTriggered && isParryInput && globals.player.state !== 'dash' && globals.player.state !== 'dead') {
     globals.enemies.forEach(e => {
-      if (!parryTriggered && (e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - (0.15 * parryWindowMult)))) {
-        const dx = e.x - globals.player.x; const dy = e.y - globals.player.y;
-        const maxDist = 200 + (e.scaleMult - 1) * 60;
-        if (dx * dx + dy * dy < maxDist * maxDist) {
-          parryTriggered = true;
-          
-          triggerFlowingCounterReset();
-          const isChilled = e.chillTimer > 0;
+      const dx = e.x - globals.player.x; const dy = e.y - globals.player.y;
+      const maxDist = 260 + (e.scaleMult - 1) * 80;
+      const distSq = dx * dx + dy * dy;
+      const inRange = distSq < maxDist * maxDist;
+      const isAttackingOrCharging = e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax * 0.35) || (inRange && e.state !== 'stun' && e.state !== 'dead');
+      if (!parryTriggered && inRange && isAttackingOrCharging) {
+        parryTriggered = true;
+        globals.parryWindowTimer = 0.5;
+        
+        triggerFlowingCounterReset();
+        const isChilled = e.chillTimer > 0;
 
-          if (isCharging) {
-            globals.riposteTimer = 0.4;
-            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "RIPOSTE READY!", "#ff0055", 22));
-            if (isFullyCharged) {
-              let iaiAngle = Math.atan2(dy, dx);
-              if (globals.selectedHero === 'aetherion') {
-                if (globals.useMobileIaijutsuAimAngle) {
-                  iaiAngle = globals.mobileIaijutsuAimAngle;
-                } else if (globals.joystickActive) {
-                  iaiAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
-                } else {
-                  iaiAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
-                }
-              }
-              fireFullyChargedIaijutsu(iaiAngle);
+        globals.riposteTimer = 0.45;
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "RIPOSTE READY!", "#ff0055", 22));
+        
+        // Auto-release iaijutsu even if charge bar is not full, damage scaled with charge time
+        const chargeRatio = Math.min(1.4, Math.max(0.45, (globals.player.chargeTimer / 0.8)));
+        let iaiAngle = Math.atan2(dy, dx);
+        if (globals.selectedHero === 'aetherion') {
+          if (globals.useMobileIaijutsuAimAngle) {
+            iaiAngle = globals.mobileIaijutsuAimAngle;
+          } else if (globals.joystickActive) {
+            iaiAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+          } else {
+            iaiAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+          }
+        }
+        fireFullyChargedIaijutsu(iaiAngle, chargeRatio);
+
+        // Deflect all incoming projectiles in radius
+        globals.projectiles.forEach(proj => {
+          if (proj.isEnemy && !proj.isDeflected && proj.life > 0) {
+            const pdx = proj.x - globals.player.x;
+            const pdy = proj.y - globals.player.y;
+            if (pdx * pdx + pdy * pdy < 450 * 450) {
+              proj.isEnemy = false;
+              proj.isDeflected = true;
+              proj.life = 3.5;
+              const deflAngle = Math.atan2(pdy, pdx);
+              const spd = 2000;
+              proj.vx = Math.cos(deflAngle) * spd;
+              proj.vy = Math.sin(deflAngle) * spd;
+              proj.angle = deflAngle;
+              proj.damage = Math.max(12, Math.round(getCurrentSlashDamage() * 1.8));
+              globals.particles.push(Particle.acquire(proj.x, proj.y, '#ffd700', 350, 0.45, 3.0, deflAngle));
             }
           }
+        });
 
           const isPerfect = (e.state === 'attack' && e.stateTime < 0.18 * parryWindowMult) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08 * parryWindowMult);
           
@@ -5784,8 +5858,39 @@ function update(realDt: number) {
           globals.player.vx = 0; globals.player.vy = 0;
           globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, Math.atan2(dy, dx), globals.playerStats.slashSizeMult * 1.5, true, undefined, false, globals.player));
         }
-      }
-    });
+      });
+
+    if (!parryTriggered) {
+      globals.projectiles.forEach(proj => {
+        if (!parryTriggered && proj.isEnemy && !proj.isDeflected && proj.life > 0) {
+          const pdx = proj.x - globals.player.x;
+          const pdy = proj.y - globals.player.y;
+          if (pdx * pdx + pdy * pdy < 420 * 420) {
+            parryTriggered = true;
+            globals.parryWindowTimer = 0.5;
+            proj.isEnemy = false;
+            proj.isDeflected = true;
+            proj.life = 3.5;
+            const deflAngle = Math.atan2(pdy, pdx);
+            const spd = 2000;
+            proj.vx = Math.cos(deflAngle) * spd;
+            proj.vy = Math.sin(deflAngle) * spd;
+            proj.angle = deflAngle;
+            proj.damage = Math.max(12, Math.round(getCurrentSlashDamage() * 1.8));
+            globals.particles.push(Particle.acquire(proj.x, proj.y, '#ffd700', 350, 0.45, 3.0, deflAngle));
+            globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, "⚡ PROJECTILE PARRIED! ⚡", "#ffd700", 26));
+            globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+            playSynthesizedParry();
+            globals.runStats.parries++;
+            addCombo();
+            triggerFlowingCounterReset();
+            
+            const chargeRatio = Math.min(1.4, Math.max(0.45, (globals.player.chargeTimer / 0.8)));
+            fireFullyChargedIaijutsu(deflAngle, chargeRatio);
+          }
+        }
+      });
+    }
   }
 
   if (globals.gameMode === 'zen') {
@@ -6746,9 +6851,10 @@ function update(realDt: number) {
       const dx = globals.player.x - proj.x; const dy = globals.player.y - proj.y;
       const distSq = dx*dx + dy*dy;
       const isShieldActive = globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0;
-      const deflectDist = isShieldActive ? 140 : 100;
+      const isParrying = globals.parryWindowTimer > 0;
+      const deflectDist = isParrying ? 180 : (isShieldActive ? 140 : 100);
       if (distSq < deflectDist*deflectDist) {
-        if (globals.player.state === 'dash' || isShieldActive) {
+        if (globals.player.state === 'dash' || isShieldActive || isParrying) {
           proj.isEnemy = false;
           proj.isDeflected = true;
           proj.life = 3.0;

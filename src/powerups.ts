@@ -377,12 +377,12 @@ export function triggerLevelUp() {
 
 export function omnislashHitDmg(hitIndex: number, isFinalBlast = false): number {
   const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
-  const base = isFinalBlast ? 24 : 14;
-  const iaiBonus = globals.playerStats?.iaijutsuBonusDmg || 0;
-  const enhanceBonus = (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) ? Math.round(15 + slashDmg * 0.6 + (globals.playerStats?.enhanceBonusDmg || 1) * 3) : 0;
-  const comboBonus = Math.min(0.6, (globals.combo || 0) * 0.01 + hitIndex * 0.02);
-  const dmg = Math.round((base + slashDmg * (isFinalBlast ? 2.5 : 1.8)) * (1 + comboBonus) + iaiBonus + enhanceBonus);
-  return Math.max(isFinalBlast ? 16 : 6, dmg);
+  const base = isFinalBlast ? 65 : 30;
+  const iaiBonus = (globals.playerStats?.iaijutsuBonusDmg || 0) * 1.5;
+  const enhanceBonus = (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) ? Math.round(25 + slashDmg * 1.2 + (globals.playerStats?.enhanceBonusDmg || 1) * 4) : 0;
+  const comboBonus = Math.min(1.2, (globals.combo || 0) * 0.015 + hitIndex * 0.03);
+  const dmg = Math.round((base + slashDmg * (isFinalBlast ? 5.2 : 3.4)) * (1 + comboBonus) + iaiBonus + enhanceBonus);
+  return Math.max(isFinalBlast ? 45 : 20, dmg);
 }
 
 export function applyHeroSignatureUltimate() {
@@ -521,10 +521,11 @@ const ultOptions = [
         playSynthesizedAwaken();
 
         // floating text
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, globals.currentLang === 'ja' ? '超究武神覇斬！' : 'OMNISLASH!', 'neon-#ffd700', 72));
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, globals.currentLang === 'ja' ? '超究武神覇斬・天極！ ⚔️' : 'OMNISLASH: HEAVENLY LIMIT! ⚔️', 'neon-#ffd700', 80));
         
-        // start shockwave
+        // start grand dual shockwaves
         globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+        globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#00ffff'));
 
        // slash all targetable active enemies
        targets.forEach((e, idx) => {
@@ -535,33 +536,42 @@ const ultOptions = [
            run: () => {
              if (e.state === 'dead') return;
              
-             // hit target for 16 DMG (always applied)
+             // hit target with massive omnislash damage
              const isBoss = e.subType?.includes('boss') || (e as any).isBoss;
-              const hitDmg = isBoss ? Math.min(32, omnislashHitDmg(idx)) : omnislashHitDmg(idx);
-              callbacks.hitEnemy(e, hitDmg);
+              const hitDmg = isBoss ? Math.round(omnislashHitDmg(idx) * 1.35) : omnislashHitDmg(idx);
+              const hpChunk = typeof e.maxHp === 'number' && e.maxHp > 0 ? Math.round(e.maxHp * (isBoss ? 0.30 : (0.30 + Math.random() * 0.10))) : 0;
+              callbacks.hitEnemy(e, hitDmg + hpChunk);
              
-             // limit heavy canvas and sound context resources to prevent lag
+             // visual & sound execution
              if (idx < maxVisuals) {
                if (idx % 2 === 0) {
                  playSlashSfx(1.2);
                }
                
-               // spawn 3 cut lines (including a horizontal sweep)
-               globals.slashes.push(Slash.acquire(e.x, e.y, Math.PI / 4, 2.5 * e.scaleMult, true));
-               globals.slashes.push(Slash.acquire(e.x, e.y, -Math.PI / 4, 2.5 * e.scaleMult, true));
-               globals.slashes.push(Slash.acquire(e.x, e.y, 0, 3.0 * e.scaleMult, true));
+               // spawn 4 vibrant high-opacity cross cut lines
+               globals.slashes.push(Slash.acquire(e.x, e.y, Math.PI / 4, 3.6 * e.scaleMult, true, '#ffd700'));
+               globals.slashes.push(Slash.acquire(e.x, e.y, -Math.PI / 4, 3.6 * e.scaleMult, true, '#00ffff'));
+               globals.slashes.push(Slash.acquire(e.x, e.y, 0, 4.0 * e.scaleMult, true, '#ff0055'));
+               globals.slashes.push(Slash.acquire(e.x, e.y, Math.PI / 2, 3.2 * e.scaleMult, true, '#a855f7'));
                
                // blast wave
-               globals.shockwaves.push(new Shockwave(e.x, e.y, 'rgba(255, 30, 70, 0.5)'));
+               globals.shockwaves.push(new Shockwave(e.x, e.y, 'rgba(255, 215, 0, 0.75)'));
+               globals.shockwaves.push(new Shockwave(e.x, e.y, 'rgba(0, 255, 255, 0.6)'));
 
-               // sparks
-               for (let i = 0; i < 4; i++) {
+               const goldImpact = (vfxAnims as any).shockwaves?.impactGold;
+               if (goldImpact && goldImpact.length > 0) {
+                 globals.animatedEffects.push(new AnimatedEffect(e.x, e.y, goldImpact, 0.28, 2.2));
+               }
+
+               // dense sparks
+               for (let i = 0; i < 8; i++) {
                  const angle = Math.random() * Math.PI * 2;
-                 const speed = 200 + Math.random() * 300;
-                 globals.particles.push(Particle.acquire(e.x, e.y, i % 2 === 0 ? '#ff1e46' : '#00ffff', speed, 0.4, 1.5 + Math.random() * 1.5, angle));
+                 const speed = 250 + Math.random() * 350;
+                 const sparkCol = i % 3 === 0 ? '#ffd700' : (i % 3 === 1 ? '#00ffff' : '#ff0055');
+                 globals.particles.push(Particle.acquire(e.x, e.y, sparkCol, speed, 0.45, 2.0 + Math.random() * 1.5, angle));
                }
                
-               globals.screenShake = Math.max(globals.screenShake, 18);
+               globals.screenShake = Math.max(globals.screenShake, 24);
              }
            }
          });
@@ -574,25 +584,27 @@ const ultOptions = [
 
             // play lightning thunder sound
             playSynthesizedThunder();
-            globals.invertScreenTimer = 0.3;
+            globals.invertScreenTimer = 0.35;
             
-            globals.screenShake = 65;
+            globals.screenShake = 75;
 
-            // golden shockwave
+            // golden & cyan shockwaves
             globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
+            globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#00ffff'));
             const lightBurstFinisher = (vfxAnims as any).shockwaves?.lightBurst;
             if (lightBurstFinisher && lightBurstFinisher.length > 0) {
-              globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, lightBurstFinisher, 0.35, 2.8));
+              globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, lightBurstFinisher, 0.4, 3.2));
             }
             
-            // Deal 20 DMG to all remaining active enemies
+            // Deal massive DMG to all remaining active enemies
             globals.enemies.forEach(enemy => {
               if (enemy.state !== 'dead') {
                 const isBoss = enemy.subType?.includes('boss') || (enemy as any).isBoss;
-                const finalDmg = isBoss ? Math.min(48, omnislashHitDmg(0, true)) : omnislashHitDmg(0, true);
-                callbacks.hitEnemy(enemy, finalDmg);
-                for (let i = 0; i < 4; i++) {
-                  globals.particles.push(Particle.acquire(enemy.x, enemy.y, '#ffd700', 150 + Math.random() * 150, 0.4, 2, Math.random() * Math.PI * 2));
+                const finalDmg = isBoss ? Math.round(omnislashHitDmg(0, true) * 1.6) : omnislashHitDmg(0, true);
+                const hpChunk = typeof enemy.maxHp === 'number' && enemy.maxHp > 0 ? Math.round(enemy.maxHp * (isBoss ? 0.30 : (0.30 + Math.random() * 0.10))) : 0;
+                callbacks.hitEnemy(enemy, finalDmg + hpChunk);
+                for (let i = 0; i < 6; i++) {
+                  globals.particles.push(Particle.acquire(enemy.x, enemy.y, '#ffd700', 180 + Math.random() * 200, 0.45, 2.5, Math.random() * Math.PI * 2));
                 }
               }
             });
@@ -855,7 +867,11 @@ export function refreshShop(isNewWave = false) {
 }
 
 export function openShop() {
-  if (globals.gameState !== 'playing') return;
+  if (globals.shopOpen) {
+    closeShop();
+    return;
+  }
+  if (globals.gameState !== 'playing' && globals.gameState !== 'paused') return;
   globals.gameState = 'paused';
   AdManager.gameplayStop();
   globals.shopOpen = true;
