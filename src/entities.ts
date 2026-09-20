@@ -191,15 +191,17 @@ export class Entity {
       else if (this.type === 'herosamurai') trailColor = '#fbbf24';
       else if (this.type === 'herosatyr') trailColor = '#10b981';
       else if (this.type === 'heroluneblade') trailColor = '#38bdf8';
+      else if (this.type === 'heroakakage') trailColor = '#ef4444';
       
       const ghostImg = getTintedImage(img, trailColor);
+      const ghostOffset = (this.type === 'heroaetherion' ? -5 : (this.type === 'heroakakage' ? -5.5 : 0)) * scale;
       
       // Far ghost
       ctx.save();
       ctx.globalAlpha = alpha * 0.16;
       ctx.translate((-cos * 30) | 0, (-sin * 30) | 0);
       ctx.scale(finalDir, 1);
-      ctx.drawImage(ghostImg, (-img.width/2 * scale) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
+      ctx.drawImage(ghostImg, ((-img.width/2 * scale) + ghostOffset) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
       ctx.restore();
 
       // Mid ghost
@@ -207,7 +209,7 @@ export class Entity {
       ctx.globalAlpha = alpha * 0.30;
       ctx.translate((-cos * 18) | 0, (-sin * 18) | 0);
       ctx.scale(finalDir, 1);
-      ctx.drawImage(ghostImg, (-img.width/2 * scale) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
+      ctx.drawImage(ghostImg, ((-img.width/2 * scale) + ghostOffset) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
       ctx.restore();
 
       // Near ghost
@@ -215,7 +217,7 @@ export class Entity {
       ctx.globalAlpha = alpha * 0.48;
       ctx.translate((-cos * 8) | 0, (-sin * 8) | 0);
       ctx.scale(finalDir, 1);
-      ctx.drawImage(ghostImg, (-img.width/2 * scale) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
+      ctx.drawImage(ghostImg, ((-img.width/2 * scale) + ghostOffset) | 0, (-img.height/2 * scale) | 0, (img.width * scale) | 0, (img.height * scale) | 0);
       ctx.restore();
     }
 
@@ -228,9 +230,10 @@ export class Entity {
     }
     
     const aethOffsetX = (this.type === 'heroaetherion' ? -5 : 0) * scale;
+    const akakageOffsetX = (this.type === 'heroakakage' ? -5.5 : 0) * scale;
     const dw = Math.round(img.width * scale);
     const dh = Math.round(img.height * scale);
-    const dx = Math.round(-img.width/2 * scale + aethOffsetX);
+    const dx = Math.round(-img.width/2 * scale + aethOffsetX + akakageOffsetX);
     const dy = Math.round(-img.height/2 * scale);
     ctx.drawImage(drawImg, dx, dy, dw, dh);
     ctx.restore();

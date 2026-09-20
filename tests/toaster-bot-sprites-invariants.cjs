@@ -57,6 +57,6 @@ test('Entities Rendering Invariants: destination coordinates are integer-rounded
   const entitiesSrc = fs.readFileSync(path.join(projectRoot, 'src', 'entities.ts'), 'utf-8');
   assert.match(entitiesSrc, /const dw\s*=\s*Math\.round\(img\.width\s*\*\s*scale\);/);
   assert.match(entitiesSrc, /const dh\s*=\s*Math\.round\(img\.height\s*\*\s*scale\);/);
-  assert.match(entitiesSrc, /const dx\s*=\s*Math\.round\(-img\.width\/2\s*\*\s*scale\s*\+\s*aethOffsetX\);/);
+  assert.match(entitiesSrc, /const dx\s*=\s*Math\.round\(-img\.width\/2\s*\*\s*scale\s*\+\s*aethOffsetX(?:\s*\+\s*akakageOffsetX)?\);/);
   assert.match(entitiesSrc, /const dy\s*=\s*Math\.round\(-img\.height\/2\s*\*\s*scale\);/);
 });

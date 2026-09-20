@@ -1254,11 +1254,12 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       // 1. Glowing Aura (behind the player)
       ctx.fillStyle = rgbaColor + '0.15)';
       ctx.beginPath();
-      ctx.arc(px, py - 10, 42, 0, Math.PI * 2);
+      const auraY = this.type === 'heroakakage' ? (py + 45) : (py - 10);
+      ctx.arc(px, auraY, 42, 0, Math.PI * 2);
       ctx.fill();
 
       // 2. Permanent Neon Ellipse Ring (calibrated to dynamic hero feet baseline)
-      const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : (this.type === 'heroaetherion' ? 75 : 62))))));
+      const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 125 : (this.type === 'heroaetherion' ? 75 : 62))))));
       const ringX = px | 0;
       const ringY = (py + playerFootOffsetY) | 0;
 
@@ -1287,7 +1288,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // Physical ground contact shadow (anchored at world ground baseline)
-    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : (this.type === 'heroaetherion' ? 75 : 62))))));
+    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 125 : (this.type === 'heroaetherion' ? 75 : 62))))));
     const groundShadowRx = (this.x - cx + globals.vw / 2) | 0;
     const groundShadowRy = ((this.y - cy + globals.vh / 2) + playerFootOffsetY) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
