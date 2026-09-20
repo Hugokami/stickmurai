@@ -5,14 +5,14 @@ export interface HeroBalance {
   passiveEn:string; passiveJa:string;
 }
 export const HERO_BALANCE:Record<string,HeroBalance> = {
-  default:{cost:0,slash:0,move:1.05,attack:1,dash:1,area:1,crit:.05,iai:0,posture:12,skillCooldown:1,passiveEn:'Parry Prodigy: +35% parry window and +12 posture damage.',passiveJa:'弾きの達人：パリィ猶予+35%、体幹ダメージ+12。'},
-  luneblade:{cost:10000,slash:.20,move:1.08,attack:.95,dash:1,area:1.35,crit:.10,iai:3,posture:0,skillCooldown:1,passiveEn:'Lunar Resonance: +35% slash reach and +3 Iaijutsu damage.',passiveJa:'月華共鳴：斬撃範囲+35%、抜刀ダメージ+3。'},
-  ninja:{cost:15000,slash:.15,move:1.30,attack:.85,dash:.75,area:1,crit:.12,iai:1,posture:0,skillCooldown:.98,passiveEn:'Phantom Strike: +30% movement, -25% dash cooldown and phantom dash afterimages.',passiveJa:'幻影瞬歩：移動+30%、瞬歩クールダウン-25%、影の残像。'},
-  samurai:{cost:30000,slash:.30,move:1.15,attack:.70,dash:1,area:1.10,crit:.15,iai:2,posture:0,skillCooldown:.96,passiveEn:'Kensei: every third basic slash cleaves up to 5 nearby foes for 50% slash damage.',passiveJa:'剣聖：通常斬撃3回ごとに周囲最大5体へ斬撃の50%ダメージ。'},
-  nightborne:{cost:50000,slash:.40,move:1.12,attack:.76,dash:1,area:1.40,crit:.18,iai:5,posture:0,skillCooldown:.94,passiveEn:'Soul Siphon: executions restore 1 heart and grant 35 Magatama.',passiveJa:'魂の吸収：処刑で体力1回復、勾玉35獲得。'},
-  satyr:{cost:75000,slash:.50,move:1.18,attack:.80,dash:.95,area:1.30,crit:.21,iai:6,posture:8,skillCooldown:.92,passiveEn:'Earthshaker: executions deal 18 damage and 32 posture to up to 4 nearby foes; 5s cooldown.',passiveJa:'大地震：処刑で周囲最大4体に18ダメージ・体幹32。再使用5秒。'},
-  akakage:{cost:120000,slash:.65,move:1.25,attack:.72,dash:.82,area:1.35,crit:.25,iai:4,posture:0,skillCooldown:.90,passiveEn:'Crimson Aftermath: one echo after each basic slash, dealing 45% slash damage (maximum 12).',passiveJa:'紅蓮残影：通常斬撃後に一度追撃。斬撃の45%ダメージ（上限12）。'},
-  aetherion:{cost:360000,slash:.80,move:1.28,attack:.65,dash:.78,area:1.45,crit:.25,iai:6,posture:16,skillCooldown:.90,passiveEn:'Celestial Duality: melee slashes apply Star Brand; ranged beam shots detonate marks in heavy cosmic AoE explosions.',passiveJa:'天星の双撃：近接斬撃で星の刻印を付与し、遠距離光線で刻印を起爆して大爆発を起こす。'}
+  default:{cost:0,slash:0,move:1.05,attack:1,dash:1,area:1,crit:.05,iai:0,posture:12,skillCooldown:1,passiveEn:'• +35% Parry Window • +12 Posture DMG',passiveJa:'• パリィ猶予+35% • 体幹削り+12'},
+  luneblade:{cost:10000,slash:.20,move:1.08,attack:.95,dash:1,area:1.35,crit:.10,iai:3,posture:0,skillCooldown:1,passiveEn:'• +35% Slash Reach • +3 Iaijutsu DMG',passiveJa:'• 斬撃範囲+35% • 抜刀DMG+3'},
+  ninja:{cost:15000,slash:.15,move:1.30,attack:.85,dash:.75,area:1,crit:.12,iai:1,posture:0,skillCooldown:.98,passiveEn:'• +30% Move Speed • -25% Dash CD • Phantom Afterimages',passiveJa:'• 移動速度+30% • 瞬歩CD-25% • 影の残像'},
+  samurai:{cost:30000,slash:.30,move:1.15,attack:.70,dash:1,area:1.10,crit:.15,iai:2,posture:0,skillCooldown:.96,passiveEn:'• 3rd Slash Cleaves 5 Foes (50% DMG)',passiveJa:'• 3連斬毎: 周囲5体へなぎ払い(50% DMG)'},
+  nightborne:{cost:50000,slash:.40,move:1.12,attack:.76,dash:1,area:1.40,crit:.18,iai:5,posture:0,skillCooldown:.94,passiveEn:'• Executions: Restore 1 Heart • +35 Mon on Execution',passiveJa:'• 処刑時: ハート1回復 • 獲得勾玉+35'},
+  satyr:{cost:75000,slash:.50,move:1.18,attack:.80,dash:.95,area:1.30,crit:.21,iai:6,posture:8,skillCooldown:.92,passiveEn:'• Executions: 18 DMG & 32 Posture to 4 Foes (5s CD)',passiveJa:'• 処刑時: 4体に18 DMG & 体幹32 (5秒CD)'},
+  akakage:{cost:120000,slash:.65,move:1.25,attack:.72,dash:.82,area:1.35,crit:.25,iai:4,posture:0,skillCooldown:.90,passiveEn:'• Slashes Trigger Echo Strike (45% DMG, Max 12)',passiveJa:'• 斬撃時追撃残影 (45% DMG、上限12)'},
+  aetherion:{cost:360000,slash:.80,move:1.28,attack:.65,dash:.78,area:1.45,crit:.25,iai:6,posture:16,skillCooldown:.90,passiveEn:'• Melee Applies Star Brand • Ranged Detonates Cosmic AoE',passiveJa:'• 近接で星の刻印付与 • 遠距離射撃で大爆発起爆'}
 };
 export const heroBalance=(id:string):HeroBalance=>HERO_BALANCE[id]||HERO_BALANCE.default;
 
@@ -37,8 +37,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '刀神の啓示',
     cost: 10000,
     icon: 'icons/rpg/fc1038.png',
-    descEn: 'Perfect parrying slows time for 1.2s and discharges 4 phantom counter-slashes seeking all nearby foes for 150% slash damage.',
-    descJa: '完璧な弾きで1.2秒間時間を遅延させ、周囲の敵へ150%ダメージの幻影斬撃4発を自動追尾で放つ。'
+    descEn: '• Perfect Parry Slows Time 1.2s • 4 Homing Phantoms (150% ATK)',
+    descJa: '• 完全パリィ時時間遅延1.2秒 • 追尾幻影刃4本発射(150% ATK)'
   },
   luneblade: {
     heroId: 'luneblade',
@@ -48,8 +48,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '月華の昇華',
     cost: 20000,
     icon: 'icons/rpg/fc1191.png',
-    descEn: 'Iaijutsu splits into a dual-crescent cross cutting all dimensions. Hits summon radiant lunar beams dealing heavy continuous damage.',
-    descJa: '抜刀術が縦横二連の十文字月華斬に分裂。命中時に天から月光柱が降り注ぎ継続大ダメージを与える。'
+    descEn: '• Dual-Crescent Cross Iaijutsu • Calls Radiant Lunar Beams (Heavy DoT)',
+    descJa: '• 十文字月華抜刀術 • 命中地点に連続月光柱召喚'
   },
   ninja: {
     heroId: 'ninja',
@@ -59,8 +59,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '幽幻の蜃気楼',
     cost: 30000,
     icon: 'icons/rpg/fc543.png',
-    descEn: 'Dashing leaves behind a lethal shadow clone that mirrors your slashes and taunts enemies for 3.5s, detonating into a flash smoke stun.',
-    descJa: '瞬歩後に斬撃を模倣し敵を引きつける影分身を生成（3.5秒）。消滅時に煙幕閃光が炸裂し周囲を気絶させる。'
+    descEn: '• Dash Leaves Mimic Clone (3.5s Taunt) • Detonates with Smoke Stun',
+    descJa: '• ダッシュ時模倣影分身(3.5秒挑発) • 爆発煙幕スタン'
   },
   samurai: {
     heroId: 'samurai',
@@ -70,8 +70,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '不撓の竜威',
     cost: 60000,
     icon: 'icons/rpg/fc1328.png',
-    descEn: 'Parries erupt into a golden dragon wave shredding 120 enemy posture instantly and granting 3 seconds of Hyper Armor (50% DR + unflinching).',
-    descJa: '弾き成功時に金龍の衝撃波が咆哮し敵の体幹を一気に120削る。さらに3秒間ハイパーアーマー（被ダメ半減・無硬直）。'
+    descEn: '• Parry Shreds 120 Posture • Grants 3s Hyper Armor (50% DR + Unflinching)',
+    descJa: '• パリィ時体幹120削り • 3秒ハイパーアーマー(被ダメ半減・無硬直)'
   },
   nightborne: {
     heroId: 'nightborne',
@@ -81,8 +81,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '虚無の特異核',
     cost: 100000,
     icon: 'icons/rpg/fc1052.png',
-    descEn: 'Executions and Awakening trigger a black hole vortex for 4s, crushing enemies together, dealing dark pulses, and siphoning player health.',
-    descJa: '処刑および覚醒時に4秒間ブラックホールが出現。周囲の敵を吸い寄せ、暗黒パルスで体力を吸収する。'
+    descEn: '• 4s Black Hole on Execution/Ult • Pulls Foes • Siphons HP',
+    descJa: '• 処刑/奥義時4秒ブラックホール • 敵吸引 • HP吸収'
   },
   satyr: {
     heroId: 'satyr',
@@ -92,8 +92,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '原初の激震',
     cost: 150000,
     icon: 'icons/rpg/fc1237.png',
-    descEn: 'Every 3rd slash fractures the ground in a cone, erupting jagged stone pillars that propel enemies airborne and increase incoming damage by +40%.',
-    descJa: '3連撃ごとに大地を叩き割る地割れが発生。隆起した巨岩が敵を打ち上げ、被ダメージを+40%増加させる。'
+    descEn: '• Every 3rd Slash Cone Fissure • Launches Foes Airborne • +40% Damage Taken',
+    descJa: '• 3撃毎に扇状地割れ • 敵打ち上げ • 被ダメ+40%付与'
   },
   akakage: {
     heroId: 'akakage',
@@ -103,8 +103,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '紅蓮の大虐殺',
     cost: 240000,
     icon: 'icons/rpg/fc1220.png',
-    descEn: 'Crits spawn spinning blood scythe boomerangs (max 2 active, 0.4s cooldown, 4 pierces). Kills during Flow Awakening extend duration by +0.7s (max +3.5s).',
-    descJa: '会心時に血の大鎌を射出（最大2枚・0.4秒CD・最大4体貫通）。覚醒中の討伐で覚醒時間を+0.7秒延長（最大+3.5秒まで）。'
+    descEn: '• Crits Spawn Blood Scythes (4 Pierces) • Flow Kills Add +0.7s (Max +3.5s)',
+    descJa: '• 会心時貫通血鎌射出 • 覚醒キル毎に持続+0.7秒(最大+3.5秒)'
   },
   aetherion: {
     heroId: 'aetherion',
@@ -114,8 +114,8 @@ export const HERO_AWAKENING_SKILLS: Record<string, HeroAwakeningSkill> = {
     titleJa: '星辰の収束',
     cost: 720000,
     icon: 'icons/rpg/fc1276.png',
-    descEn: 'Railgun fires 3-way piercing starbeam cone. Basic slashes unleash dual homing crescent blades. 100% crit chance on targets marked with Star Brand.',
-    descJa: 'レールガンが3方向の貫通光線を放射。通常斬撃で追尾する二重の三日月刃を射出。星の刻印を持つ敵に確定会心。'
+    descEn: '• 3-Way Starbeam Railgun • Dual Crescent Slashes • 100% Crit on Star Brand',
+    descJa: '• 3方向貫通星光線 • 追尾二重三日月刃 • 刻印対象に確定会心'
   }
 };
 
