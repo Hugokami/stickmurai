@@ -227,7 +227,8 @@ export class Entity {
       drawImg = getTintedImage(img, colorTint);
     }
     
-    ctx.drawImage(drawImg, -img.width/2 * scale, -img.height/2 * scale, img.width * scale, img.height * scale);
+    const aethOffsetX = (this.type === 'heroaetherion' ? -5 : 0) * scale;
+    ctx.drawImage(drawImg, -img.width/2 * scale + aethOffsetX, -img.height/2 * scale, img.width * scale, img.height * scale);
     ctx.restore();
   }
 }
@@ -1514,15 +1515,7 @@ export class Slash {
     const maxL = this.maxLife > 0 ? this.maxLife : 0.35;
     const p = Math.max(0, Math.min(1, this.life / maxL)); // 1.0 down to 0.0
     const progress = 1 - p;
-    const easeInQuad = p * p;
     const midRadius = (120 + 35 * (1 - p)) * safeMult;
-    const halfWidth = (30 * easeInQuad) * safeMult;
-
-    const isCircular = this.isCircular || false;
-    const startAngle = isCircular ? 0 : -Math.PI / 2.2;
-    const endAngle = isCircular ? Math.PI * 2 : Math.PI / 2.2;
-    const angleRange = endAngle - startAngle;
-    const steps = isCircular ? 48 : 26;
 
     // Determine hero palette
     let heroKey = this.owner?.type;
@@ -1537,136 +1530,16 @@ export class Slash {
       else if (globals.selectedHero === 'aetherion') heroKey = 'heroaetherion';
     }
 
-    let col1 = 'rgba(56, 189, 248, '; // cyan
-    let col2 = 'rgba(255, 255, 255, ';
-    let coreCol = '#ffffff';
-    let edgeCol = '#38bdf8';
-
-    if (this.colorTint && this.colorTint !== 'none') {
-      if (this.colorTint.includes('255, 0, 85') || this.colorTint.includes('#ff0055')) {
-        col1 = 'rgba(255, 0, 85, '; edgeCol = '#ff0055';
-      } else if (this.colorTint.includes('136, 51, 255') || this.colorTint.includes('#8833ff')) {
-        col1 = 'rgba(136, 51, 255, '; edgeCol = '#a855f7';
-      } else if (this.colorTint.includes('sakura') || this.colorTint.includes('255, 183, 197')) {
-        col1 = 'rgba(255, 150, 180, '; edgeCol = '#ffb7c5';
-      } else if (this.colorTint.includes('251, 191, 36') || this.colorTint.includes('#fbbf24')) {
-        col1 = 'rgba(251, 191, 36, '; edgeCol = '#f59e0b';
-      }
-    } else if (globals.flowState === 'omnislash') {
-      col1 = 'rgba(255, 215, 0, '; edgeCol = '#ffe066'; coreCol = '#ffffff';
-    } else if (globals.flowState === 'awakened') {
-      col1 = 'rgba(34, 211, 238, '; edgeCol = '#00ffff'; coreCol = '#ffffff';
-    } else if (globals.flowState === 'storm_god') {
-      col1 = 'rgba(251, 191, 36, '; edgeCol = '#f59e0b';
-    } else if (this.isEnhanced) {
-      col1 = 'rgba(251, 146, 60, '; edgeCol = '#f97316';
-    } else if (heroKey === 'heronightborne') {
-      col1 = 'rgba(147, 51, 234, '; edgeCol = '#c084fc';
-    } else if (heroKey === 'herosamurai') {
-      col1 = 'rgba(234, 179, 8, '; edgeCol = '#fbbf24';
-    } else if (heroKey === 'herosatyr') {
-      col1 = 'rgba(239, 68, 68, '; edgeCol = '#dc2626';
-    } else if (heroKey === 'heroluneblade') {
-      col1 = 'rgba(125, 211, 252, '; edgeCol = '#e0f2fe';
-    } else if (heroKey === 'heroninja') {
-      col1 = 'rgba(168, 85, 247, '; edgeCol = '#9333ea';
-    } else if (heroKey === 'heroakakage') {
-      col1 = 'rgba(244, 63, 94, '; edgeCol = '#f43f5e';
-    } else if (heroKey === 'heroaetherion') {
-      col1 = 'rgba(56, 189, 248, '; edgeCol = '#38bdf8';
-    }
-
     ctx.save();
     try {
       ctx.translate(rx, ry);
       ctx.scale(dir, 1);
       ctx.rotate(drawAngle);
 
-      // 1. Outer backing dark brush stroke
-      ctx.beginPath();
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const a = startAngle + angleRange * t;
-        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
-        const r = midRadius + halfWidth * factor * 1.25;
-        const px = Math.cos(a) * r;
-        const py = Math.sin(a) * r;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      for (let i = steps; i >= 0; i--) {
-        const t = i / steps;
-        const a = startAngle + angleRange * t;
-        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
-        const r = midRadius - halfWidth * factor * 1.25;
-        const px = Math.cos(a) * r;
-        const py = Math.sin(a) * r;
-        ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-      ctx.fillStyle = `rgba(10, 10, 15, ${easeInQuad * 0.4})`;
-      ctx.fill();
-
-      // 2. Main crescent gradient ribbon
-      ctx.beginPath();
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const a = startAngle + angleRange * t;
-        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
-        const r = midRadius + halfWidth * factor;
-        const px = Math.cos(a) * r;
-        const py = Math.sin(a) * r;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      for (let i = steps; i >= 0; i--) {
-        const t = i / steps;
-        const a = startAngle + angleRange * t;
-        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
-        const r = midRadius - halfWidth * factor;
-        const px = Math.cos(a) * r;
-        const py = Math.sin(a) * r;
-        ctx.lineTo(px, py);
-      }
-      ctx.closePath();
-
-      const grad = ctx.createRadialGradient(0, 0, Math.max(1, midRadius - halfWidth), 0, 0, midRadius + halfWidth);
       const isUltraState = globals.flowState === 'awakened' || globals.flowState === 'omnislash';
       const opacityMult = isUltraState ? 1.0 : 0.9;
-      grad.addColorStop(0, col1 + '0)');
-      grad.addColorStop(0.35, col1 + (easeInQuad * opacityMult) + ')');
-      grad.addColorStop(0.7, col2 + (easeInQuad * Math.min(1.0, opacityMult * 1.05)) + ')');
-      grad.addColorStop(1, col1 + '0)');
-      ctx.fillStyle = grad;
-      ctx.fill();
 
-      // 3. Razor-sharp white cutting edge
-      ctx.beginPath();
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const a = startAngle + angleRange * t;
-        const px = Math.cos(a) * midRadius;
-        const py = Math.sin(a) * midRadius;
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.strokeStyle = coreCol;
-      ctx.lineWidth = Math.max(isUltraState ? 2.5 : 1.5, (isUltraState ? 5.2 : 3.5) * easeInQuad * safeMult);
-      ctx.lineCap = 'round';
-      ctx.stroke();
-
-      // 4. Colored outer accent edge
-      ctx.beginPath();
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps;
-        const a = startAngle + angleRange * t;
-        const factor = isCircular ? 1.0 : Math.sin(t * Math.PI);
-        const px = Math.cos(a) * (midRadius + halfWidth * factor * 0.5);
-        const py = Math.sin(a) * (midRadius + halfWidth * factor * 0.5);
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
-      ctx.strokeStyle = edgeCol;
-      ctx.lineWidth = Math.max(isUltraState ? 1.8 : 1.0, (isUltraState ? 3.2 : 2.0) * easeInQuad * safeMult);
-      ctx.stroke();
-
-      // 5. Hero-specific slash effect animation sprite overlay, carefully centered along the attack vector
+      // Hero-specific slash effect animation sprite overlay, carefully centered along the attack vector
       const slashes = (vfxAnims as any).heroSlashes;
       let frames: HTMLImageElement[] | null = null;
       let isAkakage = false;
@@ -1697,7 +1570,9 @@ export class Slash {
         const img = frames[frameIdx];
         if (img && img.complete && img.naturalWidth > 0) {
           ctx.save();
-          ctx.globalAlpha = Math.min(1.0, easeInQuad * (isUltraState ? 1.4 : 1.15));
+          // High opacity authentic pixel art slash sprite with smooth dissolve at end
+          const tailFade = progress > 0.8 ? (1.0 - progress) / 0.2 : 1.0;
+          ctx.globalAlpha = Math.min(1.0, opacityMult * tailFade);
           if (heroKey === 'herosatyr' || heroKey === 'herosamurai' || globals.selectedHero === 'satyr' || globals.selectedHero === 'samurai') {
             // Revert back only Primal Satyr Sovereign and Grandmaster Samurai to exact previous version
             const sScale = Math.min(4.8, 3.8 * safeMult);

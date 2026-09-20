@@ -57,6 +57,7 @@ export const globals = {
   aetherionLastDimensionRend: 0,
   aetherionLastStrideCleave: 0,
   stageAttackPotions: 0,
+  stageMerchantCacheAds: 0,
   counterSiphonHpProgress: 0,
   slashSlideUpActive: false,
   slashSlideUpTime: 0,

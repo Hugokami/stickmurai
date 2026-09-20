@@ -23,7 +23,7 @@ import { initJourney, beginJourneyRun, journeyHurt, journeySkill, leaveJourney, 
 import { encounterBudget } from './journeyCore';
 import { resetCombatPolish, updateCombatPolish } from './combatPolish';
 import { initQol, clearGameInputs, actionBuffer, qolSettings } from './qol';
-import { initRuntimeQol, isPractice, practiceStep, recordHurt, resetRunFeedback, showDefeatFeedback, updateThreats } from './runtimeQol';
+import { initRuntimeQol, isPractice, exitPractice, practiceStep, recordHurt, resetRunFeedback, showDefeatFeedback, updateThreats } from './runtimeQol';
 import { assetReadiness, retryRequiredAssets, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
 import { safeStorage } from './storage';
 import { AdManager } from './adManager';
@@ -160,6 +160,11 @@ export function clearBattlefield() {
 }
 
 export function handleQuitToMainMenu() {
+  if (isPractice()) {
+    exitPractice(true);
+  }
+  document.getElementById('qol-practice-bar')?.remove();
+  document.getElementById('qol-practice-dummy')?.remove();
   AdManager.gameplayStop();
   stopSpawner();
   resetCombatPolish();
@@ -864,6 +869,7 @@ function initGame() {
   globals.zenFieldTickTimer = 0;
   globals.stageCurrency = 0;
   globals.stageAttackPotions = 0;
+  globals.stageMerchantCacheAds = 0;
   globals.shopRefreshCount = 0;
   globals.shopOpen = false;
   resetShop();
@@ -1268,6 +1274,7 @@ function initGame() {
   globals.stageKills = 0;
   globals.stageCurrency = fortuneActive ? 150 : 0;
   globals.stageAttackPotions = 0;
+  globals.stageMerchantCacheAds = 0;
   globals.shopRefreshCount = 0;
   globals.shopOpen = false;
   resetShop();

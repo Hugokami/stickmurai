@@ -767,6 +767,7 @@ let currentShopInventory: ShopSlot[] = [];
 export function resetShop() {
   currentShopInventory = [];
   globals.shopRefreshCount = 0;
+  globals.stageMerchantCacheAds = 0;
   globals.shopOpen = false;
   const modal = document.getElementById('shop-modal');
   if (modal) modal.style.display = 'none';
@@ -1043,15 +1044,22 @@ export function renderShopModal() {
                 <img src="icons/stage_gold.png" class="inline-currency-icon" style="width: 13px; height: 13px;" /> 50
               </div>
             </button>
-            <button id="shop-ad-gold-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: rgba(212, 162, 78, 0.16); border: 1px solid rgba(251, 191, 36, 0.6); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;">
-              <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: #ffd700;">
-                <img src="icons/stage_gold_chest.png" class="inline-currency-icon" style="width: 20px; height: 20px;" alt="Merchant Cache" />
-                <span>Merchant Cache (+150 Gold)</span>
-              </div>
-              <div style="font-family: 'Orbitron', monospace; font-size: 9.5px; font-weight: bold; color: #ffd700; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(251, 191, 36, 0.4); white-space: nowrap; display: flex; align-items: center; gap: 4px;">
-                <span>🎬</span> <span>REWARD</span>
-              </div>
-            </button>
+            ${(() => {
+              const maxCacheAds = 2;
+              const cacheAdsUsed = globals.stageMerchantCacheAds || 0;
+              const canUseCacheAd = cacheAdsUsed < maxCacheAds;
+              return `
+                <button id="shop-ad-gold-btn" style="width: 100%; display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; background: ${canUseCacheAd ? 'rgba(212, 162, 78, 0.16)' : 'rgba(100, 100, 100, 0.12)'}; border: 1px solid ${canUseCacheAd ? 'rgba(251, 191, 36, 0.6)' : 'rgba(150, 150, 150, 0.3)'}; border-radius: 6px; cursor: ${canUseCacheAd ? 'pointer' : 'not-allowed'}; opacity: ${canUseCacheAd ? '1' : '0.5'}; transition: all 0.2s ease; font-family: 'Outfit', sans-serif; box-sizing: border-box; text-decoration: none;" ${canUseCacheAd ? '' : 'disabled'}>
+                  <div style="display: flex; align-items: center; gap: 6px; font-size: 10.5px; font-weight: 700; color: ${canUseCacheAd ? '#ffd700' : '#888888'};">
+                    <img src="icons/stage_gold_chest.png" class="inline-currency-icon" style="width: 20px; height: 20px; ${canUseCacheAd ? '' : 'filter: grayscale(1);'}" alt="Merchant Cache" />
+                    <span>Merchant Cache (+100 Gold)${canUseCacheAd ? ` (${cacheAdsUsed}/${maxCacheAds})` : ' (2/2 Used)'}</span>
+                  </div>
+                  <div style="font-family: 'Orbitron', monospace; font-size: 9.5px; font-weight: bold; color: ${canUseCacheAd ? '#ffd700' : '#888888'}; background: rgba(0,0,0,0.55); padding: 2px 7px; border-radius: 4px; border: 1px solid ${canUseCacheAd ? 'rgba(251, 191, 36, 0.4)' : 'rgba(150, 150, 150, 0.3)'}; white-space: nowrap; display: flex; align-items: center; gap: 4px;">
+                    <span>🎬</span> <span>${canUseCacheAd ? 'REWARD' : 'LIMIT'}</span>
+                  </div>
+                </button>
+              `;
+            })()}
           </div>
         </div>
 
@@ -1300,12 +1308,14 @@ export function renderShopModal() {
   const adGoldBtn = modal.querySelector('#shop-ad-gold-btn') as HTMLElement;
   if (adGoldBtn) {
     bindDualListener(adGoldBtn, () => {
+      if ((globals.stageMerchantCacheAds || 0) >= 2) return;
       AdManager.showRewardedAd('shop-gold-cache', {
         onComplete: () => {
-          globals.stageCurrency = (globals.stageCurrency || 0) + 150;
+          globals.stageMerchantCacheAds = (globals.stageMerchantCacheAds || 0) + 1;
+          globals.stageCurrency = (globals.stageCurrency || 0) + 100;
           callbacks.updateUI();
           playSound(sfx.magatamaPickup, 1.0);
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "+150 GOLD CACHE! 💰", "#ffd700", 26));
+          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, "+100 GOLD CACHE! 💰", "#ffd700", 26));
           renderShopModal();
         },
         onFailed: (err) => {

@@ -1258,7 +1258,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
       ctx.fill();
 
       // 2. Permanent Neon Ellipse Ring (calibrated to dynamic hero feet baseline)
-      const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : 62)))));
+      const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : (this.type === 'heroaetherion' ? 75 : 62))))));
       const ringX = px | 0;
       const ringY = (py + playerFootOffsetY) | 0;
 
@@ -1287,7 +1287,7 @@ draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint
     }
 
     // Physical ground contact shadow (anchored at world ground baseline)
-    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : (this.type === 'heroaetherion' ? 150 : 62))))));
+    const playerFootOffsetY = this.type === 'heroluneblade' ? 45 : (this.type === 'heroninja' ? 52 : (this.type === 'heronightborne' ? 78 : (this.type === 'herosamurai' ? 82 : (this.type === 'herosatyr' ? 74 : (this.type === 'heroakakage' ? 78 : (this.type === 'heroaetherion' ? 75 : 62))))));
     const groundShadowRx = (this.x - cx + globals.vw / 2) | 0;
     const groundShadowRy = ((this.y - cy + globals.vh / 2) + playerFootOffsetY) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));

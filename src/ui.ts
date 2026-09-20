@@ -592,6 +592,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
 
   bindDualListener(document.getElementById('quit-btn'), () => {
     if (pauseScreen) pauseScreen.style.display = 'none';
+    document.getElementById('qol-practice-bar')?.remove();
+    document.getElementById('qol-practice-dummy')?.remove();
     if (globals.gameMode === 'pvp') {
       pvpManager.disconnect();
     } else {
@@ -609,6 +611,8 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     bindDualListener(gameOverQuitBtn, () => {
       const gameOverEl = document.getElementById('game-over');
       if (gameOverEl) gameOverEl.style.display = 'none';
+      document.getElementById('qol-practice-bar')?.remove();
+      document.getElementById('qol-practice-dummy')?.remove();
       if (globals.gameMode === 'pvp') {
         pvpManager.disconnect();
       } else {

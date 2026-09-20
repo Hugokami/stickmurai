@@ -22,7 +22,16 @@ export function initRuntimeQol(onReturn: () => void) {
   });
   window.addEventListener('qol-clear-inputs', clearThreats);
 }
-function exitPractice() {practice=false;setPracticeStorage(false);document.getElementById('qol-practice-bar')?.remove();document.getElementById('qol-practice-dummy')?.remove();clearThreats();globals.gameState='mainmenu';if(returnToMenu)returnToMenu();showToast('Training ended. No rewards or progress were saved.');}
+export function exitPractice(silent = false) {
+  practice = false;
+  setPracticeStorage(false);
+  document.getElementById('qol-practice-bar')?.remove();
+  document.getElementById('qol-practice-dummy')?.remove();
+  clearThreats();
+  globals.gameState = 'mainmenu';
+  if (returnToMenu) returnToMenu();
+  if (!silent) showToast('Training ended. No rewards or progress were saved.');
+}
 export function practiceStep() {if(!practice)return; if(globals.enemies.length>0) globals.enemies.length=0;}
 export function resetRunFeedback() {hurtCount=0;hurtSources={};threatTimer=0;clearThreats();}
 export function recordHurt(source:string, damage:number) {if(practice)return;hurtCount+=damage;hurtSources[source]=(hurtSources[source]||0)+damage;showThreat(source);}
