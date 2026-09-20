@@ -902,7 +902,7 @@ export class Enemy extends Entity {
         const isOverclocked = globals.activeStageAffix?.id === 'overclocked_circuitry';
         if (isOverclocked) {
           // 3-round rapid plasma burst in Overclocked Circuitry!
-          if (this.burstShotsFired === 0 && (this.animFrame >= 12 || this.stateTime >= 0.26)) {
+          if (this.burstShotsFired === 0 && (this.animFrame >= 6 || this.stateTime >= 0.26)) {
             const proj1 = Projectile.acquire(this.x, this.y - 16, this.targetAngle, true, 2);
             (proj1 as any).shooter = this;
             (proj1 as any).colorTint = '#38bdf8';
@@ -929,7 +929,7 @@ export class Enemy extends Entity {
           }
         } else {
           // Standard single plasma blast
-          if (!this.attackLanded && (this.animFrame >= 12 || this.stateTime >= 0.32)) {
+          if (!this.attackLanded && (this.animFrame >= 6 || this.stateTime >= 0.32)) {
             const proj = Projectile.acquire(this.x, this.y - 16, this.targetAngle, true, 2);
             (proj as any).shooter = this;
             (proj as any).colorTint = '#38bdf8';

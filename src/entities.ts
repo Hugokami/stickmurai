@@ -228,7 +228,11 @@ export class Entity {
     }
     
     const aethOffsetX = (this.type === 'heroaetherion' ? -5 : 0) * scale;
-    ctx.drawImage(drawImg, -img.width/2 * scale + aethOffsetX, -img.height/2 * scale, img.width * scale, img.height * scale);
+    const dw = Math.round(img.width * scale);
+    const dh = Math.round(img.height * scale);
+    const dx = Math.round(-img.width/2 * scale + aethOffsetX);
+    const dy = Math.round(-img.height/2 * scale);
+    ctx.drawImage(drawImg, dx, dy, dw, dh);
     ctx.restore();
   }
 }

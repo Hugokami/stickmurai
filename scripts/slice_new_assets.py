@@ -187,25 +187,27 @@ print("--- Slicing Toaster Bot ---")
 tb_zip_path = r"C:\Users\lyan1\Desktop\game assets\Toaster Bot.zip"
 with zipfile.ZipFile(tb_zip_path) as z:
     tb_sheets = [
-        ("Toaster Bot/idle.png", 10, "idle"),
-        ("Toaster Bot/run.png", 16, "walk"),
-        ("Toaster Bot/attack.png", 22, "attack"),
-        ("Toaster Bot/damaged.png", 4, "hit"),
-        ("Toaster Bot/death.png", 10, "dead"),
+        ("Toaster Bot/idle.png", 5, "idle"),
+        ("Toaster Bot/run.png", 8, "walk"),
+        ("Toaster Bot/attack.png", 11, "attack"),
+        ("Toaster Bot/damaged.png", 2, "hit"),
+        ("Toaster Bot/death.png", 5, "dead"),
     ]
     
-    # Target uniform canvas: 56x28 to provide a clean centered box
-    target_tb_w, target_tb_h = 56, 28
+    # Target uniform canvas: 200x32 with robot body center (17, 11) aligned to canvas center (100, 16)
+    target_tb_w, target_tb_h = 200, 32
+    paste_x = 100 - 17
+    paste_y = 16 - 11
     
     for zip_file, count, anim_name in tb_sheets:
         sheet = Image.open(io.BytesIO(z.read(zip_file))).convert("RGBA")
         for i in range(count):
-            crop_box = (i * 53, 0, (i + 1) * 53, 22)
+            crop_box = (i * 106, 0, (i + 1) * 106, 22)
             frame = sheet.crop(crop_box)
             
-            # place onto 56x28 canvas centered
+            # place onto 200x32 canvas centered on robot body
             canvas = Image.new("RGBA", (target_tb_w, target_tb_h), (0, 0, 0, 0))
-            canvas.paste(frame, (1, 3), frame)
+            canvas.paste(frame, (paste_x, paste_y), frame)
             
             fname = f"{anim_name}{i + 1:02d}.png"
             out1 = os.path.join("public", "sprites", "EnemyToasterBot", fname)

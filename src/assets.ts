@@ -1183,12 +1183,12 @@ export const anims = {
     shoot: loadCustomEnemyAnim('HeroAetherion', 'shoot', 12, true),
   },
   toaster_bot: {
-    idle: loadCustomEnemyAnim('EnemyToasterBot', 'idle', 10, false),
-    walk: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 16, false),
-    attack: loadCustomEnemyAnim('EnemyToasterBot', 'attack', 22, false),
-    hit: loadCustomEnemyAnim('EnemyToasterBot', 'hit', 4, false),
-    dash: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 16, false),
-    dead: loadCustomEnemyAnim('EnemyToasterBot', 'dead', 10, false),
+    idle: loadCustomEnemyAnim('EnemyToasterBot', 'idle', 5, false),
+    walk: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 8, false),
+    attack: loadCustomEnemyAnim('EnemyToasterBot', 'attack', 11, false),
+    hit: loadCustomEnemyAnim('EnemyToasterBot', 'hit', 2, false),
+    dash: loadCustomEnemyAnim('EnemyToasterBot', 'walk', 8, false),
+    dead: loadCustomEnemyAnim('EnemyToasterBot', 'dead', 5, false),
   },
   wraith01: {
     idle: loadCustomEnemyAnim('Wraith01', 'idle', 12, false),
