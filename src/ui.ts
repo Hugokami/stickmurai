@@ -3189,11 +3189,14 @@ export function triggerStageClear() {
   }
 
   // 3-Star Mastery Evaluation
-  const isBossStage = currentStage % 5 === 0;
-  const parTime = isBossStage ? 90 : 60;
+  const totalParriesAndDodges = (globals.runStats?.parries || 0) + (globals.runStats?.perfectDodges || 0);
+  const maxHearts = Math.max(1, globals.maxLives || 5);
+  const currentHearts = Math.max(0, globals.lives || 0);
+  const healthPercent = Math.round((currentHearts / maxHearts) * 100);
+
   const star1 = true; // Stage Conquered
-  const star2 = globals.runTime <= parTime; // Speed Demon
-  const star3 = (globals.runStats?.maxCombo || 0) >= 20; // Combo Master
+  const star2 = totalParriesAndDodges >= 30; // 30 Parries & Dodges
+  const star3 = healthPercent > 80; // >80% Health Remaining
 
   const earnedStars = (star1 ? 1 : 0) + (star2 ? 1 : 0) + (star3 ? 1 : 0);
   if (!globals.stageStars) globals.stageStars = {};
@@ -3251,8 +3254,8 @@ export function triggerStageClear() {
     starReq2.style.color = star2 ? '#ffd700' : '#64748b';
     starIcon2.textContent = star2 ? '⭐' : '☆';
     starText2.textContent = isJa
-      ? `神速 (≤${parTime}s)`
-      : `Speed (≤${parTime}s)`;
+      ? `防・避 (${totalParriesAndDodges}/30)`
+      : `Parry/Dodge (${totalParriesAndDodges}/30)`;
   }
 
   const starReq3 = document.getElementById('star-req-3');
@@ -3262,8 +3265,8 @@ export function triggerStageClear() {
     starReq3.style.color = star3 ? '#ffd700' : '#64748b';
     starIcon3.textContent = star3 ? '⭐' : '☆';
     starText3.textContent = isJa
-      ? `連撃 (20+)`
-      : `Combo (20+)`;
+      ? `生存 (${healthPercent}% / >80%)`
+      : `Health (${healthPercent}% / >80%)`;
   }
 
   const bountyBadge = document.getElementById('star-bounty-badge');

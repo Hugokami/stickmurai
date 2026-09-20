@@ -78,3 +78,21 @@ test('Hero Atherion Alignment Invariants: sprite centered, shadow and ring foot 
   // Renderer baseFoot for Atherion is 75 (not 102)
   assert.match(rendererSrc, /case 'heroaetherion':\s*baseFoot\s*=\s*75;\s*break;/);
 });
+
+test('Stage Clear Star Conditions: 2-star is 30 parries+dodges, 3-star is >80% health', () => {
+  const uiTs = fs.readFileSync(path.join(projectRoot, 'src', 'ui.ts'), 'utf-8');
+  const qolTs = fs.readFileSync(path.join(projectRoot, 'src', 'progressionQol.ts'), 'utf-8');
+  const indexHtml = fs.readFileSync(path.join(projectRoot, 'index.html'), 'utf-8');
+
+  // Check ui.ts evaluation
+  assert.match(uiTs, /totalParriesAndDodges\s*>=\s*30/, 'ui.ts must evaluate 30 parries + dodges for star 2');
+  assert.match(uiTs, /healthPercent\s*>\s*80/, 'ui.ts must evaluate >80% health for star 3');
+
+  // Check stage select briefing card
+  assert.match(qolTs, /30 Parries & Dodges/, 'progressionQol.ts must state 30 Parries & Dodges');
+  assert.match(qolTs, />80% HP/, 'progressionQol.ts must state >80% HP');
+
+  // Check index.html markup fallback
+  assert.match(indexHtml, /30 Parries & Dodges/, 'index.html must display 30 Parries & Dodges in star-req-2');
+  assert.match(indexHtml, /(?:>|&gt;)80% Health/, 'index.html must display >80% Health in star-req-3');
+});
