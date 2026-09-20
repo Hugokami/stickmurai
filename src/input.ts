@@ -1,5 +1,5 @@
 import { globals } from './globals';
-import { resumeAudioContext } from './audio';
+import { resumeAudioContext, triggerBgmGestureUnlock } from './audio';
 import { callbacks } from './callbacks';
 import { safeStorage } from './storage';
 import { AdManager } from './adManager';
@@ -164,6 +164,12 @@ export function initInput() {
   let joystickOriginX = 0;
   let joystickOriginY = 0;
 
+  // Universal audio wakeup helper for all user gestures on mobile and desktop
+  const wakeAudio = () => {
+    triggerBgmGestureUnlock();
+    resumeAudioContext();
+  };
+
   leftTouchZone.addEventListener('touchstart', handleJoystickStart, {passive: false});
   leftTouchZone.addEventListener('touchmove', handleJoystickMove, {passive: false});
   leftTouchZone.addEventListener('touchend', handleJoystickEnd);
@@ -177,6 +183,7 @@ export function initInput() {
 
   btnAttack.addEventListener('touchstart', (e: TouchEvent) => { 
     e.preventDefault(); 
+    wakeAudio();
     const touch = e.changedTouches[0];
     attackTouchId = touch.identifier;
     attackTouchStartX = touch.clientX;
@@ -226,6 +233,7 @@ export function initInput() {
     globals.mobileAttackReleased = true; 
     globals.mobileIaijutsuAimActive = false;
     attackTouchId = null;
+    wakeAudio();
   }, { passive: false });
 
   btnAttack.addEventListener('touchcancel', (e: TouchEvent) => { 
@@ -244,6 +252,7 @@ export function initInput() {
 
   btnDash.addEventListener('touchstart', (e: TouchEvent) => {
     e.preventDefault();
+    wakeAudio();
     globals.mobileDashDown = true;
     if (globals.player && globals.player.dashCooldown > 0) {
       return;
@@ -299,6 +308,7 @@ export function initInput() {
     globals.mobileDashAimActive = false;
     globals.mobileDashJustPressed = true;
     dashTouchId = null;
+    wakeAudio();
   }, { passive: false });
 
   btnDash.addEventListener('touchcancel', (e: TouchEvent) => {
@@ -316,6 +326,7 @@ export function initInput() {
   let raijinHasDragged = false;
 
   btnEnhance.addEventListener('touchstart', (e: TouchEvent) => {
+    wakeAudio();
     if ((globals.gameMode as string) === 'pvp') {
       e.preventDefault();
       globals.mobileParryJustPressed = true;
@@ -379,6 +390,7 @@ export function initInput() {
     globals.mobileRaijinAimActive = false;
     globals.mobileEnhanceJustPressed = true;
     raijinTouchId = null;
+    wakeAudio();
   }, { passive: false });
 
   btnEnhance.addEventListener('touchcancel', (e: TouchEvent) => {
@@ -390,6 +402,7 @@ export function initInput() {
 
   function handleJoystickStart(e: TouchEvent) {
     e.preventDefault(); 
+    wakeAudio();
     joystickActive = true;
     globals.joystickActive = true;
     const touch = e.changedTouches[0];
@@ -418,6 +431,7 @@ export function initInput() {
     globals.joystickVector = { x: 0, y: 0 };
     joystickKnob.style.transform = `translate(0px, 0px)`;
     joystickBase.classList.remove('active');
+    wakeAudio();
   }
 
   function updateJoystick(touch: Touch) {
@@ -434,9 +448,15 @@ export function initInput() {
     globals.joystickVector.y = dy / maxDist;
   }
 
-  // Audio Context Resume bindings on interact
+  // Audio Context Resume bindings on interact (capture + bubbling, touch + pointer)
+  window.addEventListener('click', wakeAudio, { capture: true, passive: true });
   window.addEventListener('click', resumeAudioContext);
+  window.addEventListener('touchstart', wakeAudio, { capture: true, passive: true });
   window.addEventListener('touchstart', resumeAudioContext);
+  window.addEventListener('touchend', wakeAudio, { capture: true, passive: true });
+  window.addEventListener('pointerdown', wakeAudio, { capture: true, passive: true });
+  window.addEventListener('pointerup', wakeAudio, { capture: true, passive: true });
+  window.addEventListener('keydown', wakeAudio, { capture: true, passive: true });
   window.addEventListener('keydown', resumeAudioContext);
 }
 

@@ -276,15 +276,17 @@ export function bindDualListener(el: HTMLElement | null | undefined, handler: (e
   let lastTriggerTime = 0;
   const safeHandler = (e: Event) => {
     e.stopPropagation();
+    triggerBgmGestureUnlock();
     const now = Date.now();
     if (now - lastTriggerTime < 250) return;
     lastTriggerTime = now;
-    triggerBgmGestureUnlock();
     handler(e);
   };
   el.addEventListener('pointerdown', safeHandler);
+  el.addEventListener('pointerup', () => triggerBgmGestureUnlock(), { passive: true });
   el.addEventListener('click', safeHandler);
   el.addEventListener('touchstart', safeHandler, { passive: true });
+  el.addEventListener('touchend', () => triggerBgmGestureUnlock(), { passive: true });
 }
 
 export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void, onRestartCallback: () => void) {
@@ -494,6 +496,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     tutorialModal.style.display = 'flex';
 
     const handleDismiss = () => {
+      triggerBgmGestureUnlock();
       safeStorage.setItem('stickmurai_tutorial_completed', 'true');
       tutorialModal.style.display = 'none';
       if (tutorialStartBtn) tutorialStartBtn.onclick = null;

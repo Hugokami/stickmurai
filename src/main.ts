@@ -274,7 +274,9 @@ function finishLoading() {
 
     loaderScreen.addEventListener('click', onContinue);
     loaderScreen.addEventListener('touchstart', onContinue);
+    loaderScreen.addEventListener('touchend', onContinue);
     loaderScreen.addEventListener('pointerdown', onContinue);
+    loaderScreen.addEventListener('pointerup', onContinue);
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'Enter') onContinue(e);
     }, { once: true });
@@ -457,6 +459,7 @@ function checkOrientationAndFullscreen() {
       rotateAutoDismissTimer = null;
     }
     rotatePrompt.style.display = 'none';
+    triggerBgmGestureUnlock();
   };
 
   if (rotateCloseBtn && !rotateCloseBtn.dataset.bound) {

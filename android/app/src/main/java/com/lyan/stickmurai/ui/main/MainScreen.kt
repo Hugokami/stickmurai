@@ -54,6 +54,7 @@ fun MainScreen(
           allowUniversalAccessFromFileURLs = true
           useWideViewPort = true
           loadWithOverviewMode = true
+          mediaPlaybackRequiresUserGesture = false
         }
         loadUrl("https://appassets.androidplatform.net/assets/index.html")
         webView = this

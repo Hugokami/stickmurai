@@ -231,19 +231,17 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0, pi
           if (ctx.state === 'suspended') {
             ctx.resume().catch(() => {});
           }
-          if (ctx.state === 'running') {
-            const source = ctx.createBufferSource();
-            source.buffer = buffer;
-            if (pitchMult !== 1.0) {
-              source.playbackRate.setValueAtTime(pitchMult, ctx.currentTime);
-            }
-            const gainNode = ctx.createGain();
-            gainNode.gain.setValueAtTime(getSfxVolume() * 0.85 * volumeMult, ctx.currentTime);
-            source.connect(gainNode);
-            gainNode.connect(getSoundDestination(ctx));
-            source.start(0);
-            return; // Success, skip HTML5 Audio playback
+          const source = ctx.createBufferSource();
+          source.buffer = buffer;
+          if (pitchMult !== 1.0) {
+            source.playbackRate.setValueAtTime(pitchMult, ctx.currentTime);
           }
+          const gainNode = ctx.createGain();
+          gainNode.gain.setValueAtTime(getSfxVolume() * 0.85 * volumeMult, ctx.currentTime);
+          source.connect(gainNode);
+          gainNode.connect(getSoundDestination(ctx));
+          source.start(0);
+          return; // Success, buffer queued or playing via Web Audio
         }
       } catch (e) {
         console.warn(`Web Audio play failed for ${relativeSrc}, falling back:`, e);
@@ -400,8 +398,18 @@ export const resumeAudioContext = () => {
   if (isPortalMuted) return;
   try {
     const ctx = getAudioContext();
-    if (ctx && ctx.state === 'suspended') {
-      ctx.resume().catch(() => {});
+    if (ctx) {
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      // Silent buffer poke: iOS Safari Web Audio hardware output clock unlock
+      try {
+        const buffer = ctx.createBuffer(1, 1, 22050);
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(ctx.destination);
+        source.start(0);
+      } catch (_) {}
     }
     if (masterGain && ctx) {
       try {
@@ -816,7 +824,7 @@ export function startBgm() {
     try { document.body.appendChild(bgmAudio); } catch (_) {}
   }
 
-  if (bgmStarted && !bgmAudio.paused) return;
+  if (bgmStarted && !bgmAudio.paused && !bgmAudio.muted) return;
 
   try {
     bgmAudio.loop = playlist.length <= 1;
@@ -846,9 +854,13 @@ export function startBgm() {
 export function triggerBgmGestureUnlock() {
   if (isPortalMuted) return;
   resumeAudioContext();
-  if (bgmAudio.muted) bgmAudio.muted = false;
-  if (!bgmStarted || bgmAudio.paused) {
-    startBgm();
+  if (bgmAudio) {
+    if (bgmAudio.muted) bgmAudio.muted = false;
+    const bgmVolumeSlider = typeof document !== 'undefined' ? document.getElementById('bgm-volume') as HTMLInputElement : null;
+    bgmAudio.volume = bgmVolumeSlider ? parseFloat(bgmVolumeSlider.value) : 0.5;
+    if (!bgmStarted || bgmAudio.paused || bgmAudio.muted) {
+      startBgm();
+    }
   }
 }
 
@@ -860,31 +872,22 @@ export function initImmediateAudio() {
     startBgm();
   } catch (_) {}
 
-  // Fallback muted play attempt to buffer pipeline early
-  if (bgmAudio.paused) {
-    try {
-      bgmAudio.muted = true;
-      const mutedPromise = bgmAudio.play();
-      if (mutedPromise) mutedPromise.catch(() => {});
-    } catch (_) {}
-  }
-
   // Instant unlock listeners on any early gesture anywhere on screen
-  const unlockEvents = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'keydown', 'click', 'wheel'];
+  const unlockEvents = ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'mouseup', 'keydown', 'click'];
   const unlockHandler = () => {
-    bgmAudio.muted = false;
-    resumeAudioContext();
-    startBgm();
-    setTimeout(() => {
-      if (!bgmAudio.paused) {
-        unlockEvents.forEach(evt => {
-          window.removeEventListener(evt, unlockHandler, true);
-          document.removeEventListener(evt, unlockHandler, true);
-          window.removeEventListener(evt, unlockHandler, false);
-          document.removeEventListener(evt, unlockHandler, false);
-        });
-      }
-    }, 80);
+    triggerBgmGestureUnlock();
+    // Only dismantle unlock handlers once audio hardware is verified running and unmuted
+    const ctx = getAudioContext();
+    const isAudioRunning = ctx && ctx.state === 'running';
+    const isBgmPlaying = bgmAudio && !bgmAudio.paused && !bgmAudio.muted;
+    if (isAudioRunning && isBgmPlaying) {
+      unlockEvents.forEach(evt => {
+        window.removeEventListener(evt, unlockHandler, true);
+        document.removeEventListener(evt, unlockHandler, true);
+        window.removeEventListener(evt, unlockHandler, false);
+        document.removeEventListener(evt, unlockHandler, false);
+      });
+    }
   };
 
   unlockEvents.forEach(evt => {
