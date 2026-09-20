@@ -162,7 +162,7 @@ export class Entity {
     } else if (this.type === 'heroaetherion') {
       scale *= 9.4;
     } else if (this.type === 'toaster_bot') {
-      scale *= 3.2;
+      scale *= 7.2;
     }
     const buffer = Math.max(img.width, img.height) * scale + 60;
     if (rx < -buffer || rx > globals.vw + buffer || ry < -buffer || ry > globals.vh + buffer) {

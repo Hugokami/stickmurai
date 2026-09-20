@@ -903,7 +903,7 @@ export class Enemy extends Entity {
         if (isOverclocked) {
           // 3-round rapid plasma burst in Overclocked Circuitry!
           if (this.burstShotsFired === 0 && (this.animFrame >= 12 || this.stateTime >= 0.26)) {
-            const proj1 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true, 2);
+            const proj1 = Projectile.acquire(this.x, this.y - 16, this.targetAngle, true, 2);
             (proj1 as any).shooter = this;
             (proj1 as any).colorTint = '#38bdf8';
             globals.projectiles.push(proj1);
@@ -911,7 +911,7 @@ export class Enemy extends Entity {
             this.burstShotTimer = 0;
             playEnergyBeam(0.45);
           } else if (this.burstShotsFired === 1 && this.burstShotTimer >= 0.12) {
-            const proj2 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true, 2);
+            const proj2 = Projectile.acquire(this.x, this.y - 16, this.targetAngle, true, 2);
             (proj2 as any).shooter = this;
             (proj2 as any).colorTint = '#00ffff';
             globals.projectiles.push(proj2);
@@ -919,7 +919,7 @@ export class Enemy extends Entity {
             this.burstShotTimer = 0;
             playEnergyBeam(0.45);
           } else if (this.burstShotsFired === 2 && this.burstShotTimer >= 0.12) {
-            const proj3 = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true, 2);
+            const proj3 = Projectile.acquire(this.x, this.y - 16, this.targetAngle, true, 2);
             (proj3 as any).shooter = this;
             (proj3 as any).colorTint = '#f43f5e';
             globals.projectiles.push(proj3);
@@ -930,7 +930,7 @@ export class Enemy extends Entity {
         } else {
           // Standard single plasma blast
           if (!this.attackLanded && (this.animFrame >= 12 || this.stateTime >= 0.32)) {
-            const proj = Projectile.acquire(this.x, this.y - 10, this.targetAngle, true, 2);
+            const proj = Projectile.acquire(this.x, this.y - 16, this.targetAngle, true, 2);
             (proj as any).shooter = this;
             (proj as any).colorTint = '#38bdf8';
             globals.projectiles.push(proj);
@@ -1397,7 +1397,7 @@ export class Enemy extends Entity {
     let headOffset = 46;
     if (this.type === 'boss_agis') headOffset = 160;
     else if (this.type === 'boss_skeleton') headOffset = 65;
-    else if (this.type === 'toaster_bot') headOffset = 25;
+    else if (this.type === 'toaster_bot') headOffset = 52;
     else if (this.type === 'evil_wizard') headOffset = 52;
     else if (this.type === 'skeleton') headOffset = 22;
     else if (this.type === 'enemy01') headOffset = 50;
@@ -1571,7 +1571,7 @@ export class Enemy extends Entity {
     }
 
     // Ground contact shadow (drawn anchored at entity's physical feet baseline)
-    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'boss_skeleton' ? 44 : (this.type === 'toaster_bot' ? 20 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03' ? 30 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37)))))))))) * this.scaleMult;
+    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'boss_skeleton' ? 44 : (this.type === 'toaster_bot' ? 45 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03' ? 30 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37)))))))))) * this.scaleMult;
     const shadowGroundRy = ((this.y - cy + globals.vh/2) + footOffsetY) | 0;
     const shadowGroundRx = (this.x - cx + globals.vw/2) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
