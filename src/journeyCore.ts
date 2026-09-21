@@ -45,10 +45,31 @@ export function masteryRank(hero:string,record:HeroRecord):number {
   return record.bosses>=10&&record.flawless>=3?3:2;
 }
 export function encounterBudget(stage:number,seconds:number,mobile:boolean,bossAlive:boolean):{cap:number;batch:number;delay:number;label:string} {
-  if(bossAlive)return {cap:mobile?5:7,batch:1,delay:2400,label:'Boss duel'};
-  const phase=Math.floor(seconds/12)%3;
-  const cap=Math.min(mobile?22:30,(mobile?12:16)+Math.floor(stage/2));
-  return phase===2 ? {cap,batch:1,delay:1800,label:'Regroup'} : {cap,batch:Math.min(3,1+Math.floor(stage/5)),delay:phase===0?1000:750,label:phase===0?'Skirmish':'Pressure'};
+  if (bossAlive) {
+    const cap = stage <= 3 ? 1 : 2;
+    return { cap, batch: 1, delay: 2400, label: 'Boss duel' };
+  }
+  const phase = Math.floor(seconds / 12) % 3;
+  let cap: number;
+  let delay: number;
+  if (stage <= 1) {
+    cap = 3;
+    delay = 1800;
+  } else if (stage === 2) {
+    cap = 4;
+    delay = 1800;
+  } else if (stage === 3) {
+    cap = 5;
+    delay = 1800;
+  } else if (stage <= 10) {
+    cap = mobile ? 5 : 6;
+    delay = 1600;
+  } else {
+    cap = mobile ? 6 : 8;
+    delay = 1400;
+  }
+  const label = phase === 2 ? 'Regroup' : (phase === 0 ? 'Skirmish' : 'Pressure');
+  return { cap, batch: 1, delay, label };
 }
 export function hazardContains(x:number,y:number,h:{x:number;y:number;radius:number;inner:number}):boolean {
   const d=(x-h.x)**2+(y-h.y)**2; return d<=h.radius*h.radius&&d>=h.inner*h.inner;

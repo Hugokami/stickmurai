@@ -62,6 +62,7 @@ export class Enemy extends Entity {
   totalPhases = 1;
   currentPhase = 1;
   phaseTransitionTimer = 0;
+  isTrainingDummy = false;
 
   constructor(x: number, y: number, target: Player) {
     super(); 
@@ -303,7 +304,7 @@ export class Enemy extends Entity {
     if (this.subType === 'brawler') {
       this.type = 'enemy01';
       this.lungeSpeed = 1000; this.chargeTimeMax = 1.3; this.lungeDuration = 0.5;
-      this.scaleMult = 1; this.hp = this.maxHp = 32; this.expValue = 1;
+      this.scaleMult = 1; this.hp = this.maxHp = 2; this.expValue = 1;
       this.colorTint = 'none';
       this.speed = 270;
       this.maxPosture = 180;
@@ -495,6 +496,16 @@ export class Enemy extends Entity {
     this.speed *= speedMult;
     this.lungeSpeed *= speedMult;
     this.chargeTimeMax *= chargeMult;
+
+    // Early campaign telegraph minimums (classic stage <= 3): melee >= 1.0s, ranged >= 1.2s
+    if (globals.gameMode === 'classic' && (globals.currentStage || 1) <= 3) {
+      if (this.isRanged()) {
+        this.chargeTimeMax = Math.max(1.2, this.chargeTimeMax);
+      } else {
+        this.chargeTimeMax = Math.max(1.0, this.chargeTimeMax);
+      }
+    }
+
     loadEnemyAssetsNow(this.type);
   }
 
@@ -811,13 +822,18 @@ export class Enemy extends Entity {
 
     if (this.state === 'recover') {
       this.vx = 0; this.vy = 0;
-      const recovery = isBoss(this) && globals.gameMode === 'classic' ? (this.currentPhase >= 3 ? 0.2 : (this.currentPhase >= 2 ? 0.25 : 0.35)) : .8;
+      let recovery = isBoss(this) && globals.gameMode === 'classic' ? (this.currentPhase >= 3 ? 0.2 : (this.currentPhase >= 2 ? 0.25 : 0.35)) : .8;
+      if (isBoss(this) && globals.gameMode === 'classic' && (globals.currentStage || 1) <= 3) {
+        recovery *= 1.25;
+      }
       if (this.stateTime > recovery) {
         this.setState('idle');
         const phaseCooldownFactor = this.currentPhase >= 3 ? 0.5 : (this.currentPhase >= 2 ? 0.7 : 0.85);
         this.attackCooldownTimer = isBoss(this) ? (0.25 + Math.random() * 0.2) * phaseCooldownFactor : (0.8 + Math.random() * 0.5);
         if (isBoss(this) && (globals.currentStage || 1) >= 60) {
           this.attackCooldownTimer *= 0.65;
+        } else if (isBoss(this) && globals.gameMode === 'classic' && (globals.currentStage || 1) <= 3) {
+          this.attackCooldownTimer *= 1.25;
         }
       }
       return;
@@ -990,6 +1006,8 @@ export class Enemy extends Entity {
           this.attackCooldownTimer = (0.26 + Math.random() * 0.20) * phaseFactor;
           if ((globals.currentStage || 1) >= 60) {
             this.attackCooldownTimer *= 0.65;
+          } else if (globals.gameMode === 'classic' && (globals.currentStage || 1) <= 3) {
+            this.attackCooldownTimer *= 1.25;
           }
         } else {
           this.attackCooldownTimer = this.isRanged() ? (0.35 + Math.random() * 0.3) : (1.0 + Math.random() * 0.6);

@@ -37,6 +37,10 @@ export const callbacks = {
   advanceToNextWave: () => {},
   refreshAllMagatamaDisplays: () => {},
   onQuitToMainMenu: () => {},
+  onTrainingHit: (_e: any, _dmg?: number, _isCrit?: boolean) => {},
+  onTrainingAction: (_action: any) => {},
+  onTrainingDummyAttack: (_data: any) => {},
+  openTutorialShop: () => {},
 };
 
 export const assetCallbacks = {

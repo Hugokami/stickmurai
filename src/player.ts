@@ -279,7 +279,12 @@ export class Player extends Entity {
         (this as any).rupturePhaseHit = false;
 
         const nowDash = performance.now();
+        (this as any).lastDashTime = nowDash;
         globals.aetherionLastDashTime = nowDash;
+        callbacks.onTrainingAction?.({ type: 'dash', dashDist: 100 });
+        if (wasCharging && previousCharge >= 0.20) {
+          callbacks.onTrainingAction?.({ type: 'charge-dash', previousCharge });
+        }
 
         if (globals.selectedHero === 'aetherion') {
           // Dash + Iaijutsu combo: Starlight Dimension Rend (smooth mobile trigger threshold)

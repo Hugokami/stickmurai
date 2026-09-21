@@ -882,6 +882,29 @@ export function openShop() {
   renderShopModal();
 }
 
+export function openTutorialShop() {
+  if (globals.shopOpen) {
+    closeShop();
+    return;
+  }
+  globals.gameState = 'paused';
+  AdManager.gameplayStop();
+  globals.shopOpen = true;
+  globals.stageCurrency = 50;
+  const power = powerUps.find((p: PowerUp) => p.nameKey === 'puGiantName') || powerUps[0];
+  currentShopInventory = [
+    {
+      power,
+      price: 20,
+      originalPrice: 20,
+      quality: 'common',
+      synergy: 'blade',
+    }
+  ];
+  renderShopModal();
+}
+callbacks.openTutorialShop = openTutorialShop;
+
 export function closeShop() {
   globals.shopOpen = false;
   const modal = document.getElementById('shop-modal');
@@ -1189,6 +1212,7 @@ export function renderShopModal() {
         slot.power.apply();
         globals.chosenPowerUps.push(slot.power.nameKey);
         currentShopInventory.splice(idx, 1);
+        callbacks.onTrainingAction?.({ type: 'shop', phase: 'buy', powerupId: slot.power.nameKey });
         callbacks.updateUI();
         playSound(sfx.magatamaPickup, 1.0);
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, `+${t(slot.power.nameKey)}`, '#ffd700', 22));

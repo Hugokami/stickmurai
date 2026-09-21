@@ -24,12 +24,12 @@ import { encounterBudget } from './journeyCore';
 import { resetCombatPolish, updateCombatPolish } from './combatPolish';
 import { initQol, clearGameInputs, actionBuffer, qolSettings } from './qol';
 import { initRuntimeQol, isPractice, exitPractice, practiceStep, recordHurt, resetRunFeedback, showDefeatFeedback, updateThreats } from './runtimeQol';
-import { assetReadiness, retryRequiredAssets, preloadStageEnemyAssets, loadHeroAssets, resolveAssetUrl } from './assets';
+import { assetReadiness, retryRequiredAssets, preloadStageEnemyAssets, loadHeroAssets } from './assets';
 import { safeStorage } from './storage';
 import { AdManager } from './adManager';
 import { globals, getStageAffix, getStageMonReward } from './globals';
 import { callbacks, assetCallbacks } from './callbacks';
-import { i18n, loaderTips, startBackgroundAssetLoading, loadCoreCombatAssetsNow } from './assets';
+import { i18n, startBackgroundAssetLoading, loadCoreCombatAssetsNow } from './assets';
 import {
   playSound,
   sfx,
@@ -189,8 +189,6 @@ let firewheelTickTimer = 0;
 let firewheelProjectileTimer = 0;
 let gravityTickTimer = 0;
 
-let loaderStickmanFrame = 1;
-let loaderStickmanInterval: any = null;
 let loadingFinished = false;
 let loaderTimeoutId: any = null;
 
@@ -209,20 +207,14 @@ function finishLoading() {
   }
 
   const fill = document.getElementById('loader-fill');
-  const flare = document.getElementById('loader-bar-flare');
   const percentText = document.getElementById('loader-percent-text');
-  const text = document.getElementById('loader-text');
   const statusText = document.getElementById('loader-status');
+  const readyBtn = document.getElementById('loader-ready-btn') as HTMLButtonElement | null;
 
   if (fill) fill.style.width = '100%';
-  if (flare) flare.style.left = 'calc(100% - 7px)';
   if (percentText) percentText.innerText = '100%';
-  if (text) {
-    const isJa = globals.currentLang === 'ja';
-    text.innerText = isJa ? '⚔️ 画面をタップして開始 ⚔️' : '⚔️ TAP / CLICK ANYWHERE TO START ⚔️';
-    text.classList.add('ready-to-continue');
-  }
-  if (statusText) statusText.innerText = globals.currentLang === 'ja' ? '武具・奥義 全読込完了 · 準備完了' : 'ALL ASSETS FULLY LOADED · READY';
+  if (statusText) statusText.innerText = 'Ready';
+  if (readyBtn) readyBtn.disabled = false;
 
   const loaderScreen = document.getElementById('loader-screen');
   if (loaderScreen && !loaderScreen.dataset.bound) {
@@ -235,6 +227,7 @@ function finishLoading() {
       loaderScreen.removeEventListener('click', onContinue);
       loaderScreen.removeEventListener('touchstart', onContinue);
       loaderScreen.removeEventListener('pointerdown', onContinue);
+      if (readyBtn) readyBtn.removeEventListener('click', onContinue);
       
       // Guaranteed immediate audio start on this user gesture
       triggerBgmGestureUnlock();
@@ -244,11 +237,6 @@ function finishLoading() {
       }
       startBgm();
 
-      clearInterval(tipsInterval);
-      if (loaderStickmanInterval) {
-        clearInterval(loaderStickmanInterval);
-      }
-      
       const proceedToMenu = () => {
         loaderScreen.classList.add('fade-out');
         const uiLayer = document.getElementById('ui-layer');
@@ -260,7 +248,7 @@ function finishLoading() {
           loaderScreen.style.display = 'none';
           const mainMenu = document.getElementById('main-menu');
           if (mainMenu) mainMenu.style.display = 'flex';
-        }, 350);
+        }, 180);
       };
 
       // Guaranteed direct progression to menu
@@ -272,6 +260,7 @@ function finishLoading() {
       }
     };
 
+    if (readyBtn) readyBtn.addEventListener('click', onContinue);
     loaderScreen.addEventListener('click', onContinue);
     loaderScreen.addEventListener('touchstart', onContinue);
     loaderScreen.addEventListener('touchend', onContinue);
@@ -283,77 +272,24 @@ function finishLoading() {
   }
 }
 
-function startLoaderStickmanAnimation() {
-  const img = document.getElementById('loader-stickman-img') as HTMLImageElement;
-  if (!img) return;
-
-  img.onerror = () => {
-    img.src = 'sprites/Stick%20Figure%20Character%20Sprites%202D/Sword%20sprites/sword_Idle_0001.png';
-  };
-
-  const preloaded = (window as any).__loaderStickmuraiSprites as HTMLImageElement[] | undefined;
-  if (preloaded && preloaded[0] && preloaded[0].src) {
-    img.src = preloaded[0].src;
-  }
-
-  loaderStickmanInterval = setInterval(() => {
-    const currentImg = document.getElementById('loader-stickman-img') as HTMLImageElement;
-    if (currentImg) {
-      loaderStickmanFrame = (loaderStickmanFrame % 8) + 1;
-      const idx = loaderStickmanFrame - 1;
-      if (preloaded && preloaded[idx] && preloaded[idx].complete && preloaded[idx].naturalWidth > 0) {
-        currentImg.src = preloaded[idx].src;
-      } else {
-        currentImg.src = resolveAssetUrl(encodeURI(`sprites/Stick Figure Character Sprites 2D/Sword sprites/sword_Idle_000${loaderStickmanFrame}.png`));
-      }
-    }
-  }, 110);
-}
-
-let currentTipIndex = 0;
-const tipsInterval = setInterval(() => {
-  const tipElement = document.getElementById('loader-tip');
-  const lang = globals.currentLang === 'ja' ? 'ja' : 'en';
-  const tips = loaderTips[lang];
-  if (tipElement && tips && tips.length > 0) {
-    tipElement.classList.add('fade-out');
-    setTimeout(() => {
-      currentTipIndex = (currentTipIndex + 1) % tips.length;
-      tipElement.innerText = tips[currentTipIndex];
-      tipElement.classList.remove('fade-out');
-    }, 300);
-  }
-}, 2800);
-
 function updateLoaderProgress() {
   const readiness = assetReadiness();
-  const percent = readiness.total > 0 ? Math.round(readiness.loaded / readiness.total * 100) : 0;
+  const percent = readiness.total > 0 ? Math.floor(readiness.loaded / readiness.total * 100) : 0;
   const fill = document.getElementById('loader-fill');
-  const flare = document.getElementById('loader-bar-flare');
-  const text = document.getElementById('loader-text');
   const percentText = document.getElementById('loader-percent-text');
   const statusText = document.getElementById('loader-status');
 
   if (fill) fill.style.width = percent + '%';
-  if (flare) {
-    flare.style.left = `clamp(7px, ${percent}%, calc(100% - 7px))`;
-    flare.style.opacity = percent > 0 ? '1' : '0';
-  }
   if (percentText) percentText.innerText = percent + '%';
 
-  if (!loadingFinished) {
-    if (text) text.innerText = t('loading') || 'LOADING RESOURCES';
-  } else {
-    if (text) {
-      text.innerText = t('tapToContinue') || 'TAP / CLICK TO CONTINUE';
-      text.classList.add('ready-to-continue');
-    }
-  }
-
   if (statusText) {
-    statusText.textContent = readiness.ready
-      ? 'All assets fully loaded · Ready'
-      : `Loading all assets: ${readiness.loaded}/${readiness.total}${readiness.failed ? ` · ${readiness.failed} retrying` : ''}`;
+    if (readiness.ready) {
+      statusText.innerText = 'Ready';
+    } else if (readiness.failed > 0) {
+      statusText.innerText = 'Connection interrupted';
+    } else {
+      statusText.innerText = 'Preparing assets';
+    }
   }
   
   if (readiness.ready && !loadingFinished) {
@@ -724,12 +660,10 @@ function startApp() {
       });
     }
 
-    startLoaderStickmanAnimation();
-
     startBackgroundAssetLoading();
     setTimeout(updateLoaderProgress, 0);
     // Offer recovery for stalled requests; elapsed time never unlocks play.
-    loaderTimeoutId = setTimeout(showLoadingRecovery, 20000);
+    loaderTimeoutId = setTimeout(showLoadingRecovery, 25000);
   } catch (err) {
     console.error("Critical error in startApp:", err);
     try {
@@ -743,17 +677,20 @@ function showLoadingRecovery() {
   if (loadingFinished) return;
   updateLoaderProgress();
   if (loadingFinished) return;
-  const loader = document.getElementById('loader-screen');
-  if (!loader || document.getElementById('qol-loader-retry')) return;
-  const actions = document.createElement('div'); actions.className='qol-actions';
-  const retry=document.createElement('button'); retry.id='qol-loader-retry'; retry.className='qol-btn'; retry.textContent='Retry loading';
-  let last=0;
-  const run=(e:Event)=>{e.preventDefault();e.stopPropagation();if(Date.now()-last<350)return;last=Date.now();retryRequiredAssets();updateLoaderProgress();};
-  retry.addEventListener('pointerdown',run);retry.addEventListener('click',run);
-  const reload=document.createElement('button');reload.className='qol-btn';reload.textContent='Reload game';reload.onclick=()=>location.reload();
-  actions.append(retry,reload);loader.append(actions);
+  const recovery = document.getElementById('loader-recovery');
+  if (recovery) {
+    recovery.style.display = 'flex';
+    const retryBtn = document.getElementById('loader-retry-btn');
+    if (retryBtn && !retryBtn.dataset.bound) {
+      retryBtn.dataset.bound = 'true';
+      retryBtn.onclick = (e) => {
+        e.preventDefault();
+        retryRequiredAssets();
+        updateLoaderProgress();
+      };
+    }
+  }
 }
-
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', startApp);
 } else {
@@ -787,10 +724,16 @@ export function setupWaveObjectives(wave: number, totalWaves: number, stage: num
 
   const isFinalWave = wave >= totalWaves;
   if (isBossStage && isFinalWave) {
-    globals.waveEnemiesTotal = 1 + Math.min(6, 2 + Math.floor(stage * 0.3));
+    globals.waveEnemiesTotal = stage <= 3 ? 1 : 2;
     globals.stageBossSpawned = false;
   } else {
-    globals.waveEnemiesTotal = Math.min(24, Math.max(6, 4 + wave * 3 + Math.floor(stage * 0.7)));
+    if (stage === 1) {
+      globals.waveEnemiesTotal = wave === 1 ? 3 : 4;
+    } else if (stage <= 3) {
+      globals.waveEnemiesTotal = Math.min(6, 3 + wave);
+    } else {
+      globals.waveEnemiesTotal = Math.min(10, 4 + wave + Math.floor(stage / 5));
+    }
   }
   globals.stageTargetKills = globals.waveEnemiesTotal;
 }
@@ -1430,7 +1373,7 @@ function spawnEnemy() {
       return;
     }
     maxEnemies=encounter.cap;count=isBossRush()?1:encounter.batch;
-    if (aliveCount === 0) {
+    if (globals.gameMode !== 'classic' && aliveCount === 0) {
       count = Math.min(3, Math.max(1, (globals.waveEnemiesTotal || 10) - (globals.waveEnemiesSpawned || 0)));
     }
   }
@@ -1440,6 +1383,19 @@ function spawnEnemy() {
        const angle = Math.random() * Math.PI * 2;
        const dist = 800 + Math.random() * 400 + (i * 100);
        const enemy = new Enemy(globals.player.x + Math.cos(angle)*dist, globals.player.y + Math.sin(angle)*dist, globals.player);
+       
+       if (globals.gameMode === 'classic') {
+         const stage = globals.currentStage || 1;
+         const wave = globals.currentWave || 1;
+         const maxRanged = (stage === 1 && wave === 1) ? 0 : (stage <= 3 ? 1 : 2);
+         if (enemy.isRanged()) {
+           const activeRanged = globals.enemies.filter(e => e.state !== 'dead' && e.isRanged?.()).length;
+           if (activeRanged >= maxRanged) {
+             const meleePool: Array<'samurai' | 'ronin' | 'brawler' | 'berserker' | 'giant' | 'orc_brute'> = ['samurai', 'ronin', 'brawler', 'berserker', 'giant', 'orc_brute'];
+             enemy.subType = meleePool[Math.floor(Math.random() * meleePool.length)];
+           }
+         }
+       }
        
        // Assign unique ID for network synchronization
        const enemyId = 'enemy_' + Math.random().toString(36).substring(2, 9);
@@ -1559,6 +1515,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       addFlow(6.0);
       addCombo();
       addCombo();
+      callbacks.onTrainingDummyAttack?.({ dodged: true, fromDummy: Boolean(enemy?.isTrainingDummy) });
 
       globals.invulnTimer = 1.3;
     
@@ -1620,6 +1577,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     globals.screenShake = 14; 
     addFlow(4.0);
     globals.invulnTimer = 0.55;
+    callbacks.onTrainingDummyAttack?.({ parried: true, fromDummy: Boolean(enemy?.isTrainingDummy) });
     
     // Mechanic 1: Kinetic Parry Sparks & Ascending Palette Streak
     const streak = getConsecutiveParries();
@@ -1766,7 +1724,12 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     }
     recordHurt(enemy?.subType || 'attack', damageAmount);
     journeyHurt(damageAmount);
-    if (isPractice()) return;
+    if (isPractice()) {
+      if (enemy && enemy.isTrainingDummy) {
+        callbacks.onTrainingDummyAttack?.({ hitPlayer: true, parried: false, dodged: false, fromDummy: true });
+      }
+      return;
+    }
     // Enemy/player-hit audio is intentionally silent to keep dense combat readable.
     globals.consecutiveParries = 0;
     const isAnyBossAlive = globals.enemies.some(en => en.state !== 'dead' && (en.subType === 'oni_boss' || en.subType === 'shogun_boss' || en.subType === 'agis_colossus' || en.subType === 'skeleton_warlord' || (en as any).isBoss));
@@ -2040,6 +2003,7 @@ function fireFullyChargedIaijutsu(angle: number, chargeScale = 1.0) {
 
   const safeScale = Math.min(1.5, Math.max(0.4, chargeScale));
   globals.screenShake = Math.max(globals.screenShake, 20 * 1.8 * safeScale);
+  callbacks.onTrainingAction?.({ type: 'iaijutsu', fullyCharged: safeScale >= 0.95, chargeScale: safeScale });
 
   if (globals.selectedHero === 'aetherion') {
     const slashDmg = getCurrentSlashDamage();
@@ -3334,6 +3298,20 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
       e.knockbackVx = Math.cos(kbAngle) * 900;
       e.knockbackVy = Math.sin(kbAngle) * 900;
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `BOSS STAGGERED! 💥 -${finalDmg}`, 'neon-#ffd700', 34));
+    } else if (e.isTrainingDummy) {
+      finalDmg = 500;
+      globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 55, `EXECUTION! 💀 -${finalDmg}`, '#ff003c', 30));
+      globals.invulnTimer = Math.max(globals.invulnTimer, 0.45);
+      globals.screenShake = Math.max(globals.screenShake, 14);
+      globals.hitStop = 0;
+      globals.shockwaves.push(new Shockwave(e.x, e.y, '#ff003c', 160));
+      e.hp -= finalDmg;
+      if (e.hp <= 0) {
+        e.hp = e.maxHp || 1000;
+        (e as any).hpDelayed = e.hp;
+      }
+      callbacks.onTrainingHit?.(e, finalDmg, isCrit);
+      return;
     } else {
       // Regular execution: lethal deathblow to standard enemies
       finalDmg = Math.max(e.hp, Math.round((e.maxHp || 10) * 1.5));
@@ -3661,6 +3639,16 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
   const hitSparkCount = globals.graphicsSettings === 'low' ? 2 : 8;
   for(let i=0; i<hitSparkCount; i++) globals.particles.push(Particle.acquire(e.x, e.y, '#d0d4d8', 300, 0.3, 3));
 
+  // Training Dummy damage resolution & instant replenishment
+  if (e.isTrainingDummy) {
+    if (e.hp <= 0) {
+      e.hp = e.maxHp || 1000;
+      (e as any).hpDelayed = e.hp;
+    }
+    callbacks.onTrainingHit?.(e, finalDmg, isCrit);
+    return;
+  }
+
   // Bushido Rally can only be restored via perfect parry or perfect dodge
 
   if (e.hp <= 0) {
@@ -3712,6 +3700,13 @@ function checkVampireHeal(e: Enemy) {
 }
 
 function killEnemy(e: Enemy) {
+  if (e.isTrainingDummy) {
+    e.hp = e.maxHp || 1000;
+    (e as any).hpDelayed = e.hp;
+    e.state = 'idle';
+    e.deathHandled = false;
+    return;
+  }
   if (e.state === 'dead' || e.deathHandled) return;
   if (e.isBoss && e.currentPhase < e.totalPhases) {
     e.advanceBossPhase();
@@ -4011,7 +4006,7 @@ function addFlow(amount: number) {
 function update(realDt: number) {
   updateJourneyHud(realDt);
   pollGamepad();
-  practiceStep();
+  practiceStep(realDt);
   updateThreats(realDt);
   if (globals.mobileDashDown && (globals.flowState === 'awakened' || globals.flowState === 'storm_god')) {
     globals.mobileDashJustPressed = true;
@@ -4429,6 +4424,7 @@ function update(realDt: number) {
       }
     } else if (globals.enhanceCooldown <= 0 && globals.enhanceActiveTimer <= 0) {
       journeySkill();
+      callbacks.onTrainingAction?.({ type: 'skill', activated: true, skill: globals.selectedSkill });
       if (globals.selectedSkill === 'enhance') {
         playSynthesizedEnhance();
         globals.enhanceActiveTimer = globals.playerStats.enhanceDuration; 
@@ -5102,6 +5098,7 @@ function update(realDt: number) {
   if ((globals.keys[globals.keyMaps.ult] || globals.mobileUltJustPressed) && globals.ultCooldown <= 0 && isFlowReady) {
     globals.mobileUltJustPressed = false;
     globals.keys[globals.keyMaps.ult] = false; // consume key
+    callbacks.onTrainingAction?.({ type: 'awakening', manualInput: true });
     triggerSpecificUltimate(globals.gameMode === 'zen' ? 'zen' : 'omni');
   }
 

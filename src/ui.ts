@@ -15,6 +15,7 @@ import { YOMI_SEALS } from './shrine';
 import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered, triggerHapticFeedback } from './audio';
 import { FloatingText, Shockwave } from './entities';
 import { updateFullscreenUI } from './fullscreen';
+import { startPractice, startTutorial } from './runtimeQol';
 
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
@@ -480,6 +481,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   const tutorialModal = document.getElementById('first-start-tutorial-modal');
   const tutorialStartBtn = document.getElementById('tutorial-start-game-btn');
   const tutorialSkipBtn = document.getElementById('tutorial-skip-btn');
+  const tutorialGuidedBtn = document.getElementById('tutorial-guided-btn');
   const pauseTutorialBtn = document.getElementById('pause-tutorial-btn');
 
   const showTutorialModal = (onDone?: () => void, isReplay = false) => {
@@ -498,14 +500,28 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     const handleDismiss = () => {
       triggerBgmGestureUnlock();
       safeStorage.setItem('stickmurai_tutorial_completed', 'true');
+      safeStorage.setItem('muramasa_tutorial_v2', 'skipped');
       tutorialModal.style.display = 'none';
       if (tutorialStartBtn) tutorialStartBtn.onclick = null;
       if (tutorialSkipBtn) tutorialSkipBtn.onclick = null;
+      if (tutorialGuidedBtn) tutorialGuidedBtn.onclick = null;
       if (onDone) onDone();
+    };
+
+    const handleGuided = () => {
+      triggerBgmGestureUnlock();
+      tutorialModal.style.display = 'none';
+      if (tutorialStartBtn) tutorialStartBtn.onclick = null;
+      if (tutorialSkipBtn) tutorialSkipBtn.onclick = null;
+      if (tutorialGuidedBtn) tutorialGuidedBtn.onclick = null;
+      if (mainMenu) mainMenu.style.display = 'none';
+      if (skillSelectScreen) skillSelectScreen.style.display = 'none';
+      startTutorial(globals.selectedHero || 'default');
     };
 
     if (tutorialStartBtn) tutorialStartBtn.onclick = handleDismiss;
     if (tutorialSkipBtn) tutorialSkipBtn.onclick = handleDismiss;
+    if (tutorialGuidedBtn) tutorialGuidedBtn.onclick = handleGuided;
   };
 
   if (pauseTutorialBtn) {
@@ -702,6 +718,23 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   bindDualListener(closeDojoBtn, closeDojo);
   const closeDojoXBtn = document.getElementById('close-dojo-x-btn');
   bindDualListener(closeDojoXBtn, closeDojo);
+
+  const dojoPracticeBtn = document.getElementById('dojo-practice-spar-btn');
+  const dojoGuidedBtn = document.getElementById('dojo-guided-tutorial-btn');
+  if (dojoPracticeBtn) {
+    bindDualListener(dojoPracticeBtn, () => {
+      closeDojo();
+      if (mainMenu) mainMenu.style.display = 'none';
+      startPractice(globals.selectedHero || 'default');
+    });
+  }
+  if (dojoGuidedBtn) {
+    bindDualListener(dojoGuidedBtn, () => {
+      closeDojo();
+      if (mainMenu) mainMenu.style.display = 'none';
+      startTutorial(globals.selectedHero || 'default');
+    });
+  }
 
   // Upgrades Modal Listeners (Main Menu & Title Screen)
   const upgradesModal = document.getElementById('upgrades-modal');
