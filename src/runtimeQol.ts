@@ -373,62 +373,62 @@ function getLessonInfo(lesson: Lesson | 'complete') {
     case 'move':
       return {
         title: 'LESSON 1 / 11 · MOVEMENT',
-        desc: 'Move into the target zone (WASD / Arrow keys / Virtual Joystick).',
+        desc: 'Move into the golden target zone (WASD / Arrow keys / Joystick).',
       };
     case 'slash':
       return {
         title: 'LESSON 2 / 11 · BASIC SLASH',
-        desc: 'Land 3 basic slash attacks on the training dummy.',
+        desc: 'Strike the training dummy with 1 basic attack (Left Click / J / Attack Button).',
       };
     case 'skill':
       return {
         title: 'LESSON 3 / 11 · HERO SKILL',
-        desc: 'Activate your hero skill (K / Right Click / Skill Button) and strike!',
+        desc: 'Activate your Hero Skill (E / Right Click / Skill Button).',
       };
     case 'awakening':
       return {
         title: 'LESSON 4 / 11 · FLOW AWAKENING',
-        desc: 'Flow meter is full! Press SPACE / Ultimate Button to enter Awakened State.',
+        desc: 'Flow meter is 100% full! Activate an Awakening: [1] Hero Signature / Shadow, [2] Omnislash (or F), [3] Wrath of Storm God (or click HUD buttons).',
       };
     case 'dash':
       return {
         title: 'LESSON 5 / 11 · TACTICAL DASH',
-        desc: 'Execute 2 tactical dashes to reposition safely (Shift / L / Dash Button).',
+        desc: 'Perform 1 tactical dash to evade danger (Space / Shift / Dash Button).',
       };
     case 'iaijutsu':
       return {
         title: 'LESSON 6 / 11 · IAIJUTSU CHARGE',
-        desc: 'Hold attack to charge your blade to full aura, then release to strike!',
+        desc: 'Hold attack (Left Click / J) until full blade aura, then release to strike!',
       };
     case 'dodge':
       return {
         title: 'LESSON 7 / 11 · PERFECT DODGE',
-        desc: 'Dummy is sparring! Dash through incoming attacks right before impact.',
+        desc: 'Dummy is attacking! Dash right before impact to execute 1 Perfect Dodge.',
       };
     case 'parry':
       return {
         title: 'LESSON 8 / 11 · PERFECT PARRY',
-        desc: 'Time a basic slash right before the dummy attack lands to deflect it.',
+        desc: 'Time a basic slash right before the dummy attack lands to execute 1 Perfect Parry.',
       };
     case 'dash-slash':
       return {
-        title: 'LESSON 9 / 11 · DASH-SLASH',
-        desc: 'Dash forward and instantly slash the dummy within 0.6s of dash start.',
+        title: 'LESSON 9 / 11 · DASH-SLASH COMBO',
+        desc: 'Dash towards the dummy and slash immediately within 0.6s.',
       };
     case 'charge-dash':
       return {
-        title: 'LESSON 10 / 11 · CHARGED DASH',
-        desc: 'Hold charge, then dash while charged to unleash a charged thrust!',
+        title: 'LESSON 10 / 11 · CHARGED DASH THRUST',
+        desc: 'Hold attack to charge, then tap Dash to perform a high-speed Charged Thrust!',
       };
     case 'shop':
       return {
         title: 'LESSON 11 / 11 · MERCHANT UPGRADE',
-        desc: 'Purchase an upgrade in the shop and strike the dummy with your new power!',
+        desc: 'Open the shop and purchase 1 upgrade using your starting gold.',
       };
     case 'complete':
       return {
         title: 'ONBOARDING COMPLETE! ⚔️',
-        desc: 'You have mastered the foundational arts of the Stickmurai.',
+        desc: 'You have mastered the foundational arts of MURAMASA.',
       };
   }
 }
@@ -440,11 +440,11 @@ function applyLessonSetup(lesson: Lesson) {
   }
 
   if (lesson === 'dodge' || lesson === 'parry') {
-    if (dummy && typeof dummy.setMode === 'function') {
-      dummy.setMode('sparring');
-      dummy.sparringCadenceTimer = 0.8;
-    }
-  } else {
+      if (dummy && typeof dummy.setMode === 'function') {
+        dummy.setMode('sparring');
+        dummy.sparringCadenceTimer = 0.5;
+      }
+    } else {
     if (dummy && typeof dummy.setMode === 'function') dummy.setMode('stationary');
   }
 
@@ -481,25 +481,41 @@ function updateTutorialBannerUI() {
     let progressText = '';
     switch (tutorialSession.currentLesson) {
       case 'move':
-        progressText = `Distance moved: ${Math.min(100, Math.round(tutorialPlayerMovedDist))} / 100`;
+        progressText = `Objective: Reach target zone (${tutorialPlayerMovedDist >= 60 ? 1 : 0} / 1)`;
         break;
       case 'slash':
-        progressText = `Hits landed: ${tutorialSession.slashHits} / 3`;
+        progressText = `Objective: Strike dummy with basic slash (${Math.min(1, tutorialSession.slashHits)} / 1)`;
+        break;
+      case 'skill':
+        progressText = `Objective: Activate Hero Skill (0 / 1)`;
+        break;
+      case 'awakening':
+        progressText = `Objective: Activate any Flow Awakening [1, 2, 3] (0 / 1)`;
         break;
       case 'dash':
-        progressText = `Dashes executed: ${tutorialSession.dashCount} / 2`;
+        progressText = `Objective: Execute tactical dash (${Math.min(1, tutorialSession.dashCount)} / 1)`;
+        break;
+      case 'iaijutsu':
+        progressText = `Objective: Execute fully charged strike (0 / 1)`;
         break;
       case 'dodge':
-        progressText = `Dodges: ${tutorialSession.dodgeSuccesses} / 2`;
+        progressText = `Objective: Execute Perfect Dodge (${Math.min(1, tutorialSession.dodgeSuccesses)} / 1)`;
         break;
       case 'parry':
-        progressText = `Parries: ${tutorialSession.parrySuccesses} / 2`;
+        progressText = `Objective: Execute Perfect Parry (${Math.min(1, tutorialSession.parrySuccesses)} / 1)`;
+        break;
+      case 'dash-slash':
+        progressText = `Objective: Execute Dash-Slash combo (0 / 1)`;
+        break;
+      case 'charge-dash':
+        progressText = `Objective: Execute Charged Dash thrust (0 / 1)`;
         break;
       case 'shop':
-        progressText = tutorialSession.shopPurchased ? 'Upgrade purchased! Strike dummy.' : 'Awaiting purchase...';
+        progressText = `Objective: Purchase 1 upgrade in shop (${tutorialSession.shopPurchased ? 1 : 0} / 1)`;
         break;
-      default:
-        progressText = '';
+      case 'complete':
+        progressText = 'All objectives completed! Click Leave or Return to Menu.';
+        break;
     }
     progEl.textContent = progressText;
   }

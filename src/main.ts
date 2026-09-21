@@ -5097,11 +5097,10 @@ function update(realDt: number) {
   }
 
   if ((globals.keys[globals.keyMaps.ult] || globals.mobileUltJustPressed) && globals.ultCooldown <= 0 && isFlowReady) {
-    globals.mobileUltJustPressed = false;
-    globals.keys[globals.keyMaps.ult] = false; // consume key
-    callbacks.onTrainingAction?.({ type: 'awakening', manualInput: true });
-    triggerSpecificUltimate(globals.gameMode === 'zen' ? 'zen' : 'omni');
-  }
+      globals.mobileUltJustPressed = false;
+      globals.keys[globals.keyMaps.ult] = false; // consume key
+      triggerSpecificUltimate(globals.gameMode === 'zen' ? 'zen' : 'omni');
+    }
 
   if (globals.flowState === 'awakened') {
     globals.flow -= (globals.playerStats.flowMax / 6.0) * realDt;

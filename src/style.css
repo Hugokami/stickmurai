@@ -1929,6 +1929,12 @@ input[type="range"]::-webkit-slider-thumb:hover {
     right: 24px;
     pointer-events: auto;
   }
+  #ult-buttons-wrap {
+    pointer-events: auto !important;
+  }
+  .ult-action-btn {
+    pointer-events: auto !important;
+  }
   .action-btn:hover {
     transform: translateY(-4px) scale(1.05);
     background: rgba(255, 255, 255, 0.08);

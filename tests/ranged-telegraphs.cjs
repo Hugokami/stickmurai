@@ -21,7 +21,7 @@ const entities = load('entities', { './globals': { globals }, './assets': assets
 const { Enemy } = load('enemy', {
   './globals': { globals }, './balance': load('balance', {}), './callbacks': { callbacks }, './entities': entities,
   './audio': { playEnergyBeam: noop }, './assets': assets, './pvpIaijutsuManager': { pvpManager: {} },
-  './combatPolish': { isBoss: e => e.isBoss }, './bosses': { isBossType: () => false },
+  './combatPolish': { isBoss: e => e.isBoss || e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' }, './bosses': { isBossType: () => false },
 });
 const rangedTypes = ['musketeer', 'shadow_sniper', 'tengu_sorcerer', 'corrupted_shaman', 'pyromancer', 'glacial_sentinel', 'astromancer', 'necromancer', 'toaster_bot'];
 function enemy(type) {

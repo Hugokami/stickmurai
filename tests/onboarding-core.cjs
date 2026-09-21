@@ -58,32 +58,17 @@ test('lesson 1: move requires distance >= 100 and inside radius 24', () => {
   assert.equal(res.session.currentLesson, 'slash');
 });
 
-test('lesson 2: slash requires 3 distinct basic slash hits and dedupes same attack ID', () => {
+test('lesson 2: slash requires 1 basic slash hit to advance', () => {
   let session = createTutorialSession(1);
   session.currentLesson = 'slash';
 
-  // Hit 1
-  let res = processLessonEvent(session, { sessionId: 1, seq: 1, type: 'slash', attackId: 101, hitDummy: true });
-  assert.equal(res.advanced, false);
-  assert.equal(res.session.slashHits, 1);
-
-  // Duplicate hitbox from same attack ID (e.g. multi-frame collider)
-  res = processLessonEvent(res.session, { sessionId: 1, seq: 2, type: 'slash', attackId: 101, hitDummy: true });
-  assert.equal(res.advanced, false);
-  assert.equal(res.session.slashHits, 1);
-
   // Miss (did not hit dummy)
-  res = processLessonEvent(res.session, { sessionId: 1, seq: 3, type: 'slash', attackId: 102, hitDummy: false });
+  let res = processLessonEvent(session, { sessionId: 1, seq: 1, type: 'slash', attackId: 101, hitDummy: false });
   assert.equal(res.advanced, false);
-  assert.equal(res.session.slashHits, 1);
+  assert.equal(res.session.slashHits, 0);
 
-  // Hit 2
-  res = processLessonEvent(res.session, { sessionId: 1, seq: 4, type: 'slash', attackId: 103, hitDummy: true });
-  assert.equal(res.advanced, false);
-  assert.equal(res.session.slashHits, 2);
-
-  // Hit 3
-  res = processLessonEvent(res.session, { sessionId: 1, seq: 5, type: 'slash', attackId: 104, hitDummy: true });
+  // Hit 1 -> advances immediately
+  res = processLessonEvent(res.session, { sessionId: 1, seq: 2, type: 'slash', attackId: 102, hitDummy: true });
   assert.equal(res.advanced, true);
   assert.equal(res.session.currentLesson, 'skill');
 });
@@ -108,21 +93,17 @@ test('lesson 3: skill requires actual skill effect (damage dummy or buff applied
   assert.equal(res.session.currentLesson, 'awakening');
 });
 
-test('lesson 4: awakening requires manual player input', () => {
+test('lesson 4: awakening advances on manual player input', () => {
   let session = createTutorialSession(1);
   session.currentLesson = 'awakening';
 
-  // Auto trigger rejected
-  let res = processLessonEvent(session, { sessionId: 1, seq: 1, type: 'awakening', manualInput: false });
-  assert.equal(res.advanced, false);
-
-  // Manual input accepted
-  res = processLessonEvent(session, { sessionId: 1, seq: 2, type: 'awakening', manualInput: true });
+  // Activation with any ultimate payload advances
+  let res = processLessonEvent(session, { sessionId: 1, seq: 1, type: 'awakening', manualInput: true, ultType: 'shadow' });
   assert.equal(res.advanced, true);
   assert.equal(res.session.currentLesson, 'dash');
 });
 
-test('lesson 5: dash requires 2 genuine dashes with >= 50 units movement each', () => {
+test('lesson 5: dash requires 1 genuine dash with >= 50 units movement', () => {
   let session = createTutorialSession(1);
   session.currentLesson = 'dash';
 
@@ -131,13 +112,8 @@ test('lesson 5: dash requires 2 genuine dashes with >= 50 units movement each', 
   assert.equal(res.advanced, false);
   assert.equal(res.session.dashCount, 0);
 
-  // Dash 1
+  // Dash 1 >= 50 -> advances immediately
   res = processLessonEvent(res.session, { sessionId: 1, seq: 2, type: 'dash', dashDist: 80 });
-  assert.equal(res.advanced, false);
-  assert.equal(res.session.dashCount, 1);
-
-  // Dash 2
-  res = processLessonEvent(res.session, { sessionId: 1, seq: 3, type: 'dash', dashDist: 95 });
   assert.equal(res.advanced, true);
   assert.equal(res.session.currentLesson, 'iaijutsu');
 });
@@ -160,7 +136,7 @@ test('lesson 6: iaijutsu requires fully charged release hitting dummy', () => {
   assert.equal(res.session.currentLesson, 'dodge');
 });
 
-test('lesson 7: dodge requires 2 successful dodges against dummy (coached then unprompted)', () => {
+test('lesson 7: dodge requires 1 perfect dodge against dummy', () => {
   let session = createTutorialSession(1);
   session.currentLesson = 'dodge';
 
@@ -169,27 +145,22 @@ test('lesson 7: dodge requires 2 successful dodges against dummy (coached then u
   assert.equal(res.advanced, false);
   assert.equal(res.session.dodgeSuccesses, 0);
 
-  // Success 1 (coached)
+  // Success 1 against dummy -> advances immediately
   res = processLessonEvent(res.session, { sessionId: 1, seq: 2, type: 'dodge', perfectDodge: true, fromDummy: true });
-  assert.equal(res.advanced, false);
-  assert.equal(res.session.dodgeSuccesses, 1);
-
-  // Success 2 (unprompted)
-  res = processLessonEvent(res.session, { sessionId: 1, seq: 3, type: 'dodge', perfectDodge: true, fromDummy: true });
   assert.equal(res.advanced, true);
   assert.equal(res.session.currentLesson, 'parry');
 });
 
-test('lesson 8: parry requires 2 successful parries against dummy (coached then unprompted)', () => {
+test('lesson 8: parry requires 1 perfect parry against dummy', () => {
   let session = createTutorialSession(1);
   session.currentLesson = 'parry';
 
-  // Success 1
-  let res = processLessonEvent(session, { sessionId: 1, seq: 1, type: 'parry', perfectParry: true, fromDummy: true });
+  // Not from dummy
+  let res = processLessonEvent(session, { sessionId: 1, seq: 1, type: 'parry', perfectParry: true, fromDummy: false });
   assert.equal(res.advanced, false);
-  assert.equal(res.session.parrySuccesses, 1);
+  assert.equal(res.session.parrySuccesses, 0);
 
-  // Success 2
+  // Success 1 against dummy -> advances immediately
   res = processLessonEvent(res.session, { sessionId: 1, seq: 2, type: 'parry', perfectParry: true, fromDummy: true });
   assert.equal(res.advanced, true);
   assert.equal(res.session.currentLesson, 'dash-slash');
@@ -231,22 +202,18 @@ test('lesson 10: charge-dash requires full charge consumed by dash and strike hi
   assert.equal(res.session.currentLesson, 'shop');
 });
 
-test('lesson 11: shop requires purchase and subsequent upgraded hit on dummy', () => {
+test('lesson 11: shop requires purchase to complete tutorial', () => {
   let session = createTutorialSession(1);
   session.currentLesson = 'shop';
 
-  // Upgraded hit without purchase fails
+  // Attack without purchase fails
   let res = processLessonEvent(session, { sessionId: 1, seq: 1, type: 'shop', phase: 'attack', hitDummy: true });
   assert.equal(res.advanced, false);
 
-  // Purchase step
+  // Purchase step completes tutorial
   res = processLessonEvent(session, { sessionId: 1, seq: 2, type: 'shop', phase: 'buy', powerupId: 'puSlashName' });
-  assert.equal(res.advanced, false);
-  assert.equal(res.session.shopPurchased, true);
-
-  // Upgraded strike hits dummy
-  res = processLessonEvent(res.session, { sessionId: 1, seq: 3, type: 'shop', phase: 'attack', hitDummy: true });
   assert.equal(res.advanced, true);
+  assert.equal(res.session.shopPurchased, true);
   assert.equal(res.session.currentLesson, 'complete');
   assert.equal(isLessonComplete(res.session), true);
 });

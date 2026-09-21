@@ -682,6 +682,9 @@ export function triggerZenField() {
 export function triggerSpecificUltimate(type: 'shadow' | 'omni' | 'storm' | 'zen') {
   if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
 
+  // Notify tutorial system of awakening activation regardless of trigger source
+  callbacks.onTrainingAction?.({ type: 'awakening', manualInput: true, ultType: type });
+
   if (globals.gameMode === 'zen' || type === 'zen') {
     globals.flow = 0;
     playSynthesizedTempleBell();

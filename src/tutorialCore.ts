@@ -82,7 +82,7 @@ export function processLessonEvent(
         if (!next.recordedSlashAttackIds.includes(attackId)) {
           next.recordedSlashAttackIds.push(attackId);
           next.slashHits++;
-          if (next.slashHits >= 3) {
+          if (next.slashHits >= 1) {
             next.currentLesson = nextLesson(next.currentLesson, 'slash');
             advanced = true;
           }
@@ -100,7 +100,7 @@ export function processLessonEvent(
     }
 
     case 'awakening': {
-      if (event.type === 'awakening' && event.manualInput) {
+      if (event.type === 'awakening') {
         next.currentLesson = nextLesson(next.currentLesson, 'awakening');
         advanced = true;
       }
@@ -110,7 +110,7 @@ export function processLessonEvent(
     case 'dash': {
       if (event.type === 'dash' && (event.dashDist ?? 0) >= 50) {
         next.dashCount++;
-        if (next.dashCount >= 2) {
+        if (next.dashCount >= 1) {
           next.currentLesson = nextLesson(next.currentLesson, 'dash');
           advanced = true;
         }
@@ -119,7 +119,7 @@ export function processLessonEvent(
     }
 
     case 'iaijutsu': {
-      if (event.type === 'iaijutsu' && (event.fullyCharged || (event.chargeScale ?? 0) >= 0.9) && event.hitDummy) {
+      if (event.type === 'iaijutsu' && (event.fullyCharged || (event.chargeScale ?? 0) >= 0.85) && event.hitDummy) {
         next.currentLesson = nextLesson(next.currentLesson, 'iaijutsu');
         advanced = true;
       }
@@ -129,7 +129,7 @@ export function processLessonEvent(
     case 'dodge': {
       if (event.type === 'dodge' && event.perfectDodge && event.fromDummy) {
         next.dodgeSuccesses++;
-        if (next.dodgeSuccesses >= 2) {
+        if (next.dodgeSuccesses >= 1) {
           next.currentLesson = nextLesson(next.currentLesson, 'dodge');
           advanced = true;
         }
@@ -140,7 +140,7 @@ export function processLessonEvent(
     case 'parry': {
       if (event.type === 'parry' && event.perfectParry && event.fromDummy) {
         next.parrySuccesses++;
-        if (next.parrySuccesses >= 2) {
+        if (next.parrySuccesses >= 1) {
           next.currentLesson = nextLesson(next.currentLesson, 'parry');
           advanced = true;
         }
@@ -168,6 +168,8 @@ export function processLessonEvent(
       if (event.type === 'shop') {
         if (event.phase === 'buy') {
           next.shopPurchased = true;
+          next.currentLesson = nextLesson(next.currentLesson, 'shop');
+          advanced = true;
         } else if (event.phase === 'attack' && next.shopPurchased && event.hitDummy) {
           next.currentLesson = nextLesson(next.currentLesson, 'shop');
           advanced = true;
