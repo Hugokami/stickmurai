@@ -296,6 +296,10 @@ export class Enemy extends Entity {
     }
   }
 
+  get rangedMuzzleOffsetY(): number {
+    return this.subType === 'toaster_bot' ? -16 : (this.subType === 'necromancer' ? -20 : 0);
+  }
+
   isRanged(): boolean {
     return this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'glacial_sentinel' || this.subType === 'astromancer' || this.subType === 'necromancer' || this.subType === 'toaster_bot' || this.subType === 'shadow_sniper' || this.subType === 'tengu_sorcerer' || this.subType === 'corrupted_shaman';
   }
@@ -849,7 +853,7 @@ export class Enemy extends Entity {
 
       // Track target during first 65% of charge, then lock in aim for fair telegraph reaction!
       if (chargeRatio < 0.65) {
-        this.targetAngle = Math.atan2(dy, dx);
+        this.targetAngle = Math.atan2(dy - this.rangedMuzzleOffsetY, dx);
         this.isAimLocked = false;
       } else {
         this.isAimLocked = true;
@@ -1086,7 +1090,7 @@ export class Enemy extends Entity {
       this.setState('walk');
     } else {
       this.vx = 0; this.vy = 0; this.setState('charge');
-      this.targetAngle = Math.atan2(dy, dx);
+      this.targetAngle = Math.atan2(dy - this.rangedMuzzleOffsetY, dx);
     }
   }
 
@@ -1349,29 +1353,36 @@ export class Enemy extends Entity {
         ctx.restore();
       }
 
-      ctx.rotate(this.targetAngle);
       if (ranged) {
+        const angles = this.subType === 'tengu_sorcerer'
+          ? [this.targetAngle - 0.18, this.targetAngle + 0.18]
+          : [this.targetAngle];
         const rangeLine = this.subType === 'shadow_sniper' ? 1250 : 950;
-        // Wide translucent danger laser corridor
-        ctx.save();
-        ctx.lineWidth = isLocked ? 18 : 12;
-        ctx.strokeStyle = isLocked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(6, 182, 212, 0.18)';
-        ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(rangeLine, 0); ctx.stroke();
-        // Core laser beam
-        ctx.lineWidth = isLocked ? 3.5 : 2;
-        ctx.strokeStyle = color;
-        ctx.setLineDash(isLocked ? [] : [12, 8]);
-        ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(rangeLine, 0); ctx.stroke();
-        // Crosshair reticle at target end
-        const reticlePulse = 8 + Math.sin(performance.now() * 0.02) * 2;
-        ctx.setLineDash([]);
-        ctx.beginPath();
-        ctx.moveTo(rangeLine, -reticlePulse); ctx.lineTo(rangeLine + reticlePulse, 0);
-        ctx.lineTo(rangeLine, reticlePulse); ctx.lineTo(rangeLine - reticlePulse, 0);
-        ctx.closePath();
-        ctx.fillStyle = color; ctx.fill(); ctx.stroke();
-        ctx.restore();
+        const color = isLocked ? '#ef4444' : '#06b6d4';
+        for (const angle of angles) {
+          ctx.save();
+          ctx.translate(0, this.rangedMuzzleOffsetY - (this.yOffset || 0) + (this.airborneZ || 0));
+          ctx.rotate(angle);
+          // Wide translucent danger laser corridor
+          ctx.lineWidth = isLocked ? 18 : 12;
+          ctx.strokeStyle = isLocked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(6, 182, 212, 0.18)';
+          ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(rangeLine, 0); ctx.stroke();
+          // Core laser beam
+          ctx.lineWidth = isLocked ? 3.5 : 2;
+          ctx.strokeStyle = color;
+          ctx.setLineDash(isLocked ? [] : [12, 8]);
+          ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(rangeLine, 0); ctx.stroke();
+          // Crosshair reticle at target end
+          const reticlePulse = 8 + Math.sin(performance.now() * 0.02) * 2;
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.moveTo(rangeLine, -reticlePulse); ctx.lineTo(rangeLine + reticlePulse, 0);
+          ctx.lineTo(rangeLine, reticlePulse); ctx.lineTo(rangeLine - reticlePulse, 0);
+          ctx.closePath();
+          ctx.fillStyle = color; ctx.fill(); ctx.stroke();
+          ctx.restore();
+        }
       } else {
         const travel = this.lungeSpeed * this.lungeDuration * 0.5;
         const radius = this.meleeHitRadius;
@@ -1598,7 +1609,7 @@ export class Enemy extends Entity {
     
     // Elite enemy aura rings
     const isEliteEnemy = (this as any).isElite || ['musketeer', 'pyromancer', 'orc_brute', 'astromancer', 'glacial_sentinel'].includes(this.subType);
-    if (isEliteEnemy && this.state !== 'dead') {
+    if (isEliteEnemy && !this.isRanged() && this.state !== 'dead') {
       ctx.save();
       const auraPulse = 0.65 + 0.35 * Math.sin(Date.now() * 0.006);
       ctx.strokeStyle = `rgba(251, 191, 36, ${0.55 * auraPulse})`;

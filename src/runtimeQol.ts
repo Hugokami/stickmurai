@@ -94,6 +94,7 @@ let lastRenderedMetricsText = '';
 
 export const isPractice = () => practice;
 export const isTutorialActive = () => isTutorial;
+export const getTutorialSession = () => tutorialSession;
 export function setPracticeState(val: boolean) { practice = val; }
 export const getTrainingMetrics = () => metricsTracker;
 
@@ -127,8 +128,10 @@ export function ensureTrainingDummy(): any {
   if (!globals.enemies) globals.enemies = [];
   let dummy = globals.enemies.find((e: any) => e && e.isTrainingDummy);
   if (!dummy) {
-    const spawnX = (globals.player.x || 400) + 180;
-    const spawnY = (globals.player.y || 400);
+    const pX = globals.player ? globals.player.x : 0;
+    const pY = globals.player ? globals.player.y : 0;
+    const spawnX = pX + 180;
+    const spawnY = pY;
     dummy = new TrainingDummy(spawnX, spawnY, globals.player);
     globals.enemies.push(dummy);
   }
@@ -148,6 +151,18 @@ export function initRuntimeQol(onReturn: () => void) {
     metricsTracker.recordDamage(dmg, now);
     if (isTutorial && tutorialSession) {
       dispatchTutorialEvent('slash', { hitDummy: true, attackId: Date.now() });
+      if (tutorialSession.currentLesson === 'skill') {
+        dispatchTutorialEvent('skill', { hitDummy: true, activated: true });
+      }
+      if (tutorialSession.currentLesson === 'iaijutsu' && (globals.player as any)?.lastIaijutsuFullyCharged) {
+        dispatchTutorialEvent('iaijutsu', { fullyCharged: true, hitDummy: true });
+      }
+      if (tutorialSession.currentLesson === 'charge-dash') {
+        const timeSinceChargeDash = now - ((globals.player as any)?.lastChargeDashTime || 0);
+        if (timeSinceChargeDash <= 1500 && (globals.player as any)?.wasChargedDash) {
+          dispatchTutorialEvent('charge-dash', { fromChargeDash: true, hitDummy: true });
+        }
+      }
       if (tutorialSession.currentLesson === 'dash-slash') {
         const timeSinceDash = now - ((globals.player as any)?.lastDashTime || 0);
         dispatchTutorialEvent('dash-slash', { hitDummy: true, timeSinceDashMs: timeSinceDash });
@@ -216,8 +231,8 @@ export function startTutorial(hero = 'default', fromCampaign = false) {
   tutorialEventSeq = 0;
   tutorialSession = createTutorialSession(Date.now());
   tutorialPlayerMovedDist = 0;
-  tutorialPlayerLastX = globals.player?.x || 400;
-  tutorialPlayerLastY = globals.player?.y || 400;
+  tutorialPlayerLastX = globals.player ? globals.player.x : 0;
+  tutorialPlayerLastY = globals.player ? globals.player.y : 0;
   setPracticeStorage(true);
   globals.selectedHero = hero;
   globals.gameMode = 'classic';
@@ -324,6 +339,12 @@ function buildTutorialBanner() {
   skipBtn.className = 'qol-btn muramasa-skip-btn';
   skipBtn.textContent = 'Skip Tutorial';
   bindQolButton(skipBtn, () => {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem('muramasa_tutorial_v2', 'skipped');
+        window.localStorage.setItem('stickmurai_tutorial_completed', 'true');
+      }
+    } catch {}
     safeStorage.setItem('muramasa_tutorial_v2', 'skipped');
     safeStorage.setItem('stickmurai_tutorial_completed', 'true');
     exitPractice(true);
@@ -499,6 +520,12 @@ function dispatchTutorialEvent(type: Lesson, payload: any = {}) {
 }
 
 function onTutorialComplete() {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem('muramasa_tutorial_v2', 'completed');
+      window.localStorage.setItem('stickmurai_tutorial_completed', 'true');
+    }
+  } catch {}
   safeStorage.setItem('muramasa_tutorial_v2', 'completed');
   safeStorage.setItem('stickmurai_tutorial_completed', 'true');
   setPracticeStorage(false);
@@ -555,12 +582,12 @@ export function practiceStep(
     tutorialPlayerLastY = globals.player.y;
 
     const dummy = globals.enemies?.find((e: any) => e?.isTrainingDummy);
-    const targetX = (dummy?.startX ?? 600) - 80;
-    const targetY = dummy?.startY ?? 400;
+    const targetX = (dummy?.startX ?? 180) - 80;
+    const targetY = dummy?.startY ?? 0;
     const distToMarker = Math.hypot(globals.player.x - targetX, globals.player.y - targetY);
 
-    if (distToMarker <= 24 && tutorialPlayerMovedDist >= 100) {
-      dispatchTutorialEvent('move', { distMoved: tutorialPlayerMovedDist, distToMarker });
+    if (distToMarker <= 60 && tutorialPlayerMovedDist >= 60) {
+      dispatchTutorialEvent('move', { distMoved: Math.max(100, tutorialPlayerMovedDist), distToMarker: Math.min(24, distToMarker) });
     }
     updateTutorialBannerUI();
   }

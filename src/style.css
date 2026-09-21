@@ -2131,10 +2131,10 @@ html.is-touch-device #mobile-controls {
 }
 
 /* ==========================================================================
-   MURAMASA Sealed-Blade Loading Screen (Quiet Authentic Japanese Aesthetic)
+   MURAMASA Cyberpunk Loading Screen (Neon Red & Obsidian Aesthetic)
    ========================================================================== */
 #loader-screen {
-  background: #090a0f !important;
+  background: #010408 !important;
   position: fixed;
   inset: 0;
   width: 100%;
@@ -2160,67 +2160,38 @@ html.is-touch-device #mobile-controls {
   display: none !important;
 }
 
-.loader-blade-container {
+.loader-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   width: 100%;
-  max-width: 480px;
+  max-width: 600px;
   box-sizing: border-box;
+  padding: 12px;
+  gap: 14px;
   text-align: center;
 }
 
-.loader-blade-header {
-  display: inline-flex;
+.loader-artwork-stage {
+  display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 24px;
-  gap: 8px;
+  width: 100%;
+  flex-shrink: 1;
+  min-height: 0;
 }
 
-.loader-title {
-  margin: 0;
-  font-family: 'Shojumaru', 'Noto Sans JP', serif;
-  font-size: 48px;
-  color: #e7dfce;
-  letter-spacing: 0.12em;
-  line-height: 1;
-  font-weight: 700;
-}
-
-.loader-seal {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  background-color: #aa3533;
-  border-radius: 1px;
-  flex-shrink: 0;
-}
-
-.loader-character-stage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  margin-bottom: 20px;
-}
-
-.loader-character-still {
-  display: block;
-  height: 168px;
-  width: auto;
-  max-width: 100%;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
+#loader-artwork {
+  width: 100%;
+  max-width: min(78vw, 68vh, 460px);
+  max-height: min(78vw, 68vh, 460px);
+  aspect-ratio: 1 / 1;
+  height: auto;
   object-fit: contain;
-}
-
-.loader-ground-line {
-  width: 220px;
-  height: 1px;
-  background: rgba(231, 223, 206, 0.2);
-  margin: 0 auto;
+  display: block;
+  border-radius: 4px;
+  box-shadow: 0 0 35px rgba(255, 30, 45, 0.22);
 }
 
 .loader-interactive-group {
@@ -2228,19 +2199,22 @@ html.is-touch-device #mobile-controls {
   flex-direction: column;
   align-items: center;
   width: 100%;
+  flex-shrink: 0;
 }
 
 .loader-progress-block {
-  width: 220px;
+  width: 240px;
+  max-width: 88vw;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
 .loader-track {
-  width: 220px;
-  height: 2px;
-  background: #34312e;
+  width: 100%;
+  height: 3px;
+  background: #161a22;
+  border-radius: 2px;
   overflow: hidden;
   position: relative;
 }
@@ -2248,7 +2222,8 @@ html.is-touch-device #mobile-controls {
 .loader-fill {
   height: 100%;
   width: 0%;
-  background: #aa3533;
+  background: #ff2233;
+  box-shadow: 0 0 8px #ff2233;
   transition: width 0.15s ease-out;
 }
 
@@ -2256,7 +2231,7 @@ html.is-touch-device #mobile-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  width: 220px;
+  width: 100%;
   font-family: 'Space Mono', 'Orbitron', monospace;
   font-size: 11px;
   color: #8c857b;
@@ -2278,7 +2253,7 @@ html.is-touch-device #mobile-controls {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 10px;
   font-family: 'Space Mono', monospace;
   font-size: 11px;
   color: #8c857b;
@@ -2296,80 +2271,74 @@ html.is-touch-device #mobile-controls {
 }
 
 .loader-retry-btn:focus-visible {
-  outline: 2px solid #e7dfce;
+  outline: 2px solid #ff2233;
   outline-offset: 2px;
 }
 
 .loader-ready-btn {
-  margin-top: 22px;
-  width: 220px;
+  margin-top: 14px;
+  width: 240px;
+  max-width: 88vw;
   min-height: 44px;
   height: 44px;
-  border: 1px solid #aa3533;
-  background: #121010;
-  color: #e7dfce;
+  border: 1px solid #ff2233;
+  background: #0e1017;
+  color: #ffffff;
   font-family: 'Space Mono', 'Orbitron', monospace;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.14em;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  box-shadow: 0 0 16px rgba(255, 34, 51, 0.25);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .loader-ready-btn:focus-visible {
-  outline: 2px solid #e7dfce;
+  outline: 2px solid #ff2233;
   outline-offset: 3px;
 }
 
 .loader-ready-btn:disabled {
   opacity: 0.35;
   cursor: not-allowed;
-  border-color: #4a4542;
-  color: #736c65;
+  border-color: #3b3f4d;
+  color: #697082;
   background: transparent;
-}
-
-@media (max-width: 600px) {
-  .loader-title {
-    font-size: 34px;
-  }
+  box-shadow: none;
 }
 
 /* 568x320 landscape two-column layout */
 @media (max-height: 420px) and (orientation: landscape), (max-width: 700px) and (orientation: landscape) {
-  .loader-blade-container {
-    display: grid;
-    grid-template-columns: auto auto;
-    grid-template-areas:
-      "art header"
-      "art interactive";
+  .loader-container {
+    flex-direction: row;
+    justify-content: center;
     align-items: center;
-    column-gap: 32px;
-    row-gap: 10px;
-    max-width: 540px;
+    column-gap: 28px;
+    row-gap: 0;
+    max-width: 640px;
+    padding: 8px env(safe-area-inset-right, 12px) 8px env(safe-area-inset-left, 12px);
   }
-  .loader-character-stage {
-    grid-area: art;
-    margin-bottom: 0;
+  .loader-artwork-stage {
+    width: auto;
   }
-  .loader-character-still {
-    height: 116px;
-  }
-  .loader-blade-header {
-    grid-area: header;
-    margin-bottom: 0;
-    justify-content: flex-start;
+  #loader-artwork {
+    max-width: min(88vh, 260px);
+    max-height: min(88vh, 260px);
   }
   .loader-interactive-group {
-    grid-area: interactive;
+    width: auto;
     align-items: flex-start;
   }
-  .loader-title {
-    font-size: 34px;
+  .loader-progress-block {
+    width: 210px;
+  }
+  .loader-ready-btn {
+    width: 210px;
+    margin-top: 12px;
   }
 }
 
@@ -5536,6 +5505,11 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
    ========================================================================== */
 
 #qol-practice-bar {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -5565,7 +5539,90 @@ button, .menu-btn, .action-btn, .hud-shop-btn, .modal-close-btn, .modal-close-x 
 }
 
 #muramasa-tutorial-banner {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: rgba(12, 16, 24, 0.94);
+  border: 1.5px solid #d4a24e;
+  border-radius: 6px;
+  padding: 12px 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 162, 78, 0.25);
+  backdrop-filter: blur(10px);
+  max-width: 90vw;
+  min-width: 320px;
+  pointer-events: auto;
   animation: tutorialFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.muramasa-tut-title {
+  font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;
+  color: #ffd700;
+  font-size: 15px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  margin-bottom: 4px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.muramasa-tut-desc {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  color: #e2e8f0;
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.muramasa-tut-progress {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  color: #38bdf8;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.muramasa-tut-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.qol-btn {
+  background: rgba(30, 41, 59, 0.85);
+  color: #f1f5f9;
+  border: 1px solid rgba(212, 162, 78, 0.5);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.qol-btn:hover {
+  background: rgba(212, 162, 78, 0.25);
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
+}
+
+.qol-btn-danger {
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+}
+
+.qol-btn-danger:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.4);
 }
 
 @keyframes tutorialFadeIn {

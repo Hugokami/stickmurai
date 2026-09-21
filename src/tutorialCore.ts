@@ -92,7 +92,7 @@ export function processLessonEvent(
     }
 
     case 'skill': {
-      if (event.type === 'skill' && event.activated && (event.hitDummy || event.isSupport)) {
+      if (event.type === 'skill' && (event.activated || event.hitDummy || event.isSupport)) {
         next.currentLesson = nextLesson(next.currentLesson, 'skill');
         advanced = true;
       }
@@ -119,7 +119,7 @@ export function processLessonEvent(
     }
 
     case 'iaijutsu': {
-      if (event.type === 'iaijutsu' && event.fullyCharged && event.hitDummy) {
+      if (event.type === 'iaijutsu' && (event.fullyCharged || (event.chargeScale ?? 0) >= 0.9) && event.hitDummy) {
         next.currentLesson = nextLesson(next.currentLesson, 'iaijutsu');
         advanced = true;
       }
@@ -157,7 +157,7 @@ export function processLessonEvent(
     }
 
     case 'charge-dash': {
-      if (event.type === 'charge-dash' && event.fromChargeDash && event.hitDummy) {
+      if (event.type === 'charge-dash' && (event.fromChargeDash || (event.previousCharge ?? 0) >= 0.85) && event.hitDummy) {
         next.currentLesson = nextLesson(next.currentLesson, 'charge-dash');
         advanced = true;
       }

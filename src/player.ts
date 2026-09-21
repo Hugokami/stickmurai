@@ -283,7 +283,9 @@ export class Player extends Entity {
         globals.aetherionLastDashTime = nowDash;
         callbacks.onTrainingAction?.({ type: 'dash', dashDist: 100 });
         if (wasCharging && previousCharge >= 0.20) {
-          callbacks.onTrainingAction?.({ type: 'charge-dash', previousCharge });
+          (this as any).lastChargeDashTime = nowDash;
+          (this as any).wasChargedDash = (previousCharge >= 0.85);
+          callbacks.onTrainingAction?.({ type: 'charge-dash', previousCharge, fromChargeDash: true });
         }
 
         if (globals.selectedHero === 'aetherion') {

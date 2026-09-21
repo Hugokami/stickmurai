@@ -15,7 +15,7 @@ import { YOMI_SEALS } from './shrine';
 import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered, triggerHapticFeedback } from './audio';
 import { FloatingText, Shockwave } from './entities';
 import { updateFullscreenUI } from './fullscreen';
-import { startPractice, startTutorial } from './runtimeQol';
+import { startPractice, startTutorial, isPractice, isTutorialActive } from './runtimeQol';
 
 
 const t = (key: string): string => i18n[globals.currentLang]?.[key] || key;
@@ -1878,7 +1878,20 @@ export function updateUI(force = false) {
 
   const objDisplay = objectiveDisplayElement || (objectiveDisplayElement = document.getElementById('objective-display'));
   if (objDisplay) {
-    if (globals.gameState === 'playing') {
+    if (isPractice() || isTutorialActive()) {
+      if (lastObjectiveDisplay !== 'none') {
+        objDisplay.style.display = 'none';
+        lastObjectiveDisplay = 'none';
+      }
+      const tracker = document.getElementById('hud-mission-tracker');
+      if (tracker && tracker.style.display !== 'none') {
+        tracker.style.display = 'none';
+      }
+    } else if (globals.gameState === 'playing') {
+      const tracker = document.getElementById('hud-mission-tracker');
+      if (tracker && tracker.style.display === 'none' && globals.gameMode !== 'pvp') {
+        tracker.style.display = '';
+      }
       if (globals.timerLimit !== 'endless') {
         if (lastObjectiveDisplay !== 'block') {
           objDisplay.style.display = 'block';

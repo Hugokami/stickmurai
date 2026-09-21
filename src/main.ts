@@ -2003,6 +2003,7 @@ function fireFullyChargedIaijutsu(angle: number, chargeScale = 1.0) {
 
   const safeScale = Math.min(1.5, Math.max(0.4, chargeScale));
   globals.screenShake = Math.max(globals.screenShake, 20 * 1.8 * safeScale);
+  (globals.player as any).lastIaijutsuFullyCharged = (safeScale >= 0.95);
   callbacks.onTrainingAction?.({ type: 'iaijutsu', fullyCharged: safeScale >= 0.95, chargeScale: safeScale });
 
   if (globals.selectedHero === 'aetherion') {
@@ -7118,6 +7119,10 @@ function update(realDt: number) {
       continue;
     }
     if (e.state === 'dead' || (e as any).deathHandled) {
+      e.update(dt);
+      continue;
+    }
+    if ((e as any).isTrainingDummy) {
       e.update(dt);
       continue;
     }

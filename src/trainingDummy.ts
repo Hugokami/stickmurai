@@ -1,5 +1,6 @@
 import { Enemy } from './enemy';
 import { callbacks } from './callbacks';
+import { globals } from './globals';
 
 let cachedDummyCanvas: HTMLCanvasElement | null = null;
 
@@ -240,10 +241,12 @@ export class TrainingDummy extends Enemy {
     }
   }
 
-  override draw(ctx: CanvasRenderingContext2D) {
+  override draw(ctx: CanvasRenderingContext2D, cx = 0, cy = 0, _alpha = 1, _tint: string | null = null) {
     if (!ctx) return;
+    const rx = (this.x - cx + globals.vw / 2) | 0;
+    const ry = (this.y - cy + globals.vh / 2 + (this.yOffset || 0)) | 0;
     ctx.save();
-    ctx.translate(this.x, this.y);
+    ctx.translate(rx, ry);
 
     // Sparring telegraph windup
     if (this.state === 'charge') {
