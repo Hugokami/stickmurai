@@ -1643,8 +1643,10 @@ export class AnimatedEffect {
 
     if (this.type) {
       if (this.type === 'fire_rune') {
+        const s = 36 * this.scale;
         ctx.beginPath();
-        ctx.arc(0, 0, 45 * this.scale, 0, Math.PI * 2);
+        ctx.moveTo(0, -s); ctx.lineTo(s, 0); ctx.lineTo(0, s); ctx.lineTo(-s, 0);
+        ctx.closePath();
         ctx.strokeStyle = `rgba(255, 68, 0, ${progress})`;
         ctx.lineWidth = 3;
         ctx.setLineDash([6, 6]);
@@ -1669,32 +1671,37 @@ export class AnimatedEffect {
         ctx.fillStyle = grad;
         ctx.fill();
       } else if (this.type === 'ice_shield') {
+        const s = 36 * this.scale;
         ctx.beginPath();
-        ctx.arc(0, 0, 40 * this.scale, 0, Math.PI * 2);
+        ctx.moveTo(0, -s); ctx.lineTo(s * 0.86, -s * 0.5); ctx.lineTo(s * 0.86, s * 0.5);
+        ctx.lineTo(0, s); ctx.lineTo(-s * 0.86, s * 0.5); ctx.lineTo(-s * 0.86, -s * 0.5);
+        ctx.closePath();
         ctx.strokeStyle = `rgba(96, 165, 250, ${(1 - progress) * 0.75})`;
-        ctx.lineWidth = 4;
+        ctx.lineWidth = 3;
         ctx.stroke();
-        ctx.fillStyle = `rgba(96, 165, 250, ${(1 - progress) * 0.15})`;
-        ctx.fill();
       } else if (this.type === 'star_rune') {
-        ctx.beginPath();
-        ctx.arc(0, 0, 50 * this.scale, 0, Math.PI * 2);
+        const s = 40 * this.scale;
         ctx.strokeStyle = `rgba(244, 63, 94, ${progress})`;
         ctx.lineWidth = 2.5;
-        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.moveTo(-s, 0); ctx.lineTo(s, 0);
+        ctx.moveTo(0, -s); ctx.lineTo(0, s);
         ctx.stroke();
       } else if (this.type === 'meteor_blast') {
+        const s = 65 * this.scale * progress;
         ctx.beginPath();
-        ctx.arc(0, 0, 75 * this.scale * progress, 0, Math.PI * 2);
+        ctx.moveTo(0, -s); ctx.lineTo(s, 0); ctx.lineTo(0, s); ctx.lineTo(-s, 0);
+        ctx.closePath();
         ctx.strokeStyle = `rgba(244, 63, 94, ${1 - progress})`;
         ctx.lineWidth = 4 * (1 - progress);
         ctx.stroke();
       } else if (this.type === 'necro_portal') {
+        const s = 25 * this.scale * Math.sin(progress * Math.PI);
         ctx.beginPath();
-        ctx.arc(0, 0, 30 * this.scale * Math.sin(progress * Math.PI), 0, Math.PI * 2);
+        ctx.moveTo(0, -s * 1.5); ctx.lineTo(s * 0.8, 0); ctx.lineTo(0, s * 1.5); ctx.lineTo(-s * 0.8, 0);
+        ctx.closePath();
         ctx.strokeStyle = `rgba(168, 85, 247, ${1 - progress})`;
-        ctx.lineWidth = 4;
-        ctx.setLineDash([5, 5]);
+        ctx.lineWidth = 3;
         ctx.stroke();
       }
     } else if (this.frames.length > 0) {

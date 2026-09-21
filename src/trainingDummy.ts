@@ -196,7 +196,7 @@ export class TrainingDummy extends Enemy {
       return;
     }
 
-    // Sparring mode: predictable melee cadence (one attack per 3s, 1.2s windup)
+    // Sparring mode: predictable melee cadence (one attack per 2s, 1.2s windup)
     if (this.state === 'idle') {
       this.sparringCadenceTimer -= dt;
       if (this.sparringCadenceTimer <= 0) {
@@ -248,24 +248,43 @@ export class TrainingDummy extends Enemy {
     ctx.save();
     ctx.translate(rx, ry);
 
-    // Sparring telegraph windup
+    // Sparring telegraph windup: directional strike corridor aimed directly at target
     if (this.state === 'charge') {
       const progress = Math.min(1, this.stateTime / this.chargeTimeMax);
+      const isLocked = progress >= 0.65;
+      const strikeLen = 140;
+      const halfW = 28;
       ctx.save();
+      ctx.rotate(this.targetAngle);
+
+      // Outer danger corridor
       ctx.beginPath();
-      ctx.arc(0, 0, 80 * progress, 0, Math.PI * 2);
-      ctx.strokeStyle = `rgba(239, 68, 68, ${0.4 + 0.6 * progress})`;
-      ctx.lineWidth = 2;
-      ctx.setLineDash([4, 4]);
+      ctx.moveTo(0, -halfW * 0.5);
+      ctx.lineTo(strikeLen, -halfW);
+      ctx.lineTo(strikeLen + 10, 0);
+      ctx.lineTo(strikeLen, halfW);
+      ctx.lineTo(0, halfW * 0.5);
+      ctx.closePath();
+      ctx.strokeStyle = isLocked ? '#ef4444' : '#fbbf24';
+      ctx.lineWidth = isLocked ? 3 : 2;
+      ctx.setLineDash(isLocked ? [] : [8, 6]);
+      ctx.fillStyle = isLocked ? `rgba(239, 68, 68, ${0.18 + progress * 0.2})` : `rgba(251, 191, 36, ${0.1 + progress * 0.15})`;
+      ctx.fill();
       ctx.stroke();
 
-      // Threat cone towards target
+      // Directional arrow down the centerline
       ctx.beginPath();
       ctx.moveTo(0, 0);
-      ctx.arc(0, 0, 140, this.targetAngle - 0.4, this.targetAngle + 0.4);
+      ctx.lineTo(strikeLen, 0);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(strikeLen + 12, 0);
+      ctx.lineTo(strikeLen - 4, -7);
+      ctx.lineTo(strikeLen - 4, 7);
       ctx.closePath();
-      ctx.fillStyle = `rgba(249, 115, 22, ${0.15 * progress})`;
+      ctx.fillStyle = isLocked ? '#ef4444' : '#fbbf24';
       ctx.fill();
+
       ctx.restore();
     }
 

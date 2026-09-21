@@ -101,7 +101,7 @@ export const getTrainingMetrics = () => metricsTracker;
 export function refillDojoResources() {
   if (globals.player) {
     globals.lives = globals.maxLives || 3;
-    globals.flow = 100;
+    globals.flow = globals.playerStats ? globals.playerStats.flowMax : 100;
     globals.enhanceActiveTimer = 0;
     globals.enhanceCooldown = 0;
     (globals.player as any).hyperArmorTimer = 0;
@@ -440,14 +440,25 @@ function applyLessonSetup(lesson: Lesson) {
   }
 
   if (lesson === 'dodge' || lesson === 'parry') {
-    if (dummy && typeof dummy.setMode === 'function') dummy.setMode('sparring');
+    if (dummy && typeof dummy.setMode === 'function') {
+      dummy.setMode('sparring');
+      dummy.sparringCadenceTimer = 0.8;
+    }
   } else {
     if (dummy && typeof dummy.setMode === 'function') dummy.setMode('stationary');
   }
 
-  if (lesson === 'awakening') {
-    globals.flow = 100;
+  if (lesson === 'skill') {
+    globals.enhanceCooldown = 0;
+    if (globals.player) (globals.player as any).skillCooldown = 0;
+    callbacks.updateUI?.();
+  } else if (lesson === 'awakening') {
+    globals.flow = globals.playerStats?.flowMax ?? 450;
+    globals.ultCooldown = 0;
     globals.flowState = 'normal';
+    callbacks.updateUI?.();
+  } else if (lesson === 'dash' || lesson === 'charge-dash' || lesson === 'dash-slash') {
+    if (globals.player) (globals.player as any).dashCooldown = 0;
     callbacks.updateUI?.();
   } else if (lesson === 'shop') {
     // Open tutorial shop with deterministic powerup
@@ -590,6 +601,16 @@ export function practiceStep(
       dispatchTutorialEvent('move', { distMoved: Math.max(100, tutorialPlayerMovedDist), distToMarker: Math.min(24, distToMarker) });
     }
     updateTutorialBannerUI();
+  }
+
+  // Ensure awakening lesson maintains 100% flow until manually activated
+  if (isTutorial && tutorialSession && tutorialSession.currentLesson === 'awakening') {
+    const targetFlow = globals.playerStats?.flowMax ?? 450;
+    if (globals.flowState === 'normal' && (globals.flow < targetFlow || globals.ultCooldown > 0)) {
+      globals.flow = targetFlow;
+      globals.ultCooldown = 0;
+      callbacks.updateUI?.();
+    }
   }
 
   // Dirty check metrics DOM update at 200ms throttle

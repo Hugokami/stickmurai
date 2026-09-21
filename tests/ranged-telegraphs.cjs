@@ -114,23 +114,28 @@ for (const type of rangedTypes) {
   });
 }
 
-test('melee grunt: unchanged attack boundary with arc present', () => {
-  Object.assign(globals.player, { x: 50, y: 0 });
+test('melee grunt: directional attack corridor rotated toward target with no circular discs', () => {
+  globals.player = { x: 50, y: 50, state: 'idle' };
   const e = enemy('grunt');
-  Object.assign(globals.player, { x: 50, y: 0 });
+  Object.assign(globals.player, { x: 50, y: 50 });
+  e.attackCooldownTimer = 0;
   e.update(0);
   assert.equal(e.state, 'charge');
   const draws = record(e);
-  assert.ok(draws.some(d => d.path.some(p => p[0] === 'arc')), 'melee charging keeps lunge arc');
+  assert.ok(draws.some(d => d.path.some(p => p[0] === 'lineTo')), 'melee directional warning present');
+  assert.equal(draws.filter(d => d.path.some(p => p[0] === 'ellipse' || p[0] === 'arc')).length, 0,
+    'melee charging must not stroke stationary attack circles');
 });
 
-test('radial boss: legitimate boss AoE impact zones preserved', () => {
-  Object.assign(globals.player, { x: 80, y: 0 });
+test('boss: directional strike telegraph rotated toward target, no ground circle disc', () => {
+  globals.player = { x: 80, y: 40, state: 'idle' };
   const e = enemy('skeleton_warlord');
-  Object.assign(globals.player, { x: 80, y: 0 });
+  Object.assign(globals.player, { x: 80, y: 40 });
+  e.attackCooldownTimer = 0;
   e.update(0);
   assert.equal(e.state, 'charge');
   const draws = record(e);
-  const circles = draws.filter(d => d.path.some(p => p[0] === 'arc'));
-  assert.ok(circles.length > 0, 'boss radial impact zone preserved');
+  assert.ok(draws.some(d => d.path.some(p => p[0] === 'lineTo')), 'boss directional warning present');
+  assert.equal(draws.filter(d => d.path.some(p => p[0] === 'ellipse' || p[0] === 'arc')).length, 0,
+    'boss charging must not stroke circular ground discs');
 });

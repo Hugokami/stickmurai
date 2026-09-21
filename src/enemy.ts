@@ -1333,26 +1333,6 @@ export class Enemy extends Entity {
       ctx.fillText(label, 0, -this.meleeHitRadius - 16);
       ctx.restore();
 
-      // Boss ground area telegraphs
-      if (this.subType === 'oni_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' || this.subType === 'shogun_boss') {
-        const aRadius = this.subType === 'skeleton_warlord' ? 220 : (this.subType === 'shogun_boss' ? 180 : 200);
-        ctx.save();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = isLocked ? 3.5 : 2;
-        ctx.setLineDash(isLocked ? [] : [10, 8]);
-        ctx.beginPath();
-        ctx.arc(0, 0, aRadius, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.16)' : 'rgba(251, 191, 36, 0.08)';
-        ctx.fill();
-        // Inner expanding charge ring
-        ctx.beginPath();
-        ctx.arc(0, 0, aRadius * p, 0, Math.PI * 2);
-        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(251, 191, 36, 0.14)';
-        ctx.fill();
-        ctx.restore();
-      }
-
       if (ranged) {
         const angles = this.subType === 'tengu_sorcerer'
           ? [this.targetAngle - 0.18, this.targetAngle + 0.18]
@@ -1384,16 +1364,22 @@ export class Enemy extends Entity {
           ctx.restore();
         }
       } else {
-        const travel = this.lungeSpeed * this.lungeDuration * 0.5;
+        const travel = Math.max(140, this.lungeSpeed * this.lungeDuration * 0.5);
         const radius = this.meleeHitRadius;
-        // Full attack range boundary
+        const halfW = Math.min(38, radius * 0.3);
         ctx.save();
+        ctx.rotate(this.targetAngle);
+
+        // Directional strike corridor pointing straight at target (no circular discs)
         ctx.strokeStyle = color;
         ctx.lineWidth = isLocked ? 3.5 : 2.5;
         ctx.setLineDash(isLocked ? [] : [10, 6]);
         ctx.beginPath();
-        ctx.arc(travel, 0, radius, -Math.PI / 2, Math.PI / 2);
-        ctx.arc(0, 0, radius, Math.PI / 2, Math.PI * 1.5);
+        ctx.moveTo(0, -halfW * 0.6);
+        ctx.lineTo(travel, -halfW);
+        ctx.lineTo(travel + 12, 0);
+        ctx.lineTo(travel, halfW);
+        ctx.lineTo(0, halfW * 0.6);
         ctx.closePath();
         ctx.fillStyle = isLocked ? `rgba(239, 68, 68, ${0.18 + p * 0.22})` : `rgba(251, 191, 36, ${0.12 + p * 0.15})`;
         ctx.fill();
@@ -1403,17 +1389,20 @@ export class Enemy extends Entity {
         const activeTravel = travel * p;
         ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.32)' : 'rgba(251, 191, 36, 0.22)';
         ctx.beginPath();
-        ctx.arc(activeTravel, 0, radius * 0.65, -Math.PI / 2, Math.PI / 2);
-        ctx.arc(0, 0, radius * 0.65, Math.PI / 2, Math.PI * 1.5);
+        ctx.moveTo(0, -halfW * 0.4);
+        ctx.lineTo(activeTravel, -halfW * 0.6);
+        ctx.lineTo(activeTravel + 8, 0);
+        ctx.lineTo(activeTravel, halfW * 0.6);
+        ctx.lineTo(0, halfW * 0.4);
         ctx.closePath();
         ctx.fill();
 
-        // Directional attack vector line & arrowhead
+        // Directional attack vector line & arrowhead pointing at target
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(travel, 0); ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(travel + 10, 0);
-        ctx.lineTo(travel - 6, -8);
-        ctx.lineTo(travel - 6, 8);
+        ctx.moveTo(travel + 12, 0);
+        ctx.lineTo(travel - 5, -7);
+        ctx.lineTo(travel - 5, 7);
         ctx.closePath();
         ctx.fillStyle = color;
         ctx.fill();
@@ -1436,18 +1425,6 @@ export class Enemy extends Entity {
     else if (this.type === 'enemy_orc') headOffset = 44;
     else if (this.type === 'enemy_barrel') headOffset = 52;
     else if (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03') headOffset = 48;
-
-    // Sniper Laser Aim Telegraph
-    if (this.subType === 'shadow_sniper' && this.state === 'charge') {
-      ctx.save();
-      ctx.strokeStyle = 'rgba(239, 68, 68, 0.75)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(rx, effectiveRy);
-      ctx.lineTo(rx + Math.cos(this.targetAngle) * 1250, effectiveRy + Math.sin(this.targetAngle) * 1250);
-      ctx.stroke();
-      ctx.restore();
-    }
 
     // Perilous Attack Danger Telegraph ("!") for charging bosses, unblockable lunges, and locked aim
     if (this.state === 'charge' && (this.isAimLocked || this.subType === 'oni_boss' || this.subType === 'shogun_boss' || this.subType === 'agis_colossus' || this.subType === 'skeleton_warlord' || this.subType === 'giant')) {
@@ -1606,25 +1583,6 @@ export class Enemy extends Entity {
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
     const shadowScale = totalElevation > 0 ? Math.max(0.25, 1.0 - totalElevation / 260) : 1.0;
     const shadowAlpha = (this.state === 'dead' ? alpha * 0.25 : 0.35) * shadowScale;
-    
-    // Elite enemy aura rings
-    const isEliteEnemy = (this as any).isElite || ['musketeer', 'pyromancer', 'orc_brute', 'astromancer', 'glacial_sentinel'].includes(this.subType);
-    if (isEliteEnemy && !this.isRanged() && this.state !== 'dead') {
-      ctx.save();
-      const auraPulse = 0.65 + 0.35 * Math.sin(Date.now() * 0.006);
-      ctx.strokeStyle = `rgba(251, 191, 36, ${0.55 * auraPulse})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.ellipse(shadowGroundRx, shadowGroundRy - 3, (28 * this.scaleMult) | 0, (10 * this.scaleMult) | 0, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.strokeStyle = `rgba(245, 158, 11, ${0.3 * auraPulse})`;
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.ellipse(shadowGroundRx, shadowGroundRy - 3, (36 * this.scaleMult) | 0, (13 * this.scaleMult) | 0, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
     
     ctx.save();
     ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;

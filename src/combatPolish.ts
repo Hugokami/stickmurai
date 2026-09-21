@@ -44,16 +44,8 @@ export function updateCombatPolish(dt:number){
   }
   hazards=hazards.filter(h=>h.age<1.5&&h.owner.state!=='dead');
 }
-// Drawn after scenery, before characters and signature VFX. No full-screen wash.
-export function drawCombatHazards(ctx:CanvasRenderingContext2D){
-  if(globals.gameMode!=='classic'||!['playing','paused','levelup','ultchoice'].includes(globals.gameState))return;
-  for(const h of hazards){
-    const x=(h.x-globals.camera.x+globals.vw/2)|0,y=(h.y-globals.camera.y+globals.vh/2)|0;
-    if(x+h.radius<0||x-h.radius>globals.vw||y+h.radius<0||y-h.radius>globals.vh)continue;
-    ctx.save();ctx.strokeStyle=h.color;ctx.fillStyle=h.color;ctx.lineWidth=3;
-    ctx.beginPath();ctx.arc(x,y,h.radius,0,Math.PI*2);if(h.inner)ctx.arc(x,y,h.inner,0,Math.PI*2,true);
-    ctx.globalAlpha=h.hit?.3:.12;ctx.fill('evenodd');ctx.globalAlpha=1;ctx.stroke();
-    ctx.lineWidth=5;ctx.beginPath();ctx.arc(x,y,h.radius,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,h.age/1.25));ctx.stroke();
-    ctx.font="bold 14px Outfit,system-ui,sans-serif";ctx.textAlign='center';ctx.fillText(h.label,x,y-h.radius-8);ctx.restore();
-  }
+// Drawn after scenery, before characters and signature VFX. No full-screen wash or circular floor hazards.
+export function drawCombatHazards(_ctx:CanvasRenderingContext2D){
+  // Pruned: circular floor hazards removed per user instruction
+  return;
 }

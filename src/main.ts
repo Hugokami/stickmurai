@@ -1182,7 +1182,7 @@ function initGame() {
     
     // 4. Full Vitality & Flow
     globals.lives = globals.maxLives;
-    globals.flow = 100;
+    globals.flow = globals.playerStats?.flowMax ?? 450;
     
     globals.delayedActions.push({
       delay: 0.35,
