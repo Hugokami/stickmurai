@@ -341,14 +341,17 @@ export class Player extends Entity {
 
         // Check for Perfect Dodge on dash initiation near attacking enemies
         let perfectDodgeTriggered = false;
+        let dodgedEnemy: any = null;
         for (const e of globals.enemies) {
           if (e.state === 'dead') continue;
           const dx = e.x - this.x;
           const dy = e.y - this.y;
-          if (dx * dx + dy * dy < 102400) { // 320^2 squared distance check
-            const isEnemyAttacking = e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.2);
+          const maxDistSq = e.isTrainingDummy ? 202500 : 102400; // 450px for training dummy, 320px for normal enemies
+          if (dx * dx + dy * dy < maxDistSq) {
+            const isEnemyAttacking = e.state === 'attack' || (e.state === 'charge' && (e.isTrainingDummy ? e.stateTime >= 0.2 : e.stateTime > e.chargeTimeMax - 0.25));
             if (isEnemyAttacking) {
               perfectDodgeTriggered = true;
+              dodgedEnemy = e;
               break;
             }
           }
@@ -367,6 +370,10 @@ export class Player extends Entity {
           globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 70, callbacks.t('dodgeText'), "neon-#00ffff", 30));
           globals.shockwaves.push(new Shockwave(this.x, this.y, '#ffd700'));
           
+          const isFromDummy = Boolean(dodgedEnemy?.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
+          callbacks.onTrainingDummyAttack?.({ dodged: true, fromDummy: isFromDummy });
+          callbacks.onTrainingAction?.({ type: 'dodge', perfectDodge: true, fromDummy: isFromDummy });
+
           const speedlines = document.getElementById('speedlines-overlay');
           if (speedlines) {
             speedlines.classList.add('active');

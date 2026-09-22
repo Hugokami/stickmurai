@@ -224,10 +224,10 @@ export class TrainingDummy extends Enemy {
     } else if (this.state === 'attack') {
       this.stateTime += dt;
       // Strike window
-      if (!this.attackLanded && this.stateTime >= 0.1 && this.stateTime <= 0.35) {
+      if (!this.attackLanded && this.stateTime >= 0.05 && this.stateTime <= 0.4) {
         if (this.target) {
           const d = Math.hypot(this.target.x - this.x, this.target.y - this.y);
-          if (d <= 140) {
+          if (d <= 160) {
             this.attackLanded = true;
             callbacks.checkPlayerHit?.(this, 1);
           }

@@ -217,3 +217,18 @@ test('lesson 11: shop requires purchase to complete tutorial', () => {
   assert.equal(res.session.currentLesson, 'complete');
   assert.equal(isLessonComplete(res.session), true);
 });
+
+test('tutorial mobile banner and perfect dodge wiring invariants', () => {
+  const css = fs.readFileSync('src/style.css', 'utf8');
+  assert.match(css, /#muramasa-tutorial-banner\s*\{[^}]*pointer-events:\s*none;/, 'banner container must have pointer-events: none to avoid blocking gameplay touches');
+  assert.match(css, /@media\s*\([^)]*max-height:\s*540px[^}]*#muramasa-tutorial-banner\s*\{[^}]*top:\s*max\(4px/s, 'mobile landscape must dock banner to top: max(4px, env(safe-area-inset-top))');
+  assert.match(css, /grid-template-areas:\s*"title actions"\s*"desc actions"\s*"prog actions"/, 'mobile banner must use compact horizontal grid layout');
+
+  const playerSrc = fs.readFileSync('src/player.ts', 'utf8');
+  assert.match(playerSrc, /callbacks\.onTrainingDummyAttack\?\.\({\s*dodged:\s*true/s, 'player dash initiation must notify onTrainingDummyAttack on perfect dodge');
+  assert.match(playerSrc, /callbacks\.onTrainingAction\?\.\({\s*type:\s*'dodge'/s, 'player dash initiation must notify onTrainingAction on perfect dodge');
+
+  const mainSrc = fs.readFileSync('src/main.ts', 'utf8');
+  assert.match(mainSrc, /callbacks\.onTrainingDummyAttack\?\.\({\s*dodged:\s*true/s, 'main combat must notify onTrainingDummyAttack on dodge');
+  assert.match(mainSrc, /callbacks\.onTrainingAction\?\.\({\s*type:\s*'dodge'/s, 'main combat must notify onTrainingAction on dodge');
+});

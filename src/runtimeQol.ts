@@ -177,11 +177,11 @@ export function initRuntimeQol(onReturn: () => void) {
     if (!practice) return;
     if (data.dodged) {
       metricsTracker.recordDodge();
-      if (isTutorial) dispatchTutorialEvent('dodge', { perfectDodge: true, fromDummy: Boolean(data.fromDummy) });
+      if (isTutorial) dispatchTutorialEvent('dodge', { perfectDodge: true, fromDummy: Boolean(data.fromDummy ?? true) });
     }
     if (data.parried) {
       metricsTracker.recordParry();
-      if (isTutorial) dispatchTutorialEvent('parry', { perfectParry: true, fromDummy: Boolean(data.fromDummy) });
+      if (isTutorial) dispatchTutorialEvent('parry', { perfectParry: true, fromDummy: Boolean(data.fromDummy ?? true) });
     }
   };
 

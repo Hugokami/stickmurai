@@ -1444,8 +1444,6 @@ function triggerFlowingCounterReset() {
 }
 
 function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
-  if (globals.invulnTimer > 0) return;
-
   // Blood Surge & Blood Tithe Affixes: Enemies deal +1 damage
   if (globals.activeStageAffix?.id === 'blood_surge' || globals.activeStageAffix?.id === 'blood_tithe') {
     damageAmount += 1;
@@ -1514,6 +1512,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       addCombo();
       addCombo();
       callbacks.onTrainingDummyAttack?.({ dodged: true, fromDummy: Boolean(enemy?.isTrainingDummy) });
+      callbacks.onTrainingAction?.({ type: 'dodge', perfectDodge: true, fromDummy: Boolean(enemy?.isTrainingDummy) });
 
       globals.invulnTimer = 1.3;
     
@@ -1716,6 +1715,8 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     return;
   }
   
+  if (globals.invulnTimer > 0) return;
+
   if (globals.player.state !== 'dead') {
     if ((globals.player as any).hyperArmorTimer > 0) {
       damageAmount = Math.max(1, Math.floor(damageAmount * 0.5));
@@ -4468,14 +4469,17 @@ function update(realDt: number) {
 
         // Check for Perfect Dodge on Raijin Step initiation near attacking enemies
         let perfectDodgeTriggered = false;
+        let dodgedEnemy: any = null;
         for (const e of globals.enemies) {
           if (e.state === 'dead') continue;
           const dx = e.x - globals.player.x;
           const dy = e.y - globals.player.y;
-          if (dx * dx + dy * dy < 102400) { // 320 * 320
-            const isEnemyAttacking = e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.2);
+          const maxDistSq = e.isTrainingDummy ? 202500 : 102400;
+          if (dx * dx + dy * dy < maxDistSq) {
+            const isEnemyAttacking = e.state === 'attack' || (e.state === 'charge' && (e.isTrainingDummy ? e.stateTime >= 0.2 : e.stateTime > e.chargeTimeMax - 0.25));
             if (isEnemyAttacking) {
               perfectDodgeTriggered = true;
+              dodgedEnemy = e;
               break;
             }
           }
@@ -4494,6 +4498,9 @@ function update(realDt: number) {
           globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ffd700'));
           
           triggerFlowingCounterReset();
+          const isFromDummy = Boolean(dodgedEnemy?.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
+          callbacks.onTrainingDummyAttack?.({ dodged: true, fromDummy: isFromDummy });
+          callbacks.onTrainingAction?.({ type: 'dodge', perfectDodge: true, fromDummy: isFromDummy });
         }
 
         let angle;
