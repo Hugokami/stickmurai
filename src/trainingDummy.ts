@@ -248,29 +248,36 @@ export class TrainingDummy extends Enemy {
     ctx.save();
     ctx.translate(rx, ry);
 
-    // Sparring telegraph windup: directional strike corridor aimed directly at target
+    // Sparring telegraph windup: directional strike capsule matching real attack range
     if (this.state === 'charge') {
       const progress = Math.min(1, this.stateTime / this.chargeTimeMax);
       const isLocked = progress >= 0.65;
       const strikeLen = 140;
-      const halfW = 28;
+      const radius = 140;
+      const color = isLocked ? '#ef4444' : '#fbbf24';
       ctx.save();
       ctx.rotate(this.targetAngle);
 
-      // Outer danger corridor
+      // Full attack range boundary matching 140px strike radius
+      ctx.strokeStyle = color;
+      ctx.lineWidth = isLocked ? 3.5 : 2.5;
+      ctx.setLineDash(isLocked ? [] : [10, 6]);
       ctx.beginPath();
-      ctx.moveTo(0, -halfW * 0.5);
-      ctx.lineTo(strikeLen, -halfW);
-      ctx.lineTo(strikeLen + 10, 0);
-      ctx.lineTo(strikeLen, halfW);
-      ctx.lineTo(0, halfW * 0.5);
+      ctx.arc(strikeLen, 0, radius, -Math.PI / 2, Math.PI / 2);
+      ctx.arc(0, 0, radius, Math.PI / 2, Math.PI * 1.5);
       ctx.closePath();
-      ctx.strokeStyle = isLocked ? '#ef4444' : '#fbbf24';
-      ctx.lineWidth = isLocked ? 3 : 2;
-      ctx.setLineDash(isLocked ? [] : [8, 6]);
-      ctx.fillStyle = isLocked ? `rgba(239, 68, 68, ${0.18 + progress * 0.2})` : `rgba(251, 191, 36, ${0.1 + progress * 0.15})`;
+      ctx.fillStyle = isLocked ? `rgba(239, 68, 68, ${0.18 + progress * 0.22})` : `rgba(251, 191, 36, ${0.12 + progress * 0.15})`;
       ctx.fill();
       ctx.stroke();
+
+      // Dynamic inner charge progress meter
+      const activeTravel = strikeLen * progress;
+      ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.32)' : 'rgba(251, 191, 36, 0.22)';
+      ctx.beginPath();
+      ctx.arc(activeTravel, 0, radius * 0.65, -Math.PI / 2, Math.PI / 2);
+      ctx.arc(0, 0, radius * 0.65, Math.PI / 2, Math.PI * 1.5);
+      ctx.closePath();
+      ctx.fill();
 
       // Directional arrow down the centerline
       ctx.beginPath();
@@ -278,11 +285,11 @@ export class TrainingDummy extends Enemy {
       ctx.lineTo(strikeLen, 0);
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(strikeLen + 12, 0);
-      ctx.lineTo(strikeLen - 4, -7);
-      ctx.lineTo(strikeLen - 4, 7);
+      ctx.moveTo(strikeLen + 10, 0);
+      ctx.lineTo(strikeLen - 6, -8);
+      ctx.lineTo(strikeLen - 6, 8);
       ctx.closePath();
-      ctx.fillStyle = isLocked ? '#ef4444' : '#fbbf24';
+      ctx.fillStyle = color;
       ctx.fill();
 
       ctx.restore();

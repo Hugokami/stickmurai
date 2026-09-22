@@ -1364,22 +1364,17 @@ export class Enemy extends Entity {
           ctx.restore();
         }
       } else {
-        const travel = Math.max(140, this.lungeSpeed * this.lungeDuration * 0.5);
+        const travel = this.lungeSpeed * this.lungeDuration * 0.5;
         const radius = this.meleeHitRadius;
-        const halfW = Math.min(38, radius * 0.3);
+        // Full attack range boundary matching real melee hit radius
         ctx.save();
         ctx.rotate(this.targetAngle);
-
-        // Directional strike corridor pointing straight at target (no circular discs)
         ctx.strokeStyle = color;
         ctx.lineWidth = isLocked ? 3.5 : 2.5;
         ctx.setLineDash(isLocked ? [] : [10, 6]);
         ctx.beginPath();
-        ctx.moveTo(0, -halfW * 0.6);
-        ctx.lineTo(travel, -halfW);
-        ctx.lineTo(travel + 12, 0);
-        ctx.lineTo(travel, halfW);
-        ctx.lineTo(0, halfW * 0.6);
+        ctx.arc(travel, 0, radius, -Math.PI / 2, Math.PI / 2);
+        ctx.arc(0, 0, radius, Math.PI / 2, Math.PI * 1.5);
         ctx.closePath();
         ctx.fillStyle = isLocked ? `rgba(239, 68, 68, ${0.18 + p * 0.22})` : `rgba(251, 191, 36, ${0.12 + p * 0.15})`;
         ctx.fill();
@@ -1389,20 +1384,17 @@ export class Enemy extends Entity {
         const activeTravel = travel * p;
         ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.32)' : 'rgba(251, 191, 36, 0.22)';
         ctx.beginPath();
-        ctx.moveTo(0, -halfW * 0.4);
-        ctx.lineTo(activeTravel, -halfW * 0.6);
-        ctx.lineTo(activeTravel + 8, 0);
-        ctx.lineTo(activeTravel, halfW * 0.6);
-        ctx.lineTo(0, halfW * 0.4);
+        ctx.arc(activeTravel, 0, radius * 0.65, -Math.PI / 2, Math.PI / 2);
+        ctx.arc(0, 0, radius * 0.65, Math.PI / 2, Math.PI * 1.5);
         ctx.closePath();
         ctx.fill();
 
         // Directional attack vector line & arrowhead pointing at target
         ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(travel, 0); ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(travel + 12, 0);
-        ctx.lineTo(travel - 5, -7);
-        ctx.lineTo(travel - 5, 7);
+        ctx.moveTo(travel + 10, 0);
+        ctx.lineTo(travel - 6, -8);
+        ctx.lineTo(travel - 6, 8);
         ctx.closePath();
         ctx.fillStyle = color;
         ctx.fill();

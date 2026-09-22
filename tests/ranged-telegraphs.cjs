@@ -114,7 +114,7 @@ for (const type of rangedTypes) {
   });
 }
 
-test('melee grunt: directional attack corridor rotated toward target with no circular discs', () => {
+test('melee grunt: directional attack capsule matching hit radius with lunge arc', () => {
   globals.player = { x: 50, y: 50, state: 'idle' };
   const e = enemy('grunt');
   Object.assign(globals.player, { x: 50, y: 50 });
@@ -122,12 +122,13 @@ test('melee grunt: directional attack corridor rotated toward target with no cir
   e.update(0);
   assert.equal(e.state, 'charge');
   const draws = record(e);
-  assert.ok(draws.some(d => d.path.some(p => p[0] === 'lineTo')), 'melee directional warning present');
-  assert.equal(draws.filter(d => d.path.some(p => p[0] === 'ellipse' || p[0] === 'arc')).length, 0,
-    'melee charging must not stroke stationary attack circles');
+  assert.ok(draws.some(d => d.path.some(p => p[0] === 'arc')), 'melee charging keeps lunge capsule arc');
+  assert.ok(draws.some(d => d.path.some(p => p[0] === 'lineTo')), 'melee directional centerline present');
+  assert.equal(draws.filter(d => d.path.some(p => p[0] === 'ellipse')).length, 0,
+    'melee charging must not stroke stationary aura rings');
 });
 
-test('boss: directional strike telegraph rotated toward target, no ground circle disc', () => {
+test('boss: directional strike capsule rotated toward target with boss hit radius', () => {
   globals.player = { x: 80, y: 40, state: 'idle' };
   const e = enemy('skeleton_warlord');
   Object.assign(globals.player, { x: 80, y: 40 });
@@ -135,7 +136,8 @@ test('boss: directional strike telegraph rotated toward target, no ground circle
   e.update(0);
   assert.equal(e.state, 'charge');
   const draws = record(e);
-  assert.ok(draws.some(d => d.path.some(p => p[0] === 'lineTo')), 'boss directional warning present');
-  assert.equal(draws.filter(d => d.path.some(p => p[0] === 'ellipse' || p[0] === 'arc')).length, 0,
-    'boss charging must not stroke circular ground discs');
+  assert.ok(draws.some(d => d.path.some(p => p[0] === 'arc')), 'boss strike telegraph has capsule arc');
+  assert.ok(draws.some(d => d.path.some(p => p[0] === 'lineTo')), 'boss directional centerline present');
+  assert.equal(draws.filter(d => d.path.some(p => p[0] === 'ellipse')).length, 0,
+    'boss charging must not stroke stationary aura rings');
 });
