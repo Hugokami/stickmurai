@@ -126,13 +126,14 @@ export class Enemy extends Entity {
     
     if (globals.gameMode === 'zen') {
       const roll = Math.random();
-      if (roll < 0.20) this.subType = 'musketeer';
-      else if (roll < 0.30) this.subType = 'toaster_bot';
-      else if (roll < 0.40) this.subType = 'samurai';
-      else if (roll < 0.50) this.subType = 'ronin';
-      else if (roll < 0.60) this.subType = 'brawler';
-      else if (roll < 0.70) this.subType = 'berserker';
-      else if (roll < 0.75) this.subType = 'giant';
+      if (roll < 0.16) this.subType = 'musketeer';
+      else if (roll < 0.26) this.subType = 'toaster_bot';
+      else if (roll < 0.35) this.subType = 'samurai';
+      else if (roll < 0.44) this.subType = 'ronin';
+      else if (roll < 0.52) this.subType = 'brawler';
+      else if (roll < 0.60) this.subType = 'berserker';
+      else if (roll < 0.68) this.subType = 'detonator';
+      else if (roll < 0.74) this.subType = 'giant';
       else if (roll < 0.80) this.subType = 'assassin';
       else if (roll < 0.85) this.subType = 'pyromancer';
       else if (roll < 0.90) this.subType = 'glacial_sentinel';
@@ -157,13 +158,14 @@ export class Enemy extends Entity {
         const r = Math.random();
         this.subType = r < 0.60 ? 'brawler' : 'samurai';
       } else if (stage === 2) {
-        // Stage 2: Forest Outpost - Wolf Pack, Snipers & Assassins
+        // Stage 2: Forest Outpost - Wolf Pack, Snipers, Assassins & Detonators
         const r = Math.random();
-        if (r < 0.25) this.subType = 'brawler';
-        else if (r < 0.45) this.subType = 'samurai';
-        else if (r < 0.65) this.subType = 'shadow_sniper';
-        else if (r < 0.85) this.subType = 'ronin';
-        else this.subType = 'assassin';
+        if (r < 0.20) this.subType = 'brawler';
+        else if (r < 0.40) this.subType = 'samurai';
+        else if (r < 0.60) this.subType = 'shadow_sniper';
+        else if (r < 0.75) this.subType = 'ronin';
+        else if (r < 0.88) this.subType = 'assassin';
+        else this.subType = 'detonator';
       } else if (stage === 3) {
         // Stage 3: Siege Workshop - Gunpowder, Musketeers, Tengu & Barrel Bombers
         const r = Math.random();
@@ -173,12 +175,12 @@ export class Enemy extends Entity {
         else if (r < 0.85) this.subType = 'detonator';
         else this.subType = 'pyromancer';
       } else if (stage === 4) {
-        // Stage 4: Iron Bastion - Heavy Orc Brutes, Snipers & Glacial Sentinels
+        // Stage 4: Iron Bastion - Heavy Orc Brutes, Snipers, Glacial Sentinels & Detonators
         const r = Math.random();
-        if (r < 0.25) this.subType = 'berserker';
-        else if (r < 0.50) this.subType = 'orc_brute';
-        else if (r < 0.70) this.subType = 'shadow_sniper';
-        else if (r < 0.85) this.subType = 'giant';
+        if (r < 0.20) this.subType = 'berserker';
+        else if (r < 0.40) this.subType = 'orc_brute';
+        else if (r < 0.60) this.subType = 'shadow_sniper';
+        else if (r < 0.80) this.subType = 'detonator';
         else this.subType = 'glacial_sentinel';
       } else if (stage === 5) {
         // Stage 5: Yomi Gateway - Oni Boss Encounter on Final Wave
@@ -189,9 +191,10 @@ export class Enemy extends Entity {
           globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
-          if (r < 0.35) this.subType = 'tengu_sorcerer';
-          else if (r < 0.65) this.subType = 'samurai';
-          else if (r < 0.85) this.subType = 'ronin';
+          if (r < 0.25) this.subType = 'tengu_sorcerer';
+          else if (r < 0.50) this.subType = 'samurai';
+          else if (r < 0.70) this.subType = 'ronin';
+          else if (r < 0.85) this.subType = 'detonator';
           else this.subType = 'brawler';
         }
       } else if (stage === 6) {
@@ -202,22 +205,24 @@ export class Enemy extends Entity {
         else if (r < 0.75) this.subType = 'detonator';
         else this.subType = 'orc_brute';
       } else if (stage === 7) {
-        // Stage 7: Blood River - Chaos Vanguard, Snipers & Advanced Bots
+        // Stage 7: Blood River - Chaos Vanguard, Snipers, Advanced Bots & Detonators
         const r = Math.random();
         if (r < 0.25) this.subType = 'shadow_sniper';
         else if (r < 0.50) this.subType = 'toaster_bot';
-        else if (r < 0.75) this.subType = 'crimson_berserker';
+        else if (r < 0.70) this.subType = 'crimson_berserker';
+        else if (r < 0.85) this.subType = 'detonator';
         else this.subType = 'pyromancer';
       } else if (stage === 8) {
-        // Stage 8: Castle Ramparts - Shogun's Guard & Artillery
+        // Stage 8: Castle Ramparts - Shogun's Guard, Artillery & Detonators
         const r = Math.random();
-        if (r < 0.25) this.subType = 'tengu_sorcerer';
-        else if (r < 0.50) this.subType = 'glacial_sentinel';
-        else if (r < 0.75) this.subType = 'crimson_berserker';
+        if (r < 0.20) this.subType = 'tengu_sorcerer';
+        else if (r < 0.40) this.subType = 'glacial_sentinel';
+        else if (r < 0.60) this.subType = 'crimson_berserker';
+        else if (r < 0.80) this.subType = 'detonator';
         else this.subType = 'giant';
       } else if (stage === 9) {
         // Stage 9: Throne Ante-Chamber - Purgatory Rampage
-        const elitePool: EnemySubType[] = ['orc_brute', 'crimson_berserker', 'corrupted_shaman', 'shadow_sniper', 'tengu_sorcerer', 'astromancer', 'toaster_bot'];
+        const elitePool: EnemySubType[] = ['orc_brute', 'crimson_berserker', 'corrupted_shaman', 'shadow_sniper', 'tengu_sorcerer', 'astromancer', 'toaster_bot', 'detonator'];
         this.subType = elitePool[Math.floor(Math.random() * elitePool.length)];
       } else if (stage === 10) {
         // Stage 10: Sanctum of Oblivion - Agis Colossus Boss on Final Wave
@@ -228,9 +233,10 @@ export class Enemy extends Entity {
           globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
-          if (r < 0.35) this.subType = 'shadow_sniper';
-          else if (r < 0.70) this.subType = 'orc_brute';
-          else this.subType = 'crimson_berserker';
+          if (r < 0.25) this.subType = 'shadow_sniper';
+          else if (r < 0.50) this.subType = 'orc_brute';
+          else if (r < 0.75) this.subType = 'crimson_berserker';
+          else this.subType = 'detonator';
         }
       } else if (stage === 15) {
         // Stage 15: Tomb of the Ancient King - Skeleton Warlord Boss on Final Wave
@@ -241,9 +247,10 @@ export class Enemy extends Entity {
           globals.stageBossSpawned = true;
         } else {
           const r = Math.random();
-          if (r < 0.35) this.subType = 'corrupted_shaman';
-          else if (r < 0.70) this.subType = 'tengu_sorcerer';
-          else this.subType = 'necromancer';
+          if (r < 0.25) this.subType = 'corrupted_shaman';
+          else if (r < 0.50) this.subType = 'tengu_sorcerer';
+          else if (r < 0.75) this.subType = 'necromancer';
+          else this.subType = 'detonator';
         }
       } else {
         // Stage 11+ Endless Realms
@@ -251,28 +258,27 @@ export class Enemy extends Entity {
         const stageInRealm = ((stage - 1) % 5) + 1;
         if (stageInRealm === 5) {
           // Boss stage on final wave
-          const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
           const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'skeleton_warlord', 'shogun_boss'];
           const targetBoss = bossTypes[(realm - 1) % bossTypes.length];
-          const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && (e.subType === targetBoss || (e as any).isBoss));
+          const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && (bossTypes.includes(e.subType) || (e as any).isBoss));
           if (isFinalWave && !bossAlive && !globals.stageBossSpawned) {
             this.subType = targetBoss;
             globals.stageBossSpawned = true;
           } else {
-            const minionPool: EnemySubType[] = ['orc_brute', 'crimson_berserker', 'corrupted_shaman', 'shadow_sniper', 'tengu_sorcerer', 'glacial_sentinel'];
+            const minionPool: EnemySubType[] = ['orc_brute', 'crimson_berserker', 'corrupted_shaman', 'shadow_sniper', 'tengu_sorcerer', 'glacial_sentinel', 'detonator'];
             this.subType = minionPool[Math.floor(Math.random() * minionPool.length)];
           }
         } else if (stageInRealm === 1) {
-          const pool: EnemySubType[] = ['samurai', 'ronin', 'assassin', 'tengu_sorcerer'];
+          const pool: EnemySubType[] = ['samurai', 'ronin', 'assassin', 'tengu_sorcerer', 'detonator'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else if (stageInRealm === 2) {
-          const pool: EnemySubType[] = ['musketeer', 'shadow_sniper', 'crimson_berserker', 'orc_brute', 'assassin'];
+          const pool: EnemySubType[] = ['musketeer', 'shadow_sniper', 'crimson_berserker', 'orc_brute', 'assassin', 'detonator'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else if (stageInRealm === 3) {
           const pool: EnemySubType[] = ['detonator', 'pyromancer', 'toaster_bot', 'corrupted_shaman', 'giant'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else {
-          const pool: EnemySubType[] = ['glacial_sentinel', 'necromancer', 'astromancer', 'crimson_berserker', 'shadow_sniper'];
+          const pool: EnemySubType[] = ['glacial_sentinel', 'necromancer', 'astromancer', 'crimson_berserker', 'shadow_sniper', 'detonator'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         }
       }
@@ -301,7 +307,7 @@ export class Enemy extends Entity {
   }
 
   isRanged(): boolean {
-    return this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'glacial_sentinel' || this.subType === 'astromancer' || this.subType === 'necromancer' || this.subType === 'toaster_bot' || this.subType === 'shadow_sniper' || this.subType === 'tengu_sorcerer' || this.subType === 'corrupted_shaman';
+    return this.subType === 'musketeer' || this.subType === 'pyromancer' || this.subType === 'glacial_sentinel' || this.subType === 'astromancer' || this.subType === 'necromancer' || this.subType === 'toaster_bot' || this.subType === 'shadow_sniper' || this.subType === 'tengu_sorcerer' || this.subType === 'corrupted_shaman' || (typeof this.type === 'string' && (this.type.startsWith('wraith') || this.type === 'toaster_bot'));
   }
 
   configureSubType() {
@@ -1441,7 +1447,7 @@ export class Enemy extends Entity {
           ctx.restore();
         }
       } else {
-        const travel = this.lungeSpeed * this.lungeDuration * 0.5;
+        const travel = Math.max(60, this.lungeSpeed * this.lungeDuration * 0.5);
         const radius = this.meleeHitRadius;
         // Full attack range boundary matching real melee hit radius
         ctx.save();

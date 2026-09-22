@@ -1127,12 +1127,12 @@ export const anims = {
     dead: loadCustomEnemyAnim('EnemyBarrel', 'dead', 6, false),
   },
   detonator: {
-    idle: loadCustomEnemyAnim('EnemyDetonator', 'idle', 4, false),
-    walk: loadCustomEnemyAnim('EnemyDetonator', 'walk', 6, false),
-    attack: loadCustomEnemyAnim('EnemyDetonator', 'attack', 6, false),
-    dash: loadCustomEnemyAnim('EnemyDetonator', 'dash', 6, false),
-    dead: loadCustomEnemyAnim('EnemyDetonator', 'dead', 6, false),
-    hit: loadCustomEnemyAnim('EnemyDetonator', 'hit', 2, false),
+    idle: loadCustomEnemyAnim('EnemyDetonator', 'idle', 4, true),
+    walk: loadCustomEnemyAnim('EnemyDetonator', 'walk', 6, true),
+    attack: loadCustomEnemyAnim('EnemyDetonator', 'attack', 6, true),
+    dash: loadCustomEnemyAnim('EnemyDetonator', 'dash', 6, true),
+    dead: loadCustomEnemyAnim('EnemyDetonator', 'dead', 6, true),
+    hit: loadCustomEnemyAnim('EnemyDetonator', 'hit', 2, true),
   },
   boss_agis: {
     idle: loadCustomEnemyAnim('BossAgis', 'idle', 6, false),

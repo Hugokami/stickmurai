@@ -1384,18 +1384,7 @@ function spawnEnemy() {
        const dist = 800 + Math.random() * 400 + (i * 100);
        const enemy = new Enemy(globals.player.x + Math.cos(angle)*dist, globals.player.y + Math.sin(angle)*dist, globals.player);
        
-       if (globals.gameMode === 'classic') {
-         const stage = globals.currentStage || 1;
-         const wave = globals.currentWave || 1;
-         const maxRanged = (stage === 1 && wave === 1) ? 0 : (stage <= 3 ? 1 : 2);
-         if (enemy.isRanged()) {
-           const activeRanged = globals.enemies.filter(e => e.state !== 'dead' && e.isRanged?.()).length;
-           if (activeRanged >= maxRanged) {
-             const meleePool: Array<'samurai' | 'ronin' | 'brawler' | 'berserker' | 'giant' | 'orc_brute'> = ['samurai', 'ronin', 'brawler', 'berserker', 'giant', 'orc_brute'];
-             enemy.subType = meleePool[Math.floor(Math.random() * meleePool.length)];
-           }
-         }
-       }
+
        
        // Assign unique ID for network synchronization
        const enemyId = 'enemy_' + Math.random().toString(36).substring(2, 9);
