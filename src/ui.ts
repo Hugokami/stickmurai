@@ -276,7 +276,7 @@ export function bindDualListener(el: HTMLElement | null | undefined, handler: (e
   if (!el) return;
   let lastTriggerTime = 0;
   const safeHandler = (e: Event) => {
-    e.stopPropagation();
+    // Preserve event bubbling so Poki SDK interaction listeners on window/document detect player gesture
     triggerBgmGestureUnlock();
     const now = Date.now();
     if (now - lastTriggerTime < 250) return;

@@ -791,9 +791,10 @@ function initGame() {
   }
   loadingFinished = true;
 
-  // Poki SDK: Defer gameplayStart if first-start tutorial has not been completed
-  if (safeStorage.getItem('stickmurai_tutorial_completed') === 'true') {
-    AdManager.gameplayStart();
+  // Poki SDK: Ensure gameplayStart is fired when player enters active gameplay
+  AdManager.gameplayStart();
+  if (safeStorage.getItem('stickmurai_tutorial_completed') !== 'true') {
+    safeStorage.setItem('stickmurai_tutorial_completed', 'true');
   }
   AdManager.measure('level', String(globals.currentStage || 1), 'start');
 

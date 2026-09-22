@@ -1,0 +1,175 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 154" width="280" height="154">
+  <defs>
+    <linearGradient id="movBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#040d1a"/>
+      <stop offset="60%" stop-color="#091829"/>
+      <stop offset="100%" stop-color="#020810"/>
+    </linearGradient>
+
+    <radialGradient id="movCyanGlow" cx="60%" cy="55%" r="65%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0.32"/>
+      <stop offset="45%" stop-color="#0284c7" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="movFloorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0"/>
+      <stop offset="30%" stop-color="#00f2fe" stop-opacity="0.4"/>
+      <stop offset="85%" stop-color="#38bdf8" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#00f2fe" stop-opacity="0"/>
+    </linearGradient>
+
+    <linearGradient id="movTrailGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00f2fe" stop-opacity="0"/>
+      <stop offset="70%" stop-color="#00f2fe" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.9"/>
+    </linearGradient>
+
+    <linearGradient id="movScarfGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284c7" stop-opacity="0.1"/>
+      <stop offset="50%" stop-color="#00f2fe" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.95"/>
+    </linearGradient>
+
+    <filter id="movGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Card Background -->
+  <rect width="280" height="154" rx="8" fill="url(#movBgGrad)"/>
+  <rect width="280" height="154" rx="8" fill="url(#movCyanGlow)"/>
+
+  <!-- Perspective Dojo Grid -->
+  <path d="M 0 128 L 280 128" stroke="url(#movFloorGrad)" stroke-width="1"/>
+  <path d="M 15 154 L 60 128" stroke="#0284c7" stroke-width="0.8" stroke-opacity="0.25"/>
+  <path d="M 75 154 L 110 128" stroke="#0284c7" stroke-width="0.8" stroke-opacity="0.25"/>
+  <path d="M 140 154 L 155 128" stroke="#0284c7" stroke-width="0.8" stroke-opacity="0.3"/>
+  <path d="M 205 154 L 195 128" stroke="#0284c7" stroke-width="0.8" stroke-opacity="0.25"/>
+  <path d="M 265 154 L 235 128" stroke="#0284c7" stroke-width="0.8" stroke-opacity="0.25"/>
+
+  <!-- Speed Vectors & Kinetic Wind Lines -->
+  <g stroke="url(#movTrailGrad)" stroke-linecap="round" opacity="0.65">
+    <line x1="20" y1="42" x2="140" y2="42" stroke-width="1.2" stroke-dasharray="8 6"/>
+    <line x1="10" y1="68" x2="185" y2="68" stroke-width="1.8" stroke-dasharray="14 10"/>
+    <line x1="35" y1="92" x2="195" y2="92" stroke-width="2.2" stroke-dasharray="24 8"/>
+    <line x1="25" y1="112" x2="160" y2="112" stroke-width="1.4" stroke-dasharray="10 14"/>
+    <line x1="70" y1="124" x2="175" y2="124" stroke-width="2"/>
+  </g>
+
+  <!-- Ground Agility Compass Reticle (Left Bottom) -->
+  <g transform="translate(62, 126)" opacity="0.85">
+    <!-- Outer Runic Ring -->
+    <ellipse cx="0" cy="0" rx="36" ry="11" fill="none" stroke="#00f2fe" stroke-width="1" stroke-dasharray="5 3"/>
+    <!-- Inner Compass Ring -->
+    <ellipse cx="0" cy="0" rx="22" ry="7" fill="rgba(0, 242, 254, 0.08)" stroke="#38bdf8" stroke-width="1.2"/>
+    <!-- Directional Chevrons on Ground -->
+    <path d="M -16 -1 L 0 -5 L 16 -1" fill="none" stroke="#00f2fe" stroke-width="1.2"/>
+    <path d="M -12 2 L 0 5 L 12 2" fill="none" stroke="#0284c7" stroke-width="1"/>
+    <!-- Omni Axis Ticks -->
+    <line x1="-34" y1="0" x2="-26" y2="0" stroke="#00f2fe" stroke-width="1.5"/>
+    <line x1="26" y1="0" x2="34" y2="0" stroke="#00f2fe" stroke-width="1.5"/>
+    <line x1="0" y1="-10" x2="0" y2="-6" stroke="#00f2fe" stroke-width="1.5"/>
+    <line x1="0" y1="6" x2="0" y2="10" stroke="#00f2fe" stroke-width="1.5"/>
+    <!-- Central Pivot Dot -->
+    <circle cx="0" cy="0" r="2.2" fill="#ffffff"/>
+  </g>
+
+  <!-- Phantom Echo 1 (Faintest Trail) -->
+  <g transform="translate(72, 54)" opacity="0.22">
+    <!-- Flowing Scarf -->
+    <path d="M -8 18 Q -28 14 -42 22 Q -24 24 -6 23 Z" fill="#00f2fe"/>
+    <!-- Head -->
+    <circle cx="20" cy="10" r="6.5" fill="#00f2fe"/>
+    <!-- Torso & Hakama -->
+    <path d="M 16 16 L 30 38 L 18 58 L 6 56 L 14 36 Z" fill="#00f2fe"/>
+    <!-- Front Leg Slide -->
+    <path d="M 28 38 L 48 54 L 56 53 L 34 35 Z" fill="#00f2fe"/>
+    <!-- Katana Sheath Silhouette -->
+    <line x1="4" y1="42" x2="38" y2="24" stroke="#00f2fe" stroke-width="2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Phantom Echo 2 (Mid-Velocity Dash Trail) -->
+  <g transform="translate(118, 52)" opacity="0.48">
+    <!-- Flowing Scarf / Shinobi Ribbon -->
+    <path d="M -12 18 Q -34 12 -54 20 Q -32 23 -8 24 Z" fill="url(#movScarfGrad)"/>
+    <!-- Head with Shinobi Mask -->
+    <circle cx="24" cy="11" r="7" fill="#38bdf8"/>
+    <!-- Torso & Dynamic Lean -->
+    <path d="M 20 18 L 36 40 L 22 62 L 10 59 L 18 38 Z" fill="#0284c7"/>
+    <!-- Arms in Sprint / Blade Grip -->
+    <path d="M 22 28 L 6 36 L 10 40 L 26 32 Z" fill="#38bdf8"/>
+    <!-- Katana at Hip -->
+    <line x1="8" y1="45" x2="44" y2="26" stroke="#e0f2fe" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Lead Samurai: Kinetic Low Dash & Sprint Silhouette -->
+  <g transform="translate(164, 48)">
+    <!-- Trail Aura / Shockwave -->
+    <ellipse cx="28" cy="40" rx="34" ry="24" fill="url(#movCyanGlow)" opacity="0.6"/>
+
+    <!-- Long Fluttering Shinobi Ribbon / Scarf -->
+    <path d="M 0 19 Q -30 11 -68 18 Q -38 25 -2 27 Z" fill="url(#movScarfGrad)"/>
+    <path d="M -4 23 Q -38 18 -82 28 Q -46 32 -6 29 Z" fill="#00f2fe" opacity="0.6"/>
+
+    <!-- Flowing Samurai Coat / Haori Folds -->
+    <path d="M 12 28 Q -10 35 -24 50 Q -6 46 16 38 Z" fill="#0c4a6e" opacity="0.8"/>
+    <path d="M 18 32 Q 4 48 -8 60 Q 14 54 26 42 Z" fill="#0369a1"/>
+
+    <!-- Main Body / Torso (Aerodynamic 45-degree Forward Angle) -->
+    <path d="M 18 18 L 40 44 L 28 68 L 14 65 L 14 36 Z" fill="#0f172a"/>
+    <path d="M 20 20 L 36 42 L 28 58 L 18 36 Z" fill="#1e293b"/>
+
+    <!-- Stylized Head & Forehead Protector / Bandana -->
+    <circle cx="34" cy="10" r="7.5" fill="#0f172a"/>
+    <path d="M 28 8 L 43 8 L 41 12 L 27 12 Z" fill="#00f2fe"/>
+    <!-- Glowing Visor / Eye Glint -->
+    <line x1="37" y1="10" x2="43" y2="10" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Lead Arm: Forward Thrust / Kinetic Balance -->
+    <path d="M 32 26 L 56 34 L 54 38 L 30 31 Z" fill="#0f172a"/>
+    <!-- Back Arm Holding Sheathed Katana Hilt -->
+    <path d="M 22 28 L 8 36 L 10 40 L 25 34 Z" fill="#0f172a"/>
+
+    <!-- Katana Sheath & Gleaming Tsuba (Guard) -->
+    <line x1="2" y1="46" x2="48" y2="23" stroke="#334155" stroke-width="3" stroke-linecap="round"/>
+    <line x1="26" y1="36" x2="28" y2="31" stroke="#ffd700" stroke-width="3.5" stroke-linecap="round"/>
+    <circle cx="27" cy="34" r="2" fill="#ffffff"/>
+
+    <!-- Rear Pushing Leg (Full Drive Extension) -->
+    <path d="M 18 56 L -4 74 L 6 78 L 26 62 Z" fill="#0f172a"/>
+    <!-- Ground Friction Sparks at Back Foot -->
+    <g fill="#00f2fe">
+      <circle cx="-6" cy="76" r="1.8"/>
+      <circle cx="-14" cy="73" r="1.2"/>
+      <circle cx="-10" cy="80" r="1.5"/>
+      <circle cx="-2" cy="82" r="1"/>
+    </g>
+
+    <!-- Front Planted Leg (Low Slide Pose) -->
+    <path d="M 32 46 L 58 64 L 68 76 L 56 78 L 44 66 L 26 48 Z" fill="#0f172a"/>
+    <!-- Front Foot Sandal Accent -->
+    <path d="M 56 77 L 70 76 L 68 79 L 54 80 Z" fill="#0284c7"/>
+  </g>
+
+  <!-- Dynamic Sonic Speed Bursts & Chevrons (Right Edge) -->
+  <g stroke="#00f2fe" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.85">
+    <path d="M 235 62 L 246 72 L 235 82"/>
+    <path d="M 248 64 L 257 72 L 248 80" stroke="#38bdf8" stroke-width="2" opacity="0.7"/>
+    <path d="M 260 67 L 267 72 L 260 77" stroke="#ffffff" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- Glowing Particles / Dash Embers -->
+  <g fill="#00f2fe" opacity="0.75">
+    <circle cx="160" cy="38" r="1.5"/>
+    <circle cx="198" cy="26" r="1.8"/>
+    <circle cx="225" cy="44" r="1.2"/>
+    <circle cx="178" cy="118" r="1.6"/>
+    <circle cx="214" cy="106" r="2"/>
+    <circle cx="242" cy="98" r="1.4"/>
+  </g>
+
+  <!-- Outer Border -->
+  <rect width="278" height="152" x="1" y="1" rx="7" fill="none" stroke="#00f2fe" stroke-width="1" stroke-opacity="0.3"/>
+</svg>

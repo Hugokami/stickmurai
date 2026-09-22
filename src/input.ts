@@ -9,6 +9,7 @@ export function initInput() {
   // Desktop Input Setup
   window.addEventListener('keydown', e => {
     if (AdManager.isAdPlaying) return;
+    if (globals.gameState === 'playing') AdManager.gameplayStart();
     if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code) || [' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
       const tag = (e.target as HTMLElement)?.tagName;
       if (tag !== 'INPUT' && tag !== 'TEXTAREA') {
@@ -62,6 +63,7 @@ export function initInput() {
   });
   window.addEventListener('mousedown', (e: MouseEvent) => { 
     if (AdManager.isAdPlaying) return;
+    if (globals.gameState === 'playing') AdManager.gameplayStart();
     if (e.button === 2 && globals.selectedHero === 'aetherion') {
       e.preventDefault();
       callbacks.triggerAetherionRangedAttack?.();

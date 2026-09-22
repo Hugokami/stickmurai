@@ -14,10 +14,13 @@ const { execSync } = require('child_process');
 
 const args = process.argv.slice(2);
 let target = 'poki';
+let shouldBuild = true;
 
 for (const arg of args) {
   if (arg.startsWith('--target=')) {
     target = arg.split('=')[1].toLowerCase();
+  } else if (arg === '--skip-build' || arg === '--no-build') {
+    shouldBuild = false;
   } else if (arg === '--help' || arg === '-h') {
     console.log(`
 Unified Portal Build Matrix
@@ -26,7 +29,7 @@ Usage: node scripts/build-portal.cjs --target=<target>
 Available targets:
   --target=poki        Build Poki-compliant distribution & release/stickmurai-poki.zip
   --target=html5       Build standalone offline HTML5 release & release/stickmurai-html5.zip
-  --target=crazygames  (Discontinued) Emits deprecation notice and builds clean HTML5 fallback
+  --target=crazygames  Build extracted clean CrazyGames release & release/crazygames
 `);
     process.exit(0);
   }
@@ -35,11 +38,6 @@ Available targets:
 if (!['poki', 'html5', 'crazygames'].includes(target)) {
   console.error(`[build-portal] Unknown target: "${target}". Valid options: poki, html5, crazygames`);
   process.exit(1);
-}
-
-if (target === 'crazygames') {
-  console.warn('[build-portal] NOTICE: CrazyGames deployment is discontinued. Building clean HTML5 target instead.');
-  target = 'html5';
 }
 
 console.log(`\n========================================`);
@@ -54,12 +52,16 @@ const ZIP_NAME = target === 'html5' ? 'MURAMASA.EXE.zip' : `muramasa-${target}.z
 const ZIP_PATH = path.join(RELEASE_ROOT, ZIP_NAME);
 
 // Step 1: Ensure dist build exists and is up to date
-console.log('[1/5] Building production web assets (npm run build)...');
-try {
-  execSync('npm run build', { cwd: ROOT_DIR, stdio: 'inherit' });
-} catch (err) {
-  console.error('[build-portal] Build failed:', err.message);
-  process.exit(1);
+if (shouldBuild) {
+  console.log('[1/5] Building production web assets (npm run build)...');
+  try {
+    execSync('npm run build', { cwd: ROOT_DIR, stdio: 'inherit' });
+  } catch (err) {
+    console.error('[build-portal] Build failed:', err.message);
+    process.exit(1);
+  }
+} else {
+  console.log('[1/5] Skipping build (--skip-build specified)...');
 }
 
 // Step 2: Clean and prepare release directory
@@ -73,10 +75,10 @@ fs.mkdirSync(TARGET_RELEASE_DIR, { recursive: true });
 console.log('[3/5] Copying distribution assets...');
 const distFiles = fs.readdirSync(DIST_DIR);
 
-if (target === 'html5') {
-  // Standalone HTML5 / Itch.io package whitelist:
-  // Itch.io has a strict platform limit of 1,000 files per project zip (error: "Too many files in zip (6107 > 1000)").
-  // All character sprites, enemy frames, VFX animations, and backgrounds are bundled in assets.bin (25 MB),
+if (target === 'html5' || target === 'crazygames') {
+  // Standalone HTML5 / Itch.io / CrazyGames package whitelist:
+  // Platform limit: under 1,000 files and under 25 MB.
+  // All character sprites, enemy frames, VFX animations, and backgrounds are bundled in assets.bin (20 MB),
   // which is unpacked into in-memory object URL blobs at startup by ensurePackedAssets().
   // Loose unbundled raw frame directories (vfx: 4,779 files, sprites: 1,166 files) are excluded.
   const allowedDirs = new Set(['assets', 'audio', 'fonts', 'icons', 'ui', 'fantasy_bg']);
@@ -95,6 +97,14 @@ if (target === 'html5') {
         fs.copyFileSync(src, dest);
       }
     }
+  }
+
+  // Also copy hero portraits if present
+  const portraitsSrc = path.join(DIST_DIR, 'sprites', 'portraits');
+  const portraitsDest = path.join(TARGET_RELEASE_DIR, 'sprites', 'portraits');
+  if (fs.existsSync(portraitsSrc)) {
+    fs.mkdirSync(portraitsDest, { recursive: true });
+    fs.cpSync(portraitsSrc, portraitsDest, { recursive: true });
   }
 } else {
   for (const file of distFiles) {
