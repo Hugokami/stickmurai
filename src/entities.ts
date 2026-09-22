@@ -49,7 +49,7 @@ export function getTintedImage(img: HTMLImageElement | HTMLCanvasElement, hexCol
 export class Entity {
   x = 0; y = 0; vx = 0; vy = 0;
   yOffset = 0; yVelocity = 0; // Simulated vertical juggle height physics
-  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' | 'heroakakage' | 'heroaetherion' | 'wraith01' | 'wraith02' | 'wraith03' = 'sword';
+  type: 'sword' | 'fighter' | 'pistol' | 'skeleton' | 'enemy01' | 'enemy02' | 'enemy03' | 'enemy05' | 'heroluneblade' | 'heroninja' | 'evil_wizard' | 'enemy_orc' | 'enemy_barrel' | 'detonator' | 'boss_agis' | 'boss_skeleton' | 'heronightborne' | 'herosamurai' | 'toaster_bot' | 'herosatyr' | 'heroakakage' | 'heroaetherion' | 'wraith01' | 'wraith02' | 'wraith03' = 'sword';
   subType?: string;
   state = 'idle'; stateTime = 0;
   animFrame = 0; animTimer = 0; fps = 15;
@@ -74,7 +74,9 @@ export class Entity {
         this.yVelocity = 0;
       }
     }
-    const animState = this.state === 'charge' ? 'idle' : this.state;
+    const animState = this.state === 'charge'
+      ? (this.subType === 'detonator' || this.subType === 'barrel_bomber' ? 'walk' : 'idle')
+      : this.state;
     const currentAnim = anims[this.type][animState as keyof typeof anims['sword']];
     if (currentAnim && currentAnim.length > 0) {
       let currentFps = this.fps;
@@ -98,7 +100,9 @@ export class Entity {
   
   draw(ctx: CanvasRenderingContext2D, cx: number, cy: number, alpha = 1, colorTint = 'none') {
     const typeAnims = anims[this.type] || anims.sword;
-    const animState = this.state === 'charge' ? 'idle' : this.state;
+    const animState = this.state === 'charge'
+      ? (this.subType === 'detonator' || this.subType === 'barrel_bomber' ? 'walk' : 'idle')
+      : this.state;
     const currentAnim = (typeAnims as any)[animState] || typeAnims.idle || anims.sword.idle;
     if (!currentAnim || currentAnim.length === 0) return;
     const frameIdx = (this.animFrame >= 0 ? this.animFrame : 0) % currentAnim.length;
@@ -147,6 +151,8 @@ export class Entity {
       scale *= 7.8;
     } else if (this.type === 'enemy_barrel') {
       scale *= 2.4;
+    } else if (this.type === 'detonator') {
+      scale *= 3.8;
     } else if (this.type === 'boss_agis') {
       scale *= 2.6;
     } else if (this.type === 'boss_skeleton') {

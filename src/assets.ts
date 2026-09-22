@@ -935,6 +935,7 @@ export const enemyFolderMap: Record<string, string> = {
   evil_wizard: 'EvilWizard',
   enemy_orc: 'EnemyOrc',
   enemy_barrel: 'EnemyBarrel',
+  detonator: 'EnemyDetonator',
   boss_agis: 'BossAgis',
   boss_skeleton: 'BossSkeleton',
   heronightborne: 'HeroNightborne',
@@ -970,6 +971,7 @@ export function preloadStageEnemyAssets(stage: number) {
   loadEnemyAssetsNow('skeleton');
   loadEnemyAssetsNow('enemy_orc');
   loadEnemyAssetsNow('enemy_barrel');
+  loadEnemyAssetsNow('detonator');
   loadEnemyAssetsNow('enemy05');
   loadEnemyAssetsNow('wraith01');
   loadEnemyAssetsNow('wraith02');
@@ -1123,6 +1125,14 @@ export const anims = {
     attack: loadCustomEnemyAnim('EnemyBarrel', 'attack', 6, false),
     dash: loadCustomEnemyAnim('EnemyBarrel', 'dash', 6, false),
     dead: loadCustomEnemyAnim('EnemyBarrel', 'dead', 6, false),
+  },
+  detonator: {
+    idle: loadCustomEnemyAnim('EnemyDetonator', 'idle', 4, false),
+    walk: loadCustomEnemyAnim('EnemyDetonator', 'walk', 6, false),
+    attack: loadCustomEnemyAnim('EnemyDetonator', 'attack', 6, false),
+    dash: loadCustomEnemyAnim('EnemyDetonator', 'dash', 6, false),
+    dead: loadCustomEnemyAnim('EnemyDetonator', 'dead', 6, false),
+    hit: loadCustomEnemyAnim('EnemyDetonator', 'hit', 2, false),
   },
   boss_agis: {
     idle: loadCustomEnemyAnim('BossAgis', 'idle', 6, false),

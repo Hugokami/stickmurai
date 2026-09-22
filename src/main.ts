@@ -3598,8 +3598,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
     }
   }
 
-  // Deflect Karakuri Barrel Bomber into enemy ranks
-  if (e.subType === 'barrel_bomber') {
+  // Deflect Karakuri Detonator / Bomber into enemy ranks
+  if (e.subType === 'detonator' || e.subType === 'barrel_bomber') {
     const dx = e.x - globals.player.x;
     const dy = e.y - globals.player.y;
     const dist = Math.hypot(dx, dy) || 1;
@@ -3747,7 +3747,7 @@ function killEnemy(e: Enemy) {
     }
   }
 
-  if (e.subType === 'barrel_bomber') {
+  if (e.subType === 'detonator' || e.subType === 'barrel_bomber') {
     triggerBarrelExplosion(e);
   }
 

@@ -11,10 +11,10 @@ import { isBossType, configureBoss, triggerBossAttack, castBossSpell } from './b
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
-export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer' | 'barrel_bomber' | 'orc_brute' | 'agis_colossus' | 'skeleton_warlord' | 'toaster_bot' | 'tengu_sorcerer' | 'shadow_sniper' | 'corrupted_shaman' | 'crimson_berserker';
+export type EnemySubType = 'brawler' | 'samurai' | 'giant' | 'assassin' | 'berserker' | 'ronin' | 'oni_boss' | 'shogun_boss' | 'musketeer' | 'pyromancer' | 'glacial_sentinel' | 'astromancer' | 'necromancer' | 'barrel_bomber' | 'detonator' | 'orc_brute' | 'agis_colossus' | 'skeleton_warlord' | 'toaster_bot' | 'tengu_sorcerer' | 'shadow_sniper' | 'corrupted_shaman' | 'crimson_berserker';
 
 export class Enemy extends Entity {
-  get meleeHitRadius(){return 140+(this.scaleMult-1)*60;}
+  get meleeHitRadius() { return (this.subType === 'detonator' || this.subType === 'barrel_bomber') ? 190 : (140 + (this.scaleMult - 1) * 60); }
   target!: Player;
   attackLanded = false;
   chargeTimeMax = 1.6;
@@ -170,7 +170,7 @@ export class Enemy extends Entity {
         if (r < 0.20) this.subType = 'brawler';
         else if (r < 0.45) this.subType = 'musketeer';
         else if (r < 0.70) this.subType = 'tengu_sorcerer';
-        else if (r < 0.85) this.subType = 'barrel_bomber';
+        else if (r < 0.85) this.subType = 'detonator';
         else this.subType = 'pyromancer';
       } else if (stage === 4) {
         // Stage 4: Iron Bastion - Heavy Orc Brutes, Snipers & Glacial Sentinels
@@ -199,7 +199,7 @@ export class Enemy extends Entity {
         const r = Math.random();
         if (r < 0.25) this.subType = 'necromancer';
         else if (r < 0.50) this.subType = 'corrupted_shaman';
-        else if (r < 0.75) this.subType = 'barrel_bomber';
+        else if (r < 0.75) this.subType = 'detonator';
         else this.subType = 'orc_brute';
       } else if (stage === 7) {
         // Stage 7: Blood River - Chaos Vanguard, Snipers & Advanced Bots
@@ -269,7 +269,7 @@ export class Enemy extends Entity {
           const pool: EnemySubType[] = ['musketeer', 'shadow_sniper', 'crimson_berserker', 'orc_brute', 'assassin'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else if (stageInRealm === 3) {
-          const pool: EnemySubType[] = ['barrel_bomber', 'pyromancer', 'toaster_bot', 'corrupted_shaman', 'giant'];
+          const pool: EnemySubType[] = ['detonator', 'pyromancer', 'toaster_bot', 'corrupted_shaman', 'giant'];
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         } else {
           const pool: EnemySubType[] = ['glacial_sentinel', 'necromancer', 'astromancer', 'crimson_berserker', 'shadow_sniper'];
@@ -283,7 +283,7 @@ export class Enemy extends Entity {
       const activeRangedCount = globals.enemies ? globals.enemies.filter(e => e && e.state !== 'dead' && e.isRanged?.()).length : 0;
       const maxRanged = globals.difficulty === 'insane' ? 7 : (globals.currentStage >= 5 ? 6 : 4);
       if (activeRangedCount >= maxRanged) {
-        const meleePool: EnemySubType[] = ['samurai', 'ronin', 'brawler', 'berserker', 'giant', 'orc_brute', 'barrel_bomber'];
+        const meleePool: EnemySubType[] = ['samurai', 'ronin', 'brawler', 'berserker', 'giant', 'orc_brute', 'detonator'];
         this.subType = meleePool[Math.floor(Math.random() * meleePool.length)];
       }
     }
@@ -412,12 +412,12 @@ export class Enemy extends Entity {
       this.maxPosture = 340;
     } else if (isBossType(this.subType)) {
       configureBoss(this, this.subType);
-    } else if (this.subType === 'barrel_bomber') {
-      this.type = 'enemy_barrel';
-      this.lungeSpeed = 1050; this.chargeTimeMax = 1.15; this.lungeDuration = 0.45;
-      this.scaleMult = 1.1; this.hp = this.maxHp = 32; this.expValue = 2;
+    } else if (this.subType === 'detonator' || this.subType === 'barrel_bomber') {
+      this.type = 'detonator';
+      this.lungeSpeed = 0; this.chargeTimeMax = 1.15; this.lungeDuration = 0.45;
+      this.scaleMult = 1.25; this.hp = this.maxHp = 35; this.expValue = 3;
       this.colorTint = 'none';
-      this.speed = 350;
+      this.speed = 320;
       this.maxPosture = 130;
     } else if (this.subType === 'orc_brute') {
       this.type = 'enemy_orc';
@@ -848,9 +848,34 @@ export class Enemy extends Entity {
     }
     
     if (this.state === 'charge') {
-      this.vx = 0; this.vy = 0;
       const chargeRatio = this.stateTime / this.chargeTimeMax;
 
+      if (this.subType === 'detonator' || this.subType === 'barrel_bomber') {
+        // Detonator moves toward the player every time even while charging countdown!
+        const pdx = globals.player.x - this.x;
+        const pdy = globals.player.y - this.y;
+        const dist = Math.hypot(pdx, pdy) || 1;
+        const moveSpeed = this.speed * (this.chillTimer > 0 ? 0.7 : 1.0) * 0.95;
+        this.vx = (pdx / dist) * moveSpeed;
+        this.vy = (pdy / dist) * moveSpeed;
+        this.dir = pdx < 0 ? -1 : 1;
+        this.targetAngle = Math.atan2(pdy, pdx);
+        this.isAimLocked = chargeRatio >= 0.65;
+
+        // Immediate detonation if contact made during arming countdown
+        if (dist < 40 && this.stateTime > 0.25) {
+          this.executeAttack();
+          return;
+        }
+
+        if (this.stateTime > this.chargeTimeMax) {
+          this.executeAttack();
+          return;
+        }
+        return;
+      }
+
+      this.vx = 0; this.vy = 0;
       // Track target during first 65% of charge, then lock in aim for fair telegraph reaction!
       if (chargeRatio < 0.65) {
         this.targetAngle = Math.atan2(dy - this.rangedMuzzleOffsetY, dx);
@@ -1024,6 +1049,7 @@ export class Enemy extends Entity {
     if (this.subType === 'musketeer') { attackRange = 950; }
     else if (this.subType === 'pyromancer') { attackRange = 900; }
     else if (this.subType === 'glacial_sentinel') { attackRange = 200; }
+    else if (this.subType === 'detonator' || this.subType === 'barrel_bomber') { attackRange = 175; }
     else if (this.subType === 'astromancer') { attackRange = 1100; }
     else if (this.subType === 'necromancer') { attackRange = 950; }
     else if (this.subType === 'toaster_bot') { attackRange = 900; }
@@ -1081,6 +1107,25 @@ export class Enemy extends Entity {
       return;
     }
 
+    // Detonator relentless pursuit: always move toward player every time
+    if (this.subType === 'detonator' || this.subType === 'barrel_bomber') {
+      const pdx = globals.player.x - this.x;
+      const pdy = globals.player.y - this.y;
+      const dist = Math.hypot(pdx, pdy) || 0.001;
+      const pursuitBoost = dist > 450 ? Math.min(2.0, 1.0 + (dist - 450) / 300) : 1.0;
+      this.vx = (pdx / dist) * speed * pursuitBoost;
+      this.vy = (pdy / dist) * speed * pursuitBoost;
+      this.dir = pdx < 0 ? -1 : 1;
+
+      if (dist <= 175 && this.attackCooldownTimer <= 0) {
+        this.setState('charge');
+        this.targetAngle = Math.atan2(pdy, pdx);
+      } else {
+        this.setState('walk');
+      }
+      return;
+    }
+
     if (distSq > attackRange * attackRange || this.attackCooldownTimer > 0) {
       const dist = Math.sqrt(distSq) || 0.001;
       // Dynamic pursuit boost: enemies sprint up to 2.2x faster when the player is moving far away
@@ -1095,7 +1140,7 @@ export class Enemy extends Entity {
   }
 
   executeAttack() {
-    if (this.subType === 'barrel_bomber') {
+    if (this.subType === 'detonator' || this.subType === 'barrel_bomber') {
       triggerBarrelExplosion(this);
       this.attackLanded = true;
       return;
@@ -1316,9 +1361,10 @@ export class Enemy extends Entity {
     if (this.state === 'charge') {
       ctx.save(); ctx.translate(rx, effectiveRy);
       const p = Math.min(1, this.stateTime / this.chargeTimeMax);
+      const isDetonator = this.subType === 'detonator' || this.subType === 'barrel_bomber';
       const ranged = this.isRanged();
       const isLocked = this.isAimLocked;
-      const color = isLocked ? '#ef4444' : (ranged ? '#06b6d4' : '#fbbf24');
+      const color = isLocked ? '#ef4444' : (ranged ? '#06b6d4' : (isDetonator ? '#f97316' : '#fbbf24'));
       
       ctx.font = "bold 13px Outfit,system-ui,sans-serif";
       ctx.textAlign = 'center';
@@ -1326,14 +1372,45 @@ export class Enemy extends Entity {
       ctx.strokeStyle = '#050508';
       ctx.lineWidth = 3.5;
       const label = isLocked 
-        ? (ranged ? '⚠️ LOCKED ON!' : '⚠️ STRIKE IMMINENT!') 
-        : (ranged ? '◇ TARGETING' : '▸ CHARGING');
+        ? (isDetonator ? '⚠️ DETONATION IMMINENT!' : (ranged ? '⚠️ LOCKED ON!' : '⚠️ STRIKE IMMINENT!')) 
+        : (isDetonator ? '▸ ARMED' : (ranged ? '◇ TARGETING' : '▸ CHARGING'));
       ctx.strokeText(label, 0, -this.meleeHitRadius - 16);
       ctx.fillStyle = color;
       ctx.fillText(label, 0, -this.meleeHitRadius - 16);
       ctx.restore();
 
-      if (ranged) {
+      if (isDetonator) {
+        const radius = this.meleeHitRadius; // 190
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = isLocked ? 3.5 : 2;
+        ctx.setLineDash(isLocked ? [] : [10, 8]);
+        // Outer warning circle boundary
+        ctx.beginPath();
+        ctx.arc(0, 0, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.fillStyle = isLocked ? `rgba(239, 68, 68, ${0.16 + p * 0.16})` : `rgba(249, 115, 22, ${0.08 + p * 0.10})`;
+        ctx.fill();
+
+        // Inner expanding radial charge ring
+        ctx.beginPath();
+        ctx.arc(0, 0, radius * p, 0, Math.PI * 2);
+        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.28)' : 'rgba(249, 115, 22, 0.18)';
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.setLineDash([]);
+        ctx.stroke();
+
+        // Pulsing hazard perimeter ticks
+        const pulse = 4 + Math.sin(performance.now() * 0.02) * 2;
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = color;
+        ctx.beginPath();
+        ctx.arc(0, 0, radius + pulse, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.restore();
+      } else if (ranged) {
         const angles = this.subType === 'tengu_sorcerer'
           ? [this.targetAngle - 0.18, this.targetAngle + 0.18]
           : [this.targetAngle];
@@ -1416,6 +1493,7 @@ export class Enemy extends Entity {
     else if (this.type === 'enemy05') headOffset = 26;
     else if (this.type === 'enemy_orc') headOffset = 44;
     else if (this.type === 'enemy_barrel') headOffset = 52;
+    else if (this.type === 'detonator') headOffset = 26;
     else if (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03') headOffset = 48;
 
     // Perilous Attack Danger Telegraph ("!") for charging bosses, unblockable lunges, and locked aim
@@ -1569,7 +1647,7 @@ export class Enemy extends Entity {
     }
 
     // Ground contact shadow (drawn anchored at entity's physical feet baseline)
-    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'boss_skeleton' ? 44 : (this.type === 'toaster_bot' ? 45 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03' ? 30 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37)))))))))) * this.scaleMult;
+    const footOffsetY = (this.type === 'boss_agis' ? 143 : (this.type === 'boss_skeleton' ? 44 : (this.type === 'toaster_bot' ? 45 : (this.type === 'detonator' ? 24 : (this.type === 'enemy_barrel' ? 42 : (this.type === 'enemy_orc' ? 27 : (this.type === 'skeleton' ? 38 : (this.type === 'evil_wizard' ? 33 : (this.type === 'wraith01' || this.type === 'wraith02' || this.type === 'wraith03' ? 30 : (this.type === 'enemy03' ? 17 : (this.type === 'enemy05' ? 18 : 37))))))))))) * this.scaleMult;
     const shadowGroundRy = ((this.y - cy + globals.vh/2) + footOffsetY) | 0;
     const shadowGroundRx = (this.x - cx + globals.vw/2) | 0;
     const totalElevation = (this.airborneZ || 0) + Math.max(0, -(this.yOffset || 0));
@@ -1666,7 +1744,7 @@ export function triggerBarrelExplosion(barrel: Enemy) {
   const isDeflected = barrel.knockbackTimer > 0;
   if (isDeflected) {
     // Kicked barrel explodes into enemies!
-    globals.floatingTexts.push(FloatingText.acquire(barrel.x, barrel.y - 45, "BARREL DETONATION! 💥", "#f97316", 26));
+    globals.floatingTexts.push(FloatingText.acquire(barrel.x, barrel.y - 45, "DETONATION! 💥", "#f97316", 26));
     for (let i = 0; i < globals.enemies.length; i++) {
       const other = globals.enemies[i];
       if (!other || other === barrel || other.state === 'dead') continue;
@@ -1682,10 +1760,10 @@ export function triggerBarrelExplosion(barrel: Enemy) {
       }
     }
   } else {
-    // Detonates on player if in blast radius
+    // Detonates on player if in blast radius (matches 190px circular telegraph)
     const pdx = globals.player.x - barrel.x;
     const pdy = globals.player.y - barrel.y;
-    if (pdx * pdx + pdy * pdy < 140 * 140 && globals.player.state !== 'dead') {
+    if (pdx * pdx + pdy * pdy < 190 * 190 && globals.player.state !== 'dead') {
       callbacks.checkPlayerHit(barrel, 2);
       globals.floatingTexts.push(FloatingText.acquire(barrel.x, barrel.y - 40, "BOOM! 💥", "#ef4444", 24));
     }

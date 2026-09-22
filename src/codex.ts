@@ -13,7 +13,7 @@ const entries = [
   ['glacial_sentinel','Glacial Sentinel','Ranged','Keep room to dodge its ranged attacks.'],
   ['astromancer','Astromancer','Ranged','Watch incoming projectiles while approaching.'],
   ['necromancer','Necromancer','Summoner','Prioritize the summoner over its reinforcements.'],
-  ['barrel_bomber','Barrel Bomber','Explosive','Keep your distance from the explosion.'],
+  ['detonator','Detonator','Explosive','Relentlessly chases player. Keep distance before circle detonates.'],
   ['orc_brute','Orc Brute','Heavy','Dodge its windup and punish the recovery.'],
   ['toaster_bot','Toaster Bot','Ranged','Cross its firing line rather than standing still.'],
   ['oni_boss','Oni Overlord','Boss','Hellfire stomps erupt with fiery fissures; radial magma fireballs can be deflected. Sidestep enraged charges at <=50% HP.'],

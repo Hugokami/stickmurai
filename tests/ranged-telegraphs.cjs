@@ -141,3 +141,30 @@ test('boss: directional strike capsule rotated toward target with boss hit radiu
   assert.equal(draws.filter(d => d.path.some(p => p[0] === 'ellipse')).length, 0,
     'boss charging must not stroke stationary aura rings');
 });
+
+test('detonator: melee enemy with circular detonation telegraph centered on enemy, moves toward player', () => {
+  globals.player = { x: 100, y: 0, state: 'idle' };
+  const e = enemy('detonator');
+  assert.equal(e.isRanged(), false, 'detonator is melee enemy');
+  assert.equal(e.type, 'detonator', 'detonator uses detonator sprite');
+  
+  // Test walk movement towards player
+  e.x = 0; e.y = 0;
+  globals.player.x = 300; globals.player.y = 0;
+  e.update(0.016);
+  assert.ok(e.vx > 0, 'detonator moves toward player on X');
+  
+  // Test charge state and circular telegraph
+  globals.player.x = 100; globals.player.y = 0;
+  e.state = 'charge';
+  e.stateTime = 0.5;
+  e.update(0.016);
+  assert.ok(e.vx > 0, 'detonator keeps moving toward player even while charging');
+
+  const draws = record(e);
+  const arcs = draws.filter(d => d.path.some(p => p[0] === 'arc'));
+  assert.ok(arcs.length >= 2, 'detonator has circular outer boundary and inner expanding charge ring');
+  const fullCircle = arcs.find(d => d.path.some(p => p[0] === 'arc' && Math.abs(p[3] - 190) < 5));
+  assert.ok(fullCircle, 'outer circle matches 190px explosion radius');
+});
+
