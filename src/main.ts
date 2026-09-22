@@ -94,7 +94,7 @@ import { initInput, pollGamepad } from './input';
 import { initUI, updateUI, updateEnhanceButton, updateStanceSwitchButton, toggleAetherionStance, updateStaticText, updateComboDisplay, HEROES_DATA } from './ui';
 import { initRenderer, draw, resetCanvasVisuals, resizeCanvas } from './renderer';
 import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate, openShop, refreshShop } from './powerups';
-import { initFullscreen, requestFullscreen } from './fullscreen';
+import { initFullscreen, requestFullscreen, isPoki } from './fullscreen';
 import { handleBossHit } from './bosses';
 import { distToSegment } from './collision';
 
@@ -255,7 +255,7 @@ function finishLoading() {
       proceedToMenu();
 
       // Optional fullscreen attempt on user gesture
-      if (e && e.isTrusted) {
+      if (e && e.isTrusted && !isPoki()) {
         tryEnterFullscreen(() => {});
       }
     };
@@ -300,12 +300,20 @@ function updateLoaderProgress() {
 function t(key: string): string { return i18n[globals.currentLang]?.[key] || key; }
 
 function tryEnterFullscreen(onComplete: () => void) {
+  if (isPoki()) {
+    onComplete();
+    return;
+  }
   requestFullscreen().finally(() => {
     onComplete();
   });
 }
 
 export function showFullscreenPrompt(onComplete: () => void) {
+  if (isPoki()) {
+    onComplete();
+    return;
+  }
   const prompt = document.getElementById('fullscreen-prompt');
   if (!prompt) {
     onComplete();
@@ -410,7 +418,7 @@ function checkOrientationAndFullscreen() {
     rotateDismissBtn.addEventListener('pointerdown', dismissRotate);
   }
 
-  if (rotatePromptDismissed) {
+  if (rotatePromptDismissed || isPoki()) {
     rotatePrompt.style.display = 'none';
     return;
   }

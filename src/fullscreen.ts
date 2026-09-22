@@ -8,9 +8,25 @@ export function isCrazyGames(): boolean {
 }
 
 /**
+ * Checks whether game is running in Poki portal environment.
+ * Fullscreen is disallowed by Poki iframe permissions policy and handled by Poki's parent wrapper.
+ */
+export function isPoki(): boolean {
+  if (typeof window === 'undefined') return false;
+  return !!(
+    (window as any).__POKI_BUILD__ ||
+    (window as any).IS_POKI ||
+    (window as any).PokiSDK ||
+    window.location.href.includes('poki') ||
+    (typeof document !== 'undefined' && document.querySelector('script[src*="poki"]'))
+  );
+}
+
+/**
  * Checks whether the browser supports standard or vendor-prefixed Fullscreen API.
  */
 export function isFullscreenSupported(): boolean {
+  if (isCrazyGames() || isPoki()) return false;
   if (typeof document === 'undefined') return false;
   const doc = document as any;
   const docEl = document.documentElement as any;
@@ -44,6 +60,7 @@ export function isFullscreenActive(): boolean {
  * Requests fullscreen on documentElement with optional landscape orientation lock.
  */
 export async function requestFullscreen(): Promise<boolean> {
+  if (isCrazyGames() || isPoki()) return false;
   if (isFullscreenActive()) return false;
   try {
     const docEl = document.documentElement as any;
@@ -64,7 +81,10 @@ export async function requestFullscreen(): Promise<boolean> {
       updateFullscreenUI();
       return true;
     }
-  } catch (err) {
+  } catch (err: any) {
+    if (err && (err.name === 'TypeError' || String(err).includes('permissions policy'))) {
+      return false;
+    }
     console.warn('[Fullscreen] Request error:', err);
   }
   return false;
@@ -74,6 +94,7 @@ export async function requestFullscreen(): Promise<boolean> {
  * Exits fullscreen mode.
  */
 export async function exitFullscreen(): Promise<boolean> {
+  if (isCrazyGames() || isPoki()) return false;
   if (!isFullscreenActive()) return false;
   try {
     const doc = document as any;
@@ -99,6 +120,7 @@ export async function exitFullscreen(): Promise<boolean> {
  * Toggles fullscreen mode on or off.
  */
 export async function toggleFullscreen(): Promise<boolean> {
+  if (isCrazyGames() || isPoki()) return false;
   if (isFullscreenActive()) {
     return exitFullscreen();
   } else {
@@ -115,6 +137,18 @@ export function updateFullscreenUI(): void {
   const pauseBtn = document.getElementById('pause-fullscreen-btn');
   const menuBtn = document.getElementById('menu-fullscreen-btn');
   const settingsBtn = document.getElementById('settings-fullscreen-btn');
+  const settingRow = document.getElementById('setting-fullscreen-row');
+  const prompt = document.getElementById('fullscreen-prompt');
+
+  if (isCrazyGames() || isPoki()) {
+    if (hudBtn) hudBtn.style.display = 'none';
+    if (pauseBtn) pauseBtn.style.display = 'none';
+    if (menuBtn) menuBtn.style.display = 'none';
+    if (settingsBtn) settingsBtn.style.display = 'none';
+    if (settingRow) settingRow.style.display = 'none';
+    if (prompt) prompt.style.display = 'none';
+    return;
+  }
 
   // In-game HUD fullscreen button is removed from battlefield
   if (hudBtn) hudBtn.style.display = 'none';
@@ -155,6 +189,10 @@ export function updateFullscreenUI(): void {
  */
 export function initFullscreen(): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  if (isCrazyGames() || isPoki()) {
+    updateFullscreenUI();
+    return;
+  }
 
   const bindBtn = (id: string) => {
     const el = document.getElementById(id);

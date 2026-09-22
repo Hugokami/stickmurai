@@ -103,13 +103,42 @@ for s in range(1, 9):
     if os.path.exists(fp):
         files_to_pack.append((fp, f'sprites/{fn}'))
 
+poki_fs_strip = \"\"\"<script>
+window.__POKI_BUILD__ = true;
+window.IS_POKI = true;
+if (typeof Element !== 'undefined' && Element.prototype) {
+    Element.prototype.requestFullscreen = function() { return Promise.resolve(); };
+    Element.prototype.webkitRequestFullscreen = function() { return Promise.resolve(); };
+}
+if (typeof Document !== 'undefined' && Document.prototype) {
+    Document.prototype.exitFullscreen = function() { return Promise.resolve(); };
+    Document.prototype.webkitExitFullscreen = function() { return Promise.resolve(); };
+}
+</script>
+<style>
+#fullscreen-hud-btn, #fullscreen-prompt, #menu-fullscreen-btn, #setting-fullscreen-row, #settings-fullscreen-btn, #pause-fullscreen-btn {
+    display: none !important;
+}
+</style>
+\"\"\"
+
 with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
     for abs_path, rel_path in files_to_pack:
-        zf.write(abs_path, rel_path)
-        
         dest_file = os.path.join(poki_folder, *rel_path.split('/'))
         os.makedirs(os.path.dirname(dest_file), exist_ok=True)
-        shutil.copy2(abs_path, dest_file)
+        if rel_path == 'index.html':
+            with open(abs_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            if '<head>' in content:
+                content = content.replace('<head>', '<head>' + poki_fs_strip, 1)
+            else:
+                content = poki_fs_strip + content
+            with open(dest_file, 'w', encoding='utf-8') as f:
+                f.write(content)
+            zf.writestr(rel_path, content.encode('utf-8'))
+        else:
+            zf.write(abs_path, rel_path)
+            shutil.copy2(abs_path, dest_file)
 
 print(f"Poki ZIP packaged successfully with {len(files_to_pack)} runtime files: {zip_path}")
 `;

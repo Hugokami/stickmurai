@@ -127,7 +127,9 @@ export function campaignHpMultiplier(stage:number,boss:boolean):number {
   if (boss) {
     const stage50Mult = s >= 50 ? 5.0 : 1.0;
     const stage60BossMult = s >= 60 ? 1.3 : 1.0;
-    return 2.0 * stage50Mult * stage60BossMult * 1.5 * (1 + (s - 1) * 0.35 + late * 0.65 + (late * late) * 0.05);
+    // Early stages are ~5x lower HP (360 HP at stage 1 vs 1800 HP), scaling up smoothly to stronger lategame
+    const early = 0.6 + (s - 1) * 1.65;
+    return stage50Mult * stage60BossMult * (early + late * 2.5 + (late * late) * 0.35);
   }
   return 1.5 * (1 + (s - 1) * 0.20 + late * 0.35 + (late * late) * 0.02);
 }
