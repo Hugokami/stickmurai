@@ -57,7 +57,8 @@ import {
   playAffixAlert,
   getConsecutiveParries,
   playSynthesizedSheathe,
-  triggerBgmGestureUnlock
+  triggerBgmGestureUnlock,
+  setAudioComboProvider
 } from './audio';
 import {
   Afterimage,
@@ -128,6 +129,7 @@ callbacks.triggerAetherionWarpHyperSnipe = triggerAetherionWarpHyperSnipe;
 (callbacks as any).triggerAetherionDimensionRend = triggerAetherionDimensionRend;
 (callbacks as any).triggerAetherionPhaseWarp = triggerAetherionPhaseWarp;
 callbacks.updateComboDisplay = updateComboDisplay;
+setAudioComboProvider(() => globals.combo || 0);
 callbacks.triggerFlowingCounterReset = triggerFlowingCounterReset;
 callbacks.triggerElementalExplosion = triggerElementalExplosion;
 (callbacks as any).triggerStormGodLightning = triggerStormGodLightning;
@@ -3302,8 +3304,10 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
     (e as any).posture = 0;
     const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
     if (isBoss) {
-      // Boss execution: ~15% max HP (min 50, capped at 260), stun boss for 2.0s
-      finalDmg = Math.min(260, Math.max(50, Math.round((e.maxHp || 100) * 0.15)));
+      // Boss execution: ~15% max HP with weapon damage floor, capped at 25% max HP
+      const execFloor = Math.max(50, Math.round(getCurrentSlashDamage() * 5.0));
+      finalDmg = Math.max(execFloor, Math.round((e.maxHp || 100) * 0.15));
+      finalDmg = Math.min(finalDmg, Math.max(execFloor, Math.round((e.maxHp || 100) * 0.25)));
       e.stunTimer = 2.0;
       e.knockbackTimer = 0.45;
       const kbAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
@@ -3381,8 +3385,7 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
             const pullA = Math.atan2(e.y - en.y, e.x - en.x);
             en.vx += Math.cos(pullA) * 900;
             en.vy += Math.sin(pullA) * 900;
-            en.hp -= voidPulseDmg;
-            if (en.hp <= 0) killEnemy(en);
+            hitEnemy(en, voidPulseDmg, false, true);
           }
         }
       });
@@ -3424,8 +3427,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
           const kAng = Math.atan2(ody, odx);
           other.knockbackVx = Math.cos(kAng) * 600;
           other.knockbackVy = Math.sin(kAng) * 600;
-          other.hp -= 18;
-          if (other.hp <= 0) killEnemy(other);
+          const satyrDmg = Math.max(18, Math.round(18 + getCurrentSlashDamage() * 1.2));
+          hitEnemy(other, satyrDmg, false, true);
         }
       }
     }
@@ -3449,8 +3452,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
           other.burnTimer = Math.max(other.burnTimer || 0, 4.0);
           other.burnDmg = Math.max(other.burnDmg || 0, 2);
           const slashDmg = getCurrentSlashDamage();
-          other.hp -= Math.max(18, Math.round((18 + 4 * (globals.playerStats.fireStanceLevel || 1)) + slashDmg * 1.5));
-          if (other.hp <= 0) killEnemy(other);
+          const fireExpDmg = Math.max(18, Math.round((18 + 4 * (globals.playerStats.fireStanceLevel || 1)) + slashDmg * 1.5));
+          hitEnemy(other, fireExpDmg, false, true);
         }
       }
     }
@@ -3472,8 +3475,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
           other.isChilled = true;
           other.chillTimer = Math.max(other.chillTimer || 0, 4.0);
           const slashDmg = getCurrentSlashDamage();
-          other.hp -= Math.max(16, Math.round(16 + slashDmg * 1.4));
-          if (other.hp <= 0) killEnemy(other);
+          const frostExpDmg = Math.max(16, Math.round(16 + slashDmg * 1.4));
+          hitEnemy(other, frostExpDmg, false, true);
         }
       }
     }
@@ -3499,8 +3502,8 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
           other.vx += (vdx / vDist) * 750;
           other.vy += (vdy / vDist) * 750;
           const slashDmg = getCurrentSlashDamage();
-          other.hp -= Math.max(15, Math.round(15 + slashDmg * 1.3));
-          if (other.hp <= 0) killEnemy(other);
+          const voidExpDmg = Math.max(15, Math.round(15 + slashDmg * 1.3));
+          hitEnemy(other, voidExpDmg, false, true);
         }
       }
     }
@@ -3624,14 +3627,17 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
   const isBossEntity = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
   if (isBossEntity) {
     const stage = globals.currentStage || 1;
+    const slashDmg = getCurrentSlashDamage();
     // Stage 60+ bosses gain innate damage reduction scaling from 45% at stage 60 up to 70%
     if (stage >= 60) {
       const lateStageDmgRed = Math.min(0.70, 0.45 + (stage - 60) * 0.008);
       finalDmg = Math.max(1, Math.round(finalDmg * (1 - lateStageDmgRed)));
-      const maxBossSingleHit = Math.max(40, Math.round((e.maxHp || 100) * 0.08));
+      const minFloor = Math.max(20, Math.round(slashDmg * 2.5));
+      const maxBossSingleHit = Math.max(minFloor, Math.round((e.maxHp || 100) * 0.08));
       finalDmg = Math.min(finalDmg, maxBossSingleHit);
     } else {
-      const maxBossSingleHit = Math.max(70, Math.round((e.maxHp || 100) * 0.12));
+      const minFloor = Math.max(12, Math.round(slashDmg * 3.0));
+      const maxBossSingleHit = Math.max(minFloor, Math.round((e.maxHp || 100) * 0.12));
       finalDmg = Math.min(finalDmg, maxBossSingleHit);
     }
     // Strict boss immunity: boss immune to all stuns and knockbacks except stagger bar
@@ -4160,7 +4166,8 @@ function update(realDt: number) {
           for (const t of targets) {
             globals.lightningBeams.push(LightningBeam.acquire(t.x, t.y));
             globals.shockwaves.push(new Shockwave(t.x, t.y, '#38bdf8'));
-            callbacks.hitEnemy(t, 8, false, true);
+            const galeDmg = Math.max(10, Math.round(8 + getCurrentSlashDamage() * 1.2));
+            callbacks.hitEnemy(t, galeDmg, false, true);
             globals.floatingTexts.push(FloatingText.acquire(t.x, t.y - 40, "⚡ GALE STRIKE", "#38bdf8", 18));
           }
         }
@@ -4269,7 +4276,7 @@ function update(realDt: number) {
               if (dSq < rSq) {
                 en.burnTimer = 3.0;
                 const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
-                const tickDmg = Math.max(1, Math.round(((6 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 0.6) * slashPct) * 0.25));
+                const tickDmg = Math.max(2, Math.round(((4 + getCurrentSlashDamage() * 0.35 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 0.4) * slashPct) * 0.35));
                 hitEnemy(en, tickDmg, false, true);
               }
             }
@@ -4315,7 +4322,7 @@ function update(realDt: number) {
               if (en.state === 'dead' || (en as any).deathHandled) continue;
               const dSq = (en.x - s.x) ** 2 + (en.y - s.y) ** 2;
               if (dSq < rSq) {
-                hitEnemy(en, s.damage || 5, false, true);
+                hitEnemy(en, s.damage || Math.max(6, Math.round(5 + getCurrentSlashDamage() * 0.5)), false, true);
                 globals.particles.push(Particle.acquire(s.x, s.y, '#4ade80', 180, 0.3, 2));
               }
             }
@@ -5259,7 +5266,7 @@ function update(realDt: number) {
         const radiusSum = petal.radius + enemyHitRadius;
         if (dx * dx + dy * dy < radiusSum * radiusSum) {
           exploded = true;
-          const petalDmg = Math.max(1, Math.round(getCurrentSlashDamage() * 0.35));
+          const petalDmg = Math.max(4, Math.round(5 + getCurrentSlashDamage() * 0.4));
           hitEnemy(e, petalDmg);
           for (let k = 0; k < 4; k++) {
             const angle = Math.random() * Math.PI * 2;
@@ -5358,7 +5365,7 @@ function update(realDt: number) {
           const dx = e.x - dome.x;
           const dy = e.y - dome.y;
           if (dx * dx + dy * dy < radius * radius) {
-            const sliceDmg = Math.max(0.5, Math.round(getCurrentSlashDamage() * 0.2 * 10) / 10);
+            const sliceDmg = Math.max(3, Math.round(4 + getCurrentSlashDamage() * 0.25));
             hitEnemy(e, sliceDmg);
           }
         }
@@ -6463,7 +6470,8 @@ function update(realDt: number) {
       }
       
       if (globals.echoLevel > 0) {
-        const echoDmg = Math.max(2, Math.round((2.0 + dmg * 0.45) * globals.echoLevel));
+        const slashDmg = getCurrentSlashDamage();
+        const echoDmg = Math.max(8, Math.round((6.0 + slashDmg * 0.65) * globals.echoLevel));
         const currentAngle = angle;
         const currentX = globals.player.x;
         const currentY = globals.player.y;
@@ -6574,7 +6582,7 @@ function update(realDt: number) {
             proj.vx = Math.cos(deflectAngle) * deflectSpeed;
             proj.vy = Math.sin(deflectAngle) * deflectSpeed;
             proj.angle = deflectAngle;
-            proj.damage = (globals.playerStats.deflectedDmg || 2) * 3 + Math.round(dmg * 0.5);
+            proj.damage = Math.max(15, Math.round(((globals.playerStats.deflectedDmg || 2) * 4) + getCurrentSlashDamage() * 1.5));
 
             playSynthesizedParry();
             globals.screenShake = 16;

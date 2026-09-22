@@ -270,18 +270,31 @@ export function playSound(pool: HTMLAudioElement[], volumeMult: number = 1.0, pi
 }
 
 let lastSlashSfxTime = 0;
+let comboProvider: (() => number) | null = null;
+
+export function setAudioComboProvider(provider: () => number) {
+  comboProvider = provider;
+}
 
 export function playSynthesizedSlash(_volumeMult: number = 1.0) {
   // Intentionally no-op: synthetic oscillator swoop sounded like a blunt hit effect.
 }
 
-export function playSlashSfx(volumeMult: number = 1.0, pitchMult: number = 1.0) {
+export function playSlashSfx(volumeMult: number = 1.0, pitchMult?: number) {
   const nowTime = performance.now();
   if (nowTime - lastSlashSfxTime < 50) return;
   lastSlashSfxTime = nowTime;
 
+  let effectivePitch = pitchMult;
+  if (effectivePitch === undefined) {
+    const combo = comboProvider ? comboProvider() : 0;
+    const crescendo = Math.min(1.45, 1.0 + combo * 0.015);
+    const jitter = 0.96 + Math.random() * 0.08;
+    effectivePitch = crescendo * jitter;
+  }
+
   // Always play slash SFX regardless of portal mute state
-  playSound(sfx.slash, volumeMult, pitchMult);
+  playSound(sfx.slash, volumeMult, effectivePitch);
 }
 
 let audioCtx: AudioContext | null = null;
@@ -475,8 +488,10 @@ export function playSynthesizedParry() {
     const now = ctx.currentTime;
     const volume = Math.max(0.001, getSfxVolume() * 0.55);
     
-    // Ascending pitch scale: +1 semitone per consecutive parry streak (+1/12 octave)
-    const pitchMult = Math.pow(2, (consecutiveParries - 1) / 12);
+    // Ascending pitch scale: +1 semitone per consecutive parry streak (+1/12 octave) + combo lift
+    const combo = comboProvider ? comboProvider() : 0;
+    const comboPitch = Math.min(1.25, 1.0 + combo * 0.006);
+    const pitchMult = Math.pow(2, (consecutiveParries - 1) / 12) * comboPitch;
 
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
@@ -561,12 +576,15 @@ export function playSynthesizedPerfectParry() {
     const now = ctx.currentTime;
     const volume = getSfxVolume() * 0.75;
     
+    const combo = comboProvider ? comboProvider() : 0;
+    const comboPitch = Math.min(1.35, 1.0 + combo * 0.008);
+
     // Core metallic strike
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
     osc1.type = 'sine';
-    osc1.frequency.setValueAtTime(1600, now);
-    osc1.frequency.exponentialRampToValueAtTime(800, now + 0.35);
+    osc1.frequency.setValueAtTime(1600 * comboPitch, now);
+    osc1.frequency.exponentialRampToValueAtTime(800 * comboPitch, now + 0.35);
     gain1.gain.setValueAtTime(volume, now);
     gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
     osc1.connect(gain1);
@@ -576,8 +594,8 @@ export function playSynthesizedPerfectParry() {
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
     osc2.type = 'triangle';
-    osc2.frequency.setValueAtTime(1000, now);
-    osc2.frequency.exponentialRampToValueAtTime(400, now + 0.2);
+    osc2.frequency.setValueAtTime(1000 * comboPitch, now);
+    osc2.frequency.exponentialRampToValueAtTime(400 * comboPitch, now + 0.2);
     gain2.gain.setValueAtTime(volume * 0.5, now);
     gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
     osc2.connect(gain2);
@@ -587,8 +605,8 @@ export function playSynthesizedPerfectParry() {
     const osc3 = ctx.createOscillator();
     const gain3 = ctx.createGain();
     osc3.type = 'sine';
-    osc3.frequency.setValueAtTime(3200, now);
-    osc3.frequency.exponentialRampToValueAtTime(2000, now + 0.15);
+    osc3.frequency.setValueAtTime(3200 * comboPitch, now);
+    osc3.frequency.exponentialRampToValueAtTime(2000 * comboPitch, now + 0.15);
     gain3.gain.setValueAtTime(volume * 0.3, now);
     gain3.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
     osc3.connect(gain3);

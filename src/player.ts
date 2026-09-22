@@ -596,7 +596,8 @@ export class Player extends Entity {
               }
             }
           } else {
-            callbacks.hitEnemy(e, 1);
+            const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
+            callbacks.hitEnemy(e, Math.max(2, Math.round(slashDmg * 0.25)));
           }
         }
       });

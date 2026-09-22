@@ -32,3 +32,25 @@ test('hero prices keep a rising baseline attack budget and capped crit',()=>{
  }
  assert.equal(heroBalance('obsolete-hero'),HERO_BALANCE.default);
 });
+
+test('boss damage governor formula clamps maximum single hit to 8-12% boss max HP with weapon floor', () => {
+  const stage1BossHp = 360;
+  const stage1SlashDmg = 12;
+  const minFloor = Math.max(12, Math.round(stage1SlashDmg * 3.0));
+  const maxHitStage1 = Math.max(minFloor, Math.round(stage1BossHp * 0.12));
+  assert.equal(maxHitStage1, 43);
+
+  const stage10BossHp = 34865;
+  const stage10SlashDmg = 55;
+  const maxHitStage10 = Math.max(Math.max(12, Math.round(stage10SlashDmg * 3.0)), Math.round(stage10BossHp * 0.12));
+  assert.equal(maxHitStage10, 4184);
+});
+
+test('audio crescendo formula scales dynamically with combo and clamps at 1.45x', () => {
+  const crescendo = (combo) => Math.min(1.45, 1.0 + combo * 0.015);
+  assert.equal(crescendo(0), 1.0);
+  assert.equal(crescendo(10), 1.15);
+  assert.equal(crescendo(20), 1.30);
+  assert.equal(crescendo(30), 1.45);
+  assert.equal(crescendo(100), 1.45);
+});

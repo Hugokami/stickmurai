@@ -630,7 +630,9 @@ export class Enemy extends Entity {
         this.knockbackVy = 0;
         this.knockbackTimer = 0;
         this.stunTimer = 1.2;
-        callbacks.hitEnemy(this, 4);
+        const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
+        const wallDmg = Math.max(4, Math.round(4 + slashDmg * 0.5));
+        callbacks.hitEnemy(this, wallDmg);
         this.addPostureDamage(35);
         globals.screenShake = 16;
         globals.shockwaves.push(new Shockwave(this.x, this.y, '#f8fafc'));
@@ -675,7 +677,9 @@ export class Enemy extends Entity {
             const odx = other.x - this.x;
             const ody = other.y - this.y;
             if (odx * odx + ody * ody < 170 * 170) {
-              callbacks.hitEnemy(other, 3);
+              const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
+              const colDmg = Math.max(3, Math.round(3 + slashDmg * 0.4));
+              callbacks.hitEnemy(other, colDmg);
               other.stunTimer = Math.max(other.stunTimer || 0, 1.0);
               other.knockbackTimer = 0.35;
               const oang = Math.atan2(ody, odx);
@@ -1757,7 +1761,9 @@ export function triggerBarrelExplosion(barrel: Enemy) {
       const edx = other.x - barrel.x;
       const edy = other.y - barrel.y;
       if (edx * edx + edy * edy < 220 * 220) {
-        callbacks.hitEnemy(other, 12);
+        const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
+        const barrelDmg = Math.max(14, Math.round(14 + slashDmg * 1.6));
+        callbacks.hitEnemy(other, barrelDmg);
         other.addPostureDamage(45);
         other.knockbackTimer = 0.4;
         const ang = Math.atan2(edy, edx);
