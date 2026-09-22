@@ -284,7 +284,7 @@ export class Player extends Entity {
         callbacks.onTrainingAction?.({ type: 'dash', dashDist: 100 });
         if (wasCharging && previousCharge >= 0.20) {
           (this as any).lastChargeDashTime = nowDash;
-          (this as any).wasChargedDash = (previousCharge >= 0.85);
+          (this as any).wasChargedDash = true;
           callbacks.onTrainingAction?.({ type: 'charge-dash', previousCharge, fromChargeDash: true });
         }
 

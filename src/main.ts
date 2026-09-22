@@ -1565,16 +1565,28 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
     return;
   }
   
+  const parryWindowMult = globals.selectedHero === 'default' ? 1.35 : 1.0;
   const isParryMasterActive = globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0;
-  if ((globals.player.state === 'attack' && globals.player.stateTime < 0.3 && isParryMasterActive) || globals.parryWindowTimer > 0) {
-    playSynthesizedParry();
+  const isSlashParryActive = globals.player.state === 'attack' && globals.player.stateTime < (0.35 * parryWindowMult);
+  const isFromDummy = Boolean(enemy?.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
+
+  if (isSlashParryActive || globals.parryWindowTimer > 0 || isParryMasterActive) {
+    const isPerfect = isSlashParryActive ? (globals.player.stateTime < (0.24 * parryWindowMult) || isFromDummy) : (globals.parryWindowTimer > 0.2 || isFromDummy);
+    if (isPerfect) {
+      globals.runStats.perfectParries++;
+      playSynthesizedPerfectParry();
+    } else {
+      playSynthesizedParry();
+    }
     globals.runStats.parries++;
+    globals.consecutiveParries++;
     addCombo();
     globals.hitStop = 0.045; // Micro hit-stop crunch (2-3 frames freeze)
     globals.screenShake = 14; 
     addFlow(4.0);
     globals.invulnTimer = 0.55;
-    callbacks.onTrainingDummyAttack?.({ parried: true, fromDummy: Boolean(enemy?.isTrainingDummy) });
+    callbacks.onTrainingDummyAttack?.({ parried: true, perfectParry: isPerfect, fromDummy: isFromDummy });
+    callbacks.onTrainingAction?.({ type: 'parry', perfectParry: isPerfect, fromDummy: isFromDummy });
     
     // Mechanic 1: Kinetic Parry Sparks & Ascending Palette Streak
     const streak = getConsecutiveParries();
@@ -4457,6 +4469,7 @@ function update(realDt: number) {
         globals.player.dashStartY = globals.player.y;
         globals.raijinDashActive = true;
         const now = performance.now();
+        (globals.player as any).lastDashTime = now;
         if (now - globals.lastIaijutsuFireTime < 350) {
           globals.lightningDischargeActive = true;
         } else {
@@ -5551,20 +5564,22 @@ function update(realDt: number) {
   // When an enemy is in crimson danger attack/charge window, tapping Slash triggers forward phased counter-thrust
   // Internal cooldown (1.8s) prevents infinite counter-flash invulnerability spam against bosses
   const nowMikiri = performance.now();
+  const hasDummy = globals.enemies?.some((e: any) => (e as any)?.isTrainingDummy);
   const mikiriCooldownMs = 1800;
-  const mikiriReady = (nowMikiri - (globals.lastMikiriStrideTime || 0)) >= mikiriCooldownMs;
+  const effectiveMikiriCooldownMs = hasDummy ? 100 : mikiriCooldownMs;
+  const mikiriReady = (nowMikiri - (globals.lastMikiriStrideTime || 0)) >= effectiveMikiriCooldownMs;
 
   if (!dashAttackTriggered && isAttackPressed && globals.player.state !== 'dash' && globals.player.state !== 'dead' && mikiriReady) {
     for (let i = 0; i < globals.enemies.length; i++) {
       const e = globals.enemies[i];
       if (e.state === 'dead') continue;
-      const isImminentAttack = (e.state === 'charge' && e.stateTime >= e.chargeTimeMax - (0.32 * parryWindowMult)) ||
-                               (e.state === 'attack' && e.stateTime <= 0.18 * parryWindowMult);
+      const isImminentAttack = (e.state === 'charge' && e.stateTime >= e.chargeTimeMax - ((e.isTrainingDummy ? 0.45 : 0.32) * parryWindowMult)) ||
+                               (e.state === 'attack' && e.stateTime <= (e.isTrainingDummy ? 0.38 : 0.18) * parryWindowMult);
       if (isImminentAttack) {
         const dx = e.x - globals.player.x;
         const dy = e.y - globals.player.y;
         const distSq = dx * dx + dy * dy;
-        const maxDist = 240 + (e.scaleMult - 1) * 60;
+        const maxDist = (240 + (e.scaleMult - 1) * 60) * (e.isTrainingDummy ? 1.35 : 1.0);
         if (distSq < maxDist * maxDist) {
           parryTriggered = true;
           globals.lastMikiriStrideTime = nowMikiri;
@@ -5609,6 +5624,9 @@ function update(realDt: number) {
           globals.runStats.parries++;
           globals.runStats.perfectParries++;
           globals.consecutiveParries++;
+          const isFromDummy = Boolean(e.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
+          callbacks.onTrainingDummyAttack?.({ parried: true, perfectParry: true, fromDummy: isFromDummy });
+          callbacks.onTrainingAction?.({ type: 'parry', perfectParry: true, fromDummy: isFromDummy });
           addCombo();
           addCombo();
           addFlow(6.0);
@@ -5699,12 +5717,15 @@ function update(realDt: number) {
           }
         });
 
-          const isPerfect = (e.state === 'attack' && e.stateTime < 0.18 * parryWindowMult) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08 * parryWindowMult);
+          const isFromDummy = Boolean(e.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
+          const isPerfect = (e.state === 'attack' && e.stateTime < 0.18 * parryWindowMult) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08 * parryWindowMult) || isFromDummy;
           
           if (isPerfect) {
             globals.runStats.perfectParries++;
             globals.runStats.parries++;
             globals.consecutiveParries++;
+            callbacks.onTrainingDummyAttack?.({ parried: true, perfectParry: true, fromDummy: isFromDummy });
+            callbacks.onTrainingAction?.({ type: 'parry', perfectParry: true, fromDummy: isFromDummy });
 
             // Bushido Rally: Landing 1 perfect parry restores Ghost Heart
             if (globals.ghostHeartTimer > 0) {
@@ -5831,6 +5852,8 @@ function update(realDt: number) {
             }
           } else {
             globals.runStats.parries++;
+            callbacks.onTrainingDummyAttack?.({ parried: true, perfectParry: false, fromDummy: isFromDummy });
+            callbacks.onTrainingAction?.({ type: 'parry', perfectParry: false, fromDummy: isFromDummy });
             addCombo();
             globals.hitStop = 0.045; // Micro hit-stop crunch (2-3 frames freeze)
             globals.screenShake = (globals.graphicsSettings === 'low' ? 0.5 : 1) * 25;

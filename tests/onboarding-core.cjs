@@ -231,4 +231,15 @@ test('tutorial mobile banner and perfect dodge wiring invariants', () => {
   const mainSrc = fs.readFileSync('src/main.ts', 'utf8');
   assert.match(mainSrc, /callbacks\.onTrainingDummyAttack\?\.\({\s*dodged:\s*true/s, 'main combat must notify onTrainingDummyAttack on dodge');
   assert.match(mainSrc, /callbacks\.onTrainingAction\?\.\({\s*type:\s*'dodge'/s, 'main combat must notify onTrainingAction on dodge');
+
+  // Parry dispatch invariants
+  assert.match(mainSrc, /callbacks\.onTrainingDummyAttack\?\.\({\s*parried:\s*true/s, 'main combat must notify onTrainingDummyAttack on parry');
+  assert.match(mainSrc, /callbacks\.onTrainingAction\?\.\({\s*type:\s*'parry'/s, 'main combat must notify onTrainingAction on parry');
+  assert.match(mainSrc, /isSlashParryActive/, 'checkPlayerHit must recognize slash parry without parry_master skill lock');
+
+  // Next tutorial objective check invariants
+  const runtimeQolSrc = fs.readFileSync('src/runtimeQol.ts', 'utf8');
+  assert.match(runtimeQolSrc, /dispatchTutorialEvent\('dash-slash'/s, 'runtimeQol must dispatch dash-slash when connecting after dash');
+  assert.match(runtimeQolSrc, /dispatchTutorialEvent\('charge-dash'/s, 'runtimeQol must dispatch charge-dash on charged dash hit');
+  assert.match(runtimeQolSrc, /dispatchTutorialEvent\('shop'/s, 'runtimeQol must dispatch shop event');
 });

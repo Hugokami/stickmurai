@@ -1236,6 +1236,7 @@ export function renderShopModal() {
       if ((globals.stageCurrency || 0) < 20 || globals.lives >= globals.maxLives) return false;
       globals.stageCurrency -= 20;
       globals.lives++;
+      callbacks.onTrainingAction?.({ type: 'shop', phase: 'buy', powerupId: 'ration' });
       callbacks.updateUI();
       playSound(sfx.magatamaPickup, 1.0);
       globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, "+1 ❤️", "#4ade80", 26));

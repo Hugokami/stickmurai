@@ -154,18 +154,20 @@ export function initRuntimeQol(onReturn: () => void) {
       if (tutorialSession.currentLesson === 'skill') {
         dispatchTutorialEvent('skill', { hitDummy: true, activated: true });
       }
-      if (tutorialSession.currentLesson === 'iaijutsu' && (globals.player as any)?.lastIaijutsuFullyCharged) {
+      if (tutorialSession.currentLesson === 'iaijutsu' && ((globals.player as any)?.lastIaijutsuFullyCharged || (globals.player as any)?.lastIaijutsuChargeScale >= 0.85)) {
         dispatchTutorialEvent('iaijutsu', { fullyCharged: true, hitDummy: true });
       }
       if (tutorialSession.currentLesson === 'charge-dash') {
         const timeSinceChargeDash = now - ((globals.player as any)?.lastChargeDashTime || 0);
-        if (timeSinceChargeDash <= 1500 && (globals.player as any)?.wasChargedDash) {
+        if (timeSinceChargeDash <= 2500 && (globals.player as any)?.wasChargedDash) {
           dispatchTutorialEvent('charge-dash', { fromChargeDash: true, hitDummy: true });
         }
       }
       if (tutorialSession.currentLesson === 'dash-slash') {
         const timeSinceDash = now - ((globals.player as any)?.lastDashTime || 0);
-        dispatchTutorialEvent('dash-slash', { hitDummy: true, timeSinceDashMs: timeSinceDash });
+        if (timeSinceDash <= 1500) {
+          dispatchTutorialEvent('dash-slash', { hitDummy: true, timeSinceDashMs: Math.min(500, timeSinceDash) });
+        }
       }
       if (tutorialSession.currentLesson === 'shop' && tutorialSession.shopPurchased) {
         dispatchTutorialEvent('shop', { phase: 'attack', hitDummy: true });
@@ -440,11 +442,12 @@ function applyLessonSetup(lesson: Lesson) {
   }
 
   if (lesson === 'dodge' || lesson === 'parry') {
-      if (dummy && typeof dummy.setMode === 'function') {
-        dummy.setMode('sparring');
-        dummy.sparringCadenceTimer = 0.5;
-      }
-    } else {
+    if (dummy && typeof dummy.setMode === 'function') {
+      dummy.setMode('sparring');
+      dummy.sparringCadenceTimer = 0.5;
+    }
+    globals.lastMikiriStrideTime = 0;
+  } else {
     if (dummy && typeof dummy.setMode === 'function') dummy.setMode('stationary');
   }
 
@@ -511,7 +514,9 @@ function updateTutorialBannerUI() {
         progressText = `Objective: Execute Charged Dash thrust (0 / 1)`;
         break;
       case 'shop':
-        progressText = `Objective: Purchase 1 upgrade in shop (${tutorialSession.shopPurchased ? 1 : 0} / 1)`;
+        progressText = tutorialSession.shopPurchased
+          ? `Objective: Strike dummy to complete training (0 / 1)`
+          : `Objective: Purchase 1 upgrade in shop (0 / 1)`;
         break;
       case 'complete':
         progressText = 'All objectives completed! Click Leave or Return to Menu.';
