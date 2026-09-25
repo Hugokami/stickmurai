@@ -9,7 +9,7 @@ const main = readFileSync(join(__dirname, '../src/main.ts'), 'utf8');
 test('arena floor and markings share world coordinates with moving camera', () => {
   const background = renderer.slice(renderer.indexOf('export function drawBackground'), renderer.indexOf('export function resetCanvasVisuals'));
   assert.ok(background.includes('ctx.translate(globals.vw / 2 - globals.camera.x, globals.vh / 2 - globals.camera.y)'));
-  assert.ok(background.includes('groundPattern'));
+  assert.ok(background.includes('terrainPattern'));
   assert.ok(background.includes('arena.left') && background.includes('arena.right'));
 });
 

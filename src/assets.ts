@@ -1225,9 +1225,15 @@ export const anims = {
 
 export const propImages: HTMLImageElement[] = [];
 
-export const groundImage = new Image();
-queueAsset(groundImage, './fantasy_bg/ground_stone1.png?v=stone1', 'fantasy_bg', true);
+export const terrainLayers = ['ground', 'ground-dirt', 'stones', 'leaves'].map(name => {
+  const image = new Image();
+  queueAsset(image, `./fantasy_bg/${name}.webp`, 'fantasy_bg', true);
+  return image;
+});
 
+
+export const portalImage = new Image();
+queueAsset(portalImage, './fantasy_bg/wave-portal.png', 'fantasy_bg', true);
 
 export const playerImages: Record<string, HTMLImageElement> = {};
 Object.entries(svgAssets).forEach(([name, url]) => {

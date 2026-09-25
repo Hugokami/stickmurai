@@ -77,7 +77,7 @@ import { pvpManager } from './pvpIaijutsuManager';
 import { initPvPLobby, updatePvpHud, showRoundBanner, updateTurnBadge, recordMatchResult } from './pvpLobby';
 import { Player } from './player';
 import { Enemy, triggerBarrelExplosion } from './enemy';
-import { clampToArena } from './arena';
+import { arena, clampToArena } from './arena';
 import { vfxAnims } from './assets';
 
 let localRematchReady = false;
@@ -731,6 +731,7 @@ export function setupWaveObjectives(wave: number, totalWaves: number, stage: num
   globals.waveEnemiesKilled = 0;
   globals.waveEnemiesSpawned = 0;
   globals.waveState = 'active';
+  globals.wavePortal = null;
   globals.stageBossDefeated = false;
 
   const isFinalWave = wave >= totalWaves;
@@ -772,6 +773,36 @@ export function advanceToNextWave() {
   spawnEnemy();
 }
 callbacks.advanceToNextWave = advanceToNextWave;
+
+function clearWaveToPortal() {
+  if (globals.waveState !== 'active' || globals.currentWave >= globals.totalWaves) return;
+  stopSpawner();
+  globals.enemies.length = 0;
+  globals.projectiles.length = 0;
+  globals.waveState = 'cleared';
+  const isJa = globals.currentLang === 'ja';
+  const banner = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `${banner}  ${isJa ? '門へ進め' : 'ENTER THE PORTAL'}`, '#38bdf8', 30));
+  playSynthesizedTempleBell();
+  const portalX = globals.player.x + (globals.player.x + 240 < arena.right - 100 ? 240 : -240);
+  globals.wavePortal = { x: portalX, y: globals.player.y };
+}
+
+function enterWavePortal() {
+  const portal = globals.wavePortal;
+  if (!portal || globals.waveState !== 'cleared' || globals.gameState !== 'playing') return;
+  const dx = globals.player.x - portal.x;
+  const dy = globals.player.y - portal.y;
+  if (dx * dx + dy * dy > 60 * 60) return;
+  globals.wavePortal = null;
+  globals.player.x = 700;
+  globals.player.y = 350;
+  globals.camera.x = 700;
+  globals.camera.y = 350;
+  globals.waveState = 'shop';
+  refreshShop(true);
+  openShop();
+}
 
 /** Reset temporary combat state whenever a new stage/run begins. */
 export function resetStageTransientState() {
@@ -1302,7 +1333,7 @@ function scheduleSpawn(delay: number) {
   spawnTimer = setTimeout(() => { spawnTimer = undefined; spawnEnemy(); }, delay);
 }
 function spawnEnemy() {
-  if (isPractice()) return;
+  if (isPractice() || (globals.gameMode === 'classic' && globals.waveState !== 'active')) return;
   if (globals.gameState !== 'playing') {
     if (globals.gameState === 'paused' || globals.gameState === 'levelup' || globals.gameState === 'ultchoice') {
       scheduleSpawn(1000);
@@ -1368,18 +1399,8 @@ function spawnEnemy() {
   let aliveCount=globals.enemies.filter(e=>e.state!=='dead'&&!e.isPvpRemote).length;
 
   if(globals.gameMode==='classic'){
-    if (globals.waveState === 'shop') {
-      if (!globals.shopOpen) {
-        globals.waveState = 'active';
-      } else {
-        scheduleSpawn(800);
-        return;
-      }
-    }
-    if (globals.waveState === 'cleared') {
-      scheduleSpawn(800);
-      return;
-    }
+
+
     if ((globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 10)) {
       scheduleSpawn(600);
       return;
@@ -3834,24 +3855,11 @@ function killEnemy(e: Enemy) {
     const bossConditionMet = !isBossStage || globals.stageBossDefeated || isBossKill;
     const isWaveComplete = (allKilled || allSpawned || (isBossStage && isFinalWave && globals.stageBossDefeated)) && aliveEnemies === 0 && bossConditionMet;
 
-    if (isWaveComplete) {
+    if (!isFinalWave && globals.waveState === 'active' && allKilled) {
+      clearWaveToPortal();
+    } else if (isWaveComplete && globals.waveState === 'active') {
       if (!isFinalWave) {
-        // Wave cleared! Transition to Battlefield Requisition Shop between waves
-        globals.waveState = 'shop';
-        playSynthesizedTempleBell();
-        const isJa = globals.currentLang === 'ja';
-        const bannerTxt = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `⚡ ${bannerTxt} ⚡`, '#38bdf8', 30));
-
-        globals.delayedActions.push({
-          delay: 0.75,
-          run: () => {
-            if (globals.gameState === 'playing' || globals.gameState === 'paused') {
-              refreshShop(true);
-              openShop();
-            }
-          }
-        });
+        clearWaveToPortal();
       } else {
         // Final wave completion
         globals.gameState = 'stageclear';
@@ -4087,10 +4095,7 @@ function update(realDt: number) {
       const isBossStage = true;
       const activeAlive = globals.enemies.filter(en => en && en.state !== 'dead' && !en.isPvpRemote).length;
 
-      // 1. If wave shop was closed or never opened, ensure active progression resumes
-      if (globals.waveState === 'shop' && !globals.shopOpen) {
-        advanceToNextWave();
-      }
+      // Wave progression occurs only when the portal is touched and the shop closes.
 
       // 2. Final wave boss stage completion: boss slain and all minions defeated
       if (isFinalWave && isBossStage && globals.stageBossDefeated && activeAlive === 0 && !isZanFinisherActive) {
@@ -4100,24 +4105,11 @@ function update(realDt: number) {
         }
       }
 
-      // 3. Wave completion watchdog: all quota spawned and 0 enemies alive
-      if (globals.waveState === 'active' && activeAlive === 0 && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1)) {
+      // End non-final waves when their spawn quota is exhausted; clear stragglers without kill credit.
+      if (globals.waveState === 'active' && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1)) {
         if (!isFinalWave) {
-          globals.waveState = 'shop';
-          playSynthesizedTempleBell();
-          const isJa = globals.currentLang === 'ja';
-          const bannerTxt = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
-          globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `⚡ ${bannerTxt} ⚡`, '#38bdf8', 30));
-          globals.delayedActions.push({
-            delay: 0.5,
-            run: () => {
-              if (globals.gameState === 'playing' || globals.gameState === 'paused') {
-                refreshShop(true);
-                openShop();
-              }
-            }
-          });
-        } else if (!isBossStage || globals.stageBossDefeated) {
+          clearWaveToPortal();
+        } else if (activeAlive === 0 && (!isBossStage || globals.stageBossDefeated)) {
           globals.gameState = 'stageclear';
           if (!isZanFinisherActive && callbacks.triggerStageClear) {
             triggerZanFinisher(() => callbacks.triggerStageClear());
@@ -5483,6 +5475,9 @@ function update(realDt: number) {
 
   globals.player.update(realDt);
   clampToArena(globals.player);
+
+  enterWavePortal();
+  if (globals.shopOpen) return;
 
   // Mechanic 2: Interactive Blade Sheathing / Blood-Flick (Chiburui & Noto)
   // Standing still for 1.2s after 3+ kills performs blood-flick particle burst & blade sheathe sound for +15 Flow and guaranteed next-hit 2.5x critical strike.

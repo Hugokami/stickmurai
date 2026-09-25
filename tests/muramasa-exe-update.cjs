@@ -44,10 +44,10 @@ test('muramasa-exe-update: verifies title, ATK labeling, combo hitboxes, and mob
   const rendererTs = fs.readFileSync(path.join(root, 'src', 'renderer.ts'), 'utf8');
   assert.match(rendererTs, /isScreenLandscape && bestW < bestH/, 'resizeCanvas swaps dimensions when screen is landscape but browser reported stale portrait values');
   assert.match(rendererTs, /ctx\.setTransform\(currentDpr, 0, 0, currentDpr, 0, 0\);[\s\S]*ctx\.clearRect\(0, 0, globals\.width, globals\.height\);\s*drawBackground\(ctx\);/, 'drawBackground covers the logical canvas at device pixel ratio');
-  assert.match(rendererTs, /ctx\.translate\(globals\.vw \/ 2 - globals\.camera\.x, globals\.vh \/ 2 - globals\.camera\.y\);/, 'stone pattern tracks camera in world coordinates');
-  assert.match(rendererTs, /ctx\.fillStyle = '#1a1619'/, 'unloaded ground uses dark stone fallback');
-  assert.match(assetsTs, /queueAsset\(groundImage, '\.\/fantasy_bg\/ground_stone1\.png\?v=stone1'/, 'ground stone is queued before gameplay');
-  assert.ok(fs.existsSync(path.join(root, 'public', 'fantasy_bg', 'ground_stone1.png')), 'stone tile exists');
+  assert.match(rendererTs, /ctx\.translate\(globals\.vw \/ 2 - globals\.camera\.x, globals\.vh \/ 2 - globals\.camera\.y\);/, 'terrain tracks camera in world coordinates');
+  assert.match(rendererTs, /ctx\.fillStyle = '#416b34'/, 'unloaded terrain uses green fallback');
+  assert.match(assetsTs, /queueAsset\(image, `\.\/fantasy_bg\/\$\{name\}\.webp`/, 'terrain layers are queued before gameplay');
+  assert.ok(fs.existsSync(path.join(root, 'public', 'fantasy_bg', 'ground.webp')), 'ground tile exists');
   assert.match(rendererTs, /ResizeObserver/, 'renderer observes documentElement and body with ResizeObserver');
   assert.match(rendererTs, /\[20, 60, 150, 300, 600, 1000\]\.forEach/, 'renderer schedules multi-tier settling passes for direct mobile landscape boots');
 

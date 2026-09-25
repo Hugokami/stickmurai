@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { groundImage, vfxAnims } from './assets';
+import { terrainLayers, portalImage, vfxAnims } from './assets';
 import { arena } from './arena';
 import { Entity } from './entities';
 import { reducedMotion } from './comfort';
@@ -156,7 +156,8 @@ export function debouncedResize() {
   }, 100);
 }
 
-let groundPattern: CanvasPattern | null = null;
+let terrainPattern: CanvasPattern | null = null;
+let terrainTile: HTMLCanvasElement | null = null;
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
   ctx.fillStyle = '#100d10';
@@ -164,32 +165,22 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   ctx.save();
   ctx.scale(globals.gameZoom, globals.gameZoom);
   ctx.translate(globals.vw / 2 - globals.camera.x, globals.vh / 2 - globals.camera.y);
-  ctx.fillStyle = '#1a1619';
-  if (groundImage.complete && groundImage.naturalWidth) {
-    groundPattern ??= ctx.createPattern(groundImage, 'repeat');
-    if (groundPattern) {
-      ctx.imageSmoothingEnabled = false;
-      ctx.fillStyle = groundPattern;
+  ctx.fillStyle = '#416b34';
+  if (!terrainPattern && terrainLayers.every(image => image.complete && image.naturalWidth === 1254)) {
+    terrainTile = document.createElement('canvas');
+    terrainTile.width = terrainTile.height = 1254;
+    const tileCtx = terrainTile.getContext('2d');
+    if (tileCtx) {
+      for (const image of terrainLayers) tileCtx.drawImage(image, 0, 0);
+      terrainPattern = ctx.createPattern(terrainTile, 'repeat');
     }
   }
+  if (terrainPattern) ctx.fillStyle = terrainPattern;
   const width = arena.right - arena.left;
   const height = arena.bottom - arena.top;
   ctx.fillRect(arena.left, arena.top, width, height);
-
-  // Fixed stone joints provide movement cues without screen-wide overlays.
-  ctx.beginPath();
-  for (let x = arena.left + 512; x < arena.right; x += 512) {
-    ctx.moveTo(x, arena.top); ctx.lineTo(x, arena.bottom);
-  }
-  for (let y = arena.top + 512; y < arena.bottom; y += 512) {
-    ctx.moveTo(arena.left, y); ctx.lineTo(arena.right, y);
-  }
-  ctx.strokeStyle = 'rgba(8, 6, 9, 0.65)';
-  ctx.lineWidth = 8;
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(150, 124, 103, 0.38)';
-  ctx.lineWidth = 2;
-  ctx.stroke();
+  // Composition stays fixed in world space; cracks, foliage, and ruins reveal movement.
+  ctx.imageSmoothingEnabled = true;
   ctx.strokeStyle = '#8b6d58';
   ctx.lineWidth = 28;
   ctx.strokeRect(arena.left + 14, arena.top + 14, width - 28, height - 28);
@@ -278,6 +269,15 @@ export function draw() {
 
   ctx.save();
   ctx.scale(globals.gameZoom, globals.gameZoom);
+  if (globals.wavePortal && portalImage.complete && portalImage.naturalWidth === 192) {
+    const frame = Math.floor(performance.now() / 95) % 8;
+    const px = globals.wavePortal.x - globals.camera.x + globals.vw / 2;
+    const py = globals.wavePortal.y - globals.camera.y + globals.vh / 2;
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(portalImage, frame % 3 * 64, Math.floor(frame / 3) * 64, 64, 64, px - 64, py - 98, 128, 128);
+    ctx.restore();
+  }
   drawCombatHazards(ctx);
   
   // Softened low-health red border vignette
