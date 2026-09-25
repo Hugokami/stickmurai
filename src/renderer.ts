@@ -1,6 +1,7 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
 import { groundImage, vfxAnims } from './assets';
+import { arena } from './arena';
 import { Entity } from './entities';
 import { reducedMotion } from './comfort';
 import { drawCombatHazards } from './combatPolish';
@@ -158,20 +159,44 @@ export function debouncedResize() {
 let groundPattern: CanvasPattern | null = null;
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
+  ctx.fillStyle = '#100d10';
+  ctx.fillRect(0, 0, globals.width, globals.height);
+  ctx.save();
+  ctx.scale(globals.gameZoom, globals.gameZoom);
+  ctx.translate(globals.vw / 2 - globals.camera.x, globals.vh / 2 - globals.camera.y);
   ctx.fillStyle = '#1a1619';
   if (groundImage.complete && groundImage.naturalWidth) {
     groundPattern ??= ctx.createPattern(groundImage, 'repeat');
     if (groundPattern) {
-      const zoom = globals.gameZoom;
-      const tileSize = groundImage.naturalWidth * zoom;
-      const originX = (globals.vw / 2 - globals.camera.x) * zoom;
-      const originY = (globals.vh / 2 - globals.camera.y) * zoom;
-      groundPattern.setTransform(new DOMMatrix([zoom, 0, 0, zoom, originX % tileSize, originY % tileSize]));
       ctx.imageSmoothingEnabled = false;
       ctx.fillStyle = groundPattern;
     }
   }
-  ctx.fillRect(0, 0, globals.width, globals.height);
+  const width = arena.right - arena.left;
+  const height = arena.bottom - arena.top;
+  ctx.fillRect(arena.left, arena.top, width, height);
+
+  // Fixed stone joints provide movement cues without screen-wide overlays.
+  ctx.beginPath();
+  for (let x = arena.left + 512; x < arena.right; x += 512) {
+    ctx.moveTo(x, arena.top); ctx.lineTo(x, arena.bottom);
+  }
+  for (let y = arena.top + 512; y < arena.bottom; y += 512) {
+    ctx.moveTo(arena.left, y); ctx.lineTo(arena.right, y);
+  }
+  ctx.strokeStyle = 'rgba(8, 6, 9, 0.65)';
+  ctx.lineWidth = 8;
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(150, 124, 103, 0.38)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.strokeStyle = '#8b6d58';
+  ctx.lineWidth = 28;
+  ctx.strokeRect(arena.left + 14, arena.top + 14, width - 28, height - 28);
+  ctx.strokeStyle = '#332a29';
+  ctx.lineWidth = 8;
+  ctx.strokeRect(arena.left + 32, arena.top + 32, width - 64, height - 64);
+  ctx.restore();
 }
 
 export function resetCanvasVisuals() {

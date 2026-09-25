@@ -44,7 +44,7 @@ test('muramasa-exe-update: verifies title, ATK labeling, combo hitboxes, and mob
   const rendererTs = fs.readFileSync(path.join(root, 'src', 'renderer.ts'), 'utf8');
   assert.match(rendererTs, /isScreenLandscape && bestW < bestH/, 'resizeCanvas swaps dimensions when screen is landscape but browser reported stale portrait values');
   assert.match(rendererTs, /ctx\.setTransform\(currentDpr, 0, 0, currentDpr, 0, 0\);[\s\S]*ctx\.clearRect\(0, 0, globals\.width, globals\.height\);\s*drawBackground\(ctx\);/, 'drawBackground covers the logical canvas at device pixel ratio');
-  assert.match(rendererTs, /groundPattern\.setTransform\(new DOMMatrix\(/, 'stone pattern tracks camera without per-tile draw calls');
+  assert.match(rendererTs, /ctx\.translate\(globals\.vw \/ 2 - globals\.camera\.x, globals\.vh \/ 2 - globals\.camera\.y\);/, 'stone pattern tracks camera in world coordinates');
   assert.match(rendererTs, /ctx\.fillStyle = '#1a1619'/, 'unloaded ground uses dark stone fallback');
   assert.match(assetsTs, /queueAsset\(groundImage, '\.\/fantasy_bg\/ground_stone1\.png\?v=stone1'/, 'ground stone is queued before gameplay');
   assert.ok(fs.existsSync(path.join(root, 'public', 'fantasy_bg', 'ground_stone1.png')), 'stone tile exists');

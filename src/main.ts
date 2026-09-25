@@ -77,6 +77,7 @@ import { pvpManager } from './pvpIaijutsuManager';
 import { initPvPLobby, updatePvpHud, showRoundBanner, updateTurnBadge, recordMatchResult } from './pvpLobby';
 import { Player } from './player';
 import { Enemy, triggerBarrelExplosion } from './enemy';
+import { clampToArena } from './arena';
 import { vfxAnims } from './assets';
 
 let localRematchReady = false;
@@ -1394,6 +1395,7 @@ function spawnEnemy() {
        const angle = Math.random() * Math.PI * 2;
        const dist = 800 + Math.random() * 400 + (i * 100);
        const enemy = new Enemy(globals.player.x + Math.cos(angle)*dist, globals.player.y + Math.sin(angle)*dist, globals.player);
+       clampToArena(enemy);
        
 
        
@@ -5480,6 +5482,7 @@ function update(realDt: number) {
   }
 
   globals.player.update(realDt);
+  clampToArena(globals.player);
 
   // Mechanic 2: Interactive Blade Sheathing / Blood-Flick (Chiburui & Noto)
   // Standing still for 1.2s after 3+ kills performs blood-flick particle burst & blade sheathe sound for +15 Flow and guaranteed next-hit 2.5x critical strike.
@@ -7211,6 +7214,8 @@ function update(realDt: number) {
       }
     }
   }
+  clampToArena(globals.player);
+  for (const enemy of globals.enemies) clampToArena(enemy);
   inplaceFilter(globals.enemies, e => {
     if (e.isPvpRemote || e.state !== 'dead') return true;
     const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
