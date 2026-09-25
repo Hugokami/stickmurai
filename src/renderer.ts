@@ -55,6 +55,30 @@ function getEntityFootY(e: Entity): number {
   return e.y + baseFoot * (e.scaleMult || 1);
 }
 
+export function getPlayerAimOrigin(player: any): { x: number; y: number } {
+  if (!player) return { x: 0, y: 0 };
+  let baseFoot = 56;
+  const pType = (player.type || '').toLowerCase();
+  switch (pType) {
+    case 'boss_agis': baseFoot = 143; break;
+    case 'boss_skeleton': baseFoot = 44; break;
+    case 'heroluneblade': baseFoot = 30; break;
+    case 'heroninja': baseFoot = 48; break;
+    case 'heronightborne': baseFoot = 52; break;
+    case 'herosamurai': baseFoot = 56; break;
+    case 'herosatyr': baseFoot = 46; break;
+    case 'heroakakage': baseFoot = 125; break;
+    case 'heroaetherion': baseFoot = 75; break;
+    default: baseFoot = 56; break;
+  }
+  // Visual middle of character torso sits at ~55% of the entity vertical height
+  const torsoOffset = Math.round(baseFoot * 0.55 * (player.scaleMult || 1));
+  return {
+    x: player.x,
+    y: player.y + torsoOffset + (player.yOffset || 0)
+  };
+}
+
 const depthCompare = (a: Entity, b: Entity) => getEntityFootY(a) - getEntityFootY(b);
 
 
@@ -269,14 +293,135 @@ export function draw() {
 
   ctx.save();
   ctx.scale(globals.gameZoom, globals.gameZoom);
-  if (globals.wavePortal && portalImage.complete && portalImage.naturalWidth === 192) {
-    const frame = Math.floor(performance.now() / 95) % 8;
-    const px = globals.wavePortal.x - globals.camera.x + globals.vw / 2;
-    const py = globals.wavePortal.y - globals.camera.y + globals.vh / 2;
-    ctx.save();
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(portalImage, frame % 3 * 64, Math.floor(frame / 3) * 64, 64, 64, px - 64, py - 98, 128, 128);
-    ctx.restore();
+  if (globals.wavePortal && globals.gameState === 'playing') {
+    const ptx = globals.wavePortal.x - globals.camera.x + globals.vw / 2;
+    const pty = globals.wavePortal.y - globals.camera.y + globals.vh / 2;
+
+    // 1. Player Guidance to Portal: Ground spirit trail and directional compass
+    if (globals.player && globals.waveState === 'cleared') {
+      const pOrigin = getPlayerAimOrigin(globals.player);
+      const plx = pOrigin.x - globals.camera.x + globals.vw / 2;
+      const ply = pOrigin.y - globals.camera.y + globals.vh / 2;
+      const pDist = Math.hypot(ptx - plx, pty - ply);
+      const pAngle = Math.atan2(pty - ply, ptx - plx);
+
+      if (pDist > 45) {
+        // Ground guide pathway connecting player to portal
+        ctx.save();
+        ctx.strokeStyle = 'rgba(168, 85, 247, 0.35)';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([16, 12]);
+        ctx.lineDashOffset = -performance.now() * 0.045;
+        ctx.beginPath();
+        ctx.moveTo(plx, ply);
+        ctx.lineTo(ptx, pty);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(232, 121, 249, 0.75)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath();
+        ctx.moveTo(plx, ply);
+        ctx.lineTo(ptx, pty);
+        ctx.stroke();
+        ctx.restore();
+
+        // Flowing chevron pulse along ground guide trail
+        const trailStep = 64;
+        const trailOffset = (performance.now() * 0.08) % trailStep;
+        ctx.save();
+        ctx.strokeStyle = '#e879f9';
+        ctx.lineWidth = 2.2;
+        for (let d = trailOffset + 30; d < pDist - 50; d += trailStep) {
+          const gx = plx + Math.cos(pAngle) * d;
+          const gy = ply + Math.sin(pAngle) * d;
+          ctx.save();
+          ctx.translate(gx, gy);
+          ctx.rotate(pAngle);
+          ctx.beginPath();
+          ctx.moveTo(-8, -6);
+          ctx.lineTo(2, 0);
+          ctx.lineTo(-8, 6);
+          ctx.stroke();
+          ctx.restore();
+        }
+        ctx.restore();
+
+        // Floating directional guide arrow and badge near player
+        ctx.save();
+        ctx.translate(plx, ply);
+        const guidePulse = Math.sin(performance.now() * 0.006) * 4;
+        const guideDist = 60 + guidePulse;
+        const ax = Math.cos(pAngle) * guideDist;
+        const ay = Math.sin(pAngle) * guideDist;
+
+        // Floating guide arrow pointing directly at portal
+        ctx.save();
+        ctx.translate(ax, ay);
+        ctx.rotate(pAngle);
+        ctx.fillStyle = '#a855f7';
+        ctx.beginPath();
+        ctx.moveTo(-10, -7);
+        ctx.lineTo(8, 0);
+        ctx.lineTo(-10, 7);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.restore();
+
+        // Floating text badge near player
+        const badgeDist = guideDist + 28;
+        const bx = Math.cos(pAngle) * badgeDist;
+        const by = Math.sin(pAngle) * badgeDist;
+        ctx.fillStyle = 'rgba(15, 6, 28, 0.75)';
+        ctx.fillRect(bx - 36, by - 10, 72, 20);
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 1.2;
+        ctx.strokeRect(bx - 36, by - 10, 72, 20);
+        ctx.font = 'bold 11px system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = '#f5d0fe';
+        ctx.fillText('PORTAL ➔', bx, by);
+        ctx.restore();
+      }
+    }
+
+    // 2. Enlarged Portal Visuals (256x256 with void ground aura & light beacon)
+    if (portalImage.complete && portalImage.naturalWidth === 192) {
+      const frame = Math.floor(performance.now() / 95) % 8;
+      const portalSize = 256;
+      const halfSize = portalSize / 2;
+
+      ctx.save();
+      // Ground void pool
+      const portalPulse = Math.sin(performance.now() * 0.005) * 6;
+      ctx.fillStyle = 'rgba(25, 8, 45, 0.55)';
+      ctx.beginPath();
+      ctx.ellipse(ptx, pty + 16, 105 + portalPulse, 40 + portalPulse * 0.35, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Swirling arcane orbit
+      ctx.strokeStyle = 'rgba(168, 85, 247, 0.45)';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.ellipse(ptx, pty + 16, 92, 34, performance.now() * 0.0012, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Celestial vertical light pillar
+      const beaconGrad = ctx.createLinearGradient(0, pty - 340, 0, pty);
+      beaconGrad.addColorStop(0, 'rgba(168, 85, 247, 0)');
+      beaconGrad.addColorStop(0.7, 'rgba(168, 85, 247, 0.10)');
+      beaconGrad.addColorStop(1, 'rgba(168, 85, 247, 0.26)');
+      ctx.fillStyle = beaconGrad;
+      ctx.fillRect(ptx - 55, pty - 340, 110, 340);
+
+      // Animated 256x256 portal sprite
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(portalImage, frame % 3 * 64, Math.floor(frame / 3) * 64, 64, 64, ptx - halfSize, pty - 180, portalSize, portalSize);
+      ctx.restore();
+    }
   }
   drawCombatHazards(ctx);
   
@@ -1036,23 +1181,23 @@ export function draw() {
     ctx.save();
     ctx.setLineDash([]);
     
-    // Soft outer ring
+    // Soft outer ring centered at character middle (px, py)
     ctx.strokeStyle = outerColor;
     ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.arc(px, py + 10, radius, 0, Math.PI * 2);
+    ctx.arc(px, py, radius, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Directional forward arc
+    // Directional forward arc centered at character middle
     ctx.strokeStyle = accentColor;
     ctx.lineWidth = 3.2;
     ctx.beginPath();
-    ctx.arc(px, py + 10, radius + 3, angle - Math.PI / 4, angle + Math.PI / 4);
+    ctx.arc(px, py, radius + 3, angle - Math.PI / 4, angle + Math.PI / 4);
     ctx.stroke();
 
     // Forward aim notch
     const notchX = px + Math.cos(angle) * (radius + 7);
-    const notchY = py + 10 + Math.sin(angle) * (radius + 7);
+    const notchY = py + Math.sin(angle) * (radius + 7);
     ctx.fillStyle = accentColor;
     ctx.beginPath();
     ctx.arc(notchX, notchY, 3, 0, Math.PI * 2);
@@ -1061,49 +1206,159 @@ export function draw() {
     ctx.restore();
   };
 
+  const drawPreciseWidenedAimIndicator = (
+    px: number,
+    py: number,
+    angle: number,
+    length: number,
+    corridorWidth: number,
+    colors: {
+      primary: string;
+      accent: string;
+      fillRgba: string;
+      glowRgba: string;
+    }
+  ) => {
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate(angle);
+
+    const hw = corridorWidth / 2;
+    const arrowLen = Math.min(50, length * 0.16);
+    const arrowFlare = hw * 1.38;
+    const bodyLen = Math.max(10, length - arrowLen);
+    const now = performance.now();
+
+    // 1. Shaded corridor & aerodynamic arrowhead silhouette
+    ctx.save();
+    ctx.fillStyle = colors.fillRgba;
+    ctx.beginPath();
+    ctx.moveTo(0, -hw);
+    ctx.lineTo(bodyLen, -hw);
+    ctx.lineTo(bodyLen, -arrowFlare);
+    ctx.lineTo(length, 0);
+    ctx.lineTo(bodyLen, arrowFlare);
+    ctx.lineTo(bodyLen, hw);
+    ctx.lineTo(0, hw);
+    ctx.closePath();
+    ctx.fill();
+
+    // 2. High-precision outer boundary rails
+    ctx.strokeStyle = colors.glowRgba;
+    ctx.lineWidth = 3.2;
+    ctx.stroke();
+
+    ctx.strokeStyle = colors.primary;
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. Lateral graduation / range ticks along corridor edges
+    const numSegments = Math.max(2, Math.floor(bodyLen / 85));
+    ctx.save();
+    ctx.strokeStyle = colors.glowRgba;
+    ctx.lineWidth = 1.5;
+    for (let i = 1; i <= numSegments; i++) {
+      const d = (bodyLen / (numSegments + 1)) * i;
+      ctx.beginPath();
+      ctx.moveTo(d, -hw);
+      ctx.lineTo(d, -hw + 6);
+      ctx.moveTo(d, hw);
+      ctx.lineTo(d, hw - 6);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 4. Moving dynamic energy flow chevrons
+    const chevronCount = 3;
+    ctx.save();
+    ctx.strokeStyle = colors.accent;
+    ctx.lineWidth = 2.2;
+    for (let c = 0; c < chevronCount; c++) {
+      const flow = ((now * 0.0016 + c / chevronCount) % 1);
+      const cx = bodyLen * flow;
+      if (cx > 24 && cx < bodyLen - 12) {
+        ctx.globalAlpha = Math.sin(flow * Math.PI) * 0.85;
+        ctx.beginPath();
+        ctx.moveTo(cx - 10, -hw * 0.58);
+        ctx.lineTo(cx + 2, 0);
+        ctx.lineTo(cx - 10, hw * 0.58);
+        ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    // 5. Crisp animated centerline laser beam
+    ctx.save();
+    ctx.strokeStyle = colors.primary;
+    ctx.lineWidth = 2.6;
+    ctx.setLineDash([14, 8]);
+    ctx.lineDashOffset = -now * 0.045;
+    ctx.beginPath();
+    ctx.moveTo(10, 0);
+    ctx.lineTo(bodyLen + 4, 0);
+    ctx.stroke();
+
+    // Core bright white centerline
+    ctx.strokeStyle = colors.accent;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(10, 0);
+    ctx.lineTo(bodyLen + 4, 0);
+    ctx.stroke();
+    ctx.restore();
+
+    // 6. Arrowhead core chevron & terminal cross ticks
+    ctx.save();
+    ctx.strokeStyle = colors.accent;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(bodyLen - 4, -arrowFlare * 0.65);
+    ctx.lineTo(length - 6, 0);
+    ctx.lineTo(bodyLen - 4, arrowFlare * 0.65);
+    ctx.stroke();
+
+    ctx.strokeStyle = colors.primary;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(length, -12);
+    ctx.lineTo(length, 12);
+    ctx.stroke();
+    ctx.restore();
+
+    // 7. Base anchor bracket framing character middle
+    ctx.save();
+    ctx.strokeStyle = colors.primary;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.arc(0, 0, hw, -Math.PI / 2, Math.PI / 2);
+    ctx.stroke();
+
+    ctx.fillStyle = colors.glowRgba;
+    ctx.beginPath();
+    ctx.arc(0, 0, 7, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
+  };
+
   // Dash Aim Preview
   if (globals.mobileDashAimActive && globals.player && globals.player.state !== 'dead' && globals.player.dashCooldown <= 0) {
     ctx.save();
-    const px = globals.player.x - globals.camera.x + globals.vw/2;
-    const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
+    const origin = getPlayerAimOrigin(globals.player);
+    const px = origin.x - globals.camera.x + globals.vw/2;
+    const py = origin.y - globals.camera.y + globals.vh/2;
     const angle = globals.mobileDashAimAngle;
     const length = 440;
     const targetX = px + Math.cos(angle) * length;
     const targetY = py + Math.sin(angle) * length;
-    
-    // Soft translucent energy corridor
-    ctx.strokeStyle = 'rgba(0, 229, 255, 0.14)';
-    ctx.lineWidth = 18;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(targetX, targetY);
-    ctx.stroke();
 
-    // Core crisp electric beam
-    ctx.strokeStyle = '#00e5ff';
-    ctx.lineWidth = 3.5;
-    ctx.setLineDash([12, 8]);
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(targetX, targetY);
-    ctx.stroke();
-
-    // In-flight speed chevrons along path
-    ctx.setLineDash([]);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-    ctx.lineWidth = 2;
-    [0.3, 0.6].forEach(ratio => {
-      const sx = px + (targetX - px) * ratio;
-      const sy = py + (targetY - py) * ratio;
-      ctx.save();
-      ctx.translate(sx, sy);
-      ctx.rotate(angle);
-      ctx.beginPath();
-      ctx.moveTo(-8, -6);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(-8, 6);
-      ctx.stroke();
-      ctx.restore();
+    drawPreciseWidenedAimIndicator(px, py, angle, length, 46, {
+      primary: '#00e5ff',
+      accent: '#ffffff',
+      fillRgba: 'rgba(0, 229, 255, 0.14)',
+      glowRgba: 'rgba(0, 229, 255, 0.40)'
     });
 
     drawAimCompass(px, py, angle, 'rgba(0, 229, 255, 0.35)', '#00e5ff', 26);
@@ -1114,43 +1369,35 @@ export function draw() {
   // Iaijutsu Mobile Aim Preview
   if (globals.mobileIaijutsuAimActive && globals.player && globals.player.state !== 'dead') {
     ctx.save();
-    const px = globals.player.x - globals.camera.x + globals.vw/2;
-    const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
+    const origin = getPlayerAimOrigin(globals.player);
+    const px = origin.x - globals.camera.x + globals.vw/2;
+    const py = origin.y - globals.camera.y + globals.vh/2;
     const angle = globals.mobileIaijutsuAimAngle;
     const length = 600 * (globals.playerStats.iaijutsuRangeMult || 1.0);
     const targetX = px + Math.cos(angle) * length;
     const targetY = py + Math.sin(angle) * length;
     
     const isFullyCharged = globals.player.chargeTimer >= 0.8;
-    const primaryColor = isFullyCharged ? '#00f0ff' : 'rgba(56, 189, 248, 0.7)';
-    const corridorColor = isFullyCharged ? 'rgba(0, 240, 255, 0.18)' : 'rgba(56, 189, 248, 0.10)';
-    
-    // Outer corridor
-    ctx.strokeStyle = corridorColor;
-    ctx.lineWidth = isFullyCharged ? 20 : 12;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(targetX, targetY);
-    ctx.stroke();
+    const primaryColor = isFullyCharged ? '#00f0ff' : 'rgba(56, 189, 248, 0.85)';
+    const corridorFill = isFullyCharged ? 'rgba(0, 240, 255, 0.18)' : 'rgba(56, 189, 248, 0.12)';
+    const glowColor = isFullyCharged ? 'rgba(0, 240, 255, 0.45)' : 'rgba(56, 189, 248, 0.35)';
 
-    // Razor line
-    ctx.strokeStyle = primaryColor;
-    ctx.lineWidth = isFullyCharged ? 4 : 2.5;
-    ctx.setLineDash([14, 8]);
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(targetX, targetY);
-    ctx.stroke();
-    
-    // Crescent blade arc at player feet
+    drawPreciseWidenedAimIndicator(px, py, angle, length, isFullyCharged ? 54 : 42, {
+      primary: primaryColor,
+      accent: '#ffffff',
+      fillRgba: corridorFill,
+      glowRgba: glowColor
+    });
+
+    // Crescent blade arc at player middle
     ctx.setLineDash([]);
     ctx.strokeStyle = primaryColor;
-    ctx.lineWidth = isFullyCharged ? 4 : 2.5;
+    ctx.lineWidth = isFullyCharged ? 3.5 : 2.2;
     ctx.beginPath();
-    ctx.arc(px, py, 42, angle - Math.PI/4, angle + Math.PI/4);
+    ctx.arc(px, py, 38, angle - Math.PI / 4, angle + Math.PI / 4);
     ctx.stroke();
 
-    drawAimCompass(px, py, angle, 'rgba(56, 189, 248, 0.35)', primaryColor, 30);
+    drawAimCompass(px, py, angle, 'rgba(56, 189, 248, 0.35)', primaryColor, 28);
     drawAimReticle(targetX, targetY, angle, primaryColor, '#ffffff', isFullyCharged ? 20 : 16);
     ctx.restore();
   }
@@ -1158,41 +1405,19 @@ export function draw() {
   // Atherion Astral Ranged Aim Preview
   if (globals.mobileAetherionAimActive && globals.player && globals.player.state !== 'dead') {
     ctx.save();
-    const px = globals.player.x - globals.camera.x + globals.vw/2;
-    const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
+    const origin = getPlayerAimOrigin(globals.player);
+    const px = origin.x - globals.camera.x + globals.vw/2;
+    const py = origin.y - globals.camera.y + globals.vh/2;
     const angle = globals.mobileAetherionAimAngle;
     const length = 750;
     const targetX = px + Math.cos(angle) * length;
     const targetY = py + Math.sin(angle) * length;
 
-    // Cosmic violet/magenta energy corridor
-    ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
-    ctx.lineWidth = 22;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(targetX, targetY);
-    ctx.stroke();
-
-    // Starlight core laser
-    ctx.strokeStyle = '#c084fc';
-    ctx.lineWidth = 3.5;
-    ctx.setLineDash([14, 8]);
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(targetX, targetY);
-    ctx.stroke();
-
-    // Floating celestial diamonds along trajectory
-    ctx.setLineDash([]);
-    [0.33, 0.66].forEach(ratio => {
-      const dx = px + (targetX - px) * ratio;
-      const dy = py + (targetY - py) * ratio;
-      ctx.save();
-      ctx.translate(dx, dy);
-      ctx.rotate(angle + Math.PI / 4);
-      ctx.fillStyle = '#f472b6';
-      ctx.fillRect(-3, -3, 6, 6);
-      ctx.restore();
+    drawPreciseWidenedAimIndicator(px, py, angle, length, 48, {
+      primary: '#c084fc',
+      accent: '#f472b6',
+      fillRgba: 'rgba(168, 85, 247, 0.18)',
+      glowRgba: 'rgba(168, 85, 247, 0.40)'
     });
 
     drawAimCompass(px, py, angle, 'rgba(168, 85, 247, 0.4)', '#c084fc', 28);
@@ -1203,30 +1428,21 @@ export function draw() {
   // Raijin Aim Preview
   if (globals.mobileRaijinAimActive && globals.player && globals.player.state !== 'dead' && globals.enhanceCooldown <= 0) {
     ctx.save();
-    const px = globals.player.x - globals.camera.x + globals.vw/2;
-    const py = globals.player.y - globals.camera.y + globals.vh/2 - 10;
+    const origin = getPlayerAimOrigin(globals.player);
+    const px = origin.x - globals.camera.x + globals.vw/2;
+    const py = origin.y - globals.camera.y + globals.vh/2;
     const angle = globals.mobileRaijinAimAngle;
     const length = 600 * (1 + 0.30 * (globals.playerStats.dashRangeLevel || 0));
     const targetX = px + Math.cos(angle) * length;
     const targetY = py + Math.sin(angle) * length;
     
-    // Gold lightning corridor
-    ctx.strokeStyle = 'rgba(255, 215, 0, 0.18)';
-    ctx.lineWidth = 20;
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(targetX, targetY);
-    ctx.stroke();
+    drawPreciseWidenedAimIndicator(px, py, angle, length, 50, {
+      primary: '#ffd700',
+      accent: '#ffffff',
+      fillRgba: 'rgba(255, 215, 0, 0.16)',
+      glowRgba: 'rgba(255, 215, 0, 0.40)'
+    });
 
-    // Core amber dashed beam
-    ctx.strokeStyle = '#ffd700';
-    ctx.lineWidth = 4;
-    ctx.setLineDash([12, 6]);
-    ctx.beginPath();
-    ctx.moveTo(px, py);
-    ctx.lineTo(targetX, targetY);
-    ctx.stroke();
-    
     drawAimCompass(px, py, angle, 'rgba(255, 215, 0, 0.4)', '#ffd700', 28);
     drawAimReticle(targetX, targetY, angle, '#ffd700', '#ffffff', 20);
     ctx.restore();

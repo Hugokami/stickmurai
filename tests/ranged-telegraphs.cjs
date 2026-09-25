@@ -132,6 +132,7 @@ test('boss: directional strike capsule rotated toward target with boss hit radiu
   globals.player = { x: 80, y: 40, state: 'idle' };
   const e = enemy('skeleton_warlord');
   Object.assign(globals.player, { x: 80, y: 40 });
+  e.state = 'idle';
   e.attackCooldownTimer = 0;
   e.update(0);
   assert.equal(e.state, 'charge');

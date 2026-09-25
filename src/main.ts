@@ -793,7 +793,8 @@ function enterWavePortal() {
   if (!portal || globals.waveState !== 'cleared' || globals.gameState !== 'playing') return;
   const dx = globals.player.x - portal.x;
   const dy = globals.player.y - portal.y;
-  if (dx * dx + dy * dy > 60 * 60) return;
+  // Trigger immediately as player walks near / touches the enlarged portal perimeter (256px portal)
+  if (dx * dx + dy * dy > 165 * 165) return;
   globals.wavePortal = null;
   globals.player.x = 700;
   globals.player.y = 350;
