@@ -1225,26 +1225,8 @@ export const anims = {
 
 export const propImages: HTMLImageElement[] = [];
 
-export const bgLayers = [
-  // Sole battlefield terrain: detailed grass, moss, and stone ruins
-  { name: 'stones_grass', fallbackName: 'stones&grass', speed: 0.6 }
-];
-
-export const bgImages: Record<string, HTMLImageElement> = {};
-bgLayers.forEach(layer => {
-  const img = new Image();
-  const baseSrc = `./fantasy_bg/${layer.name}.png`;
-  img.onerror = () => {
-    if ((layer as any).fallbackName && !img.src.includes(encodeURIComponent((layer as any).fallbackName))) {
-      img.src = `./fantasy_bg/${encodeURIComponent((layer as any).fallbackName + '.png')}`;
-    }
-  };
-  queueAsset(img, baseSrc, 'fantasy_bg', true);
-  bgImages[layer.name] = img;
-  if ((layer as any).fallbackName) {
-    bgImages[(layer as any).fallbackName] = img;
-  }
-});
+export const groundImage = new Image();
+queueAsset(groundImage, './fantasy_bg/ground_stone1.png?v=stone1', 'fantasy_bg', true);
 
 
 export const playerImages: Record<string, HTMLImageElement> = {};

@@ -1,6 +1,6 @@
 import { globals } from './globals';
 import { callbacks } from './callbacks';
-import { bgLayers, bgImages, vfxAnims } from './assets';
+import { groundImage, vfxAnims } from './assets';
 import { Entity } from './entities';
 import { reducedMotion } from './comfort';
 import { drawCombatHazards } from './combatPolish';
@@ -155,45 +155,23 @@ export function debouncedResize() {
   }, 100);
 }
 
+let groundPattern: CanvasPattern | null = null;
+
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.fillStyle = '#527c2f';
-  ctx.fillRect(0, 0, canvas ? canvas.width : globals.width * currentDpr, canvas ? canvas.height : globals.height * currentDpr);
-  ctx.restore();
-
-  // Draw green base across transformed logical dimensions
-  ctx.fillStyle = '#527c2f';
-  ctx.fillRect(0, 0, globals.width, globals.height);
-
-  ctx.imageSmoothingEnabled = false;
-
-  // 2. Ground Layer: Tile full grass & stone slabs across entire arena in both X and Y
-  const groundLayer = bgLayers.find(l => l.name === 'stones_grass' || l.name === 'stones&grass');
-  if (groundLayer) {
-    const img = bgImages[groundLayer.name] || ((groundLayer as any).fallbackName && bgImages[(groundLayer as any).fallbackName]);
-    if (img && img.complete && img.naturalWidth > 0) {
-      ctx.save();
-      const bufferFactor = 1.15;
-      const scale = (globals.height * bufferFactor) / img.naturalHeight;
-      const imgW = img.naturalWidth * scale;
-      const imgH = img.naturalHeight * scale;
-      
-      const offsetX = -(globals.camera.x * groundLayer.speed * globals.gameZoom) % imgW;
-      let startX = offsetX > 0 ? offsetX - imgW : offsetX;
-      
-      const midY = (globals.height - imgH) / 2;
-      const offsetY = midY - (globals.camera.y * groundLayer.speed * globals.gameZoom);
-      const offsetYMod = offsetY % imgH;
-      let startY = offsetYMod > 0 ? offsetYMod - imgH : offsetYMod;
-      for (let x = startX; x < globals.width + imgW; x += imgW) {
-        for (let y = startY; y < globals.height + imgH; y += imgH) {
-          ctx.drawImage(img, x, y, imgW, imgH);
-        }
-      }
-      ctx.restore();
+  ctx.fillStyle = '#1a1619';
+  if (groundImage.complete && groundImage.naturalWidth) {
+    groundPattern ??= ctx.createPattern(groundImage, 'repeat');
+    if (groundPattern) {
+      const zoom = globals.gameZoom;
+      const tileSize = groundImage.naturalWidth * zoom;
+      const originX = (globals.vw / 2 - globals.camera.x) * zoom;
+      const originY = (globals.vh / 2 - globals.camera.y) * zoom;
+      groundPattern.setTransform(new DOMMatrix([zoom, 0, 0, zoom, originX % tileSize, originY % tileSize]));
+      ctx.imageSmoothingEnabled = false;
+      ctx.fillStyle = groundPattern;
     }
   }
+  ctx.fillRect(0, 0, globals.width, globals.height);
 }
 
 export function resetCanvasVisuals() {
@@ -202,7 +180,7 @@ export function resetCanvasVisuals() {
   if (!canvas || !ctx) return;
   ctx.save();
   ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
-  ctx.fillStyle = '#527c2f';
+  ctx.fillStyle = '#1a1619';
   ctx.fillRect(0, 0, globals.width, globals.height);
   ctx.restore();
 }
