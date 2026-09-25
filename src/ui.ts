@@ -1993,11 +1993,23 @@ export function updateUI(force = false) {
   const ghostActive = (globals.ghostHeartTimer || 0) > 0;
   if (globals.lives !== lastLives || globals.maxLives !== lastRenderedMaxLives || ghostActive !== lastGhostHeartActive) {
     const heartsHost = document.getElementById('hearts-container');
-    if (heartsHost && globals.maxLives > heartsHost.querySelectorAll('.heart').length) {
-      for (let i = heartsHost.querySelectorAll('.heart').length; i < globals.maxLives; i++) {
+    const visibleHearts = Math.min(globals.maxLives, 7);
+    if (heartsHost && visibleHearts > heartsHost.querySelectorAll('.heart').length) {
+      for (let i = heartsHost.querySelectorAll('.heart').length; i < visibleHearts; i++) {
         const h = document.createElement('span'); h.className = 'heart'; h.textContent = '❤️'; heartsHost.appendChild(h);
       }
       heartsElements = heartsHost.querySelectorAll('.heart');
+    }
+    if (heartsHost) {
+      let count = heartsHost.querySelector('#heart-count');
+      if (globals.maxLives > 7) {
+        if (!count) {
+          count = document.createElement('span'); count.id = 'heart-count'; heartsHost.appendChild(count);
+        }
+        count.textContent = `${globals.lives}/${globals.maxLives}`;
+      } else {
+        count?.remove();
+      }
     }
     if (heartsElements) {
       heartsElements.forEach((h, i) => {
@@ -2506,6 +2518,10 @@ function processRedeemCode() {
   let rewardTitle = '';
 
   switch(rawCode) {
+    case 'MURAMASA':
+      rewardMagatama = 100000;
+      rewardTitle = 'MURAMASA GIFT (+100,000 🪙)';
+      break;
     case 'STICKMURAI':
       rewardMagatama = 100000;
       rewardTitle = 'STICKMURAI TRIBUTE (+100,000 🪙)';

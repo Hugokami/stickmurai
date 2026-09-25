@@ -358,8 +358,8 @@ export function triggerLevelUp() {
     globals.maxExp = Math.round(globals.maxExp * 1.25);
     globals.level++;
     
-    const maxHearts = globals.gameMode === 'zen' ? 3 : globals.maxLives;
-    if (globals.lives < maxHearts) globals.lives++;
+    globals.maxLives++;
+    globals.lives++;
 
     applyStatLevelUp();
     playSynthesizedLevelUp();

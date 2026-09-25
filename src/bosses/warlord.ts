@@ -24,7 +24,7 @@ export const warlordBossBehavior: BossBehavior = {
   triggerAttack(enemy: Enemy, distToTarget: number): boolean {
     if (!enemy.attackLanded && distToTarget > 220 && enemy.stateTime >= 0.15) {
       for (const off of [-0.25, 0, 0.25]) {
-        const p = Projectile.acquire(enemy.x, enemy.y, enemy.targetAngle + off, true, 4);
+        const p = Projectile.acquire(enemy.x, enemy.y, enemy.targetAngle + off, true, 1);
         (p as any).shooter = enemy;
         (p as any).colorTint = '#a855f7';
         (p as any).projectileType = 'water';
@@ -67,20 +67,9 @@ export const warlordBossBehavior: BossBehavior = {
     const pdx = globals.player.x - enemy.x;
     const pdy = globals.player.y - enemy.y;
     const cleaveRadius = isLateStage ? 280 : 220;
-    if (pdx * pdx + pdy * pdy < cleaveRadius * cleaveRadius && globals.player.state !== 'dead') {
-      callbacks.checkPlayerHit(enemy, isLateStage ? 3 : 2);
-    }
-
-    const shardCount = isLateStage ? 10 : 6;
-    for (let i = 0; i < shardCount; i++) {
-      const shardAng = enemy.targetAngle + (i * 2 * Math.PI / shardCount);
-      const proj = Projectile.acquire(enemy.x, enemy.y, shardAng, true, isLateStage ? 5 : 4);
-      (proj as any).shooter = enemy;
-      (proj as any).colorTint = '#f87171';
-      (proj as any).projectileType = 'water';
-      proj.vx = Math.cos(shardAng) * (isLateStage ? 1150 : 950);
-      proj.vy = Math.sin(shardAng) * (isLateStage ? 1150 : 950);
-      globals.projectiles.push(proj);
+    const facing = pdx * Math.cos(enemy.targetAngle) + pdy * Math.sin(enemy.targetAngle);
+    if (pdx * pdx + pdy * pdy < cleaveRadius * cleaveRadius && facing > 0 && globals.player.state !== 'dead') {
+      callbacks.checkPlayerHit(enemy, 1);
     }
     enemy.attackLanded = true;
     return true;
@@ -101,8 +90,8 @@ export const warlordBossBehavior: BossBehavior = {
       enemy.targetAngle = Math.atan2(globals.player.y - enemy.y, globals.player.x - enemy.x);
       enemy.lungeCos = Math.cos(enemy.targetAngle);
       enemy.lungeSin = Math.sin(enemy.targetAngle);
-      enemy.vx = enemy.lungeCos * enemy.lungeSpeed;
-      enemy.vy = enemy.lungeSin * enemy.lungeSpeed;
+      enemy.vx = 0;
+      enemy.vy = 0;
       return true;
     }
     return false;

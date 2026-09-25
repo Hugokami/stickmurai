@@ -24,7 +24,7 @@ export const colossusBossBehavior: BossBehavior = {
 
   triggerAttack(enemy: Enemy, distToTarget: number): boolean {
     if (!enemy.attackLanded && distToTarget > 220 && enemy.stateTime >= 0.18) {
-      const p = Projectile.acquire(enemy.x, enemy.y, enemy.targetAngle, true, 4, true);
+      const p = Projectile.acquire(enemy.x, enemy.y, enemy.targetAngle, true, 1, true);
       (p as any).shooter = enemy;
       (p as any).colorTint = '#00ffff';
       (p as any).projectileType = 'water_ball';
@@ -66,55 +66,37 @@ export const colossusBossBehavior: BossBehavior = {
     ));
     playSynthesizedThunder();
 
-    const baseAng = enemy.targetAngle;
-    const spreadAngles = isLateStage
-      ? [baseAng - 0.48, baseAng - 0.24, baseAng, baseAng + 0.24, baseAng + 0.48]
-      : [baseAng - 0.28, baseAng, baseAng + 0.28];
-    for (const ang of spreadAngles) {
-      const proj = Projectile.acquire(enemy.x, enemy.y, ang, true, isLateStage ? 3 : 2);
-      (proj as any).shooter = enemy;
-      (proj as any).colorTint = '#38bdf8';
-      (proj as any).projectileType = 'water';
-      globals.projectiles.push(proj);
-    }
-
     const pdx = globals.player.x - enemy.x;
     const pdy = globals.player.y - enemy.y;
     const slamRadius = isLateStage ? 260 : 200;
     if (pdx * pdx + pdy * pdy < slamRadius * slamRadius && globals.player.state !== 'dead') {
-      callbacks.checkPlayerHit(enemy, isLateStage ? 5 : 4);
+      callbacks.checkPlayerHit(enemy, 2);
     }
 
+    const centerX = enemy.x;
+    const centerY = enemy.y;
+    const outerRadius = isLateStage ? 360 : 280;
+    const warning = new Shockwave(centerX, centerY, '#38bdf8', outerRadius);
+    warning.life = warning.maxLife = 0.65;
+    globals.shockwaves.push(warning);
+    const innerWarning = new Shockwave(centerX, centerY, '#38bdf8', isLateStage ? 260 : 180);
+    innerWarning.life = innerWarning.maxLife = 0.65;
+    globals.shockwaves.push(innerWarning);
     globals.delayedActions.push({
-      delay: 0.25,
+      delay: 0.65,
       run: () => {
-        if (enemy.state !== 'dead') {
-          globals.shockwaves.push(new Shockwave(enemy.x, enemy.y, '#0284c7', isLateStage ? 400 : 300));
-          const afterDx = globals.player.x - enemy.x;
-          const afterDy = globals.player.y - enemy.y;
-          const afterRadius = isLateStage ? 360 : 280;
-          if (afterDx * afterDx + afterDy * afterDy < afterRadius * afterRadius && globals.player.state !== 'dead') {
-            callbacks.checkPlayerHit(enemy, isLateStage ? 2 : 1);
-          }
+        if (enemy.state === 'dead') return;
+        globals.shockwaves.push(new Shockwave(centerX, centerY, '#0284c7', isLateStage ? 400 : 300));
+        const afterDx = globals.player.x - centerX;
+        const afterDy = globals.player.y - centerY;
+        const distanceSq = afterDx * afterDx + afterDy * afterDy;
+        const outerRadius = isLateStage ? 360 : 280;
+        // Step inside after the slam, or stay outside the expanding ring.
+        if (distanceSq >= slamRadius * slamRadius && distanceSq < outerRadius * outerRadius && globals.player.state !== 'dead') {
+          callbacks.checkPlayerHit(enemy, 1);
         }
       }
     });
-
-    if (isLateStage) {
-      globals.delayedActions.push({
-        delay: 0.5,
-        run: () => {
-          if (enemy.state !== 'dead') {
-            globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8', 180));
-            const pDistX = globals.player.x - enemy.x;
-            const pDistY = globals.player.y - enemy.y;
-            if (Math.hypot(pDistX, pDistY) < 380 && globals.player.state !== 'dead') {
-              callbacks.checkPlayerHit(enemy, 2);
-            }
-          }
-        }
-      });
-    }
 
     enemy.attackLanded = true;
     return true;

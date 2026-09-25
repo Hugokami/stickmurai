@@ -24,8 +24,8 @@ export const oniBossBehavior: BossBehavior = {
 
   triggerAttack(enemy: Enemy, distToTarget: number): boolean {
     if (!enemy.attackLanded && distToTarget > 200 && enemy.stateTime >= 0.15) {
-      const p1 = Projectile.acquire(enemy.x, enemy.y, enemy.targetAngle - 0.18, true, 4, true);
-      const p2 = Projectile.acquire(enemy.x, enemy.y, enemy.targetAngle + 0.18, true, 4, true);
+      const p1 = Projectile.acquire(enemy.x, enemy.y, enemy.targetAngle - 0.18, true, 1, true);
+      const p2 = Projectile.acquire(enemy.x, enemy.y, enemy.targetAngle + 0.18, true, 1, true);
       (p1 as any).shooter = enemy;
       (p1 as any).colorTint = '#ef4444';
       (p1 as any).projectileType = 'fire';
@@ -65,18 +65,7 @@ export const oniBossBehavior: BossBehavior = {
     const pdy = globals.player.y - enemy.y;
     const slamRadius = isLateStage ? 260 : 200;
     if (pdx * pdx + pdy * pdy < slamRadius * slamRadius && globals.player.state !== 'dead') {
-      callbacks.checkPlayerHit(enemy, isLateStage ? 3 : 2);
-    }
-
-    const baseAng = enemy.targetAngle;
-    const offsets = isLateStage ? [-0.6, -0.4, -0.2, 0, 0.2, 0.4, 0.6] : [-0.32, 0, 0.32];
-    for (const offset of offsets) {
-      const proj = Projectile.acquireFireball(enemy.x, enemy.y, baseAng + offset, true, isLateStage ? 5 : 4);
-      (proj as any).shooter = enemy;
-      (proj as any).colorTint = '#ef4444';
-      proj.vx = Math.cos(baseAng + offset) * (isLateStage ? 1200 : 1050);
-      proj.vy = Math.sin(baseAng + offset) * (isLateStage ? 1200 : 1050);
-      globals.projectiles.push(proj);
+      callbacks.checkPlayerHit(enemy, 1);
     }
     enemy.attackLanded = true;
     return true;

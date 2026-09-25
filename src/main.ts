@@ -96,7 +96,7 @@ import { initUI, updateUI, updateEnhanceButton, updateStanceSwitchButton, toggle
 import { initRenderer, draw, resetCanvasVisuals, resizeCanvas } from './renderer';
 import { triggerLevelUp, applyRandomStartUpgrade, resetShop, triggerSpecificUltimate, openShop, refreshShop } from './powerups';
 import { initFullscreen, requestFullscreen, isPoki } from './fullscreen';
-import { handleBossHit } from './bosses';
+import { handleBossHit, isBossType } from './bosses';
 import { distToSegment } from './collision';
 
 // register callbacks
@@ -1450,6 +1450,7 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   if (globals.activeStageAffix?.id === 'blood_surge' || globals.activeStageAffix?.id === 'blood_tithe') {
     damageAmount += 1;
   }
+  if (isBossType(enemy?.subType)) damageAmount = Math.min(2, damageAmount);
 
   if (globals.selectedSkill === 'shield' && globals.enhanceActiveTimer > 0) {
     if (globals.playerStats.shieldBlastLevel && globals.playerStats.shieldBlastLevel > 0 && enemy && enemy.state !== 'dead') {

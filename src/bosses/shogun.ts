@@ -1,7 +1,6 @@
 import type { Enemy } from '../enemy';
 import type { BossBehavior } from './types';
 import { globals } from '../globals';
-import { callbacks } from '../callbacks';
 import { BOSS_BASE_HP } from '../balance';
 import { Projectile, Shockwave, FloatingText } from '../entities';
 
@@ -23,7 +22,7 @@ export const shogunBossBehavior: BossBehavior = {
   triggerAttack(enemy: Enemy, distToTarget: number): boolean {
     if (!enemy.attackLanded && distToTarget > 180 && enemy.stateTime >= 0.15) {
       for (const off of [-0.3, -0.1, 0.1, 0.3]) {
-        const p = Projectile.acquireKunai(enemy.x, enemy.y, enemy.targetAngle + off, true, 4);
+        const p = Projectile.acquireKunai(enemy.x, enemy.y, enemy.targetAngle + off, true, 1);
         (p as any).shooter = enemy;
         (p as any).colorTint = '#fbbf24';
         globals.projectiles.push(p);
@@ -54,19 +53,16 @@ export const shogunBossBehavior: BossBehavior = {
       30
     ));
 
-    const pdx = globals.player.x - enemy.x;
-    const pdy = globals.player.y - enemy.y;
-    const slashRadius = isLateStage ? 240 : 180;
-    if (pdx * pdx + pdy * pdy < slashRadius * slashRadius && globals.player.state !== 'dead') {
-      callbacks.checkPlayerHit(enemy, isLateStage ? 3 : 2);
-    }
-
+    // Center lane stays open: sidestep into it or deflect an outside shot.
     const baseAng = enemy.targetAngle;
     const offsets = isLateStage
-      ? [-0.7, -0.5, -0.3, -0.1, 0.1, 0.3, 0.5, 0.7]
-      : [-0.44, -0.22, 0, 0.22, 0.44];
+      ? [-0.7, -0.5, -0.3, 0.3, 0.5, 0.7]
+      : [-0.44, -0.22, 0.22, 0.44];
+    const sideX = -Math.sin(baseAng) * 115;
+    const sideY = Math.cos(baseAng) * 115;
     for (const offset of offsets) {
-      const proj = Projectile.acquire(enemy.x, enemy.y, baseAng + offset, true, isLateStage ? 5 : 4);
+      const side = Math.sign(offset);
+      const proj = Projectile.acquire(enemy.x + sideX * side, enemy.y + sideY * side, baseAng + offset, true, 1);
       (proj as any).shooter = enemy;
       (proj as any).colorTint = '#a855f7';
       (proj as any).projectileType = 'water_ball';

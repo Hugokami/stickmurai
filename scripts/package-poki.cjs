@@ -41,7 +41,7 @@ console.log('\n--- 2. Packaging Poki release for Poki Inspector & Platform ---')
 // Only package essential runtime files so Poki Inspector directory upload and ZIP upload
 // process cleanly without hitting browser file-count limits or missing index.html.
 const pythonScript = `
-import os, zipfile, sys, shutil
+import os, zipfile, sys, shutil, struct, zlib
 
 dist_dir = sys.argv[1]
 zip_path = sys.argv[2]
@@ -54,7 +54,12 @@ exclude_names = {'.ds_store', 'thumbs.db'}
 allowed_root_files = {'index.html', 'manifest.json', 'sw.js', 'favicon.svg', 'assets.bin', 'vite.svg', 'icons.svg'}
 allowed_dirs = {'audio', 'fonts', 'fantasy_bg', 'ui', 'icons'}
 
+sdk_dir = os.path.join(os.path.dirname(dist_dir), 'scripts')
 files_to_pack = []
+for sdk_name in ('poki-sdk.js', 'poki-sdk-core.js'):
+    sdk_file = os.path.join(sdk_dir, sdk_name)
+    assert os.path.isfile(sdk_file), f'Local Poki SDK missing: {sdk_name}'
+    files_to_pack.append((sdk_file, sdk_name))
 
 # 1. Root files (guarantee index.html is top-priority root)
 for rf in allowed_root_files:
@@ -103,7 +108,55 @@ for s in range(1, 9):
     if os.path.exists(fp):
         files_to_pack.append((fp, f'sprites/{fn}'))
 
-poki_fs_strip = \"\"\"<script>
+def optimize_bundle(source):
+    data = open(source, 'rb').read()
+    assert data[:4] == b'STIK', 'Invalid asset bundle'
+    count = struct.unpack_from('<I', data, 4)[0]
+    index_size = struct.unpack_from('<I', data, 8)[0]
+    index = memoryview(data)[12:12 + index_size]
+    payload = memoryview(data)[12 + index_size:]
+    entries = []
+    cursor = 0
+    for _ in range(count):
+        name_size = struct.unpack_from('<H', index, cursor)[0]
+        cursor += 2
+        name = bytes(index[cursor:cursor + name_size])
+        cursor += name_size
+        offset, size = struct.unpack_from('<II', index, cursor)
+        cursor += 8
+        blob = bytes(payload[offset:offset + size])
+        if b'Stick Figure Character Sprites 2D/' in name and blob.startswith(bytes.fromhex('89504e470d0a1a0a')):
+            chunks = []
+            compressed = []
+            pos = 8
+            while pos < len(blob):
+                length = struct.unpack_from('>I', blob, pos)[0]
+                tag = blob[pos + 4:pos + 8]
+                chunk = blob[pos + 8:pos + 8 + length]
+                if tag == b'IDAT':
+                    compressed.append(chunk)
+                else:
+                    chunks.append((tag, chunk))
+                pos += 12 + length
+            assert pos == len(blob), name
+            packed = zlib.compress(zlib.decompress(b''.join(compressed)), 6)
+            rebuilt = bytearray(blob[:8])
+            for tag, chunk in chunks:
+                if tag == b'IEND':
+                    rebuilt += struct.pack('>I', len(packed)) + b'IDAT' + packed + struct.pack('>I', zlib.crc32(b'IDAT' + packed))
+                rebuilt += struct.pack('>I', len(chunk)) + tag + chunk + struct.pack('>I', zlib.crc32(tag + chunk))
+            if len(rebuilt) < len(blob):
+                blob = bytes(rebuilt)
+        entries.append((name, blob))
+    assert cursor == index_size
+    table = bytearray()
+    bodies = bytearray()
+    for name, blob in entries:
+        table += struct.pack('<H', len(name)) + name + struct.pack('<II', len(bodies), len(blob))
+        bodies += blob
+    return b'STIK' + struct.pack('<II', count, len(table)) + table + bodies
+
+poki_fs_strip = """<script>
 window.__POKI_BUILD__ = true;
 window.IS_POKI = true;
 if (typeof Element !== 'undefined' && Element.prototype) {
@@ -130,12 +183,23 @@ with zipfile.ZipFile(zip_path, 'w', compression=zipfile.ZIP_DEFLATED, compressle
             with open(abs_path, 'r', encoding='utf-8') as f:
                 content = f.read()
             if '<head>' in content:
-                content = content.replace('<head>', '<head>' + poki_fs_strip, 1)
+                content = content.replace('<head>', '<head>' + poki_fs_strip + '<script defer src="./poki-sdk.js"></script>', 1)
             else:
                 content = poki_fs_strip + content
             with open(dest_file, 'w', encoding='utf-8') as f:
                 f.write(content)
             zf.writestr(rel_path, content.encode('utf-8'))
+        elif rel_path == 'poki-sdk.js':
+            content = open(abs_path, 'rb').read().replace(b'https://game-cdn.poki.com/scripts/\${e}/\${t}', b'./poki-sdk-core.js')
+            assert b'./poki-sdk-core.js' in content, 'Poki SDK core URL changed'
+            with open(dest_file, 'wb') as f:
+                f.write(content)
+            zf.writestr(rel_path, content)
+        elif rel_path == 'assets.bin':
+            content = optimize_bundle(abs_path)
+            with open(dest_file, 'wb') as f:
+                f.write(content)
+            zf.writestr(rel_path, content)
         else:
             zf.write(abs_path, rel_path)
             shutil.copy2(abs_path, dest_file)

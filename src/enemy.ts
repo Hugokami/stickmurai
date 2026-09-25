@@ -506,6 +506,7 @@ export class Enemy extends Entity {
     this.speed *= speedMult;
     this.lungeSpeed *= speedMult;
     this.chargeTimeMax *= chargeMult;
+    if (isBossType(this.subType)) this.chargeTimeMax = Math.max(0.85, this.chargeTimeMax);
 
     // Early campaign telegraph minimums (classic stage <= 3): melee >= 1.0s, ranged >= 1.2s
     if (globals.gameMode === 'classic' && (globals.currentStage || 1) <= 3) {
@@ -534,7 +535,7 @@ export class Enemy extends Entity {
     // Aggression and speed buffs per phase
     this.speed = Math.round(this.speed * 1.15);
     this.lungeSpeed = Math.round(this.lungeSpeed * 1.12);
-    this.chargeTimeMax = Math.max(0.35, this.chargeTimeMax * 0.85);
+    this.chargeTimeMax = Math.max(0.85, this.chargeTimeMax * 0.85);
     this.lungeDuration = Math.max(0.24, this.lungeDuration * 0.88);
     this.attackCooldownTimer = 0.15;
     this.setState('idle');
@@ -836,7 +837,7 @@ export class Enemy extends Entity {
 
     if (this.state === 'recover') {
       this.vx = 0; this.vy = 0;
-      let recovery = isBoss(this) && globals.gameMode === 'classic' ? (this.currentPhase >= 3 ? 0.2 : (this.currentPhase >= 2 ? 0.25 : 0.35)) : .8;
+      let recovery = isBoss(this) && globals.gameMode === 'classic' ? (this.currentPhase >= 3 ? 0.55 : (this.currentPhase >= 2 ? 0.65 : 0.75)) : .8;
       if (isBoss(this) && globals.gameMode === 'classic' && (globals.currentStage || 1) <= 3) {
         recovery *= 1.25;
       }
@@ -910,7 +911,7 @@ export class Enemy extends Entity {
         // Trigger custom spells
         this.triggerCustomSpellCast(currentTarget);
 
-        let curLungeSpeed = this.lungeSpeed;
+        let curLungeSpeed = isBossType(this.subType) ? 0 : this.lungeSpeed;
         if (this.chillTimer > 0) {
           curLungeSpeed *= 0.7;
         }
@@ -923,7 +924,7 @@ export class Enemy extends Entity {
     if (this.state === 'attack') {
       const t = this.stateTime / this.lungeDuration;
       const decay = Math.max(0, 1 - t);
-      let curLungeSpeed = this.lungeSpeed;
+      let curLungeSpeed = isBossType(this.subType) ? 0 : this.lungeSpeed;
       if (this.chillTimer > 0) {
         curLungeSpeed *= 0.7;
       }
@@ -1178,6 +1179,11 @@ export class Enemy extends Entity {
       }
     }
     if (currentTarget === this.target) {
+      if (isBossType(this.subType)) {
+        const dx = this.target.x - this.x;
+        const dy = this.target.y - this.y;
+        if (dx * Math.cos(this.targetAngle) + dy * Math.sin(this.targetAngle) <= 0) return;
+      }
       if (this.subType === 'orc_brute') {
         globals.screenShake = Math.max(globals.screenShake, 14);
         globals.shockwaves.push(new Shockwave(this.x, this.y, '#ea580c'));
@@ -1332,7 +1338,10 @@ export class Enemy extends Entity {
       }
       this.attackLanded = true;
     } else if (isBossType(this.subType)) {
-      castBossSpell(this);
+      const dx = currentTarget.x - this.x;
+      const dy = currentTarget.y - this.y;
+      const spellRange = this.subType === 'shogun_boss' ? 180 : this.subType === 'oni_boss' ? 200 : 220;
+      if (dx * dx + dy * dy <= spellRange * spellRange) castBossSpell(this);
     }
   }
 
@@ -1389,7 +1398,41 @@ export class Enemy extends Entity {
       ctx.fillText(label, 0, -this.meleeHitRadius - 16);
       ctx.restore();
 
-      if (isDetonator) {
+      if (isBossType(this.subType)) {
+        const late = (globals.currentStage || 1) >= 60;
+        const radius = this.subType === 'skeleton_warlord' ? (late ? 280 : 220)
+          : this.subType === 'agis_colossus' || this.subType === 'oni_boss' ? (late ? 260 : 200) : 0;
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(251, 191, 36, 0.12)';
+        ctx.lineWidth = isLocked ? 3.5 : 2;
+        ctx.setLineDash(isLocked ? [] : [10, 8]);
+        if (this.subType === 'shogun_boss') {
+          const angles = late ? [-0.7, -0.5, -0.3, 0.3, 0.5, 0.7] : [-0.44, -0.22, 0.22, 0.44];
+          const sideX = -Math.sin(this.targetAngle) * 115;
+          const sideY = Math.cos(this.targetAngle) * 115;
+          for (const offset of angles) {
+            const side = Math.sign(offset);
+            ctx.beginPath(); ctx.moveTo(sideX * side, sideY * side);
+            ctx.lineTo(sideX * side + Math.cos(this.targetAngle + offset) * 450, sideY * side + Math.sin(this.targetAngle + offset) * 450);
+            ctx.stroke();
+          }
+        } else {
+          ctx.beginPath();
+          if (this.subType === 'skeleton_warlord') {
+            ctx.moveTo(0, 0);
+            ctx.arc(0, 0, radius, this.targetAngle - Math.PI / 2, this.targetAngle + Math.PI / 2);
+            ctx.closePath();
+          } else {
+            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+          }
+          ctx.fill(); ctx.stroke();
+          if (this.subType === 'agis_colossus') {
+            ctx.beginPath(); ctx.arc(0, 0, late ? 360 : 280, 0, Math.PI * 2); ctx.stroke();
+          }
+        }
+        ctx.restore();
+      } else if (isDetonator) {
         const radius = this.meleeHitRadius; // 190
         ctx.save();
         ctx.strokeStyle = color;
