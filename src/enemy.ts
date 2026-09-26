@@ -1400,37 +1400,131 @@ export class Enemy extends Entity {
 
       if (isBossType(this.subType)) {
         const late = (globals.currentStage || 1) >= 60;
-        const radius = this.subType === 'skeleton_warlord' ? (late ? 280 : 220)
-          : this.subType === 'agis_colossus' || this.subType === 'oni_boss' ? (late ? 260 : 200) : 0;
+        const attackRange = this.subType === 'shogun_boss' ? 450
+          : this.subType === 'agis_colossus' ? 440
+          : 420; // oni_boss, skeleton_warlord
+        
+        const closeHitRadius = this.subType === 'skeleton_warlord' ? (late ? 280 : 220)
+          : this.subType === 'agis_colossus' ? Math.max(this.meleeHitRadius, late ? 260 : 220)
+          : this.subType === 'oni_boss' ? Math.max(this.meleeHitRadius, late ? 260 : 230)
+          : this.meleeHitRadius; // shogun_boss: 224
+
         ctx.save();
         ctx.strokeStyle = color;
-        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(251, 191, 36, 0.12)';
         ctx.lineWidth = isLocked ? 3.5 : 2;
         ctx.setLineDash(isLocked ? [] : [10, 8]);
+
+        // 1. Attack Range boundary arc & directional centerline to full attack range
+        ctx.beginPath();
+        const spreadHalf = this.subType === 'skeleton_warlord' ? (Math.PI / 2)
+          : this.subType === 'shogun_boss' ? 0.65
+          : 0.55;
+        ctx.arc(0, 0, attackRange, this.targetAngle - spreadHalf, this.targetAngle + spreadHalf);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(Math.cos(this.targetAngle) * attackRange, Math.sin(this.targetAngle) * attackRange);
+        ctx.stroke();
+
+        // 2. Boss-specific attack pattern corridors reaching out to attackRange
         if (this.subType === 'shogun_boss') {
+          // 4-kunai fan volley corridors
+          for (const off of [-0.3, -0.1, 0.1, 0.3]) {
+            const ang = this.targetAngle + off;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(ang) * attackRange, Math.sin(ang) * attackRange);
+            ctx.stroke();
+          }
+          // Flank laser lines
           const angles = late ? [-0.7, -0.5, -0.3, 0.3, 0.5, 0.7] : [-0.44, -0.22, 0.22, 0.44];
           const sideX = -Math.sin(this.targetAngle) * 115;
           const sideY = Math.cos(this.targetAngle) * 115;
           for (const offset of angles) {
             const side = Math.sign(offset);
-            ctx.beginPath(); ctx.moveTo(sideX * side, sideY * side);
-            ctx.lineTo(sideX * side + Math.cos(this.targetAngle + offset) * 450, sideY * side + Math.sin(this.targetAngle + offset) * 450);
+            ctx.beginPath();
+            ctx.moveTo(sideX * side, sideY * side);
+            ctx.lineTo(sideX * side + Math.cos(this.targetAngle + offset) * attackRange, sideY * side + Math.sin(this.targetAngle + offset) * attackRange);
             ctx.stroke();
           }
-        } else {
-          ctx.beginPath();
-          if (this.subType === 'skeleton_warlord') {
+        } else if (this.subType === 'oni_boss') {
+          // Twin fire projectile corridors out to attackRange
+          for (const ang of [this.targetAngle - 0.18, this.targetAngle + 0.18]) {
+            ctx.beginPath();
             ctx.moveTo(0, 0);
-            ctx.arc(0, 0, radius, this.targetAngle - Math.PI / 2, this.targetAngle + Math.PI / 2);
-            ctx.closePath();
-          } else {
-            ctx.arc(0, 0, radius, 0, Math.PI * 2);
+            ctx.lineTo(Math.cos(ang) * attackRange, Math.sin(ang) * attackRange);
+            ctx.stroke();
+            const sideX = -Math.sin(ang) * 16;
+            const sideY = Math.cos(ang) * 16;
+            ctx.beginPath();
+            ctx.moveTo(sideX, sideY);
+            ctx.lineTo(Math.cos(ang) * attackRange + sideX, Math.sin(ang) * attackRange + sideY);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-sideX, -sideY);
+            ctx.lineTo(Math.cos(ang) * attackRange - sideX, Math.sin(ang) * attackRange - sideY);
+            ctx.stroke();
           }
-          ctx.fill(); ctx.stroke();
-          if (this.subType === 'agis_colossus') {
-            ctx.beginPath(); ctx.arc(0, 0, late ? 360 : 280, 0, Math.PI * 2); ctx.stroke();
+        } else if (this.subType === 'skeleton_warlord') {
+          // 3-way void wave spread corridors out to attackRange
+          for (const off of [-0.25, 0, 0.25]) {
+            const ang = this.targetAngle + off;
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.lineTo(Math.cos(ang) * attackRange, Math.sin(ang) * attackRange);
+            ctx.stroke();
           }
+        } else if (this.subType === 'agis_colossus') {
+          // Heavy tidal projectile corridor along targetAngle out to attackRange
+          const sideX = -Math.sin(this.targetAngle) * 22;
+          const sideY = Math.cos(this.targetAngle) * 22;
+          ctx.beginPath();
+          ctx.moveTo(sideX, sideY);
+          ctx.lineTo(Math.cos(this.targetAngle) * attackRange + sideX, Math.sin(this.targetAngle) * attackRange + sideY);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(-sideX, -sideY);
+          ctx.lineTo(Math.cos(this.targetAngle) * attackRange - sideX, Math.sin(this.targetAngle) * attackRange - sideY);
+          ctx.stroke();
         }
+
+        // 3. Precise actual damage hitbox (melee / slam / cleave zone)
+        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.22)' : 'rgba(251, 191, 36, 0.12)';
+        ctx.beginPath();
+        if (this.subType === 'skeleton_warlord') {
+          // Frontal 180-deg cleave hitbox
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, closeHitRadius, this.targetAngle - Math.PI / 2, this.targetAngle + Math.PI / 2);
+          ctx.closePath();
+        } else {
+          // Full 360-deg slam/strike hitbox
+          ctx.arc(0, 0, closeHitRadius, 0, Math.PI * 2);
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // 4. Dynamic charge-up progression fill matching damage hitbox
+        ctx.setLineDash([]);
+        ctx.fillStyle = isLocked ? 'rgba(239, 68, 68, 0.35)' : 'rgba(251, 191, 36, 0.22)';
+        ctx.beginPath();
+        if (this.subType === 'skeleton_warlord') {
+          ctx.moveTo(0, 0);
+          ctx.arc(0, 0, closeHitRadius * p, this.targetAngle - Math.PI / 2, this.targetAngle + Math.PI / 2);
+          ctx.closePath();
+        } else {
+          ctx.arc(0, 0, closeHitRadius * p, 0, Math.PI * 2);
+        }
+        ctx.fill();
+
+        // 5. Colossus outer ground rupture warning ring
+        if (this.subType === 'agis_colossus') {
+          ctx.setLineDash(isLocked ? [] : [10, 8]);
+          ctx.beginPath();
+          ctx.arc(0, 0, late ? 360 : 280, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
         ctx.restore();
       } else if (isDetonator) {
         const radius = this.meleeHitRadius; // 190

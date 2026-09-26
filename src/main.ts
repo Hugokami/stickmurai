@@ -753,11 +753,11 @@ export function setupWaveObjectives(wave: number, totalWaves: number, stage: num
     globals.stageBossSpawned = false;
   } else {
     if (stage === 1) {
-      globals.waveEnemiesTotal = wave === 1 ? 3 : 4;
+      globals.waveEnemiesTotal = wave === 1 ? 5 : 7;
     } else if (stage <= 3) {
-      globals.waveEnemiesTotal = Math.min(6, 3 + wave);
+      globals.waveEnemiesTotal = Math.min(9, 5 + wave);
     } else {
-      globals.waveEnemiesTotal = Math.min(10, 4 + wave + Math.floor(stage / 5));
+      globals.waveEnemiesTotal = Math.min(14, 6 + wave + Math.floor(stage / 5));
     }
   }
   globals.stageTargetKills = globals.waveEnemiesTotal;
@@ -3876,9 +3876,9 @@ function killEnemy(e: Enemy) {
     const allSpawned = (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1);
     const allKilled = globals.waveEnemiesKilled >= (globals.waveEnemiesTotal || 1);
     const bossConditionMet = !isBossStage || globals.stageBossDefeated || isBossKill;
-    const isWaveComplete = (allKilled || allSpawned || (isBossStage && isFinalWave && globals.stageBossDefeated)) && aliveEnemies === 0 && bossConditionMet;
+    const isWaveComplete = allKilled && allSpawned && aliveEnemies === 0 && bossConditionMet;
 
-    if (!isFinalWave && globals.waveState === 'active' && allKilled && aliveEnemies === 0) {
+    if (!isFinalWave && globals.waveState === 'active' && allKilled && allSpawned && aliveEnemies === 0) {
       clearWaveToPortal();
     } else if (isWaveComplete && globals.waveState === 'active') {
       if (!isFinalWave) {

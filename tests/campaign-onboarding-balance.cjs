@@ -75,62 +75,62 @@ test('encounterBudget table tests across stages 1, 2, 3, 4, 10, 11, 30 for deskt
 test('setupWaveObjectives wave quotas follow approved campaign plan and preserve boss progression', () => {
   const { globals, setupWaveObjectives } = createWaveTester();
 
-  // Stage 1: regular wave quotas 3 then 4; final wave boss alone (1)
+  // Stage 1: regular wave quotas 5 then 7; final wave boss alone (1)
   setupWaveObjectives(1, 3, 1, false);
-  assert.equal(globals.waveEnemiesTotal, 3, 'Stage 1 Wave 1 quota must be 3');
-  assert.equal(globals.stageTargetKills, 3);
+  assert.equal(globals.waveEnemiesTotal, 5, 'Stage 1 Wave 1 quota must be 5');
+  assert.equal(globals.stageTargetKills, 5);
 
   setupWaveObjectives(2, 3, 1, false);
-  assert.equal(globals.waveEnemiesTotal, 4, 'Stage 1 Wave 2 quota must be 4');
+  assert.equal(globals.waveEnemiesTotal, 7, 'Stage 1 Wave 2 quota must be 7');
 
   setupWaveObjectives(3, 3, 1, true);
   assert.equal(globals.waveEnemiesTotal, 1, 'Stage 1 Final Wave quota must be 1 (boss alone)');
 
-  // Stages 2-3: regular quotas 3 + wave capped 6; final boss alone (1)
+  // Stages 2-3: regular quotas 5 + wave capped 9; final boss alone (1)
   setupWaveObjectives(1, 3, 2, false);
-  assert.equal(globals.waveEnemiesTotal, 4, 'Stage 2 Wave 1 quota must be 4 (3 + 1)');
+  assert.equal(globals.waveEnemiesTotal, 6, 'Stage 2 Wave 1 quota must be 6 (5 + 1)');
 
   setupWaveObjectives(2, 3, 2, false);
-  assert.equal(globals.waveEnemiesTotal, 5, 'Stage 2 Wave 2 quota must be 5 (3 + 2)');
+  assert.equal(globals.waveEnemiesTotal, 7, 'Stage 2 Wave 2 quota must be 7 (5 + 2)');
 
   setupWaveObjectives(3, 3, 2, true);
   assert.equal(globals.waveEnemiesTotal, 1, 'Stage 2 Final Wave quota must be 1 (boss alone)');
 
   setupWaveObjectives(1, 3, 3, false);
-  assert.equal(globals.waveEnemiesTotal, 4, 'Stage 3 Wave 1 quota must be 4');
+  assert.equal(globals.waveEnemiesTotal, 6, 'Stage 3 Wave 1 quota must be 6');
 
   setupWaveObjectives(2, 3, 3, false);
-  assert.equal(globals.waveEnemiesTotal, 5, 'Stage 3 Wave 2 quota must be 5');
+  assert.equal(globals.waveEnemiesTotal, 7, 'Stage 3 Wave 2 quota must be 7');
 
   setupWaveObjectives(3, 3, 3, true);
   assert.equal(globals.waveEnemiesTotal, 1, 'Stage 3 Final Wave quota must be 1 (boss alone)');
 
-  // Stage 4+: min(10, 4 + wave + Math.floor(stage / 5)); boss wave max 1 add (2)
-  // Stage 4, wave 1: 4 + 1 + 0 = 5
+  // Stage 4+: min(14, 6 + wave + Math.floor(stage / 5)); boss wave max 1 add (2)
+  // Stage 4, wave 1: 6 + 1 + 0 = 7
   setupWaveObjectives(1, 4, 4, false);
-  assert.equal(globals.waveEnemiesTotal, 5, 'Stage 4 Wave 1 quota must be 5');
+  assert.equal(globals.waveEnemiesTotal, 7, 'Stage 4 Wave 1 quota must be 7');
 
   // Stage 4 final wave: 2 (boss + 1 add)
   setupWaveObjectives(4, 4, 4, true);
   assert.equal(globals.waveEnemiesTotal, 2, 'Stage 4 Final Wave quota must be 2 (boss + 1 add)');
 
-  // Stage 10: wave 1: 4 + 1 + 2 = 7; final wave: 2
+  // Stage 10: wave 1: 6 + 1 + 2 = 9; final wave: 2
   setupWaveObjectives(1, 5, 10, false);
-  assert.equal(globals.waveEnemiesTotal, 7, 'Stage 10 Wave 1 quota must be 7');
+  assert.equal(globals.waveEnemiesTotal, 9, 'Stage 10 Wave 1 quota must be 9');
 
   setupWaveObjectives(5, 5, 10, true);
   assert.equal(globals.waveEnemiesTotal, 2, 'Stage 10 Final Wave quota must be 2');
 
-  // Stage 11: wave 1: 4 + 1 + 2 = 7; final wave: 2
+  // Stage 11: wave 1: 6 + 1 + 2 = 9; final wave: 2
   setupWaveObjectives(1, 6, 11, false);
-  assert.equal(globals.waveEnemiesTotal, 7, 'Stage 11 Wave 1 quota must be 7');
+  assert.equal(globals.waveEnemiesTotal, 9, 'Stage 11 Wave 1 quota must be 9');
 
   setupWaveObjectives(6, 6, 11, true);
   assert.equal(globals.waveEnemiesTotal, 2, 'Stage 11 Final Wave quota must be 2');
 
-  // Stage 30: wave 1: min(10, 4 + 1 + 6 = 11) = 10; final wave: 2
+  // Stage 30: wave 1: min(14, 6 + 1 + 6 = 13) = 13; final wave: 2
   setupWaveObjectives(1, 10, 30, false);
-  assert.equal(globals.waveEnemiesTotal, 10, 'Stage 30 Wave 1 quota must be capped at 10');
+  assert.equal(globals.waveEnemiesTotal, 13, 'Stage 30 Wave 1 quota must be 13');
 
   setupWaveObjectives(10, 10, 30, true);
   assert.equal(globals.waveEnemiesTotal, 2, 'Stage 30 Final Wave quota must be 2');
