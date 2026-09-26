@@ -1852,21 +1852,49 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 0 0 20px rgba(0, 229, 255, 0.6) !important;
 }
 
-/* Attack/Slash button - Red Hanko Stamp */
+/* Attack/Slash button - Custom Ink Art Sprite without borders or text */
 #btn-attack {
-  width: clamp(95px, 18vh, 135px);
-  height: clamp(95px, 18vh, 135px);
-  background: rgba(188, 44, 44, 0.04);
-  border-color: #bc2c2c;
-  color: #bc2c2c;
-  font-size: clamp(14px, 2.7vh, 18px);
-  text-shadow: 0 0 8px rgba(188, 44, 44, 0.3);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(188, 44, 44, 0.1);
+  width: clamp(105px, 20vh, 145px) !important;
+  height: clamp(105px, 20vh, 145px) !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  clip-path: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease-out, filter 0.15s ease-out;
 }
+
+#btn-attack:hover {
+  transform: scale(1.05);
+  filter: drop-shadow(0 0 10px rgba(255, 60, 60, 0.5));
+}
+
 #btn-attack:active {
-  background: #bc2c2c !important;
-  color: #0c0d12 !important;
-  box-shadow: 0 0 20px rgba(188, 44, 44, 0.6) !important;
+  transform: scale(0.92) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  filter: drop-shadow(0 0 14px rgba(255, 60, 60, 0.85)) brightness(1.2) !important;
+}
+
+.btn-slash-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.65));
+  display: block;
+}
+
+#btn-attack #attack-cooldown-overlay {
+  border-radius: 20px;
 }
 
 /* Enhance button - Gold Hanko Stamp */

@@ -863,8 +863,15 @@ export function startBgm() {
     playPromise.then(() => {
       bgmStarted = true;
     }).catch(() => {
-      // Browser autoplay policy prevented playback before interaction
+      // Browser autoplay policy prevented playback before interaction; arm immediate gesture unlock
       bgmStarted = false;
+      const onUserGesture = () => {
+        ['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach(evt => window.removeEventListener(evt, onUserGesture));
+        triggerBgmGestureUnlock();
+      };
+      if (typeof window !== 'undefined') {
+        ['pointerdown', 'touchstart', 'mousedown', 'keydown'].forEach(evt => window.addEventListener(evt, onUserGesture, { once: true, passive: true }));
+      }
     });
   }
 }

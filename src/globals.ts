@@ -400,7 +400,7 @@ export const globals = {
   waveEnemiesKilled: 0,
   waveEnemiesSpawned: 0,
   waveState: 'active' as 'spawning' | 'active' | 'cleared' | 'shop',
-  wavePortal: null as { x: number; y: number } | null,
+  wavePortal: null as { x: number; y: number; spawnTime?: number } | null,
   waveBannerTimer: 0,
   waveBannerText: '',
   waveBannerSub: '',

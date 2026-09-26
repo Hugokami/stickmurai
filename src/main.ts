@@ -219,6 +219,14 @@ function finishLoading() {
   if (statusText) statusText.innerText = 'Ready';
   if (readyBtn) readyBtn.disabled = false;
 
+  // Immediately start background music as soon as loading completes
+  triggerBgmGestureUnlock();
+  resumeAudioContext();
+  if (bgmAudio.muted) {
+    bgmAudio.muted = false;
+  }
+  startBgm();
+
   const loaderScreen = document.getElementById('loader-screen');
   if (loaderScreen && !loaderScreen.dataset.bound) {
     loaderScreen.dataset.bound = 'true';
@@ -232,7 +240,7 @@ function finishLoading() {
       loaderScreen.removeEventListener('pointerdown', onContinue);
       if (readyBtn) readyBtn.removeEventListener('click', onContinue);
       
-      // Guaranteed immediate audio start on this user gesture
+      // Guaranteed immediate audio start on user gesture or transition
       triggerBgmGestureUnlock();
       resumeAudioContext();
       if (bgmAudio.muted) {
@@ -272,6 +280,11 @@ function finishLoading() {
     window.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.code === 'Space' || e.code === 'Enter') onContinue(e);
     }, { once: true });
+
+    // Auto-advance loading screen smoothly after assets finish loading
+    setTimeout(() => {
+      onContinue();
+    }, 280);
   }
 }
 
@@ -784,13 +797,18 @@ function clearWaveToPortal() {
   const banner = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `${banner}  ${isJa ? '門へ進め' : 'ENTER THE PORTAL'}`, '#38bdf8', 30));
   playSynthesizedTempleBell();
-  const portalX = globals.player.x + (globals.player.x + 240 < arena.right - 100 ? 240 : -240);
-  globals.wavePortal = { x: portalX, y: globals.player.y };
+  // Spawn portal safely away from player (460px) so player does not enter accidentally on wave end
+  const offsetDir = (globals.player.x + 460 < arena.right - 250) ? 1 : -1;
+  const portalX = Math.max(arena.left + 250, Math.min(arena.right - 250, globals.player.x + offsetDir * 460));
+  const portalY = Math.max(arena.top + 250, Math.min(arena.bottom - 250, globals.player.y));
+  globals.wavePortal = { x: portalX, y: portalY, spawnTime: performance.now() };
 }
 
 function enterWavePortal() {
   const portal = globals.wavePortal;
   if (!portal || globals.waveState !== 'cleared' || globals.gameState !== 'playing') return;
+  // Grace delay of 500ms after spawn so player momentum / current attack dash doesn't trigger immediately
+  if (portal.spawnTime && performance.now() - portal.spawnTime < 500) return;
   const dx = globals.player.x - portal.x;
   const dy = globals.player.y - portal.y;
   // Trigger immediately as player walks near / touches the enlarged portal perimeter (256px portal)
@@ -1400,20 +1418,21 @@ function spawnEnemy() {
   let aliveCount=globals.enemies.filter(e=>e.state!=='dead'&&!e.isPvpRemote).length;
 
   if(globals.gameMode==='classic'){
-
-
-    if ((globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 10)) {
-      scheduleSpawn(600);
+    const totalNeeded = globals.waveEnemiesTotal || 10;
+    const currentSpawned = globals.waveEnemiesSpawned || 0;
+    const remainingToSpawn = totalNeeded - currentSpawned;
+    if (remainingToSpawn <= 0) {
       return;
     }
-    maxEnemies=encounter.cap;count=isBossRush()?1:encounter.batch;
-    if (globals.gameMode !== 'classic' && aliveCount === 0) {
-      count = Math.min(3, Math.max(1, (globals.waveEnemiesTotal || 10) - (globals.waveEnemiesSpawned || 0)));
-    }
+    maxEnemies = Math.min(encounter.cap, totalNeeded);
+    count = Math.min(isBossRush() ? 1 : encounter.batch, remainingToSpawn);
   }
   // Insane difficulty is used for insane_survival
   if (globals.enemies.filter(e => e.state !== 'dead' && !e.isPvpRemote).length < maxEnemies) {
      for(let i=0; i<count && aliveCount<maxEnemies; i++) {
+       if (globals.gameMode === 'classic' && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 10)) {
+         break;
+       }
        const angle = Math.random() * Math.PI * 2;
        const dist = 800 + Math.random() * 400 + (i * 100);
        const enemy = new Enemy(globals.player.x + Math.cos(angle)*dist, globals.player.y + Math.sin(angle)*dist, globals.player);
@@ -1442,6 +1461,9 @@ function spawnEnemy() {
      }
   }
   
+  if (globals.gameMode === 'classic' && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 10)) {
+    return;
+  }
   const nextSpawn = globals.gameMode==='classic'?encounter.delay:(1200 - Math.min(700, globals.score * 15)) * nextSpawnMult;
   scheduleSpawn(nextSpawn);
 }
@@ -3856,7 +3878,7 @@ function killEnemy(e: Enemy) {
     const bossConditionMet = !isBossStage || globals.stageBossDefeated || isBossKill;
     const isWaveComplete = (allKilled || allSpawned || (isBossStage && isFinalWave && globals.stageBossDefeated)) && aliveEnemies === 0 && bossConditionMet;
 
-    if (!isFinalWave && globals.waveState === 'active' && allKilled) {
+    if (!isFinalWave && globals.waveState === 'active' && allKilled && aliveEnemies === 0) {
       clearWaveToPortal();
     } else if (isWaveComplete && globals.waveState === 'active') {
       if (!isFinalWave) {

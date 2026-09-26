@@ -36,7 +36,7 @@ test('Combat HUD, Flow, Hero Scale & Level-Up VFX Invariants', async (t) => {
   await t.test('In-game action buttons use .rpg-icon-box and RPG icons', () => {
     const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
     assert.match(indexHtml, /id="btn-dash"[\s\S]*?icons\/rpg\/fc888\.png/, 'btn-dash must use fc888.png');
-    assert.match(indexHtml, /id="btn-attack"[\s\S]*?icons\/rpg\/fc1038\.png/, 'btn-attack must use fc1038.png');
+    assert.match(indexHtml, /id="btn-attack"[\s\S]*?btn-slash\.(webp|png)/, 'btn-attack must use custom slash icon');
     assert.match(indexHtml, /id="btn-stance-switch"[\s\S]*?icons\/rpg\/fc1142\.png/, 'btn-stance-switch must use fc1142.png');
     assert.match(indexHtml, /action-btn-rpg-box/, 'Action buttons must use action-btn-rpg-box class');
   });

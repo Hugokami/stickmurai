@@ -1226,18 +1226,14 @@ export const anims = {
 export const propImages: HTMLImageElement[] = [];
 
 export const borderPropImages = {
-  fence: new Image(),
   torigate: new Image(),
   stoneLamp: new Image(),
-  statue: new Image(),
-  bridge: new Image()
+  statue: new Image()
 };
-queueAsset(borderPropImages.fence, './fantasy_bg/fence.webp', 'fantasy_bg', true);
 queueAsset(borderPropImages.torigate, './fantasy_bg/torigate.webp', 'fantasy_bg', true);
 queueAsset(borderPropImages.stoneLamp, './fantasy_bg/stone-lamp.webp', 'fantasy_bg', true);
 queueAsset(borderPropImages.statue, './fantasy_bg/statue.webp', 'fantasy_bg', true);
-queueAsset(borderPropImages.bridge, './fantasy_bg/bridge.webp', 'fantasy_bg', true);
-propImages.push(borderPropImages.fence, borderPropImages.torigate, borderPropImages.stoneLamp, borderPropImages.statue, borderPropImages.bridge);
+propImages.push(borderPropImages.torigate, borderPropImages.stoneLamp, borderPropImages.statue);
 
 export const terrainLayers = ['ground', 'ground-dirt', 'stones', 'leaves'].map(name => {
   const image = new Image();

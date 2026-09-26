@@ -22,6 +22,6 @@ test('portal clear removes stragglers and projectiles without kill credit; waits
 test('portal sprite renders in world space, away from initial player location', () => {
   assert.match(renderer, /portalImage\.naturalWidth === 192/);
   assert.match(renderer, /ctx\.drawImage\(portalImage, frame % 3 \* 64, Math\.floor\(frame \/ 3\) \* 64, 64, 64/);
-  assert.match(main, /globals\.wavePortal = \{ x: portalX, y: globals\.player\.y \}/);
+  assert.match(main, /globals\.wavePortal = \{ x: portalX, y: portalY/);
   assert.ok(fs.existsSync(path.join(root, 'public/fantasy_bg/wave-portal.png')));
 });
