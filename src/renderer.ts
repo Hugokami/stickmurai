@@ -5,6 +5,7 @@ import { arena } from './arena';
 import { Entity } from './entities';
 import { reducedMotion } from './comfort';
 import { drawCombatHazards } from './combatPolish';
+import { drawBorderDecorations } from './borderDecor';
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -211,6 +212,13 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   ctx.strokeStyle = '#332a29';
   ctx.lineWidth = 8;
   ctx.strokeRect(arena.left + 32, arena.top + 32, width - 64, height - 64);
+  drawBorderDecorations(
+    ctx,
+    globals.camera.x,
+    globals.camera.y,
+    globals.vw / (2 * globals.gameZoom) + 300,
+    globals.vh / (2 * globals.gameZoom) + 300
+  );
   ctx.restore();
 }
 
