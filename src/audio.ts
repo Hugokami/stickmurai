@@ -36,6 +36,19 @@ try {
   console.warn('Failed to load initial BGM:', e);
 }
 
+// Early gesture unlock for browser audio policies
+if (typeof window !== 'undefined') {
+  const earlyUnlock = () => {
+    resumeAudioContext();
+    if (bgmAudio && !isPortalMuted) {
+      if (bgmAudio.muted) bgmAudio.muted = false;
+    }
+  };
+  ['pointerdown', 'touchstart', 'mousedown', 'keydown', 'click'].forEach(evt => {
+    window.addEventListener(evt, earlyUnlock, { passive: true });
+  });
+}
+
 export function createAudio(src: string): HTMLAudioElement {
   try {
     const audio = new Audio(src);
@@ -855,6 +868,10 @@ export function startBgm() {
     }
   } catch (e) {
     console.warn('Failed BGM load call:', e);
+  }
+
+  if (!isPortalMuted) {
+    bgmAudio.muted = false;
   }
 
   bgmStarted = true;
