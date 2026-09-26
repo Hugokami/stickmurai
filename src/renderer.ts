@@ -5,7 +5,7 @@ import { arena } from './arena';
 import { Entity } from './entities';
 import { reducedMotion } from './comfort';
 import { drawCombatHazards } from './combatPolish';
-import { drawBorderDecorations } from './borderDecor';
+import { drawBorderDecorations, STONE_LAMP_OBSTACLES } from './borderDecor';
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -185,7 +185,7 @@ let terrainPattern: CanvasPattern | null = null;
 let terrainTile: HTMLCanvasElement | null = null;
 
 export function drawBackground(ctx: CanvasRenderingContext2D) {
-  ctx.fillStyle = '#100d10';
+  ctx.fillStyle = '#080c09';
   ctx.fillRect(0, 0, globals.width, globals.height);
   ctx.save();
   ctx.scale(globals.gameZoom, globals.gameZoom);
@@ -204,6 +204,47 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   const width = arena.right - arena.left;
   const height = arena.bottom - arena.top;
   ctx.fillRect(arena.left, arena.top, width, height);
+
+  // Dark ambient battlefield theme overlay
+  ctx.fillStyle = 'rgba(4, 7, 9, 0.65)';
+  ctx.fillRect(arena.left, arena.top, width, height);
+
+  // Bright radial illumination pools centered around stone lamps
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const camX = globals.camera.x;
+  const camY = globals.camera.y;
+  const halfW = globals.vw / (2 * globals.gameZoom);
+  const halfH = globals.vh / (2 * globals.gameZoom);
+
+  for (let i = 0; i < STONE_LAMP_OBSTACLES.length; i++) {
+    const lamp = STONE_LAMP_OBSTACLES[i];
+    if (Math.abs(lamp.x - camX) > halfW + 360 || Math.abs(lamp.y - camY) > halfH + 360) continue;
+
+    // Wide ambient lantern light pool
+    const halo = ctx.createRadialGradient(lamp.x, lamp.y - 12, 10, lamp.x, lamp.y - 12, 320);
+    halo.addColorStop(0, 'rgba(255, 230, 150, 0.55)');
+    halo.addColorStop(0.22, 'rgba(255, 200, 100, 0.35)');
+    halo.addColorStop(0.55, 'rgba(230, 160, 50, 0.15)');
+    halo.addColorStop(0.85, 'rgba(180, 110, 20, 0.04)');
+    halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(lamp.x, lamp.y - 12, 320, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Intense inner core light pool
+    const core = ctx.createRadialGradient(lamp.x, lamp.y - 12, 4, lamp.x, lamp.y - 12, 130);
+    core.addColorStop(0, 'rgba(255, 250, 210, 0.60)');
+    core.addColorStop(0.45, 'rgba(255, 220, 130, 0.30)');
+    core.addColorStop(1, 'rgba(255, 190, 80, 0)');
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    ctx.arc(lamp.x, lamp.y - 12, 130, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
   // Composition stays fixed in world space; cracks, foliage, and ruins reveal movement.
   ctx.imageSmoothingEnabled = true;
   ctx.strokeStyle = '#8b6d58';

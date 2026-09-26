@@ -8,6 +8,9 @@ import { vfxAnims, loadEnemyAssetsNow } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
 import { isBoss } from './combatPolish';
 import { isBossType, configureBoss, triggerBossAttack, castBossSpell } from './bosses';
+import { resolveStoneLampCollisions } from './borderDecor';
+
+const checkStoneLampCollisions = typeof resolveStoneLampCollisions === 'function' ? resolveStoneLampCollisions : undefined;
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
@@ -651,6 +654,7 @@ export class Enemy extends Entity {
         this.dominoHitEnemies.clear();
       }
       super.update(effectiveDt);
+      checkStoneLampCollisions?.(this, isBoss(this) ? 45 : 22);
       return;
     }
 
@@ -722,6 +726,7 @@ export class Enemy extends Entity {
         globals.particles.push(Particle.acquire(this.x + (Math.random()-0.5)*20, this.y + (Math.random()-0.5)*40, '#00ffff', 100, 0.3, 1.5));
       }
       super.update(effectiveDt);
+      checkStoneLampCollisions?.(this, isBoss(this) ? 45 : 22);
       return;
     }
 
@@ -739,6 +744,7 @@ export class Enemy extends Entity {
     }
 
     super.update(effectiveDt);
+    checkStoneLampCollisions?.(this, isBoss(this) ? 45 : 22);
 
     if (isBurning) {
       this.burnTimer -= effectiveDt;
@@ -1148,6 +1154,7 @@ export class Enemy extends Entity {
       this.vx = 0; this.vy = 0; this.setState('charge');
       this.targetAngle = Math.atan2(dy - this.rangedMuzzleOffsetY, dx);
     }
+    checkStoneLampCollisions?.(this, isBoss(this) ? 45 : 22);
   }
 
   executeAttack() {

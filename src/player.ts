@@ -13,6 +13,7 @@ import {
 import { playSound, sfx } from './audio';
 import { vfxAnims } from './assets';
 import { pvpManager } from './pvpIaijutsuManager';
+import { resolveStoneLampCollisions } from './borderDecor';
 
 const isMobile = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 
@@ -206,6 +207,7 @@ export class Player extends Entity {
     }
 
     super.update(dt);
+    resolveStoneLampCollisions(this, 22);
     globals.playerPosHistory.push({ x: this.x, y: this.y, state: this.state, animFrame: this.animFrame, dir: this.dir });
     if (globals.playerPosHistory.length > 100) {
       globals.playerPosHistory.shift();
@@ -719,6 +721,7 @@ export class Player extends Entity {
         isParryCooldown: this.pvpParryCooldownTimer > 0
       });
     }
+    resolveStoneLampCollisions(this, 22);
   }
 
   /* warning: don't change performance shadows check or it lags like crazy on older mobile browsers */

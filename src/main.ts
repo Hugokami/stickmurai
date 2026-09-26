@@ -78,6 +78,7 @@ import { initPvPLobby, updatePvpHud, showRoundBanner, updateTurnBadge, recordMat
 import { Player } from './player';
 import { Enemy, triggerBarrelExplosion } from './enemy';
 import { arena, clampToArena } from './arena';
+import { resolveStoneLampCollisions } from './borderDecor';
 import { vfxAnims } from './assets';
 
 let localRematchReady = false;
@@ -5498,6 +5499,7 @@ function update(realDt: number) {
 
   globals.player.update(realDt);
   clampToArena(globals.player);
+  resolveStoneLampCollisions(globals.player, 22);
 
   enterWavePortal();
   if (globals.shopOpen) return;
@@ -7234,6 +7236,8 @@ function update(realDt: number) {
   }
   clampToArena(globals.player);
   for (const enemy of globals.enemies) clampToArena(enemy);
+  resolveStoneLampCollisions(globals.player, 22);
+  for (const enemy of globals.enemies) resolveStoneLampCollisions(enemy, enemy.isBoss ? 45 : 22);
   inplaceFilter(globals.enemies, e => {
     if (e.isPvpRemote || e.state !== 'dead') return true;
     const isBoss = e.subType === 'oni_boss' || e.subType === 'shogun_boss' || e.subType === 'agis_colossus' || e.subType === 'skeleton_warlord' || (e as any).isBoss;
