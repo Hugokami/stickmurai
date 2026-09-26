@@ -241,6 +241,8 @@ export class Entity {
     const dh = Math.round(img.height * scale);
     const dx = Math.round(-img.width/2 * scale + aethOffsetX + akakageOffsetX);
     const dy = Math.round(-img.height/2 * scale);
+    ctx.imageSmoothingEnabled = true;
+    (ctx as any).imageSmoothingQuality = 'high';
     ctx.drawImage(drawImg, dx, dy, dw, dh);
     ctx.restore();
   }

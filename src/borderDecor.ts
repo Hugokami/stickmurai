@@ -204,14 +204,13 @@ export function drawBorderDecorations(
       const flameY = item.y + item.h * 0.42;
       ctx.save();
       ctx.globalCompositeOperation = 'lighter';
-      const fireGrad = ctx.createRadialGradient(flameX, flameY, 1, flameX, flameY, 14);
-      fireGrad.addColorStop(0, 'rgba(255, 255, 230, 0.95)');
-      fireGrad.addColorStop(0.35, 'rgba(255, 210, 110, 0.75)');
-      fireGrad.addColorStop(0.7, 'rgba(255, 140, 30, 0.35)');
-      fireGrad.addColorStop(1, 'rgba(255, 100, 20, 0)');
+      const fireGrad = ctx.createRadialGradient(flameX, flameY, 1, flameX, flameY, 9);
+      fireGrad.addColorStop(0, 'rgba(255, 235, 170, 0.65)');
+      fireGrad.addColorStop(0.4, 'rgba(255, 180, 70, 0.35)');
+      fireGrad.addColorStop(1, 'rgba(255, 120, 20, 0)');
       ctx.fillStyle = fireGrad;
       ctx.beginPath();
-      ctx.arc(flameX, flameY, 14, 0, Math.PI * 2);
+      ctx.arc(flameX, flameY, 9, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }

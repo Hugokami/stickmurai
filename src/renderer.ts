@@ -150,12 +150,14 @@ export function resizeCanvas() {
   globals.height = bestH || window.innerHeight || 600;
   
   const isTouchDevice = typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
-  const dprCap = (globals.graphicsSettings === 'low' || isTouchDevice) ? 1.0 : 1.25;
+  const dprCap = globals.graphicsSettings === 'low' ? 1.0 : (isTouchDevice ? 1.5 : Math.min(window.devicePixelRatio || 1, 2.0));
   currentDpr = Math.min(window.devicePixelRatio || 1, dprCap);
   
-  canvas.width = globals.width * currentDpr;
-  canvas.height = globals.height * currentDpr;
+  canvas.width = Math.round(globals.width * currentDpr);
+  canvas.height = Math.round(globals.height * currentDpr);
   ctx.setTransform(currentDpr, 0, 0, currentDpr, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
 
   const targetVW = 1650;
   const baseZoom = Math.min(1, globals.width / targetVW);
@@ -209,44 +211,34 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
   ctx.fillStyle = 'rgba(4, 7, 9, 0.65)';
   ctx.fillRect(arena.left, arena.top, width, height);
 
-  // Bright radial illumination pools centered around stone lamps
+  // Soft radial illumination pools centered around stone lamps
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   const camX = globals.camera.x;
   const camY = globals.camera.y;
-  const halfW = globals.vw / (2 * globals.gameZoom);
-  const halfH = globals.vh / (2 * globals.gameZoom);
+  const halfW = globals.vw / 2;
+  const halfH = globals.vh / 2;
 
   for (let i = 0; i < STONE_LAMP_OBSTACLES.length; i++) {
     const lamp = STONE_LAMP_OBSTACLES[i];
-    if (Math.abs(lamp.x - camX) > halfW + 360 || Math.abs(lamp.y - camY) > halfH + 360) continue;
+    if (Math.abs(lamp.x - camX) > halfW + 160 || Math.abs(lamp.y - camY) > halfH + 160) continue;
 
-    // Wide ambient lantern light pool
-    const halo = ctx.createRadialGradient(lamp.x, lamp.y - 12, 10, lamp.x, lamp.y - 12, 320);
-    halo.addColorStop(0, 'rgba(255, 230, 150, 0.55)');
-    halo.addColorStop(0.22, 'rgba(255, 200, 100, 0.35)');
-    halo.addColorStop(0.55, 'rgba(230, 160, 50, 0.15)');
-    halo.addColorStop(0.85, 'rgba(180, 110, 20, 0.04)');
+    // Gentle ambient lantern light pool
+    const halo = ctx.createRadialGradient(lamp.x, lamp.y - 14, 6, lamp.x, lamp.y - 14, 140);
+    halo.addColorStop(0, 'rgba(255, 215, 120, 0.28)');
+    halo.addColorStop(0.35, 'rgba(235, 160, 60, 0.12)');
+    halo.addColorStop(0.7, 'rgba(180, 100, 25, 0.03)');
     halo.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.arc(lamp.x, lamp.y - 12, 320, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Intense inner core light pool
-    const core = ctx.createRadialGradient(lamp.x, lamp.y - 12, 4, lamp.x, lamp.y - 12, 130);
-    core.addColorStop(0, 'rgba(255, 250, 210, 0.60)');
-    core.addColorStop(0.45, 'rgba(255, 220, 130, 0.30)');
-    core.addColorStop(1, 'rgba(255, 190, 80, 0)');
-    ctx.fillStyle = core;
-    ctx.beginPath();
-    ctx.arc(lamp.x, lamp.y - 12, 130, 0, Math.PI * 2);
+    ctx.arc(lamp.x, lamp.y - 14, 140, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
 
   // Composition stays fixed in world space; cracks, foliage, and ruins reveal movement.
   ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.strokeStyle = '#8b6d58';
   ctx.lineWidth = 28;
   ctx.strokeRect(arena.left + 14, arena.top + 14, width - 28, height - 28);
@@ -257,8 +249,8 @@ export function drawBackground(ctx: CanvasRenderingContext2D) {
     ctx,
     globals.camera.x,
     globals.camera.y,
-    globals.vw / (2 * globals.gameZoom) + 300,
-    globals.vh / (2 * globals.gameZoom) + 300
+    halfW + 300,
+    halfH + 300
   );
   ctx.restore();
 }
@@ -316,6 +308,8 @@ export function draw() {
   ctx.globalCompositeOperation = 'source-over';
   ctx.filter = 'none';
   ctx.setLineDash([]);
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
   ctx.clearRect(0, 0, globals.width, globals.height);
   drawBackground(ctx);
 
@@ -469,6 +463,8 @@ export function draw() {
       // Animated 256x256 portal sprite
       ctx.imageSmoothingEnabled = false;
       ctx.drawImage(portalImage, frame % 3 * 64, Math.floor(frame / 3) * 64, 64, 64, ptx - halfSize, pty - 180, portalSize, portalSize);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.restore();
     }
   }
