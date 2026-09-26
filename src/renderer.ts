@@ -303,14 +303,14 @@ export function draw() {
   riposteVisualScale += (targetRiposte - riposteVisualScale) * Math.min(1, 12 * dt);
 
   // Reset every frame before clear/background. Effects can change alpha/composite state;
-  // leaking that state makes clearRect ineffective and accumulates a green/dark veil.
-  ctx.globalAlpha = 1;
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.filter = 'none';
-  ctx.setLineDash([]);
-  ctx.imageSmoothingEnabled = true;
-  ctx.imageSmoothingQuality = 'high';
-  ctx.clearRect(0, 0, globals.width, globals.height);
+    // leaking that state makes clearRect ineffective and accumulates a green/dark veil.
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.filter = 'none';
+    ctx.setLineDash([]);
+    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.clearRect(0, 0, globals.width, globals.height);
   drawBackground(ctx);
 
   // Boss locator: keep the player oriented during boss stages without darkening the scene.

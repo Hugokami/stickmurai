@@ -4129,8 +4129,8 @@ function update(realDt: number) {
         }
       }
 
-      // End non-final waves when their spawn quota is exhausted; clear stragglers without kill credit.
-      if (globals.waveState === 'active' && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1)) {
+      // End non-final waves when their spawn quota is exhausted AND player killed required count; clear stragglers without kill credit.
+            if (globals.waveState === 'active' && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1) && (globals.waveEnemiesKilled || 0) >= (globals.waveEnemiesTotal || 1)) {
         if (!isFinalWave) {
           clearWaveToPortal();
         } else if (activeAlive === 0 && (!isBossStage || globals.stageBossDefeated)) {
