@@ -1420,6 +1420,15 @@ function spawnEnemy() {
 
   if(globals.gameMode==='classic'){
     const totalNeeded = globals.waveEnemiesTotal || 10;
+    const kills = globals.waveEnemiesKilled || 0;
+    const aliveEnemies = globals.enemies.filter(e => e.state !== 'dead' && !e.isPvpRemote).length;
+
+    // Self-healing spawner quota: waveEnemiesSpawned cannot exceed confirmed kills + current alive enemies.
+    // If any enemy was lost, culled, or failed to record, resync spawned count to allow missing enemies to spawn.
+    if ((globals.waveEnemiesSpawned || 0) > kills + aliveEnemies) {
+      globals.waveEnemiesSpawned = kills + aliveEnemies;
+    }
+
     const currentSpawned = globals.waveEnemiesSpawned || 0;
     const remainingToSpawn = totalNeeded - currentSpawned;
     if (remainingToSpawn <= 0) {
@@ -4142,10 +4151,8 @@ function update(realDt: number) {
       }
 
       // 4. Enemy Spawner Watchdog: if wave is active and 0 enemies on screen while quota remains, trigger spawn immediately!
-      if (globals.waveState === 'active' && activeAlive === 0 && (globals.waveEnemiesSpawned || 0) < (globals.waveEnemiesTotal || 1)) {
-        if (spawnTimer === undefined) {
-          spawnEnemy();
-        }
+      if (globals.waveState === 'active' && activeAlive === 0 && (globals.waveEnemiesKilled || 0) < (globals.waveEnemiesTotal || 1)) {
+        spawnEnemy();
       }
     }
 

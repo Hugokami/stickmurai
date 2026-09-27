@@ -1875,7 +1875,6 @@ export function triggerBarrelExplosion(barrel: Enemy) {
   if ((barrel as any).hasExploded) return;
   (barrel as any).hasExploded = true;
   barrel.hp = 0;
-  barrel.setState('dead');
 
   globals.screenShake = Math.max(globals.screenShake, 18);
   globals.shockwaves.push(new Shockwave(barrel.x, barrel.y, '#f97316'));
@@ -1923,5 +1922,12 @@ export function triggerBarrelExplosion(barrel: Enemy) {
       callbacks.checkPlayerHit(barrel, 2);
       globals.floatingTexts.push(FloatingText.acquire(barrel.x, barrel.y - 40, "BOOM! 💥", "#ef4444", 24));
     }
+  }
+
+  // Ensure detonator explosion registers as a death/kill for wave progression and scoring
+  if (callbacks.killEnemy && !barrel.deathHandled) {
+    callbacks.killEnemy(barrel);
+  } else {
+    barrel.setState('dead');
   }
 }
