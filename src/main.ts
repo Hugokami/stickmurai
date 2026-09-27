@@ -3483,11 +3483,6 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
     e.burnTimer = 3.0;
     if (e.burnTickTimer <= 0) e.burnTickTimer = 0.5;
   }
-  if (!isProc && globals.activeFusions.has('plasma_tempest') && e.burnTimer > 0) {
-    const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
-    const plasmaDmg = Math.round(((10 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 1.5) * slashPct + getCurrentSlashDamage() * 0.5) * (1 + (globals.level - 1) * 0.05));
-    triggerChainLightning(e, plasmaDmg);
-  }
   if (globals.frostStanceActive) {
     e.chillTimer = 3.0;
   }
@@ -4458,78 +4453,6 @@ function update(realDt: number) {
           globals.aetherionShootCooldown = Math.max(0, globals.aetherionShootCooldown - realDt);
           callbacks.updateStanceSwitchButton?.();
         }
-
-        // Plasma Tempest Trails Update
-        for (let i = globals.plasmaTrails.length - 1; i >= 0; i--) {
-          const pt = globals.plasmaTrails[i];
-          pt.life -= realDt;
-          if (pt.life <= 0) {
-            globals.plasmaTrails.splice(i, 1);
-            continue;
-          }
-          (pt as any).tickTimer = ((pt as any).tickTimer || 0) - realDt;
-          if ((pt as any).tickTimer <= 0) {
-            (pt as any).tickTimer = 0.25;
-            const rSq = (pt.radius || 50) ** 2;
-            for (let j = 0; j < globals.enemies.length; j++) {
-              const en = globals.enemies[j];
-              if (en.state === 'dead' || (en as any).deathHandled) continue;
-              const dSq = (en.x - pt.x) ** 2 + (en.y - pt.y) ** 2;
-              if (dSq < rSq) {
-                en.burnTimer = 3.0;
-                const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
-                const tickDmg = Math.max(2, Math.round(((4 + getCurrentSlashDamage() * 0.35 + (globals.playerStats?.iaijutsuBonusDmg || 0) * 0.4) * slashPct) * 0.35));
-                hitEnemy(en, tickDmg, false, true);
-              }
-            }
-          }
-        }
-
-        // Kamaitachi Bouncing Sickles Update
-        for (let i = globals.bouncingSickles.length - 1; i >= 0; i--) {
-          const s = globals.bouncingSickles[i];
-          s.life -= realDt;
-          if (s.life <= 0) {
-            globals.bouncingSickles.splice(i, 1);
-            continue;
-          }
-          s.x += s.vx * realDt;
-          s.y += s.vy * realDt;
-          if (s.x < 50) { s.x = 50; s.vx = Math.abs(s.vx); }
-          else if (s.x > globals.width - 50) { s.x = globals.width - 50; s.vx = -Math.abs(s.vx); }
-          if (s.y < 50) { s.y = 50; s.vy = Math.abs(s.vy); }
-          else if (s.y > globals.height - 50) { s.y = globals.height - 50; s.vy = -Math.abs(s.vy); }
-
-          // Kamaitachi Projectile Deflection Vortex
-          for (let pIdx = 0; pIdx < globals.projectiles.length; pIdx++) {
-            const pr = globals.projectiles[pIdx];
-            if (pr.isEnemy && pr.active) {
-              const pdx = pr.x - s.x;
-              const pdy = pr.y - s.y;
-              if (pdx * pdx + pdy * pdy < 65 * 65) {
-                pr.isEnemy = false;
-                pr.angle = Math.atan2(-pdy, -pdx);
-                pr.speed = Math.max(pr.speed, 650);
-                globals.particles.push(Particle.acquire(pr.x, pr.y, '#4ade80', 250, 0.35, 2.5));
-              }
-            }
-          }
-
-          (s as any).hitTimer = ((s as any).hitTimer || 0) - realDt;
-          if ((s as any).hitTimer <= 0) {
-            (s as any).hitTimer = 0.2;
-            const rSq = (s.radius || 30) ** 2;
-            for (let j = 0; j < globals.enemies.length; j++) {
-              const en = globals.enemies[j];
-              if (en.state === 'dead' || (en as any).deathHandled) continue;
-              const dSq = (en.x - s.x) ** 2 + (en.y - s.y) ** 2;
-              if (dSq < rSq) {
-                hitEnemy(en, s.damage || Math.max(6, Math.round(5 + getCurrentSlashDamage() * 0.5)), false, true);
-                globals.particles.push(Particle.acquire(s.x, s.y, '#4ade80', 180, 0.3, 2));
-              }
-            }
-          }
-        }
   }
 
   // Option 5: Battlefield Bounty Contracts Update
@@ -5301,10 +5224,6 @@ function update(realDt: number) {
     globals.roninResolveCooldown -= realDt;
     if (globals.roninResolveCooldown < 0) globals.roninResolveCooldown = 0;
   }
-  if (globals.singularityCleaveCD > 0) {
-    globals.singularityCleaveCD -= realDt;
-    if (globals.singularityCleaveCD < 0) globals.singularityCleaveCD = 0;
-  }
   
   const isFlowReady = globals.flow >= globals.playerStats.flowMax && globals.flowState === 'normal' && globals.ultCooldown <= 0;
   if (isFlowReady) {
@@ -5988,51 +5907,6 @@ function update(realDt: number) {
             if (globals.unlockedSeals.includes(6)) {
               e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
             }
-            if (globals.activeFusions.has('asura_storm')) {
-              let asuraHits = 0;
-              globals.screenShake = Math.max(globals.screenShake, 38);
-              globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#ef4444'));
-
-              // Hexagonal Asura ground scars & radiating crimson slashes
-              for (let a = 0; a < 6; a++) {
-                const scAngle = (a * Math.PI) / 3;
-                globals.groundScars.push(new GroundScar(
-                  globals.player.x + Math.cos(scAngle) * 55,
-                  globals.player.y + Math.sin(scAngle) * 55,
-                  scAngle,
-                  90,
-                  '#ef4444'
-                ));
-                globals.slashes.push(Slash.acquire(
-                  globals.player.x + Math.cos(scAngle) * 65,
-                  globals.player.y + Math.sin(scAngle) * 65,
-                  scAngle,
-                  1.5,
-                  true,
-                  '#ef4444'
-                ));
-              }
-
-              const asuraRadiusSq = 360 * 360;
-              const nearby = globals.enemies.filter(other => {
-                if (other.state === 'dead') return false;
-                const dX = other.x - globals.player.x;
-                const dY = other.y - globals.player.y;
-                return (dX * dX + dY * dY) < asuraRadiusSq;
-              });
-              nearby.forEach((other, idx) => {
-                if (idx < 6) {
-                  asuraHits++;
-                  hitEnemy(other, Math.max(20, Math.round(22 + getCurrentSlashDamage() * 3.2)));
-                  globals.shockwaves.push(new Shockwave(other.x, other.y, '#ef4444'));
-                }
-              });
-              if (asuraHits >= 3) {
-                globals.lives = Math.min(globals.maxLives, globals.lives + 1);
-                globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 100, globals.currentLang === 'ja' ? '【六腕阿修羅】血肉再生！ 心臓全快！' : "【SIX-ARMED ASURA】 FLESH REBORN! +1 HEART!", '#ef4444', 32));
-                callbacks.updateUI();
-              }
-            }
             addCombo();
             addCombo();
             globals.hitStop = 0.045; // Micro hit-stop crunch (2-3 frames freeze)
@@ -6323,31 +6197,6 @@ function update(realDt: number) {
 
       if (isDragonFuryActive) {
         globals.projectiles.push(Projectile.acquire(globals.player.x, globals.player.y, angle, false, dmg, true));
-      }
-      if (globals.activeFusions.has('kamaitachi')) {
-        const sSpd = 650;
-        const sickleDmg = Math.round((8 + dmg * 0.6) * (1 + (globals.playerStats?.slashBonusDmgPct || 0)) * (1 + Math.min(0.5, (globals.combo || 0) * 0.01)));
-        globals.bouncingSickles.push({
-          x: globals.player.x,
-          y: globals.player.y,
-          vx: Math.cos(angle - 0.35) * sSpd,
-          vy: Math.sin(angle - 0.35) * sSpd,
-          life: 4.0,
-          maxLife: 4.0,
-          radius: 32,
-          damage: sickleDmg
-        });
-        globals.bouncingSickles.push({
-          x: globals.player.x,
-          y: globals.player.y,
-          vx: Math.cos(angle + 0.35) * sSpd,
-          vy: Math.sin(angle + 0.35) * sSpd,
-          life: 4.0,
-          maxLife: 4.0,
-          radius: 32,
-          damage: sickleDmg
-        });
-
       }
       // Atherion Dash + Slash Combo: CELESTIAL STRIDE CLEAVE! (generous 650ms buffer window)
       const nowSlash = performance.now();
@@ -6881,27 +6730,6 @@ function update(realDt: number) {
             }
           }
         }
-      }
-
-      if (globals.activeFusions.has('singularity_cleave') && globals.singularityCleaveCD <= 0 && enemyHitCount > 0) {
-        const bhX = globals.player.x + Math.cos(angle) * 150;
-        const bhY = globals.player.y + Math.sin(angle) * 150;
-        globals.gravityWellTimer = 2.0;
-        globals.gravityWellX = bhX;
-        globals.gravityWellY = bhY;
-        globals.singularityCleaveCD = 4.0;
-        globals.shockwaves.push(new Shockwave(bhX, bhY, '#a855f7'));
-        if (vfxAnims.gigapack?.explosion?.length > 0) {
-          globals.animatedEffects.push(new AnimatedEffect(bhX, bhY, vfxAnims.gigapack.explosion, 0.65, 2.5));
-        }
-        const cleaveDmg = Math.round(((20 + (globals.playerStats?.enhanceBonusDmg || 0) * 3) + dmg * 1.2) * (1 + (globals.playerStats?.slashBonusDmgPct || 0)));
-        globals.enemies.forEach(en => {
-          if (en.state === 'dead') return;
-          const dist = Math.hypot(en.x - bhX, en.y - bhY);
-          if (dist < 180) {
-            hitEnemy(en, cleaveDmg);
-          }
-        });
       }
 
       // Whiff recovery lag: empty air penalizes cooldown; landed hits confirm snappy cancel

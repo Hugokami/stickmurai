@@ -211,113 +211,7 @@ export interface FusionRecipe {
   apply: () => void;
 }
 
-export const FUSION_RECIPES: FusionRecipe[] = [
-  {
-    key: 'plasma_tempest',
-    nameKey: 'fuPlasmaName',
-    descKey: 'fuPlasmaDesc',
-    nameEn: 'Plasma Tempest (天雷業火)',
-    nameJa: '天雷業火（プラズマ・テンペスト）',
-    descEn: '• Dash leaves electric firewalls (6 DMG/s) • Slashing burned foes chains lightning (10 DMG)',
-    descJa: '• ダッシュ電磁炎壁(6 DMG/秒) • 炎上敵を斬ると連鎖雷撃(10 DMG)',
-    req1En: 'Inferno Sweep (or Fire upgrades)',
-    req1Ja: '業火の回天（または炎属性強化）',
-    req2En: 'Raijin Step (or Thunder upgrades)',
-    req2Ja: '雷神の瞬歩（または雷属性強化）',
-    checkPrereqs: () => {
-      const hasFire = globals.selectedSkill === 'firewheel' || (globals.playerStats.firewheelBlazeLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Fire'));
-      const hasThunder = globals.selectedSkill === 'dash' || (globals.playerStats.dashThunderLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Thunder') || k.includes('Feather'));
-      return hasFire && hasThunder && globals.level >= 3;
-    },
-    apply: () => {
-      globals.activeFusions.add('plasma_tempest');
-    }
-  },
-  {
-    key: 'singularity_cleave',
-    nameKey: 'fuSingularityName',
-    descKey: 'fuSingularityDesc',
-    nameEn: 'Singularity Cleave (虚無の太刀)',
-    nameJa: '虚無の太刀（シンギュラリティ・クリーブ）',
-    descEn: '• Slashes fire black holes devouring bullets • Pulls in mobs • 20 AoE DMG implosion',
-    descJa: '• 斬撃から敵弾消滅ブラックホール • 敵吸引 • 20範囲DMG特異点爆発',
-    req1En: 'Gravity Well (or Void Stance)',
-    req1Ja: '重力崩壊（または虚無の型）',
-    req2En: "Dragon's Fury (or High Damage)",
-    req2Ja: '竜の激昂（または攻撃力強化）',
-    checkPrereqs: () => {
-      const hasGravity = globals.selectedSkill === 'gravity' || (globals.playerStats.gravityExplosionLevel || 0) > 0 || globals.voidStanceActive;
-      const hasDragon = globals.selectedSkill === 'enhance' || globals.playerStats.enhanceBonusDmg >= 2 || globals.chosenPowerUps.some(k => k.includes('Lethal') || k.includes('Giant'));
-      return hasGravity && hasDragon && globals.level >= 3;
-    },
-    apply: () => {
-      globals.activeFusions.add('singularity_cleave');
-    }
-  },
-  {
-    key: 'hundred_phantoms',
-    nameKey: 'fuPhantomsName',
-    descKey: 'fuPhantomsDesc',
-    nameEn: 'Hundred Demon March (百鬼夜行)',
-    nameJa: '百鬼夜行（ハンドレッド・ファントム）',
-    descEn: '• Perfect Dodge or Finisher spawns clone (12s) • Mirrors all slashes',
-    descJa: '• 見切り回避/フィニッシャーで影武者召喚(12秒) • 全斬撃模倣',
-    req1En: 'Shadow Step / Clones',
-    req1Ja: '影遁・分身術',
-    req2En: 'Glass Edge (or Cursed Relic)',
-    req2Ja: '玻璃の刃（または呪物）',
-    checkPrereqs: () => {
-      const hasShadow = globals.selectedSkill === 'decoy_illusion' || (globals.playerStats.shadowClonesLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Clones') || k.includes('Decoy'));
-      const hasCursed = globals.maxLives === 1 || globals.bloodThirstCurseActive || globals.chosenPowerUps.some(k => k.includes('Cursed'));
-      return hasShadow && hasCursed && globals.level >= 3;
-    },
-    apply: () => {
-      globals.activeFusions.add('hundred_phantoms');
-    }
-  },
-  {
-    key: 'kamaitachi',
-    nameKey: 'fuKamaitachiName',
-    descKey: 'fuKamaitachiDesc',
-    nameEn: 'Kamaitachi Sickle-Wind (鎌鼬の風)',
-    nameJa: '鎌鼬の風（カマイタチ・シックル）',
-    descEn: '• Slashes fire 2 wind discs • Ricochets 3x off borders • 8 DMG piercing',
-    descJa: '• 斬撃から真空鎌2枚射出 • 壁3回反射 • 敵群貫通(8 DMG)',
-    req1En: 'Wind Aegis (or Wind Stance)',
-    req1Ja: '烈風の加護（または風属性）',
-    req2En: 'Deflect Damage >= 4',
-    req2Ja: '弾き返しダメージ強化',
-    checkPrereqs: () => {
-      const hasWind = globals.selectedSkill === 'shield' || globals.chosenPowerUps.some(k => k.includes('Wind') || k.includes('Shield') || k.includes('Gale'));
-      const hasDeflect = (globals.playerStats.deflectedDmg || 1) >= 4 || globals.chosenPowerUps.some(k => k.includes('Echo') || k.includes('Iron'));
-      return hasWind && hasDeflect && globals.level >= 3;
-    },
-    apply: () => {
-      globals.activeFusions.add('kamaitachi');
-    }
-  },
-  {
-    key: 'asura_storm',
-    nameKey: 'fuAsuraName',
-    descKey: 'fuAsuraDesc',
-    nameEn: "Asura's Blade Storm (修羅の六腕)",
-    nameJa: '修羅の六腕（アスラ・ストーム）',
-    descEn: '• Parry triggers 360° 6-blade storm (12 DMG each) • Heals 1 Heart on 3+ hits',
-    descJa: '• パリィ時360度6連幻影斬(各12 DMG) • 3体以上命中でハート1回復',
-    req1En: 'Parry Master',
-    req1Ja: '弾きの極意',
-    req2En: 'Blood Thirst (or Vampire Chance)',
-    req2Ja: '血の渇き（または吸血確率）',
-    checkPrereqs: () => {
-      const hasParry = globals.selectedSkill === 'parry_master' || globals.chosenPowerUps.some(k => k.includes('Parry'));
-      const hasBlood = globals.bloodThirstCurseActive || globals.playerStats.vampireChance > 0 || globals.chosenPowerUps.some(k => k.includes('Blood'));
-      return hasParry && hasBlood && globals.level >= 3;
-    },
-    apply: () => {
-      globals.activeFusions.add('asura_storm');
-    }
-  }
-];
+export const FUSION_RECIPES: FusionRecipe[] = [];
 
 function applyStatLevelUp() {
   // Guaranteed stat gains on every level - scales slash damage noticeably with each stage level
@@ -925,17 +819,6 @@ function renderShopBadges(slot: ShopSlot, activeSyn: Record<string, number>): st
 
   if (slot.discountPct) {
     badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: #ef4444; color: #ffffff; font-size: 8.5px; font-weight: 900; padding: 1px 5px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1221.png" class="rpg-icon-img" /></div> -${slot.discountPct}% SALE</div>`);
-  }
-
-  const name = slot.power.nameKey;
-  if (!globals.activeFusions.has('plasma_tempest') && (name.includes('Fire') || name.includes('Thunder') || name.includes('Feather'))) {
-    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1223.png" class="rpg-icon-img" /></div> PLASMA</div>`);
-  } else if (!globals.activeFusions.has('singularity_cleave') && (name.includes('Cataclysm') || name.includes('Lethal') || name.includes('Giant') || name.includes('Void'))) {
-    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1120.png" class="rpg-icon-img" /></div> SINGULARITY</div>`);
-  } else if (!globals.activeFusions.has('hundred_phantoms') && (name.includes('Rupture') || name.includes('Clones') || name.includes('Cursed'))) {
-    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1388.png" class="rpg-icon-img" /></div> PHANTOMS</div>`);
-  } else if (!globals.activeFusions.has('kamaitachi') && (name.includes('Wind') || name.includes('Gale') || name.includes('Deflect') || name.includes('Echo'))) {
-    badges.push(`<div class="rpg-text-upperlayer" style="display: inline-flex; align-items: center; gap: 3px; background: rgba(168, 85, 247, 0.25); color: #e9d5ff; border: 1px solid #c084fc; font-size: 8px; font-weight: 900; padding: 1px 4px; border-radius: 4px; margin-bottom: 3px; margin-right: 3px;"><div class="rpg-icon-box" style="width: 11px; height: 11px; border: none; background: transparent; box-shadow: none; display: inline-flex;"><img src="icons/rpg/fc1155.png" class="rpg-icon-img" /></div> KAMAITACHI</div>`);
   }
 
   const curSyn = activeSyn[slot.synergy] || 0;

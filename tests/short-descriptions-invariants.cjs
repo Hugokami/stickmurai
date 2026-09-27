@@ -44,13 +44,9 @@ test('Short Key-Point Descriptions Invariants: balance.ts hero passives and awak
   }
 });
 
-test('Short Key-Point Descriptions Invariants: powerups.ts fusions and ui.ts ascension', () => {
+test('Short Key-Point Descriptions Invariants: powerups.ts fusions removed and ui.ts ascension', () => {
   const fusionMatches = [...powerupsTs.matchAll(/descEn:\s*'([^']+)'/g)];
-  assert.equal(fusionMatches.length, 5, '5 fusion recipes in powerups.ts');
-  for (const [, desc] of fusionMatches) {
-    assert.ok(desc.includes('•'), `Fusion description should include '•', got: "${desc}"`);
-    assert.ok(desc.length <= 100, `Fusion description should be concise (<=100 chars), got: "${desc}"`);
-  }
+  assert.equal(fusionMatches.length, 0, 'Forbidden Grimoire fusion recipes removed from powerups.ts');
 
   const ascensionSection = uiTs.slice(uiTs.indexOf('ASCENSION_UPGRADES: AscensionUpgrade[] = ['));
   const ascensionMatches = [...ascensionSection.matchAll(/desc:\s*'([^']+)'/g)];

@@ -34,8 +34,6 @@ test('performance optimization invariant tests', () => {
   // Single-execution & anti-runaway invariant checks
   assert.match(entitiesSrc, /if \(this\.deathHandled && newState !== 'dead'\) return;/, 'entities.ts must lock dead entities from state alteration');
   assert.match(mainSrc, /if \(e\.state === 'dead' \|\| e\.deathHandled\) return;/, 'main.ts must guard killEnemy with deathHandled');
-  assert.match(mainSrc, /tickTimer = 0\.25/, 'main.ts plasma trails must use tick timer to prevent per-frame hitEnemy explosion');
-  assert.match(mainSrc, /hitTimer = 0\.2/, 'main.ts bouncing sickles must use hit timer to prevent per-frame hitEnemy explosion');
 
   // UI modal containment & display invariants
   const styleCss = fs.readFileSync('src/style.css', 'utf8');

@@ -10,7 +10,7 @@ import { bgmAudio, pauseBgm, triggerBgmGestureUnlock } from './audio';
 import { callbacks } from './callbacks';
 import { pvpManager } from './pvpIaijutsuManager';
 import { AdManager } from './adManager';
-import { FUSION_RECIPES, openShop, closeShop, triggerSpecificUltimate } from './powerups';
+import { openShop, closeShop, triggerSpecificUltimate } from './powerups';
 import { YOMI_SEALS } from './shrine';
 import { playSynthesizedFusionUnlock, playSynthesizedSingingBowl, playSynthesizedSealShatter, playSynthesizedTempleBell, playShrineBlessing, playStageConquered, triggerHapticFeedback } from './audio';
 import { FloatingText, Shockwave } from './entities';
@@ -2294,91 +2294,7 @@ export function populateGrimoireGrid() {
   const grid = document.getElementById('grimoire-grid');
   if (!grid) return;
   grid.innerHTML = '';
-
-  const isJa = globals.currentLang === 'ja';
-
-  const recipeIcons: Record<string, string> = {
-    plasma_tempest: 'icons/rpg/fc1223.png',
-    singularity_cleave: 'icons/rpg/fc1120.png',
-    hundred_phantoms: 'icons/rpg/fc1388.png',
-    kamaitachi: 'icons/rpg/fc1155.png',
-    asura_storm: 'icons/rpg/fc1207.png'
-  };
-
   renderCodex(grid);
-
-  FUSION_RECIPES.forEach(recipe => {
-    const card = document.createElement('div');
-    card.className = 'grimoire-card discovered';
-    card.style.background = 'linear-gradient(135deg, rgba(20, 24, 35, 0.95) 0%, rgba(10, 12, 18, 0.98) 100%)';
-    card.style.border = '1.5px solid #d4a24e';
-    card.style.borderRadius = '0';
-    card.style.clipPath = 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)';
-    card.style.padding = '16px';
-    card.style.display = 'flex';
-    card.style.flexDirection = 'column';
-    card.style.gap = '8px';
-    card.style.boxShadow = '0 0 18px rgba(212, 162, 78, 0.25)';
-    card.style.position = 'relative';
-    card.style.overflow = 'hidden';
-    
-    // Live Run Synergy Calculation
-    let req1Met = false;
-    let req2Met = false;
-
-    if (recipe.key === 'plasma_tempest') {
-      req1Met = globals.selectedSkill === 'firewheel' || (globals.playerStats.firewheelBlazeLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Fire'));
-      req2Met = globals.selectedSkill === 'dash' || (globals.playerStats.dashThunderLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Thunder') || k.includes('Feather'));
-    } else if (recipe.key === 'singularity_cleave') {
-      req1Met = globals.selectedSkill === 'gravity' || (globals.playerStats.gravityRadiusLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Gravity'));
-      req2Met = globals.selectedSkill === 'enhance' || globals.playerStats.enhanceBonusDmg >= 2 || globals.chosenPowerUps.some(k => k.includes('Lethal') || k.includes('Giant'));
-    } else if (recipe.key === 'hundred_phantoms') {
-      req1Met = (globals.playerStats.shadowClonesLevel || 0) > 0 || globals.chosenPowerUps.some(k => k.includes('Clones') || k.includes('Echo'));
-      req2Met = globals.chosenPowerUps.includes('puCursedGlass') || globals.lives <= 2;
-    } else if (recipe.key === 'kamaitachi') {
-      req1Met = globals.galeVortexActive || globals.selectedSkill === 'shield' || globals.chosenPowerUps.some(k => k.includes('Wind') || k.includes('Gale'));
-      req2Met = globals.playerStats.deflectedDmg >= 3 || globals.chosenPowerUps.some(k => k.includes('Deflect') || k.includes('Iron'));
-    } else if (recipe.key === 'asura_storm') {
-      req1Met = globals.selectedSkill === 'parry_master' || globals.consecutiveParries >= 3 || globals.runStats.perfectParries >= 3;
-      req2Met = globals.bloodThirstCurseActive || globals.playerStats.flowGenMult >= 1.3 || globals.chosenPowerUps.some(k => k.includes('Blood'));
-    }
-
-    const synergyPct = ((req1Met ? 1 : 0) + (req2Met ? 1 : 0)) * 50;
-    const iconSrc = recipeIcons[recipe.key] || 'icons/rpg/fc1267.png';
-
-    card.innerHTML = `
-      <img src="${iconSrc}" class="rpg-card-backdrop-icon" alt="" aria-hidden="true" style="width: 56px; height: 56px; opacity: 0.18;" />
-      <div style="position: relative; z-index: 2; display: flex; flex-direction: column; gap: 8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <div class="rpg-icon-box" style="width:28px; height:28px;">
-              <img src="${iconSrc}" class="rpg-icon-img" alt="icon" />
-            </div>
-            <span class="rpg-text-upperlayer" style="font-family:'Cinzel', serif; font-size:16px; font-weight:bold; color:#ffd700;">${isJa ? recipe.nameJa : recipe.nameEn}</span>
-          </div>
-          <span class="rpg-text-upperlayer" style="font-size:11px; padding:2px 6px; border-radius:4px; background:rgba(34,197,94,0.2); color:#22c55e; border:1px solid #22c55e;">${isJa ? '解読済' : 'DISCOVERED'}</span>
-        </div>
-        <div class="rpg-text-upperlayer" style="font-size:13px; color:#e2e8f0; line-height:1.4;">${isJa ? recipe.descJa : recipe.descEn}</div>
-        
-        <div style="margin-top:4px; display:flex; flex-direction:column; gap:3px;">
-          <div style="display:flex; justify-content:space-between; font-size:11px; color:#94a3b8;">
-            <span class="rpg-text-upperlayer">${isJa ? '出撃中の共鳴度' : 'Active Run Synergy'}: <strong style="color:${synergyPct === 100 ? '#22c55e' : (synergyPct > 0 ? '#ffd700' : '#64748b')};">${synergyPct}%</strong></span>
-            <span class="rpg-text-upperlayer" style="color:${synergyPct === 100 ? '#22c55e' : '#ffd700'}; font-weight:bold; display: inline-flex; align-items: center; gap: 4px;">${synergyPct === 100 ? (isJa ? '<div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> 融合準備完了！' : '<div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1025.png" class="rpg-icon-img" /></div> READY TO FORGE!') : (synergyPct === 50 ? (isJa ? '素材1つ獲得済' : '1/2 Acquired') : '')}</span>
-          </div>
-          <div style="width:100%; height:5px; background:#0f172a; border-radius:3px; overflow:hidden; border:1px solid #334155;">
-            <div style="width:${synergyPct}%; height:100%; background:${synergyPct === 100 ? 'linear-gradient(90deg, #22c55e, #4ade80)' : 'linear-gradient(90deg, #f59e0b, #ffd700)'};"></div>
-          </div>
-        </div>
-
-        <div style="margin-top:auto; padding-top:8px; border-top:1px dashed #334155; display:flex; gap:6px; align-items:center; flex-wrap:wrap; font-size:12px; color:#94a3b8;">
-          <span class="rpg-text-upperlayer" style="background:${req1Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req1Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req1Met ? '#86efac' : '#cbd5e1'}; display:inline-flex; align-items:center; gap:4px;"><div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1170.png" class="rpg-icon-img" /></div> ${isJa ? recipe.req1Ja : recipe.req1En} ${req1Met ? '✓' : ''}</span>
-          <span>+</span>
-          <span class="rpg-text-upperlayer" style="background:${req2Met ? 'rgba(34,197,94,0.15)' : '#0f172a'}; padding:3px 8px; border-radius:4px; border:${req2Met ? '1px solid #22c55e' : '1px solid #475569'}; color:${req2Met ? '#86efac' : '#cbd5e1'}; display:inline-flex; align-items:center; gap:4px;"><div class="rpg-icon-box" style="width:12px;height:12px;border:none;background:transparent;box-shadow:none;"><img src="icons/rpg/fc1038.png" class="rpg-icon-img" /></div> ${isJa ? recipe.req2Ja : recipe.req2En} ${req2Met ? '✓' : ''}</span>
-        </div>
-      </div>
-    `;
-    grid.appendChild(card);
-  });
 }
 
 export const HEROES_DATA = [
@@ -2933,13 +2849,9 @@ export function triggerDawnVictory(_stats?: any) {
         <span>${isJa ? '黄泉の古銭獲得' : 'Ancient Mon Dawn Tribute'}:</span>
         <span style="color:#ffd700; font-weight:bold; display:inline-flex; align-items:center; gap:4px;">+${dawnReward} <img src="icons/mon_coin.png" class="inline-currency-icon" alt="Mon" /></span>
       </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:6px;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #334155; padding-bottom:6px;">
         <span>${isJa ? '解除した黄泉の封印' : 'Yomi Seals Awakened'}:</span>
         <span style="color:#a855f7; font-weight:bold;">${globals.unlockedSeals.length} / 7</span>
-      </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #334155; padding-bottom:6px;">
-        <span>${isJa ? '開眼した禁断の融合' : 'Active Fusions'}:</span>
-        <span style="color:#22c55e; font-weight:bold;">${globals.activeFusions.size}</span>
       </div>
       <div style="font-size:13px; color:#cbd5e1; font-style:italic; line-height:1.5; text-align:center; padding:12px; background:rgba(255,215,0,0.08); border-radius:6px; border:1px solid rgba(255,215,0,0.2);">
         "${isJa 

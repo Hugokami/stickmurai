@@ -534,121 +534,21 @@ export function draw() {
     ctx.restore();
   }
 
-  // Draw Plasma Tempest Electric Napalm & Inter-Node Lightning Arcs
-  if (globals.plasmaTrails && globals.plasmaTrails.length > 0) {
-    ctx.save();
-    ctx.translate(-globals.camera.x + globals.vw/2, -globals.camera.y + globals.vh/2);
-    
-    // Inter-node lightning conduction arcs
-    const trails = globals.plasmaTrails;
-    ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 1.8;
-    for (let i = 1; i < trails.length; i++) {
-      const p1 = trails[i - 1];
-      const p2 = trails[i];
-      const dx = p2.x - p1.x;
-      const dy = p2.y - p1.y;
-      const distSq = dx * dx + dy * dy;
-      if (distSq < 160 * 160) {
-        ctx.beginPath();
-        ctx.moveTo(p1.x, p1.y);
-        const steps = 4;
-        for (let s = 1; s < steps; s++) {
-          const t = s / steps;
-          const mx = p1.x + dx * t + (Math.random() - 0.5) * 12;
-          const my = p1.y + dy * t + (Math.random() - 0.5) * 12;
-          ctx.lineTo(mx, my);
-        }
-        ctx.lineTo(p2.x, p2.y);
-        ctx.stroke();
-      }
-    }
-
-    // Individual node fire & spark zones
-    for (const pt of trails) {
-      const alpha = Math.max(0, pt.life / pt.maxLife);
-      
-      // Electric ground burn zone
-      ctx.beginPath();
-      ctx.arc(pt.x, pt.y, pt.radius, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(56, 189, 248, ${alpha * 0.28})`;
-      ctx.fill();
-      
-      // Crackling gold inner ring
-      ctx.lineWidth = 2.2;
-      ctx.strokeStyle = `rgba(251, 191, 36, ${alpha * 0.85})`;
-      ctx.stroke();
-
-      // Center discharge spark
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(pt.x + (Math.random() - 0.5) * 6, pt.y + (Math.random() - 0.5) * 6, 2.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    ctx.restore();
-  }
-
-  // Draw Kamaitachi Razor Wind Scythes with motion blur trails
-  if (globals.bouncingSickles && globals.bouncingSickles.length > 0) {
-    ctx.save();
-    ctx.translate(-globals.camera.x + globals.vw/2, -globals.camera.y + globals.vh/2);
-    const sickleRot = performance.now() * 0.016;
-    for (const s of globals.bouncingSickles) {
-      ctx.save();
-      ctx.translate(s.x, s.y);
-      ctx.rotate(sickleRot);
-
-      // Motion blur outer wind ring
-      ctx.beginPath();
-      ctx.arc(0, 0, s.radius * 1.15, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(74, 222, 128, 0.25)';
-      ctx.lineWidth = 6;
-      ctx.stroke();
-
-      // Twin razor crescent blades (opposing 180 deg)
-      [0, Math.PI].forEach(armAngle => {
-        ctx.save();
-        ctx.rotate(armAngle);
-        ctx.beginPath();
-        ctx.moveTo(-4, -s.radius * 0.3);
-        ctx.quadraticCurveTo(s.radius * 0.8, -s.radius * 0.2, s.radius, -s.radius * 0.9);
-        ctx.quadraticCurveTo(s.radius * 0.5, -s.radius * 0.5, 0, 0);
-        ctx.closePath();
-        ctx.fillStyle = '#4ade80';
-        ctx.fill();
-        ctx.strokeStyle = '#bbf7d0'; // razor edge highlight
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.restore();
-      });
-
-      // Central wind eye
-      ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(0, 0, 3, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.restore();
-    }
-    ctx.restore();
-  }
-
-  // Draw Gravity Well & Singularity Cleave Accretion Disk
+  // Draw Gravity Well
   if (globals.gravityWellTimer > 0) {
     ctx.save();
     const gx = (globals.gravityWellX - globals.camera.x + globals.vw / 2) | 0;
     const gy = (globals.gravityWellY - globals.camera.y + globals.vh / 2) | 0;
     const baseRadius = (420 * (1 + 0.25 * (globals.playerStats.gravityRadiusLevel || 0))) | 0;
     const timer = performance.now() / 1000;
-    const isSingularity = globals.activeFusions.has('singularity_cleave');
 
     // 1. High-Visibility Event Horizon Area Glow
     const pulse = 1.0 + Math.sin(timer * 10) * 0.04;
     const currentRadius = (baseRadius * pulse) | 0;
     const glowGrad = ctx.createRadialGradient(gx, gy, 20, gx, gy, currentRadius);
     glowGrad.addColorStop(0, 'rgba(15, 2, 28, 0.92)');
-    glowGrad.addColorStop(0.35, isSingularity ? 'rgba(88, 28, 135, 0.45)' : 'rgba(107, 33, 168, 0.35)');
-    glowGrad.addColorStop(0.75, isSingularity ? 'rgba(147, 51, 234, 0.25)' : 'rgba(126, 34, 206, 0.2)');
+    glowGrad.addColorStop(0.35, 'rgba(107, 33, 168, 0.35)');
+    glowGrad.addColorStop(0.75, 'rgba(126, 34, 206, 0.2)');
     glowGrad.addColorStop(1, 'rgba(192, 132, 252, 0)');
     ctx.fillStyle = glowGrad;
     ctx.beginPath();
