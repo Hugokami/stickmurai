@@ -335,7 +335,7 @@ export function initInput() {
       return;
     }
     
-    if (globals.selectedSkill !== 'dash' || globals.enhanceCooldown > 0 || globals.gameMode === 'zen') {
+    if (globals.selectedSkill !== 'dash' || globals.enhanceCooldown > 0) {
       e.preventDefault();
       globals.mobileEnhanceJustPressed = true;
       return;

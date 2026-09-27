@@ -336,7 +336,8 @@ export class Player extends Entity {
         if ((globals.flowState as string) === 'awakened' || (globals.flowState as string) === 'storm_god') {
           this.dashCooldown = 0.2;
         } else {
-          this.dashCooldown = Math.max(1.72, globals.playerStats.dashCooldownBase);
+          const cdMult = (globals.playerStats.synergyDashCdMult || 1.0);
+          this.dashCooldown = Math.max(0.4, globals.playerStats.dashCooldownBase * cdMult);
         }
         
         this.overloadHitEnemies.clear();
@@ -395,6 +396,8 @@ export class Player extends Entity {
         }
         
         // Check for Vortex Shatter (Iaijutsu -> Dash)
+        const dashStartX = this.x;
+        const dashStartY = this.y;
         const now = performance.now();
         if (now - globals.lastIaijutsuFireTime < 600) {
           let angleDiff = Math.abs(angle - globals.lastIaijutsuAngle);
@@ -484,6 +487,17 @@ export class Player extends Entity {
           globals.particles.push(Particle.acquire(this.x, this.y, trailColor, 400, 0.3, 2));
         }
         globals.floatingTexts.push(FloatingText.acquire(this.x, this.y - 40, callbacks.t('dashText'), trailColor, 18));
+        
+        // Shadow Step Synergy (4): Decoy afterimage on dash
+        if ((globals as any).hasShadowCloneSynergy && globals.decoys) {
+          globals.decoys.push({
+            x: dashStartX,
+            y: dashStartY,
+            life: 2.5,
+            maxLife: 2.5,
+            hp: 20
+          });
+        }
         
         // Register dash radial wind force
         globals.windForces.push({

@@ -539,7 +539,7 @@ export class FloatingText {
 
   update(dt: number) {
     if (!this.visible || this.life <= 0) return;
-    if (this.isFrozenDuringTimeStop && (globals.flowState === 'awakened' || globals.zenFieldActiveTimer > 0)) {
+    if (this.isFrozenDuringTimeStop && globals.flowState === 'awakened') {
       return;
     }
     this.y -= 45 * dt;
@@ -890,8 +890,6 @@ export class Projectile {
             pColor = Math.random() > 0.5 ? '#d8b4fe' : '#aa66ff';
           } else if (this.enhancedType === 'storm_god') {
             pColor = Math.random() > 0.5 ? '#fbbf24' : '#fef08a';
-          } else if (this.enhancedType === 'zen_field') {
-            pColor = Math.random() > 0.5 ? '#22d3ee' : '#e0f2fe';
           } else if (this.enhancedType === 'blood_scythe') {
             pColor = Math.random() > 0.5 ? '#ef4444' : '#b91c1c';
           } else if (this.enhancedType === 'astral_beam') {
@@ -1288,10 +1286,6 @@ export class Projectile {
           shadowCol = '#fbbf24';
           strokeCol = '#ffffff';
           colorBase = 'rgba(251, 191, 36, ';
-        } else if (this.enhancedType === 'zen_field') {
-          shadowCol = '#22d3ee';
-          strokeCol = '#e0f2fe';
-          colorBase = 'rgba(34, 211, 238, ';
         }
 
         // Sprite-based Iaijutsu Shockwave animation

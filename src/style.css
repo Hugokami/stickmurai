@@ -4127,14 +4127,6 @@ html.is-touch-device #mobile-controls {
   filter: drop-shadow(0 0 10px rgba(255, 30, 70, 0.6));
 }
 
-#manga-cutin.ult-zen .manga-slice {
-  border-right-color: #00ffff;
-  box-shadow: 10px 0 30px rgba(0, 255, 255, 0.45);
-}
-#manga-cutin.ult-zen .manga-character-wrap {
-  filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.6));
-}
-
 @keyframes manga-slice-entrance {
   0% {
     transform: skewX(-20deg) translateX(-115%);

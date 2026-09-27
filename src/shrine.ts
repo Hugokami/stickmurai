@@ -555,7 +555,7 @@ export function spawnShrine(sealId: number) {
 }
 
 export function triggerCalamityCheck(realDt: number) {
-  if (globals.gameState !== 'playing' || globals.gameMode === 'zen') return;
+  if (globals.gameState !== 'playing') return;
 
   if (globals.calamityTimer > 0) {
     globals.calamityTimer -= realDt;

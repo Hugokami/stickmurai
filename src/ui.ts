@@ -290,7 +290,7 @@ export function bindDualListener(el: HTMLElement | null | undefined, handler: (e
   el.addEventListener('touchend', () => triggerBgmGestureUnlock(), { passive: true });
 }
 
-export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void, onRestartCallback: () => void) {
+export function initUI(onPlayCallback: () => void, onRestartCallback: () => void) {
   // DOM queries
   enhanceCooldownOverlay = document.getElementById('enhance-cooldown-overlay');
   enhanceCooldownText = document.getElementById('enhance-cooldown-text');
@@ -392,8 +392,6 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       globals.ultCooldown = 0;
       globals.enhanceActiveTimer = 0;
       globals.enhanceCooldown = 0;
-      globals.zenFieldActiveTimer = 0;
-      globals.zenFieldTickTimer = 0;
       globals.roninResolveCooldown = 0;
       AdManager.showMidrollAd(() => {
         if (cachedOnPlayCallback) cachedOnPlayCallback();
@@ -413,8 +411,6 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
       globals.ultCooldown = 0;
       globals.enhanceActiveTimer = 0;
       globals.enhanceCooldown = 0;
-      globals.zenFieldActiveTimer = 0;
-      globals.zenFieldTickTimer = 0;
       globals.roninResolveCooldown = 0;
       AdManager.showMidrollAd(() => {
         if (cachedOnPlayCallback) cachedOnPlayCallback();
@@ -452,18 +448,6 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     lvlModeBtn.addEventListener('click', () => {
       if (mainMenu) mainMenu.style.display = 'none';
       globals.gameMode = 'level';
-      if (skillSelectScreen) skillSelectScreen.style.display = 'flex';
-      globals.activeBlessing = null;
-      updateBlessingSelectionUI();
-      renderSkillChoicesPregame();
-    });
-  }
-
-  const zenBtn = document.getElementById('zen-btn');
-  if (zenBtn) {
-    zenBtn.addEventListener('click', () => {
-      if (mainMenu) mainMenu.style.display = 'none';
-      globals.gameMode = 'zen';
       if (skillSelectScreen) skillSelectScreen.style.display = 'flex';
       globals.activeBlessing = null;
       updateBlessingSelectionUI();
@@ -538,11 +522,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
     loadHeroAssets(globals.selectedHero || 'default');
     preloadStageEnemyAssets(globals.currentStage || 1);
     const proceedWithStart = () => {
-      if (globals.gameMode === 'zen') {
-        onZenPlayCallback();
-      } else {
-        onPlayCallback();
-      }
+      onPlayCallback();
     };
     if (safeStorage.getItem('stickmurai_tutorial_completed') !== 'true') {
       showTutorialModal(proceedWithStart, false);
@@ -758,7 +738,7 @@ export function initUI(onPlayCallback: () => void, onZenPlayCallback: () => void
   bindDualListener(openUpgradesBtn, openUpgrades);
   bindDualListener(document.getElementById('shop-btn'), openShop);
   bindDualListener(document.getElementById('btn-ult-shadow'), () => triggerSpecificUltimate('shadow'));
-  bindDualListener(document.getElementById('btn-ult-omni'), () => triggerSpecificUltimate(globals.gameMode === 'zen' ? 'zen' : 'omni'));
+  bindDualListener(document.getElementById('btn-ult-omni'), () => triggerSpecificUltimate('omni'));
   bindDualListener(document.getElementById('btn-ult-storm'), () => triggerSpecificUltimate('storm'));
   bindDualListener(closeUpgradesBtn, closeUpgrades);
   bindDualListener(closeUpgradesXBtn, closeUpgrades);
@@ -1470,16 +1450,10 @@ export function renderSkillChoicesPregame() {
     container.appendChild(card);
   });
 
-  // Toggle active skill selections for Zen Mode
   const skillSelectTitle = document.getElementById('skill-select-title');
   const skillChoices = document.getElementById('pregame-skill-choices');
-  if (globals.gameMode === 'zen') {
-    if (skillSelectTitle) skillSelectTitle.style.display = 'none';
-    if (skillChoices) skillChoices.style.display = 'none';
-  } else {
-    if (skillSelectTitle) skillSelectTitle.style.display = 'block';
-    if (skillChoices) skillChoices.style.display = 'flex';
-  }
+  if (skillSelectTitle) skillSelectTitle.style.display = 'block';
+  if (skillChoices) skillChoices.style.display = 'flex';
 
   updatePregameOptionsUI();
 }
@@ -1490,12 +1464,6 @@ export function updateEnhanceButton() {
   
   const textSpan = btn.querySelector('.btn-text');
   const imgEl = document.getElementById('enhance-btn-rpg-img') as HTMLImageElement | null;
-  
-  if (globals.gameMode === 'zen') {
-    if (textSpan) textSpan.innerHTML = t('btnRestricted');
-    btn.style.opacity = '0.3';
-    return;
-  }
   
   btn.style.opacity = '1';
   
@@ -1764,21 +1732,15 @@ export function updateCooldownsUI() {
     }
   };
 
-  // Dynamic Zen Mode label on omnislash button
+  // Omnislash button label and icon setup
   const omniBtnEl = document.getElementById('btn-ult-omni');
   if (omniBtnEl) {
     const textEl = omniBtnEl.querySelector('.ult-text');
     const iconEl = omniBtnEl.querySelector('.ult-icon');
     if (textEl && iconEl) {
-      if (globals.gameMode === 'zen') {
-        textEl.textContent = 'ZEN';
-        setUltIcon(iconEl, 'icons/rpg/fc1150.png', 'Zen Sanctuary');
-        omniBtnEl.title = 'Zen Sanctuary (Press 2 / F)';
-      } else {
-        textEl.textContent = 'OMNI';
-        setUltIcon(iconEl, 'icons/rpg/fc1267.png', 'Omnislash');
-        omniBtnEl.title = 'Omnislash (Press 2 / F)';
-      }
+      textEl.textContent = 'OMNI';
+      setUltIcon(iconEl, 'icons/rpg/fc1267.png', 'Omnislash');
+      omniBtnEl.title = 'Omnislash (Press 2 / F)';
     }
   }
 
@@ -2051,16 +2013,6 @@ export function updateStaticText() {
   document.querySelectorAll('[data-i18n]').forEach(el => {
     const key = el.getAttribute('data-i18n');
     if (key && i18n[globals.currentLang][key]) {
-      if (globals.gameMode === 'zen') {
-        if (el.id === 'btn-attack') {
-          el.innerHTML = t('btnParryOnly');
-          return;
-        }
-        if (el.id === 'btn-enhance') {
-          el.innerHTML = t('btnRestricted');
-          return;
-        }
-      }
       el.innerHTML = i18n[globals.currentLang][key];
     }
   });

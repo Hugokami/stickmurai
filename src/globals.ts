@@ -3,12 +3,11 @@ import { safeStorage } from './storage';
 export const globals = {
   // Game State
   gameState: 'mainmenu',
-  gameMode: 'classic' as 'classic' | 'zen' | 'time' | 'level' | 'pvp',
+  gameMode: 'classic' as 'classic' | 'time' | 'level' | 'pvp',
   timerLimit: 'endless' as 'endless' | 180 | 300 | 600,
   timeModeDuration: 180,
   timeModeTimeRemaining: 180,
   levelModeTarget: 15,
-  lastZenWarningTime: 0,
   flowState: 'normal' as 'normal' | 'awakened' | 'storm_god' | 'omnislash',
   timeSlowFactor: 1,
   timeSlowDuration: 0,
@@ -155,7 +154,12 @@ export const globals = {
     ultimateDamageBonusPct: 0,
     counterSiphonLevel: 0,
     critMasteryLevel: 0,
-    executionLevel: 0
+    executionLevel: 0,
+    synergySlashBonusPct: 0,
+    synergyFlowMult: 1.0,
+    synergyDashCdMult: 1.0,
+    synergyPostureBonus: 0,
+    synergySkillDmg: 0
   },
 
   executionUnlocked: false,
@@ -304,8 +308,6 @@ export const globals = {
   },
   stageFortuneMult: 1.0,
   stageDoubleRewardClaimed: false,
-  zenFieldActiveTimer: 0,
-  zenFieldTickTimer: 0,
 
   // Battlefield Bounty Contracts
   activeBounty: null as null | {

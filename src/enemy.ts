@@ -56,6 +56,7 @@ export class Enemy extends Entity {
   posture = 0;
   maxPosture = 60;
   postureBrokenTimer = 0;
+  postureRegenPauseTimer = 0;
   dominoHitEnemies = new Set<Enemy>();
   airborneZ = 0;
   airborneVz = 0;
@@ -127,27 +128,8 @@ export class Enemy extends Entity {
     this.colorTint = '#ffffff';
     this.type = 'fighter';
     
-    if (globals.gameMode === 'zen') {
-      const roll = Math.random();
-      if (roll < 0.16) this.subType = 'musketeer';
-      else if (roll < 0.26) this.subType = 'toaster_bot';
-      else if (roll < 0.35) this.subType = 'samurai';
-      else if (roll < 0.44) this.subType = 'ronin';
-      else if (roll < 0.52) this.subType = 'brawler';
-      else if (roll < 0.60) this.subType = 'berserker';
-      else if (roll < 0.68) this.subType = 'detonator';
-      else if (roll < 0.74) this.subType = 'giant';
-      else if (roll < 0.80) this.subType = 'assassin';
-      else if (roll < 0.85) this.subType = 'pyromancer';
-      else if (roll < 0.90) this.subType = 'glacial_sentinel';
-      else if (roll < 0.94) this.subType = 'astromancer';
-      else if (roll < 0.96 && globals.score > 20) this.subType = 'oni_boss';
-      else if (roll < 0.98 && globals.score > 35) this.subType = 'skeleton_warlord';
-      else if (globals.score > 50) this.subType = 'shogun_boss';
-      else this.subType = 'necromancer';
-    } else {
-      // Stage Mode Campaign Spawning - Final Boss in ALL Stages on Final Wave
-      const stage = globals.currentStage || 1;
+    // Stage Mode Campaign Spawning - Final Boss in ALL Stages on Final Wave
+    const stage = globals.currentStage || 1;
       const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
       const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'skeleton_warlord', 'shogun_boss'];
       const targetBoss = bossTypes[(stage - 1) % bossTypes.length];
@@ -285,12 +267,12 @@ export class Enemy extends Entity {
           this.subType = pool[Math.floor(Math.random() * pool.length)];
         }
       }
-    }
 
-    // Enforce active ranged density cap (Max 6-7 simultaneous ranged casters)
+    // Enforce active ranged density cap (Max 2-4 simultaneous ranged casters)
     if (this.isRanged()) {
       const activeRangedCount = globals.enemies ? globals.enemies.filter(e => e && e.state !== 'dead' && e.isRanged?.()).length : 0;
-      const maxRanged = globals.difficulty === 'insane' ? 7 : (globals.currentStage >= 5 ? 6 : 4);
+      const stage = globals.currentStage || 1;
+      const maxRanged = globals.difficulty === 'insane' ? 4 : (stage >= 9 ? 4 : (stage >= 5 ? 3 : 2));
       if (activeRangedCount >= maxRanged) {
         const meleePool: EnemySubType[] = ['samurai', 'ronin', 'brawler', 'berserker', 'giant', 'orc_brute', 'detonator'];
         this.subType = meleePool[Math.floor(Math.random() * meleePool.length)];
@@ -301,7 +283,7 @@ export class Enemy extends Entity {
 
     // Desynchronize ranged attacks with random cadence offset to prevent simultaneous off-screen bullet walls
     if (this.isRanged()) {
-      this.chargeTimeMax += 0.05 + Math.random() * 0.15;
+      this.chargeTimeMax += 0.20 + Math.random() * 0.45;
     }
   }
 
@@ -726,6 +708,9 @@ export class Enemy extends Entity {
     }
 
     // Posture broken timer and recovery
+    if (this.postureRegenPauseTimer > 0) {
+      this.postureRegenPauseTimer -= effectiveDt;
+    }
     if (this.postureBrokenTimer > 0) {
       this.postureBrokenTimer -= effectiveDt;
       this.stunTimer = Math.max(this.stunTimer, this.postureBrokenTimer);
@@ -733,8 +718,8 @@ export class Enemy extends Entity {
       if (this.postureBrokenTimer <= 0) {
         this.posture = 0;
       }
-    } else if (this.posture > 0) {
-      this.posture = Math.max(0, this.posture - 8 * effectiveDt);
+    } else if (this.posture > 0 && this.postureRegenPauseTimer <= 0) {
+      this.posture = Math.max(0, this.posture - (isBoss(this) ? 10 : 8) * effectiveDt);
     }
 
     if ((this as any).starBrandTimer > 0) {
@@ -1090,25 +1075,20 @@ export class Enemy extends Entity {
     }
     
     let speed = this.speed, attackRange = 250 * this.scaleMult;
-    if (this.subType === 'musketeer') { attackRange = 950; }
-    else if (this.subType === 'pyromancer') { attackRange = 900; }
+    if (this.subType === 'musketeer') { attackRange = 750; }
+    else if (this.subType === 'pyromancer') { attackRange = 720; }
     else if (this.subType === 'glacial_sentinel') { attackRange = 200; }
     else if (this.subType === 'detonator' || this.subType === 'barrel_bomber') { attackRange = 175; }
-    else if (this.subType === 'astromancer') { attackRange = 1100; }
-    else if (this.subType === 'necromancer') { attackRange = 950; }
-    else if (this.subType === 'toaster_bot') { attackRange = 900; }
-    else if (this.subType === 'shadow_sniper') { attackRange = 1250; }
-    else if (this.subType === 'tengu_sorcerer') { attackRange = 920; }
-    else if (this.subType === 'corrupted_shaman') { attackRange = 950; }
+    else if (this.subType === 'astromancer') { attackRange = 780; }
+    else if (this.subType === 'necromancer') { attackRange = 720; }
+    else if (this.subType === 'toaster_bot') { attackRange = 720; }
+    else if (this.subType === 'shadow_sniper') { attackRange = 820; }
+    else if (this.subType === 'tengu_sorcerer') { attackRange = 750; }
+    else if (this.subType === 'corrupted_shaman') { attackRange = 750; }
     else if (this.subType === 'oni_boss') { attackRange = 420; }
     else if (this.subType === 'skeleton_warlord') { attackRange = 420; }
     else if (this.subType === 'agis_colossus') { attackRange = 440; }
     else if (this.subType === 'shogun_boss') { attackRange = 450; }
-
-    // Active boss poise regeneration: recovers posture when not under active pressure
-    if (isBoss(this) && this.posture > 0 && this.postureBrokenTimer <= 0) {
-      this.posture = Math.max(0, this.posture - 28 * effectiveDt);
-    }
 
     if (this.chillTimer > 0) {
       speed *= 0.7;
@@ -1385,7 +1365,8 @@ export class Enemy extends Entity {
 
   addPostureDamage(amount: number) {
     if (this.state === 'dead' || this.postureBrokenTimer > 0) return;
-    const bonus = globals.playerStats?.postureDmgBonus || 0;
+    this.postureRegenPauseTimer = 3.0; // Pause poise recovery for 3s on hit/parry
+    const bonus = (globals.playerStats?.postureDmgBonus || 0) + (globals.playerStats?.synergyPostureBonus || 0);
     this.posture += (amount + bonus);
     if (this.posture >= this.maxPosture) {
       this.posture = this.maxPosture;
@@ -1892,8 +1873,6 @@ export class Enemy extends Entity {
         cutColor = '#c084fc';
       } else if (globals.flowState === 'storm_god') {
         cutColor = '#fbbf24';
-      } else if (globals.gameMode === 'zen' && globals.timeSlowDuration > 0) {
-        cutColor = '#00ffff';
       }
 
       // Removed shadowBlur to prevent lag

@@ -757,17 +757,6 @@ export function draw() {
         }
       }
 
-      if (globals.gameMode === 'zen' && globals.timeSlowDuration > 0) {
-        ctx.save();
-        ctx.strokeStyle = 'rgba(0, 255, 255, 0.75)';
-        ctx.lineWidth = 2.5;
-        ctx.setLineDash([8, 6]);
-        ctx.beginPath();
-        ctx.arc(px, py, 42 + Math.sin(auraTime * 8) * 4, -auraTime * 1.2, -auraTime * 1.2 + Math.PI * 2);
-        ctx.stroke();
-        ctx.restore();
-      }
-
       // Dragon's Fury Active Animation Loop (programmatic energy aura and rotating blades)
       const isDragonFuryActive = globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0;
       if (isDragonFuryActive) {

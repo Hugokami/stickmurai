@@ -13,7 +13,8 @@ export function getCurrentSlashDamage(): number {
   const baseDmg = 1.0 + (globals.playerStats?.slashFlatDmg || 0) + (globals.playerStats?.reapersMarkLevel || 0) * 2 + (globals.flowState === 'awakened' ? 2.5 : 0) + (globals.playerStats?.enhanceBonusDmg || 0);
   const slashPotionPct = (globals.stageAttackPotions || 0) * 0.05;
   const stageLevelPct = Math.max(0, (globals.level || 1) - 1) * 0.10;
-  const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0) + slashPotionPct + stageLevelPct;
+  const stageProgressionPct = Math.max(0, (globals.currentStage || 1) - 1) * 0.08;
+  const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0) + (globals.playerStats?.synergySlashBonusPct || 0) + slashPotionPct + stageLevelPct + stageProgressionPct;
   const comboMult = 1.0 + Math.min(1.5, (globals.combo || 0) * 0.015);
   const ultMult = globals.flowState === 'awakened' ? (1 + (globals.playerStats?.ultimateDamageBonusPct || 0)) : 1.0;
   return Math.max(1, baseDmg * slashPct * comboMult * ultMult);
@@ -612,8 +613,7 @@ function startApp() {
     initRenderer(canvasElement);
     initInput();
     initUI(
-      () => { initGame(); }, // Classic start
-      () => { initGame(); }, // Zen start
+      () => { initGame(); }, // Play start
       () => { initGame(); }  // Restart run
     );
     initFullscreen();
@@ -848,9 +848,9 @@ function clearWaveToPortal() {
   const banner = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `${banner}  ${isJa ? '門へ進め' : 'ENTER THE PORTAL'}`, '#38bdf8', 30));
   playSynthesizedTempleBell();
-  // Spawn portal safely away from player (460px) so player does not enter accidentally on wave end
-  const offsetDir = (globals.player.x + 460 < arena.right - 250) ? 1 : -1;
-  const portalX = Math.max(arena.left + 250, Math.min(arena.right - 250, globals.player.x + offsetDir * 460));
+  // Spawn portal safely near player (280px) with clear sightline without long dead-time walks
+  const offsetDir = (globals.player.x + 280 < arena.right - 250) ? 1 : -1;
+  const portalX = Math.max(arena.left + 250, Math.min(arena.right - 250, globals.player.x + offsetDir * 280));
   const portalY = Math.max(arena.top + 250, Math.min(arena.bottom - 250, globals.player.y));
   globals.wavePortal = { x: portalX, y: portalY, spawnTime: performance.now() };
 }
@@ -858,23 +858,23 @@ function clearWaveToPortal() {
 function enterWavePortal(dt: number = 0.016) {
   const portal = globals.wavePortal;
   if (!portal || globals.waveState !== 'cleared' || globals.gameState !== 'playing') return;
-  // Grace delay of 500ms after spawn so player momentum / current attack dash doesn't trigger immediately
-  if (portal.spawnTime && performance.now() - portal.spawnTime < 500) return;
+  // Grace delay of 400ms after spawn so player momentum / current attack dash doesn't trigger immediately
+  if (portal.spawnTime && performance.now() - portal.spawnTime < 400) return;
   const dx = globals.player.x - portal.x;
   const dy = globals.player.y - portal.y;
   const distSq = dx * dx + dy * dy;
   const dist = Math.sqrt(distSq);
 
   // Gravitational vortex suction: approaching/touching portal pulls player toward vortex center
-  if (dist < 260 && dist > 0) {
-    const pullFactor = Math.max(0.25, (1 - dist / 260));
-    const pullSpeed = 480 * pullFactor;
+  if (dist < 340 && dist > 0) {
+    const pullFactor = Math.max(0.3, (1 - dist / 340));
+    const pullSpeed = 520 * pullFactor;
     const nx = dx / dist;
     const ny = dy / dist;
     globals.player.x -= nx * pullSpeed * dt;
     globals.player.y -= ny * pullSpeed * dt;
-    globals.player.vx *= 0.88;
-    globals.player.vy *= 0.88;
+    globals.player.vx *= 0.85;
+    globals.player.vy *= 0.85;
 
     // Ambient vortex inward dust & starlight particles
     if (globals.particles.length < 150 && Math.random() < 0.45) {
@@ -893,7 +893,8 @@ function enterWavePortal(dt: number = 0.016) {
   }
 
   // Trigger immediately as player walks near / touches the enlarged portal perimeter (256px portal)
-  if (distSq > 165 * 165) return;
+  const isActionNearPortal = distSq < 320 * 320 && (globals.keys[globals.keyMaps.dash] || globals.keys[globals.keyMaps.skill] || globals.mobileDashJustPressed);
+  if (distSq > 165 * 165 && !isActionNearPortal) return;
 
   // Record portal entry location for wave ejection burst
   (globals as any).lastPortalPos = { x: portal.x, y: portal.y };
@@ -915,8 +916,6 @@ export function resetStageTransientState() {
   globals.ultCooldown = 0;
   globals.enhanceActiveTimer = 0;
   globals.enhanceCooldown = 0;
-  globals.zenFieldActiveTimer = 0;
-  globals.zenFieldTickTimer = 0;
   globals.roninResolveCooldown = 0;
   globals.invulnTimer = 0;
   globals.calamityTimer = 0;
@@ -958,8 +957,6 @@ function initGame() {
   globals.gameState = 'playing'; 
   globals.flowState = 'normal'; 
   globals.hasRevivedThisRun = false;
-  globals.zenFieldActiveTimer = 0;
-  globals.zenFieldTickTimer = 0;
   globals.stageCurrency = 0;
   globals.stageAttackPotions = 0;
   globals.stageMerchantCacheAds = 0;
@@ -1150,7 +1147,7 @@ function initGame() {
   globals.weatherEngine.type = Math.random() > 0.5 ? 'rain' : 'snow';
   globals.windForces = [];
   
-  globals.maxLives = globals.gameMode === 'zen' ? 3 : 5;
+  globals.maxLives = 5;
   globals.lives = globals.maxLives;
   globals.petalArmorLevel = 0;
   globals.petalArmorActive = false;
@@ -1214,10 +1211,6 @@ function initGame() {
   globals.bouncingSickles = [];
   globals.plasmaTrails = [];
   globals.destructibleProps = [];
-
-  if (globals.gameMode === 'zen') {
-    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('playZen'), "#00ffff", 36));
-  }
   
   const eMax = globals.selectedSkill === 'enhance' ? 12.0 : (globals.selectedSkill === 'shield' ? 10.0 : (globals.selectedSkill === 'dash' ? 0.9 : (globals.selectedSkill === 'firewheel' ? 11.0 : (globals.selectedSkill === 'gravity' ? 10.0 : (globals.selectedSkill === 'parry_master' ? 10.0 : (globals.selectedSkill === 'decoy_illusion' ? 12.0 : 10.0))))));
   const eDur = globals.selectedSkill === 'enhance' ? 10.0 : (globals.selectedSkill === 'shield' ? 4.5 : (globals.selectedSkill === 'dash' ? 0.45 : (globals.selectedSkill === 'firewheel' ? 6.0 : (globals.selectedSkill === 'gravity' ? 7.0 : (globals.selectedSkill === 'parry_master' ? 4.0 : (globals.selectedSkill === 'decoy_illusion' ? 6.0 : 3.5))))));
@@ -1272,7 +1265,12 @@ function initGame() {
     ultimateDamageBonusPct: 0,
     counterSiphonLevel: 0,
     critMasteryLevel: 0,
-    executionLevel: 0
+    executionLevel: 0,
+    synergySlashBonusPct: 0,
+    synergyFlowMult: 1.0,
+    synergyDashCdMult: 1.0,
+    synergyPostureBonus: 0,
+    synergySkillDmg: 0
   };
   // One shared balance table drives both run initialization and Dojo comparisons.
   const hero = heroBalance(globals.selectedHero);
@@ -1762,15 +1760,8 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
       globals.animatedEffects.push(new AnimatedEffect(globals.player.x, globals.player.y, pY, 0.28, 1.8));
     }
 
-    if (globals.gameMode === 'zen' && enemy && enemy.state !== 'dead') {
-      hitEnemy(enemy, Math.max(2, Math.round(getCurrentSlashDamage() * 1.2)));
-      globals.slashes.push(Slash.acquire(enemy.x, enemy.y, Math.random() * Math.PI * 2, 1.8, true));
-      globals.floatingTexts.push(FloatingText.acquire(enemy.x, enemy.y - 40, "COUNTER!", "#ffd700", 24));
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, '閃', 'neon-#ffd700', 72));
-    } else {
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, t('dodgeText'), "#ffd700", 28));
-      globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, '閃', 'neon-#ffd700', 72));
-    }
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, t('dodgeText'), "#ffd700", 28));
+    globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, '閃', 'neon-#ffd700', 72));
     
     const dodgeSparkCount = globals.graphicsSettings === 'low' ? 8 : 24;
     for (let i = 0; i < dodgeSparkCount; i++) {
@@ -2314,11 +2305,6 @@ function fireFullyChargedIaijutsu(angle: number, chargeScale = 1.0) {
       projDmg = Math.max(20, Math.round(28 + slashDmg * 4.2)) + iaiBonus;
       txtColor = '#fbbf24';
       txtLabel = "⚡ LIGHTNING IAIJUTSU! ⚡";
-    } else if (globals.zenFieldActiveTimer > 0 && globals.flowState !== 'omnislash') {
-      enhancedType = 'zen_field';
-      projDmg = Math.max(18, Math.round(25 + slashDmg * 4.0)) + iaiBonus;
-      txtColor = '#22d3ee';
-      txtLabel = "🌀 CHRONO IAIJUTSU! 🌀";
     } else if (globals.selectedSkill === 'enhance' && globals.enhanceActiveTimer > 0) {
       enhancedType = 'dragon';
       projDmg = Math.max(24, Math.round(35 + slashDmg * 4.5)) + iaiBonus;
@@ -3487,6 +3473,16 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
     e.chillTimer = 3.0;
   }
   
+  // Blade Art Synergy (4): Inflicts Bleed
+  if ((globals as any).hasBladeBleedSynergy && e.state !== 'dead') {
+    (e as any).bleedTimer = Math.max((e as any).bleedTimer || 0, 3.0);
+    (e as any).bleedDmg = Math.max((e as any).bleedDmg || 0, Math.round(getCurrentSlashDamage() * 0.25));
+  }
+  // Elemental Synergy (4): Skills & attacks chain lightning
+  if ((globals as any).hasElementChainSynergy && !isProc && Math.random() < 0.3) {
+    triggerStormGodLightning(e.x, e.y);
+  }
+  
   // Critical Hit calculation (hero base crit + powerup crit, with powerup bonus capped at 40%)
   const heroCritChance = globals.playerStats?.heroCritChance || 0;
   const powerupCritChance = Math.min(0.4, globals.playerStats?.critChanceBonus || 0);
@@ -3940,7 +3936,7 @@ function triggerShatterAoE(x: number, y: number) {
 
 
 function checkVampireHeal(e: Enemy) {
-  if (globals.gameMode !== 'zen' && globals.playerStats.vampireChance > 0 && Math.random() < globals.playerStats.vampireChance) {
+  if (globals.playerStats.vampireChance > 0 && Math.random() < globals.playerStats.vampireChance) {
     globals.collectibles.push(new Collectible(e.x, e.y, 'heart'));
   }
 }
@@ -4036,8 +4032,11 @@ function killEnemy(e: Enemy) {
   }
 
   // Stage Mode Progress & Clear Condition (Visceral "斬" Finisher Trigger)
-  globals.stageKills = (globals.stageKills || 0) + 1;
-  globals.waveEnemiesKilled = (globals.waveEnemiesKilled || 0) + 1;
+  if (!(e as any).waveKillCounted) {
+    (e as any).waveKillCounted = true;
+    globals.stageKills = (globals.stageKills || 0) + 1;
+    globals.waveEnemiesKilled = (globals.waveEnemiesKilled || 0) + 1;
+  }
 
   if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
     const isBossStage = true;
@@ -4205,9 +4204,9 @@ function addCombo() {
 }
 
 function addFlow(amount: number) {
-  if (globals.flowState !== 'normal' || globals.zenFieldActiveTimer > 0) return;
+  if (globals.flowState !== 'normal') return;
   const prevFlow = globals.flow;
-  let mult = globals.playerStats.flowGenMult || 1.0;
+  let mult = (globals.playerStats.flowGenMult || 1.0) * (globals.playerStats.synergyFlowMult || 1.0);
   if (globals.difficulty === 'insane') {
     mult *= 0.5; // Significantly reduce flow accumulation in insane mode
   } else if (globals.difficulty === 'hard') {
@@ -4274,7 +4273,7 @@ function update(realDt: number) {
         triggerGameOver(true);
         return;
       } else {
-        // Survived in classic or zen mode!
+        // Survived in classic mode!
         triggerVictory();
         return;
       }
@@ -4328,7 +4327,7 @@ function update(realDt: number) {
     }
 
     // 10-Minute Showdown: Supreme Shogun Boss Spawn (Survival / Endless modes only)
-    if (globals.runTime >= 540 && globals.gameMode !== 'zen' && globals.gameMode !== 'classic' && !shogunSpawned) {
+    if (globals.runTime >= 540 && globals.gameMode !== 'classic' && !shogunSpawned) {
       shogunSpawned = true;
       playSynthesizedTempleBell();
       const shogun = new Enemy(globals.player.x + 350, globals.player.y, globals.player);
@@ -4408,7 +4407,7 @@ function update(realDt: number) {
     }
 
     // Low HP Survival Tracking for Seal II
-    if (globals.lives === 1 && globals.gameMode !== 'zen') {
+    if (globals.lives === 1) {
       const prevInt = Math.floor(globals.lowHpSurviveTimer);
       globals.lowHpSurviveTimer += realDt;
       const curInt = Math.floor(globals.lowHpSurviveTimer);
@@ -4456,7 +4455,7 @@ function update(realDt: number) {
   }
 
   // Option 5: Battlefield Bounty Contracts Update
-  if (globals.gameState === 'playing' && globals.gameMode !== 'zen') {
+  if (globals.gameState === 'playing') {
     if (!globals.activeBounty) {
       globals.bountyTimer -= realDt;
       if (globals.bountyTimer <= 0) {
@@ -4560,13 +4559,7 @@ function update(realDt: number) {
   if (globals.enhanceActiveTimer <= 0 && globals.enhanceCooldown > 0) globals.enhanceCooldown -= realDt;
   if (globals.keys[globals.keyMaps.skill] || globals.mobileEnhanceJustPressed) {
     globals.mobileEnhanceJustPressed = false;
-    if (globals.gameMode === 'zen') {
-      const now = performance.now();
-      if (now - globals.lastZenWarningTime > 1000) {
-        globals.lastZenWarningTime = now;
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, t('zenWarningText'), "#ff3355", 24));
-      }
-    } else if (globals.enhanceCooldown <= 0 && globals.enhanceActiveTimer <= 0) {
+    if (globals.enhanceCooldown <= 0 && globals.enhanceActiveTimer <= 0) {
       journeySkill();
       callbacks.onTrainingAction?.({ type: 'skill', activated: true, skill: globals.selectedSkill });
       if (globals.selectedSkill === 'enhance') {
@@ -5245,7 +5238,7 @@ function update(realDt: number) {
   if ((globals.keys[globals.keyMaps.ult] || globals.mobileUltJustPressed) && globals.ultCooldown <= 0 && isFlowReady) {
       globals.mobileUltJustPressed = false;
       globals.keys[globals.keyMaps.ult] = false; // consume key
-      triggerSpecificUltimate(globals.gameMode === 'zen' ? 'zen' : 'omni');
+      triggerSpecificUltimate('omni');
     }
 
   if (globals.flowState === 'awakened') {
@@ -5280,33 +5273,6 @@ function update(realDt: number) {
   } else {
     globals.fullScreenSkillTimer = 0;
     globals.fullScreenSkillEffect = 'none';
-  }
-
-  // Zen Field Ultimate Ticking
-  if (globals.zenFieldActiveTimer > 0) {
-    globals.zenFieldActiveTimer -= realDt;
-    globals.zenFieldTickTimer += realDt;
-    if (globals.zenFieldTickTimer >= 0.4) {
-      globals.zenFieldTickTimer = 0;
-      playSynthesizedParry();
-      globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, 'rgba(0, 255, 255, 0.4)'));
-      globals.enemies.forEach(e => {
-        if (e.state === 'dead') return;
-        const dx = e.x - globals.player.x;
-        const dy = e.y - globals.player.y;
-        if (dx * dx + dy * dy < 260 * 260) {
-          const pushAngle = Math.atan2(dy, dx);
-          e.vx = Math.cos(pushAngle) * 800;
-          e.vy = Math.sin(pushAngle) * 800;
-          e.stunTimer = Math.max(e.stunTimer || 0, 0.6);
-          hitEnemy(e, Math.max(8, Math.round(getCurrentSlashDamage() * 1.6)));
-        }
-      });
-    }
-    if (globals.zenFieldActiveTimer <= 0) {
-      globals.zenFieldActiveTimer = 0;
-      globals.ultCooldown = globals.ultCooldownMax; // 6s cooldown starts ONLY after Zen Field duration finishes
-    }
   }
   
   const dt = realDt; // Time scaling disabled to prevent laggy feel
@@ -6016,15 +5982,7 @@ function update(realDt: number) {
     }
   }
 
-  if (globals.gameMode === 'zen') {
-    if (isAttackPressed) {
-      const now = performance.now();
-      if (now - globals.lastZenWarningTime > 1000) {
-        globals.lastZenWarningTime = now;
-        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, t('zenWarningText'), "#ff3355", 22));
-      }
-    }
-  } else if (!dashAttackTriggered && !parryTriggered && globals.player.attackCooldown <= 0 && globals.player.state !== 'dash' && globals.player.state !== 'dead') {
+  if (!dashAttackTriggered && !parryTriggered && globals.player.attackCooldown <= 0 && globals.player.state !== 'dash' && globals.player.state !== 'dead') {
     let shouldAttack = false;
     let attackPower = 1.0;
     
@@ -6638,7 +6596,7 @@ function update(realDt: number) {
             proj.vx = Math.cos(deflectAngle) * deflectSpeed;
             proj.vy = Math.sin(deflectAngle) * deflectSpeed;
             proj.angle = deflectAngle;
-            proj.damage = Math.max(15, Math.round(((globals.playerStats.deflectedDmg || 2) * 4) + getCurrentSlashDamage() * 1.5));
+            proj.damage = Math.max(15, Math.round(((globals.playerStats.deflectedDmg || 2) * 4) + getCurrentSlashDamage() * 1.5)) * ((globals as any).hasIronDeflectSynergy ? 2 : 1);
 
             playSynthesizedParry();
             globals.screenShake = 16;
@@ -6964,7 +6922,7 @@ function update(realDt: number) {
           proj.vy = Math.sin(angle) * deflectSpeed;
           proj.angle = angle;
           const slashPct = 1.0 + (globals.playerStats?.slashBonusDmgPct || 0);
-          proj.damage = Math.max(4, Math.round(((globals.playerStats.deflectedDmg || 1) + 2) * slashPct + getCurrentSlashDamage() * 0.75));
+          proj.damage = Math.max(4, Math.round(((globals.playerStats.deflectedDmg || 1) + 2) * slashPct + getCurrentSlashDamage() * 0.75)) * ((globals as any).hasIronDeflectSynergy ? 2 : 1);
           
           playSynthesizedParry();
           globals.screenShake = 15;
@@ -7169,8 +7127,6 @@ function update(realDt: number) {
               } else if (proj.enhancedType === 'storm_god') {
                 triggerStormGodLightning(e.x, e.y);
                 e.stunTimer = Math.max(e.stunTimer || 0, 2.0);
-              } else if (proj.enhancedType === 'zen_field') {
-                e.chillTimer = 4.0;
               }
             }
           }

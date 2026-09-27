@@ -6,7 +6,6 @@ import {
   playSynthesizedAwaken,
   playSynthesizedThunder,
   playSynthesizedSingingBowl,
-  playSynthesizedTempleBell,
   playSound,
   playSlashSfx,
   sfx
@@ -548,43 +547,11 @@ const ultOptions = [
   }
 ];
 
-export function triggerZenField() {
-  globals.flowState = 'normal';
-  globals.flow = 0;
-  globals.zenFieldActiveTimer = 8.0;
-  globals.zenFieldTickTimer = 0;
-  globals.invulnTimer = 8.0;
-  globals.timeSlowDuration = 0;
-  globals.targetTimeSlowFactor = 1.0;
-  globals.timeSlowFactor = 1.0;
-  
-  globals.screenShake = 40;
-  globals.invertScreenTimer = 0.25;
-  
-  triggerMangaCutin('zen');
-
-  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, t('zenFieldText'), "neon-#00ffff", 48));
-  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#00ffff'));
-  
-  for (let i = 0; i < 20; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 200 + Math.random() * 200;
-    globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#00ffff', speed, 0.6, 3, angle));
-  }
-}
-
-export function triggerSpecificUltimate(type: 'shadow' | 'omni' | 'storm' | 'zen') {
+export function triggerSpecificUltimate(type: 'shadow' | 'omni' | 'storm') {
   if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
 
   // Notify tutorial system of awakening activation regardless of trigger source
   callbacks.onTrainingAction?.({ type: 'awakening', manualInput: true, ultType: type });
-
-  if (globals.gameMode === 'zen' || type === 'zen') {
-    globals.flow = 0;
-    playSynthesizedTempleBell();
-    triggerZenField();
-    return;
-  }
 
   if (type === 'shadow') {
     // Flow stays full so the 6-second drain in main.ts can run to completion
@@ -611,11 +578,7 @@ export function triggerSpecificUltimate(type: 'shadow' | 'omni' | 'storm' | 'zen
 
 export function activateAwakening() {
   if (globals.flow < globals.playerStats.flowMax || globals.flowState !== 'normal' || globals.ultCooldown > 0) return;
-  if (globals.gameMode === 'zen') {
-    triggerSpecificUltimate('zen');
-  } else {
-    triggerSpecificUltimate('omni');
-  }
+  triggerSpecificUltimate('omni');
 }
 
 export type SynergyType = 'blade' | 'flow' | 'shadow' | 'iron' | 'element';
@@ -657,6 +620,31 @@ export function getActiveSynergies(): Record<SynergyType, number> {
     }
   }
   return counts;
+}
+
+export function applySynergyPassives() {
+  const syn = getActiveSynergies();
+  // 1. Blade Art: (2) +15% ATK, (4) Inflicts Bleed
+  globals.playerStats.synergySlashBonusPct = (syn.blade >= 2 ? 0.15 : 0) + (syn.blade >= 4 ? 0.15 : 0);
+  (globals as any).hasBladeBleedSynergy = syn.blade >= 4;
+
+  // 2. Flow Chi: (2) +25% Flow Gain, (4) Ult Flow Cost -20%
+  globals.playerStats.synergyFlowMult = (syn.flow >= 2 ? 1.25 : 1.0);
+  if (syn.flow >= 4 && globals.playerStats.flowMax > 360) {
+    globals.playerStats.flowMax = Math.round(globals.playerStats.flowMax * 0.8);
+  }
+
+  // 3. Shadow Step: (2) -15% Dash CD, (4) Shadow Clones
+  globals.playerStats.synergyDashCdMult = (syn.shadow >= 2 ? 0.85 : 1.0);
+  (globals as any).hasShadowCloneSynergy = syn.shadow >= 4;
+
+  // 4. Iron Guard: (2) +4 Posture Break, (4) Parry Deflects 200%
+  globals.playerStats.synergyPostureBonus = (syn.iron >= 2 ? 4 : 0);
+  (globals as any).hasIronDeflectSynergy = syn.iron >= 4;
+
+  // 5. Elemental: (2) +2 Skill DMG, (4) Skills Chain Lightning
+  globals.playerStats.synergySkillDmg = (syn.element >= 2 ? 2 : 0);
+  (globals as any).hasElementChainSynergy = syn.element >= 4;
 }
 
 let currentShopInventory: ShopSlot[] = [];
@@ -1097,6 +1085,7 @@ export function renderShopModal() {
         globals.stageCurrency -= slot.price;
         slot.power.apply();
         globals.chosenPowerUps.push(slot.power.nameKey);
+        applySynergyPassives();
         currentShopInventory.splice(idx, 1);
         callbacks.onTrainingAction?.({ type: 'shop', phase: 'buy', powerupId: slot.power.nameKey });
         callbacks.updateUI();
@@ -1284,7 +1273,7 @@ export function renderShopModal() {
   }
 }
 
-export function triggerMangaCutin(type: 'shadow' | 'omni' | 'storm' | 'zen') {
+export function triggerMangaCutin(type: 'shadow' | 'omni' | 'storm') {
   const mangaCutin = document.getElementById('manga-cutin');
   if (mangaCutin) {
     mangaCutin.className = '';
@@ -1309,28 +1298,19 @@ export function triggerMangaCutin(type: 'shadow' | 'omni' | 'storm' | 'zen') {
 }
 
 export function applyRandomStartUpgrade(): string {
-  let availablePowers = [...powerUps];
-  if (globals.gameMode === 'zen') {
-    availablePowers = [
-      { nameKey: "puFeatherName", descKey: "puFeatherDesc", apply: () => globals.playerStats.dashCooldownBase = Math.max(0.72, globals.playerStats.dashCooldownBase * 0.90) },
-      { nameKey: "puSwiftName", descKey: "puSwiftDesc", apply: () => globals.playerStats.moveSpeedMult = Math.min(1.50, globals.playerStats.moveSpeedMult + 0.10) },
-      { nameKey: "puBloodName", descKey: "puBloodDesc", apply: () => globals.playerStats.flowGenMult += 0.15 },
-      { nameKey: "puDeflectDmgName", descKey: "puDeflectDmgDesc", apply: () => globals.playerStats.deflectedDmg += 2 }
-    ];
-  } else {
-    availablePowers = availablePowers.filter(power => {
-      if (power.skill) {
-        return power.skill === globals.selectedSkill;
-      }
-      return true;
-    });
-  }
+  let availablePowers = powerUps.filter(power => {
+    if (power.skill) {
+      return power.skill === globals.selectedSkill;
+    }
+    return true;
+  });
 
   if (availablePowers.length > 0) {
     const randomPower = availablePowers[Math.floor(Math.random() * availablePowers.length)];
     randomPower.apply();
     const name = t(randomPower.nameKey);
     globals.chosenPowerUps.push(randomPower.nameKey);
+    applySynergyPassives();
     return name;
   }
   return "None";
