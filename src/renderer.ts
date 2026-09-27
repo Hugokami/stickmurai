@@ -1298,19 +1298,57 @@ export function draw() {
     ctx.stroke();
     ctx.restore();
 
-    // 3. Lateral graduation / range ticks along corridor edges
-    const numSegments = Math.max(2, Math.floor(bodyLen / 85));
+    // 3. Indicator Range Notches (current slash reach vs wave projectile travel)
+    const slashReach = Math.min(bodyLen - 30, Math.max(60, 165 * (globals.playerStats?.slashSizeMult || 1.0)));
+    const waveTravel = Math.min(bodyLen - 10, Math.max(slashReach + 60, 480 * (globals.playerStats?.iaijutsuRangeMult || 1.0)));
+
     ctx.save();
+    // Slash reach notch: prominent lateral ticks & rail diamond pips
+    ctx.strokeStyle = colors.accent;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(slashReach, -hw - 5);
+    ctx.lineTo(slashReach, -hw + 10);
+    ctx.moveTo(slashReach, hw + 5);
+    ctx.lineTo(slashReach, hw - 10);
+    ctx.stroke();
+
+    ctx.fillStyle = colors.accent;
+    ctx.beginPath();
+    ctx.arc(slashReach, -hw, 3.2, 0, Math.PI * 2);
+    ctx.arc(slashReach, hw, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Wave projectile travel notch: prominent lateral ticks & rail diamond pips
+    ctx.strokeStyle = colors.primary;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.moveTo(waveTravel, -hw - 5);
+    ctx.lineTo(waveTravel, -hw + 10);
+    ctx.moveTo(waveTravel, hw + 5);
+    ctx.lineTo(waveTravel, hw - 10);
+    ctx.stroke();
+
+    ctx.fillStyle = colors.primary;
+    ctx.beginPath();
+    ctx.arc(waveTravel, -hw, 3.2, 0, Math.PI * 2);
+    ctx.arc(waveTravel, hw, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Subtle intermediate graduation ticks along corridor edges
+    const numSegments = Math.max(2, Math.floor(bodyLen / 85));
     ctx.strokeStyle = colors.glowRgba;
-    ctx.lineWidth = 1.5;
+    ctx.lineWidth = 1.2;
     for (let i = 1; i <= numSegments; i++) {
       const d = (bodyLen / (numSegments + 1)) * i;
-      ctx.beginPath();
-      ctx.moveTo(d, -hw);
-      ctx.lineTo(d, -hw + 6);
-      ctx.moveTo(d, hw);
-      ctx.lineTo(d, hw - 6);
-      ctx.stroke();
+      if (Math.abs(d - slashReach) > 22 && Math.abs(d - waveTravel) > 22) {
+        ctx.beginPath();
+        ctx.moveTo(d, -hw);
+        ctx.lineTo(d, -hw + 5);
+        ctx.moveTo(d, hw);
+        ctx.lineTo(d, hw - 5);
+        ctx.stroke();
+      }
     }
     ctx.restore();
 
@@ -1386,6 +1424,31 @@ export function draw() {
     ctx.restore();
 
     ctx.restore();
+
+    // Kill-Threshold Glow: light enemy silhouette red when inside corridor & within 1-shot lethal threshold
+    const ux = Math.cos(angle);
+    const uy = Math.sin(angle);
+    const slashDmg = (globals.playerStats?.slashBonusDmgPct ? (1 + globals.playerStats.slashBonusDmgPct) : 1) * 12;
+    const lethalThreshold = Math.max(14, Math.round(18 + slashDmg * 2.5));
+    if (globals.enemies && globals.enemies.length > 0) {
+      for (let i = 0; i < globals.enemies.length; i++) {
+        const e = globals.enemies[i];
+        if (!e || e.state === 'dead' || (e.hp !== undefined && e.hp <= 0)) continue;
+        const ex = e.x - globals.camera.x + globals.vw / 2;
+        const ey = e.y - globals.camera.y + globals.vh / 2;
+        const dx = ex - px;
+        const dy = ey - py;
+        const proj = dx * ux + dy * uy;
+        const perp = Math.abs(-dx * uy + dy * ux);
+        const enemyRadius = (e.radius || 24);
+        if (proj >= 0 && proj <= length && perp <= hw + enemyRadius) {
+          if (e.hp <= lethalThreshold) {
+            (e as any).isAimTargetLethal = true;
+            (e as any).aimTargetLethalTimer = 0.08;
+          }
+        }
+      }
+    }
   };
 
   // Dash Aim Preview
@@ -1411,13 +1474,16 @@ export function draw() {
     ctx.restore();
   }
 
-  // Iaijutsu Mobile Aim Preview
-  if (globals.mobileIaijutsuAimActive && globals.player && globals.player.state !== 'dead') {
+  // Iaijutsu Aim Preview (Desktop Charge & Mobile Aim)
+  const isDesktopCharging = globals.player && globals.player.state === 'charge';
+  if ((globals.mobileIaijutsuAimActive || isDesktopCharging) && globals.player && globals.player.state !== 'dead') {
     ctx.save();
     const origin = getPlayerAimOrigin(globals.player);
     const px = origin.x - globals.camera.x + globals.vw/2;
     const py = origin.y - globals.camera.y + globals.vh/2;
-    const angle = globals.mobileIaijutsuAimAngle;
+    const angle = globals.mobileIaijutsuAimActive
+      ? globals.mobileIaijutsuAimAngle
+      : Math.atan2((globals.mouse?.y ?? py) - py, (globals.mouse?.x ?? (px + (globals.player?.dir === -1 ? -100 : 100))) - px);
     const length = 600 * (globals.playerStats.iaijutsuRangeMult || 1.0);
     const targetX = px + Math.cos(angle) * length;
     const targetY = py + Math.sin(angle) * length;

@@ -15,6 +15,7 @@ export const callbacks = {
   hitEnemy: (_e: any, _dmg?: number, _killedByClient?: boolean, _isProc?: boolean) => {},
   checkPlayerHit: (_e: any, _damageAmount?: number) => {},
   killEnemy: (_e: any) => {},
+  tryDeflectDetonator: (_e: any) => false as boolean,
   addCombo: () => {},
   addFlow: (_amount: number) => {},
   updateUI: () => {},

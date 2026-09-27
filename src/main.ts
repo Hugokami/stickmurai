@@ -119,6 +119,7 @@ callbacks.playSynthesizedGravity = playSynthesizedGravity;
 callbacks.hitEnemy = hitEnemy;
 callbacks.checkPlayerHit = checkPlayerHit;
 callbacks.killEnemy = killEnemy;
+callbacks.tryDeflectDetonator = tryDeflectDetonator;
 callbacks.addCombo = addCombo;
 callbacks.addFlow = addFlow;
 (callbacks as any).getCurrentSlashDamage = getCurrentSlashDamage;
@@ -774,6 +775,55 @@ export function advanceToNextWave() {
   globals.currentWave++;
   setupWaveObjectives(globals.currentWave, globals.totalWaves, stage, isBossStage);
 
+  // Portal Momentum Ejection (Wave Transitions):
+  // Upon shop exit, burst player into new wave with 0.35s phantom dash (intangible, +50% move speed, trail particles) aimed toward arena center.
+  const portalPos = (globals as any).lastPortalPos;
+  if (portalPos) {
+    globals.player.x = portalPos.x;
+    globals.player.y = portalPos.y;
+    globals.camera.x = portalPos.x;
+    globals.camera.y = portalPos.y;
+    (globals as any).lastPortalPos = null;
+  }
+  const toCenterX = 700 - globals.player.x;
+  const toCenterY = 350 - globals.player.y;
+  const distToCenter = Math.hypot(toCenterX, toCenterY);
+  const ejectAngle = distToCenter > 30 ? Math.atan2(toCenterY, toCenterX) : (globals.player.dir === -1 ? Math.PI : 0);
+
+  // 0.35s phantom dash: intangible, +50% move speed, trail particles
+  globals.invulnTimer = Math.max(globals.invulnTimer || 0, 0.35);
+
+  const baseSpeed = 400 * (globals.playerStats?.moveSpeedMult || 1.0);
+  const burstSpeed = baseSpeed * 1.5;
+  globals.player.vx = Math.cos(ejectAngle) * burstSpeed;
+  globals.player.vy = Math.sin(ejectAngle) * burstSpeed;
+  globals.player.setState('dash');
+  (globals.player as any).dashDuration = 0.35;
+
+  // Phantom dash afterimages & azure vortex trail particles
+  for (let i = 1; i <= 4; i++) {
+    const ratio = i / 5;
+    const afterimg = Afterimage.acquire(globals.player, '#38bdf8');
+    afterimg.life = 0.35 - ratio * 0.06;
+    afterimg.maxLife = 0.35;
+    globals.afterimages.push(afterimg);
+  }
+  for (let p = 0; p < 18; p++) {
+    const pAngle = ejectAngle + (Math.random() - 0.5) * 0.9;
+    const spd = 260 + Math.random() * 320;
+    globals.particles.push(Particle.acquire(
+      globals.player.x,
+      globals.player.y,
+      p % 2 === 0 ? '#38bdf8' : '#818cf8',
+      spd,
+      0.35,
+      3.0,
+      pAngle
+    ));
+  }
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#38bdf8'));
+  globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 40, "PORTAL BURST!", "#38bdf8", 22));
+
   const isJa = globals.currentLang === 'ja';
   const isFinalWave = globals.currentWave >= globals.totalWaves;
   const waveTitle = isJa
@@ -805,15 +855,49 @@ function clearWaveToPortal() {
   globals.wavePortal = { x: portalX, y: portalY, spawnTime: performance.now() };
 }
 
-function enterWavePortal() {
+function enterWavePortal(dt: number = 0.016) {
   const portal = globals.wavePortal;
   if (!portal || globals.waveState !== 'cleared' || globals.gameState !== 'playing') return;
   // Grace delay of 500ms after spawn so player momentum / current attack dash doesn't trigger immediately
   if (portal.spawnTime && performance.now() - portal.spawnTime < 500) return;
   const dx = globals.player.x - portal.x;
   const dy = globals.player.y - portal.y;
+  const distSq = dx * dx + dy * dy;
+  const dist = Math.sqrt(distSq);
+
+  // Gravitational vortex suction: approaching/touching portal pulls player toward vortex center
+  if (dist < 260 && dist > 0) {
+    const pullFactor = Math.max(0.25, (1 - dist / 260));
+    const pullSpeed = 480 * pullFactor;
+    const nx = dx / dist;
+    const ny = dy / dist;
+    globals.player.x -= nx * pullSpeed * dt;
+    globals.player.y -= ny * pullSpeed * dt;
+    globals.player.vx *= 0.88;
+    globals.player.vy *= 0.88;
+
+    // Ambient vortex inward dust & starlight particles
+    if (globals.particles.length < 150 && Math.random() < 0.45) {
+      const pAngle = Math.random() * Math.PI * 2;
+      const pDist = 30 + Math.random() * (dist * 0.75);
+      globals.particles.push(Particle.acquire(
+        portal.x + Math.cos(pAngle) * pDist,
+        portal.y + Math.sin(pAngle) * pDist,
+        Math.random() < 0.5 ? '#38bdf8' : '#818cf8',
+        160,
+        0.32,
+        2.2,
+        Math.atan2(portal.y - (portal.y + Math.sin(pAngle) * pDist), portal.x - (portal.x + Math.cos(pAngle) * pDist))
+      ));
+    }
+  }
+
   // Trigger immediately as player walks near / touches the enlarged portal perimeter (256px portal)
-  if (dx * dx + dy * dy > 165 * 165) return;
+  if (distSq > 165 * 165) return;
+
+  // Record portal entry location for wave ejection burst
+  (globals as any).lastPortalPos = { x: portal.x, y: portal.y };
+
   globals.wavePortal = null;
   globals.player.x = 700;
   globals.player.y = 350;
@@ -1501,7 +1585,96 @@ function triggerFlowingCounterReset() {
   }
 }
 
+export function tryDeflectDetonator(enemy: any): boolean {
+  if (!enemy || enemy.state === 'dead' || enemy.isDeflected) return false;
+  if (enemy.subType !== 'detonator' && enemy.subType !== 'barrel_bomber') return false;
+
+  const parryWindowMult = globals.selectedHero === 'default' ? 1.35 : 1.0;
+  const isParryMasterActive = globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0;
+  const isSlashParryActive = globals.player.state === 'attack' && globals.player.stateTime < (0.35 * parryWindowMult);
+  const isFromDummy = Boolean(enemy?.isTrainingDummy);
+  const isParrying = isSlashParryActive || globals.parryWindowTimer > 0 || isParryMasterActive;
+  if (!isParrying) return false;
+
+  const isPerfect = isSlashParryActive ? (globals.player.stateTime < (0.24 * parryWindowMult) || isFromDummy) : (globals.parryWindowTimer > 0.2 || isFromDummy);
+  if (!isPerfect) return false;
+
+  // Perfect Parry against charging Detonator!
+  globals.runStats.perfectParries++;
+  globals.runStats.parries++;
+  globals.consecutiveParries++;
+  playSynthesizedPerfectParry();
+  playSynthesizedThunder();
+  addCombo();
+  globals.hitStop = 0.055;
+  globals.screenShake = 22;
+  addFlow(6.0);
+  globals.invulnTimer = 0.6;
+
+  // Bat unit backward 600px into enemy clusters before detonation!
+  // At speed 1600 px/s with 0.38s travel time: 1600 * 0.38 ≈ 608px
+  const pdx = enemy.x - globals.player.x;
+  const pdy = enemy.y - globals.player.y;
+  let batAngle = Math.atan2(pdy, pdx);
+
+  // Steer deflection toward enemy clusters if available
+  let bestClusterAngle = batAngle;
+  let maxClusterCount = 0;
+  for (let i = 0; i < globals.enemies.length; i++) {
+    const other = globals.enemies[i];
+    if (other && other !== enemy && other.state !== 'dead') {
+      const odx = other.x - enemy.x;
+      const ody = other.y - enemy.y;
+      const oDist = Math.hypot(odx, ody);
+      if (oDist > 80 && oDist < 750) {
+        const testAngle = Math.atan2(ody, odx);
+        let count = 0;
+        for (let j = 0; j < globals.enemies.length; j++) {
+          const cOther = globals.enemies[j];
+          if (cOther && cOther !== enemy && cOther.state !== 'dead') {
+            const cdx = cOther.x - other.x;
+            const cdy = cOther.y - other.y;
+            if (cdx * cdx + cdy * cdy < 240 * 240) count++;
+          }
+        }
+        if (count > maxClusterCount) {
+          maxClusterCount = count;
+          bestClusterAngle = testAngle;
+        }
+      }
+    }
+  }
+  if (maxClusterCount > 0) {
+    batAngle = bestClusterAngle;
+  }
+
+  const batSpeed = 1600;
+  enemy.knockbackTimer = 0.38;
+  enemy.knockbackVx = Math.cos(batAngle) * batSpeed;
+  enemy.knockbackVy = Math.sin(batAngle) * batSpeed;
+  enemy.vx = enemy.knockbackVx;
+  enemy.vy = enemy.knockbackVy;
+  enemy.stunTimer = 0.45;
+  enemy.isDeflected = true;
+  enemy.deflectedDetonationTimer = 0.38;
+  enemy.setState('walk');
+
+  // VFX & Floating alert
+  globals.shockwaves.push(new Shockwave(globals.player.x, globals.player.y, '#f97316'));
+  for (let i = 0; i < 22; i++) {
+    const a = Math.random() * Math.PI * 2;
+    const spd = 320 + Math.random() * 280;
+    globals.particles.push(Particle.acquire(globals.player.x, globals.player.y, '#f97316', spd, 0.45, 3.2, a));
+  }
+  globals.floatingTexts.push(FloatingText.acquire(enemy.x, enemy.y - 70, "💣 VOLATILE DEFLECTION! 600px! 💣", "#f97316", 26));
+
+  return true;
+}
+
 function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
+  if (enemy && (enemy.subType === 'detonator' || enemy.subType === 'barrel_bomber')) {
+    if (tryDeflectDetonator(enemy)) return;
+  }
   // Blood Surge & Blood Tithe Affixes: Enemies deal +1 damage
   if (globals.activeStageAffix?.id === 'blood_surge' || globals.activeStageAffix?.id === 'blood_tithe') {
     damageAmount += 1;
@@ -3269,6 +3442,9 @@ export function revivePlayer() {
 function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
   if (!e || e.state === 'dead' || e.deathHandled || (e.hp !== undefined && e.hp <= 0)) return;
   if ((e as any).phaseTransitionTimer > 0) return;
+  if ((e.subType === 'detonator' || e.subType === 'barrel_bomber') && (e.state === 'charge' || (e as any).attackWindup > 0)) {
+    if (tryDeflectDetonator(e)) return;
+  }
   // Shadow Doppelganger Mirror Counter-Parry
   if ((e as any).isShadowDoppelganger && e.state === 'charge' && Math.random() < 0.45) {
     globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 50, globals.currentLang === 'ja' ? '影の受け流し！ 🛡️' : 'SHADOW PARRY! 🛡️', '#a855f7', 26));
@@ -5508,7 +5684,7 @@ function update(realDt: number) {
   clampToArena(globals.player);
   resolveStoneLampCollisions(globals.player, 22);
 
-  enterWavePortal();
+  enterWavePortal(realDt);
   if (globals.shopOpen) return;
 
   // Mechanic 2: Interactive Blade Sheathing / Blood-Flick (Chiburui & Noto)

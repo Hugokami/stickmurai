@@ -616,6 +616,33 @@ export class Enemy extends Entity {
       this.attackCooldownTimer -= effectiveDt;
     }
 
+    if ((this as any).aimTargetLethalTimer > 0) {
+      (this as any).aimTargetLethalTimer -= effectiveDt;
+      (this as any).isAimTargetLethal = (this as any).aimTargetLethalTimer > 0;
+    } else {
+      (this as any).isAimTargetLethal = false;
+    }
+
+    if ((this as any).deflectedDetonationTimer > 0) {
+      (this as any).deflectedDetonationTimer -= effectiveDt;
+      if (globals.particles.length < 150 && Math.random() < 0.6) {
+        globals.particles.push(Particle.acquire(
+          this.x,
+          this.y,
+          '#f97316',
+          90,
+          0.26,
+          2.6,
+          Math.random() * Math.PI * 2
+        ));
+      }
+      if ((this as any).deflectedDetonationTimer <= 0) {
+        (this as any).deflectedDetonationTimer = 0;
+        triggerBarrelExplosion(this);
+        return;
+      }
+    }
+
     if (isKnockedBack) {
       this.knockbackTimer -= effectiveDt;
       this.vx = this.knockbackVx;
@@ -1159,6 +1186,10 @@ export class Enemy extends Entity {
 
   executeAttack() {
     if (this.subType === 'detonator' || this.subType === 'barrel_bomber') {
+      if (callbacks.tryDeflectDetonator && callbacks.tryDeflectDetonator(this)) {
+        this.attackLanded = true;
+        return;
+      }
       triggerBarrelExplosion(this);
       this.attackLanded = true;
       return;
@@ -1820,6 +1851,9 @@ export class Enemy extends Entity {
     if (this.chillTimer > 0 && this.hitFlash <= 0) {
       tint = '#00ffff';
     }
+    if ((this as any).isAimTargetLethal && this.hitFlash <= 0) {
+      tint = '#ef4444';
+    }
 
     if (this.airborneZ > 0) {
       this.y -= this.airborneZ;
@@ -1827,6 +1861,25 @@ export class Enemy extends Entity {
       this.y += this.airborneZ;
     } else {
       super.draw(ctx, cx, cy, alpha, tint);
+    }
+
+    if ((this as any).isAimTargetLethal && this.state !== 'dead') {
+      ctx.save();
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.8;
+      const bRad = Math.round(((this as any).radius || 24) * this.scaleMult * 0.85);
+      const bLen = 6;
+      ctx.beginPath();
+      // Top-Left
+      ctx.moveTo(rx - bRad, ry - bRad + bLen); ctx.lineTo(rx - bRad, ry - bRad); ctx.lineTo(rx - bRad + bLen, ry - bRad);
+      // Top-Right
+      ctx.moveTo(rx + bRad - bLen, ry - bRad); ctx.lineTo(rx + bRad, ry - bRad); ctx.lineTo(rx + bRad, ry - bRad + bLen);
+      // Bottom-Left
+      ctx.moveTo(rx - bRad, ry + bRad - bLen); ctx.lineTo(rx - bRad, ry + bRad); ctx.lineTo(rx - bRad + bLen, ry + bRad);
+      // Bottom-Right
+      ctx.moveTo(rx + bRad - bLen, ry + bRad); ctx.lineTo(rx + bRad, ry + bRad); ctx.lineTo(rx + bRad, ry + bRad - bLen);
+      ctx.stroke();
+      ctx.restore();
     }
 
     // time stop cut marks
@@ -1894,24 +1947,24 @@ export function triggerBarrelExplosion(barrel: Enemy) {
   }
 
   // Was it kicked / deflected by the player?
-  const isDeflected = barrel.knockbackTimer > 0;
+  const isDeflected = barrel.knockbackTimer > 0 || Boolean((barrel as any).isDeflected);
   if (isDeflected) {
-    // Kicked barrel explodes into enemies!
-    globals.floatingTexts.push(FloatingText.acquire(barrel.x, barrel.y - 45, "DETONATION! 💥", "#f97316", 26));
+    // Kicked / deflected barrel explodes into enemies!
+    globals.floatingTexts.push(FloatingText.acquire(barrel.x, barrel.y - 45, "VOLATILE DETONATION! 💥", "#f97316", 28));
     for (let i = 0; i < globals.enemies.length; i++) {
       const other = globals.enemies[i];
       if (!other || other === barrel || other.state === 'dead') continue;
       const edx = other.x - barrel.x;
       const edy = other.y - barrel.y;
-      if (edx * edx + edy * edy < 220 * 220) {
+      if (edx * edx + edy * edy < 320 * 320) {
         const slashDmg = (callbacks as any).getCurrentSlashDamage ? (callbacks as any).getCurrentSlashDamage() : 1;
-        const barrelDmg = Math.max(14, Math.round(14 + slashDmg * 1.6));
+        const barrelDmg = Math.max(35, Math.round(28 + slashDmg * 2.5));
         callbacks.hitEnemy(other, barrelDmg);
-        other.addPostureDamage(45);
-        other.knockbackTimer = 0.4;
+        other.addPostureDamage(65);
+        other.knockbackTimer = 0.45;
         const ang = Math.atan2(edy, edx);
-        other.knockbackVx = Math.cos(ang) * 900;
-        other.knockbackVy = Math.sin(ang) * 900;
+        other.knockbackVx = Math.cos(ang) * 950;
+        other.knockbackVy = Math.sin(ang) * 950;
       }
     }
   } else {
