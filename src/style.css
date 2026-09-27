@@ -469,36 +469,49 @@ canvas.inverted {
   position: absolute;
   top: max(16px, env(safe-area-inset-top));
   right: max(16px, env(safe-area-inset-right));
-  width: 42px;
-  height: 42px;
-  font-size: 16px;
-  background: rgba(12, 15, 22, 0.92);
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+  background: rgba(14, 16, 22, 0.92);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border: 1.5px solid #d4a24e;
-  color: #d4a24e;
-  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
+  color: #cbd5e1;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
   pointer-events: auto !important;
   cursor: pointer;
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 10px rgba(255, 255, 255, 0.1);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
   z-index: 70;
   touch-action: manipulation;
+  padding: 0;
+}
+
+#pause-btn .hud-pause-svg {
+  display: block;
+  pointer-events: none;
+  transition: transform 0.15s ease;
 }
 
 #pause-btn:hover, .hud-pause-btn:hover {
-  background: rgba(255, 30, 39, 0.25);
-  border-color: #ffd200;
-  color: #ffd200;
+  background: rgba(28, 33, 44, 0.96);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
   transform: scale(1.06);
-  box-shadow: 0 0 16px rgba(255, 210, 0, 0.4);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+#pause-btn:hover .hud-pause-svg {
+  transform: scale(1.05);
 }
 
 #pause-btn:active, .hud-pause-btn:active {
   transform: scale(0.94);
+  background: rgba(20, 24, 32, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
 }
 
 .hud-currency-icon {
@@ -559,17 +572,17 @@ canvas.inverted {
 .hud-magatama-badge, #magatama-display {
   top: max(16px, env(safe-area-inset-top));
   right: max(68px, calc(env(safe-area-inset-right) + 56px));
-  color: #c084fc;
-  border: 1.5px solid rgba(192, 132, 252, 0.5);
-  box-shadow: 0 0 14px rgba(192, 132, 252, 0.25), 0 4px 10px rgba(0, 0, 0, 0.6);
+  color: #ddd6fe;
+  border: 1.5px solid rgba(167, 139, 250, 0.32);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 .hud-currency-badge, #stage-currency-display {
   top: max(56px, calc(env(safe-area-inset-top) + 40px));
   right: max(68px, calc(env(safe-area-inset-right) + 56px));
-  color: #fbbf24;
-  border: 1.5px solid rgba(251, 191, 36, 0.5);
-  box-shadow: 0 0 14px rgba(251, 191, 36, 0.25), 0 4px 10px rgba(0, 0, 0, 0.6);
+  color: #fde68a;
+  border: 1.5px solid rgba(226, 183, 85, 0.32);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
 
@@ -1733,9 +1746,9 @@ input[type="range"]::-webkit-slider-thumb:hover {
   height: clamp(75px, 14vh, 105px);
   border-radius: 0;
   clip-path: polygon(12px 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0 calc(100% - 12px), 0 12px);
-  background: rgba(14, 14, 20, 0.88);
-  border: 3px solid #bc2c2c;
-  color: #bc2c2c;
+  background: rgba(14, 16, 22, 0.88);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
   font-weight: 700;
   font-family: 'Shojumaru', 'Noto Sans JP', sans-serif;
   display: flex;
@@ -1743,7 +1756,7 @@ input[type="range"]::-webkit-slider-thumb:hover {
   justify-content: center;
   align-items: center;
   gap: 2px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(188, 44, 44, 0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -1835,21 +1848,21 @@ input[type="range"]::-webkit-slider-thumb:hover {
   transform: scale(0.92);
 }
 
-/* Dash button - Blue/Cyan Hanko Stamp */
+/* Dash button - Neutral Dark Steel */
 #btn-dash {
   width: clamp(95px, 18vh, 135px);
   height: clamp(95px, 18vh, 135px);
-  background: rgba(0, 229, 255, 0.04);
-  border-color: #00d5ed;
-  color: #00d5ed;
+  background: rgba(14, 16, 22, 0.88);
+  border: 1.5px solid rgba(255, 255, 255, 0.14);
+  color: #e2e8f0;
   font-size: clamp(14px, 2.7vh, 18px);
-  text-shadow: 0 0 8px rgba(0, 229, 255, 0.3);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 213, 237, 0.1);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 #btn-dash:active {
-  background: #00d5ed !important;
-  color: #0c0d12 !important;
-  box-shadow: 0 0 20px rgba(0, 229, 255, 0.6) !important;
+  background: rgba(45, 52, 68, 0.95) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.7) !important;
 }
 
 /* Attack/Slash button - Custom Ink Art Sprite without borders or text */
@@ -1897,38 +1910,38 @@ input[type="range"]::-webkit-slider-thumb:hover {
   border-radius: 20px;
 }
 
-/* Enhance button - Gold Hanko Stamp */
+/* Enhance button - Neutral Dark Steel */
 #btn-enhance {
   width: clamp(95px, 18vh, 135px) !important;
   height: clamp(95px, 18vh, 135px) !important;
-  background: rgba(14, 14, 20, 0.85) !important;
-  border-color: #ffd700 !important;
-  color: #ffd700 !important;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.95);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), inset 0 0 10px rgba(255, 215, 0, 0.15) !important;
+  background: rgba(14, 16, 22, 0.88) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+  color: #e2e8f0 !important;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.95);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
 }
 #btn-enhance.buff-active {
-  border-color: #ffd700 !important;
-  background: #d4af37 !important;
-  color: #0c0d12 !important;
-  box-shadow: 0 0 25px rgba(212, 175, 55, 0.8) !important;
-  animation: pulse-orange 1.0s infinite alternate;
+  border-color: rgba(255, 255, 255, 0.35) !important;
+  background: rgba(48, 54, 70, 0.95) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+  animation: pulse-steel 1.0s infinite alternate;
 }
 #btn-enhance.ready {
-  border-color: #ffd700 !important;
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
 #btn-dash.ready {
-  border-color: #00d5ed !important;
-  box-shadow: 0 0 15px rgba(0, 229, 255, 0.4) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
 }
-@keyframes pulse-orange {
-  0% { transform: scale(1); box-shadow: 0 0 15px rgba(212, 175, 55, 0.4); }
-  100% { transform: scale(1.04); box-shadow: 0 0 25px rgba(212, 175, 55, 0.85); }
+@keyframes pulse-steel {
+  0% { transform: scale(1); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6); }
+  100% { transform: scale(1.03); box-shadow: 0 8px 26px rgba(0, 0, 0, 0.8), inset 0 0 12px rgba(255, 255, 255, 0.1); }
 }
 #btn-enhance:active {
-  background: #d4af37 !important;
-  color: #0c0d12 !important;
+  background: rgba(45, 52, 68, 0.95) !important;
+  color: #ffffff !important;
 }
 
 /* Action buttons layout */
@@ -1970,19 +1983,18 @@ input[type="range"]::-webkit-slider-thumb:hover {
     cursor: pointer;
   }
   #btn-dash:hover {
-    background: rgba(0, 229, 255, 0.08) !important;
-    border-color: #00e5ff !important;
-    box-shadow: 0 0 15px rgba(0, 229, 255, 0.4) !important;
+    background: rgba(28, 33, 44, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
   }
   #btn-attack:hover {
-    background: rgba(188, 44, 44, 0.08) !important;
-    border-color: #e03b3b !important;
-    box-shadow: 0 0 15px rgba(188, 44, 44, 0.4) !important;
+    background: transparent !important;
+    border: none !important;
   }
   #btn-enhance:hover {
-    background: rgba(212, 175, 55, 0.08) !important;
-    border-color: #ffd700 !important;
-    box-shadow: 0 0 15px rgba(212, 175, 55, 0.4) !important;
+    background: rgba(28, 33, 44, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15) !important;
   }
 }
 
@@ -2031,9 +2043,12 @@ html.is-touch-device #mobile-controls {
   #pause-btn {
     width: 28px;
     height: 28px;
-    font-size: 11px;
     top: max(8px, env(safe-area-inset-top));
     right: max(8px, env(safe-area-inset-right));
+  }
+  #pause-btn .hud-pause-svg {
+    width: 12px;
+    height: 12px;
   }
 
   #fullscreen-hud-btn {
@@ -4167,7 +4182,7 @@ html.is-touch-device #mobile-controls {
 }
 
 #objective-display {
-  color: #ffd700;
+  color: #e2e8f0;
   font-family: 'Orbitron', 'Outfit', sans-serif;
   font-size: clamp(10px, 1.2vw, 11.5px);
   font-weight: 700;
@@ -4175,7 +4190,7 @@ html.is-touch-device #mobile-controls {
   background: rgba(10, 12, 18, 0.88);
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-  border: 1.5px solid rgba(212, 162, 78, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.16);
   border-radius: 0;
   clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
   padding: 3px 12px;
@@ -4578,14 +4593,16 @@ html:not(.qol-touch-custom) #btn-attack {
 html:not(.qol-touch-custom) #btn-dash { right: calc(var(--size) * 1.35); bottom: 0; }
 html:not(.qol-touch-custom) #btn-enhance { right: 0; bottom: calc(var(--size) * 1.35); }
 #btn-stance-switch {
-  border-color: #38bdf8;
-  color: #38bdf8;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 8px rgba(56, 189, 248, 0.25);
+  background: rgba(14, 16, 22, 0.88) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
+  color: #e2e8f0 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 #btn-stance-switch.mode-ranged {
-  border-color: #00ffff;
-  color: #00ffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), inset 0 0 14px rgba(0, 255, 255, 0.45);
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  color: #f8fafc !important;
+  background: rgba(26, 30, 40, 0.95) !important;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14);
 }
 html:not(.qol-touch-custom) #btn-stance-switch {
   right: calc(var(--size) * 1.35);
@@ -4649,8 +4666,9 @@ html.qol-left:not(.qol-touch-custom) #action-buttons > button { scale: -1 1; }
   position: absolute;
   top: max(52px, calc(env(safe-area-inset-top) + 38px));
   right: max(160px, calc(env(safe-area-inset-right) + 148px));
-  background: rgba(15, 10, 5, 0.92);
-  border: 1.5px solid rgba(251, 191, 36, 0.5);
+  background: rgba(14, 16, 22, 0.92);
+  border: 1.5px solid rgba(212, 162, 78, 0.38);
+  color: #e5c07b;
   border-radius: 0;
   clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
   padding: 5px 12px;
@@ -4660,12 +4678,13 @@ html.qol-left:not(.qol-touch-custom) #action-buttons > button { scale: -1 1; }
   cursor: pointer;
   pointer-events: auto !important;
   z-index: 70;
-  box-shadow: 0 0 12px rgba(251, 191, 36, 0.25);
-  transition: transform 0.15s ease, background 0.15s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
   touch-action: manipulation;
 }
 .hud-shop-btn:hover {
-  background: rgba(251, 191, 36, 0.2);
+  background: rgba(28, 33, 44, 0.95);
+  border-color: rgba(212, 162, 78, 0.65);
   transform: scale(1.05);
 }
 .hud-shop-btn:active {
@@ -4696,9 +4715,9 @@ html.qol-left #ult-buttons-wrap {
   height: clamp(44px, 8.5vh, 56px);
   border-radius: 0;
   clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
-  background: rgba(12, 10, 8, 0.92);
-  border: 2px solid rgba(212, 162, 78, 0.3);
-  color: #94a3b8;
+  background: rgba(14, 16, 22, 0.92);
+  border: 1.5px solid rgba(255, 255, 255, 0.12) !important;
+  color: #cbd5e1;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4706,7 +4725,7 @@ html.qol-left #ult-buttons-wrap {
   cursor: pointer;
   touch-action: none;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   position: relative;
   overflow: hidden;
   opacity: 0.45;
@@ -4719,7 +4738,7 @@ html.qol-left #ult-buttons-wrap {
   left: 0;
   right: 0;
   height: 0%;
-  background: rgba(255, 215, 0, 0.25);
+  background: rgba(255, 255, 255, 0.15);
   pointer-events: none;
   transition: height 0.15s ease-out;
   z-index: 1;
@@ -4758,28 +4777,20 @@ html.qol-left #ult-buttons-wrap {
   opacity: 1 !important;
   pointer-events: auto !important;
   transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  color: #f8fafc !important;
+  background: rgba(24, 28, 38, 0.95) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
   animation: ult-pulse 1.2s infinite alternate;
 }
 
-#btn-ult-shadow.ready {
-  border-color: #c084fc !important;
-  color: #c084fc !important;
-  background: rgba(192, 132, 252, 0.15) !important;
-  box-shadow: 0 0 16px rgba(192, 132, 252, 0.6) !important;
-}
-
-#btn-ult-omni.ready {
-  border-color: #ffd700 !important;
-  color: #ffd700 !important;
-  background: rgba(255, 215, 0, 0.15) !important;
-  box-shadow: 0 0 20px rgba(255, 215, 0, 0.7) !important;
-}
-
+#btn-ult-shadow.ready,
+#btn-ult-omni.ready,
 #btn-ult-storm.ready {
-  border-color: #fbbf24 !important;
-  color: #fbbf24 !important;
-  background: rgba(251, 191, 36, 0.15) !important;
-  box-shadow: 0 0 16px rgba(251, 191, 36, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  color: #f8fafc !important;
+  background: rgba(24, 28, 38, 0.95) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
 }
 
 @keyframes ult-pulse {

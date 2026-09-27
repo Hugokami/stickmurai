@@ -1947,8 +1947,8 @@ export function updateUI(force = false) {
         }
         if (text !== lastObjectiveText) {
           objDisplay.textContent = text;
-          objDisplay.style.borderColor = (isBoss && isFinalWave) ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255, 215, 0, 0.35)';
-          objDisplay.style.color = (isBoss && isFinalWave) ? '#ef4444' : '#ffd700';
+          objDisplay.style.borderColor = (isBoss && isFinalWave) ? 'rgba(239, 68, 68, 0.8)' : 'rgba(255, 255, 255, 0.18)';
+          objDisplay.style.color = (isBoss && isFinalWave) ? '#f87171' : '#e2e8f0';
           lastObjectiveText = text;
         }
       } else {
