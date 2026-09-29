@@ -3085,9 +3085,11 @@ export function populateAscensionUpgrades() {
 }
 
 export function triggerStageClear() {
-  if (completeJourneyStage()) return;
-  globals.gameState = 'paused';
+  const journeyCompleted = completeJourneyStage();
   AdManager.gameplayStop();
+  AdManager.measure('level', String(globals.currentStage || 1), 'complete');
+  if (journeyCompleted) return;
+  globals.gameState = 'paused';
   const levelUpModal = document.getElementById('level-up-screen');
   if (levelUpModal) levelUpModal.style.display = 'none';
   const ultModal = document.getElementById('ult-screen');

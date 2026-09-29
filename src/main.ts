@@ -252,6 +252,7 @@ function finishLoading() {
       startBgm();
 
       const proceedToMenu = () => {
+        AdManager.measure('onboarding', 'menu', 'enter');
         loaderScreen.classList.add('fade-out');
         const uiLayer = document.getElementById('ui-layer');
         if (uiLayer) uiLayer.style.display = 'none';
@@ -844,6 +845,9 @@ function clearWaveToPortal() {
   globals.enemies.length = 0;
   globals.projectiles.length = 0;
   globals.waveState = 'cleared';
+  if (globals.currentWave === 1 && !isPractice() && globals.gameMode === 'classic') {
+    AdManager.measure('onboarding', 'first-wave', 'complete');
+  }
   const isJa = globals.currentLang === 'ja';
   const banner = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `${banner}  ${isJa ? '門へ進め' : 'ENTER THE PORTAL'}`, '#38bdf8', 30));
@@ -3958,6 +3962,9 @@ function killEnemy(e: Enemy) {
   e.setState('dead');
   addCombo();
   globals.runStats.kills++;
+  if (globals.runStats.kills === 1 && !isPractice() && globals.gameMode === 'classic') {
+    AdManager.measure('onboarding', 'first-kill', 'complete');
+  }
   const isBossKill = (e.subType?.includes('boss') || (e as any).isBoss);
   if (isBossKill) {
     globals.stageBossDefeated = true;
