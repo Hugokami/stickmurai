@@ -6,7 +6,7 @@ const distDir = path.join(rootDir, 'dist');
 const publicDir = path.join(rootDir, 'public');
 
 // Prefer source files from dist if built, otherwise public
-const sourceDir = fs.existsSync(distDir) ? distDir : publicDir;
+const sourceDir = publicDir;
 
 console.log('--- Comprehensive Asset Packing into assets.bin ---');
 

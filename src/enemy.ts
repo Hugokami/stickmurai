@@ -128,14 +128,14 @@ export class Enemy extends Entity {
     this.colorTint = '#ffffff';
     this.type = 'fighter';
     
-    // Stage Mode Campaign Spawning - Final Boss in ALL Stages on Final Wave
+    // Stage Mode Campaign Spawning - Final Boss in Stages 2+ on Final Wave (Stage 1 stays fast grunts & rogues)
     const stage = globals.currentStage || 1;
       const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
       const bossTypes: EnemySubType[] = ['oni_boss', 'agis_colossus', 'skeleton_warlord', 'shogun_boss'];
       const targetBoss = bossTypes[(stage - 1) % bossTypes.length];
       const bossAlive = globals.enemies?.some(e => e && e.state !== 'dead' && (bossTypes.includes(e.subType) || (e as any).isBoss));
 
-      if (isFinalWave && !bossAlive && !globals.stageBossSpawned) {
+      if (stage > 1 && isFinalWave && !bossAlive && !globals.stageBossSpawned) {
         this.subType = targetBoss;
         globals.stageBossSpawned = true;
       } else if (stage === 1) {

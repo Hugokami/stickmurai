@@ -266,8 +266,35 @@ function finishLoading() {
         }, 180);
       };
 
-      // Guaranteed direct progression to menu
-      proceedToMenu();
+      const proceedToFirstCombat = () => {
+        safeStorage.setItem('stickmurai_first_play_done', 'true');
+        safeStorage.setItem('stickmurai_tutorial_completed', 'true');
+        loaderScreen.classList.add('fade-out');
+        const uiLayer = document.getElementById('ui-layer');
+        if (uiLayer) uiLayer.style.display = 'none';
+        const mobileControls = document.getElementById('mobile-controls');
+        if (mobileControls) mobileControls.style.display = 'none';
+        setTimeout(() => {
+          loaderScreen.classList.add('hidden');
+          loaderScreen.style.display = 'none';
+          globals.gameMode = 'classic';
+          globals.difficulty = 'normal';
+          globals.timerLimit = 'endless';
+          globals.currentStage = 1;
+          globals.activeBlessing = null;
+          initGame();
+        }, 180);
+      };
+
+      const isFirstRun = safeStorage.getItem('stickmurai_first_play_done') !== 'true'
+        && (!globals.clearedStages || globals.clearedStages.length === 0)
+        && (!globals.maxStageUnlocked || globals.maxStageUnlocked <= 1);
+
+      if (isFirstRun) {
+        proceedToFirstCombat();
+      } else {
+        proceedToMenu();
+      }
 
       // Optional fullscreen attempt on user gesture
       if (e && e.isTrusted && !isPoki()) {
@@ -852,10 +879,12 @@ function clearWaveToPortal() {
   const banner = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `${banner}  ${isJa ? '門へ進め' : 'ENTER THE PORTAL'}`, '#38bdf8', 30));
   playSynthesizedTempleBell();
-  // Spawn portal safely near player (280px) with clear sightline without long dead-time walks
-  const offsetDir = (globals.player.x + 280 < arena.right - 250) ? 1 : -1;
-  const portalX = Math.max(arena.left + 250, Math.min(arena.right - 250, globals.player.x + offsetDir * 280));
-  const portalY = Math.max(arena.top + 250, Math.min(arena.bottom - 250, globals.player.y));
+  // Spawn portal safely near player (180px for stage 1 onboarding, 280px for standard) with clear sightline without long dead-time walks
+  const isStage1 = globals.currentStage === 1;
+  const portalDist = isStage1 ? 180 : 280;
+  const offsetDir = (globals.player.x + portalDist < arena.right - 250) ? 1 : -1;
+  const portalX = Math.max(arena.left + 200, Math.min(arena.right - 200, globals.player.x + offsetDir * portalDist));
+  const portalY = Math.max(arena.top + 200, Math.min(arena.bottom - 200, globals.player.y));
   globals.wavePortal = { x: portalX, y: portalY, spawnTime: performance.now() };
 }
 
@@ -870,9 +899,12 @@ function enterWavePortal(dt: number = 0.016) {
   const dist = Math.sqrt(distSq);
 
   // Gravitational vortex suction: approaching/touching portal pulls player toward vortex center
-  if (dist < 340 && dist > 0) {
-    const pullFactor = Math.max(0.3, (1 - dist / 340));
-    const pullSpeed = 520 * pullFactor;
+  // Stage 1 onboarding has arena-wide magnetic pull to eliminate player wandering / walk delay
+  const isStage1 = globals.currentStage === 1;
+  const pullRange = isStage1 ? 9999 : 340;
+  if (dist < pullRange && dist > 0) {
+    const pullFactor = Math.max(0.4, (1 - dist / (isStage1 ? 1600 : pullRange)));
+    const pullSpeed = (isStage1 ? 880 : 520) * pullFactor;
     const nx = dx / dist;
     const ny = dy / dist;
     globals.player.x -= nx * pullSpeed * dt;
@@ -897,8 +929,9 @@ function enterWavePortal(dt: number = 0.016) {
   }
 
   // Trigger immediately as player walks near / touches the enlarged portal perimeter (256px portal)
+  const triggerDist = globals.currentStage === 1 ? 200 : 165;
   const isActionNearPortal = distSq < 320 * 320 && (globals.keys[globals.keyMaps.dash] || globals.keys[globals.keyMaps.skill] || globals.mobileDashJustPressed);
-  if (distSq > 165 * 165 && !isActionNearPortal) return;
+  if (distSq > triggerDist * triggerDist && !isActionNearPortal) return;
 
   // Record portal entry location for wave ejection burst
   (globals as any).lastPortalPos = { x: portal.x, y: portal.y };
@@ -1385,9 +1418,9 @@ function initGame() {
   const currentStage = globals.currentStage || 1;
   const isBossStage = currentStage % 5 === 0;
 
-  // Wave Progression (3 to 10 waves per stage, boss on final wave)
-  globals.totalWaves = Math.min(10, Math.max(3, 2 + Math.floor(currentStage * 0.65)));
-  if (isBossStage) {
+  // Wave Progression (2 waves for Stage 1 onboarding, 3 to 10 waves for higher stages, boss on final wave)
+  globals.totalWaves = currentStage === 1 ? 2 : Math.min(10, Math.max(3, 2 + Math.floor(currentStage * 0.65)));
+  if (isBossStage && currentStage > 1) {
     globals.totalWaves = Math.min(10, Math.max(4, 3 + Math.floor(currentStage * 0.5)));
   }
   globals.currentWave = 1;
@@ -1421,6 +1454,19 @@ function initGame() {
     }
   } else {
     globals.activeStageAffix = null;
+  }
+
+  if (globals.gameMode === 'classic' && currentStage === 1 && globals.currentWave === 1) {
+    const isJa = globals.currentLang === 'ja';
+    const controlHint = isTouchDevice
+      ? (isJa ? '⚡ スティックで移動 · 斬撃ボタンで攻撃！' : '⚡ JOYSTICK TO MOVE · TAP SLASH TO ATTACK!')
+      : (isJa ? '⚡ WASD: 移動 · 左クリック: 斬撃 · SPACE: 回避' : '⚡ WASD: MOVE · LMB: SLASH · SPACE: DASH');
+    globals.delayedActions.push({
+      delay: 0.5,
+      run: () => {
+        globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 80, controlHint, '#38bdf8', 22));
+      }
+    });
   }
 
   document.getElementById('level-display')!.textContent = globals.level.toString();
@@ -1530,7 +1576,8 @@ function spawnEnemy() {
          break;
        }
        const angle = Math.random() * Math.PI * 2;
-       const dist = 800 + Math.random() * 400 + (i * 100);
+       const isEarlyStage1 = globals.currentStage === 1 && globals.currentWave === 1;
+       const dist = isEarlyStage1 ? (450 + Math.random() * 150) : (800 + Math.random() * 400 + (i * 100));
        const enemy = new Enemy(globals.player.x + Math.cos(angle)*dist, globals.player.y + Math.sin(angle)*dist, globals.player);
        clampToArena(enemy);
        
@@ -1560,7 +1607,7 @@ function spawnEnemy() {
   if (globals.gameMode === 'classic' && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 10)) {
     return;
   }
-  const nextSpawn = globals.gameMode==='classic'?encounter.delay:(1200 - Math.min(700, globals.score * 15)) * nextSpawnMult;
+  const nextSpawn = globals.gameMode==='classic' ? (globals.currentStage === 1 ? 750 : encounter.delay) : (1200 - Math.min(700, globals.score * 15)) * nextSpawnMult;
   scheduleSpawn(nextSpawn);
 }
 
