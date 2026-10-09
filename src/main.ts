@@ -798,7 +798,7 @@ export function advanceToNextWave() {
   globals.gameState = 'playing';
   globals.waveState = 'active';
   const stage = globals.currentStage || 1;
-  const isBossStage = true;
+  const isBossStage = stage > 1;
 
   globals.currentWave++;
   setupWaveObjectives(globals.currentWave, globals.totalWaves, stage, isBossStage);
@@ -867,7 +867,7 @@ export function advanceToNextWave() {
 callbacks.advanceToNextWave = advanceToNextWave;
 
 function clearWaveToPortal() {
-  if (globals.waveState !== 'active' || globals.currentWave >= globals.totalWaves) return;
+  if (globals.waveState !== 'active') return;
   stopSpawner();
   globals.enemies.length = 0;
   globals.projectiles.length = 0;
@@ -876,7 +876,10 @@ function clearWaveToPortal() {
     AdManager.measure('onboarding', 'first-wave', 'complete');
   }
   const isJa = globals.currentLang === 'ja';
-  const banner = isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`;
+  const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 1);
+  const banner = isFinalWave
+    ? (isJa ? `第 ${globals.currentWave} 波 突破！ 門へ進め` : `STAGE ${globals.currentStage || 1} CLEARED!`)
+    : (isJa ? `第 ${globals.currentWave} 波 突破！` : `WAVE ${globals.currentWave} CLEARED!`);
   globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 120, `${banner}  ${isJa ? '門へ進め' : 'ENTER THE PORTAL'}`, '#38bdf8', 30));
   playSynthesizedTempleBell();
   // Spawn portal safely near player (180px for stage 1 onboarding, 280px for standard) with clear sightline without long dead-time walks
@@ -937,6 +940,23 @@ function enterWavePortal(dt: number = 0.016) {
   (globals as any).lastPortalPos = { x: portal.x, y: portal.y };
 
   globals.wavePortal = null;
+
+  const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 1);
+  if (isFinalWave) {
+    globals.gameState = 'stageclear';
+    const lvlScreen = document.getElementById('level-up-screen');
+    if (lvlScreen) lvlScreen.style.display = 'none';
+    const ultScreen = document.getElementById('ult-screen');
+    if (ultScreen) ultScreen.style.display = 'none';
+
+    if (!isZanFinisherActive && callbacks.triggerStageClear) {
+      triggerZanFinisher(() => {
+        callbacks.triggerStageClear();
+      });
+    }
+    return;
+  }
+
   globals.player.x = 700;
   globals.player.y = 350;
   globals.camera.x = 700;
@@ -4093,7 +4113,7 @@ function killEnemy(e: Enemy) {
   }
 
   if (globals.gameState === 'playing' && globals.gameMode === 'classic') {
-    const isBossStage = true;
+    const isBossStage = (globals.currentStage || 1) > 1;
     const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
 
     // In boss stage final wave, defeating the boss also eliminates remaining minor minions
@@ -4112,25 +4132,8 @@ function killEnemy(e: Enemy) {
     const bossConditionMet = !isBossStage || globals.stageBossDefeated || isBossKill;
     const isWaveComplete = allKilled && allSpawned && aliveEnemies === 0 && bossConditionMet;
 
-    if (!isFinalWave && globals.waveState === 'active' && allKilled && allSpawned && aliveEnemies === 0) {
+    if (globals.waveState === 'active' && isWaveComplete) {
       clearWaveToPortal();
-    } else if (isWaveComplete && globals.waveState === 'active') {
-      if (!isFinalWave) {
-        clearWaveToPortal();
-      } else {
-        // Final wave completion
-        globals.gameState = 'stageclear';
-        const lvlScreen = document.getElementById('level-up-screen');
-        if (lvlScreen) lvlScreen.style.display = 'none';
-        const ultScreen = document.getElementById('ult-screen');
-        if (ultScreen) ultScreen.style.display = 'none';
-
-        if (!isZanFinisherActive && callbacks.triggerStageClear) {
-          triggerZanFinisher(() => {
-            callbacks.triggerStageClear();
-          });
-        }
-      }
     }
   }
 
@@ -4349,28 +4352,20 @@ function update(realDt: number) {
     // Classic Stage & Wave Progress Watchdog: prevents stalls, missing spawns, and stranded wave states
     if (globals.gameMode === 'classic') {
       const isFinalWave = (globals.currentWave || 1) >= (globals.totalWaves || 3);
-      const isBossStage = true;
+      const isBossStage = (globals.currentStage || 1) > 1;
       const activeAlive = globals.enemies.filter(en => en && en.state !== 'dead' && !en.isPvpRemote).length;
 
       // Wave progression occurs only when the portal is touched and the shop closes.
 
       // 2. Final wave boss stage completion: boss slain and all minions defeated
-      if (isFinalWave && isBossStage && globals.stageBossDefeated && activeAlive === 0 && !isZanFinisherActive) {
-        globals.gameState = 'stageclear';
-        if (callbacks.triggerStageClear) {
-          triggerZanFinisher(() => callbacks.triggerStageClear());
-        }
+      if (isFinalWave && isBossStage && globals.stageBossDefeated && activeAlive === 0 && globals.waveState === 'active') {
+        clearWaveToPortal();
       }
 
       // End non-final waves when their spawn quota is exhausted AND player killed required count; clear stragglers without kill credit.
-            if (globals.waveState === 'active' && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1) && (globals.waveEnemiesKilled || 0) >= (globals.waveEnemiesTotal || 1)) {
-        if (!isFinalWave) {
+      if (globals.waveState === 'active' && (globals.waveEnemiesSpawned || 0) >= (globals.waveEnemiesTotal || 1) && (globals.waveEnemiesKilled || 0) >= (globals.waveEnemiesTotal || 1)) {
+        if (!isFinalWave || (activeAlive === 0 && (!isBossStage || globals.stageBossDefeated))) {
           clearWaveToPortal();
-        } else if (activeAlive === 0 && (!isBossStage || globals.stageBossDefeated)) {
-          globals.gameState = 'stageclear';
-          if (!isZanFinisherActive && callbacks.triggerStageClear) {
-            triggerZanFinisher(() => callbacks.triggerStageClear());
-          }
         }
       }
 
