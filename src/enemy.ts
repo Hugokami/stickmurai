@@ -695,12 +695,11 @@ export class Enemy extends Entity {
               const colDmg = Math.max(3, Math.round(3 + slashDmg * 0.4));
               callbacks.hitEnemy(other, colDmg);
               other.stunTimer = Math.max(other.stunTimer || 0, 1.0);
-              other.knockbackTimer = 0.35;
-              const oang = Math.atan2(ody, odx);
-              other.knockbackVx = Math.cos(oang) * 900;
-              other.knockbackVy = Math.sin(oang) * 900;
-              other.vx = other.knockbackVx;
-              other.vy = other.knockbackVy;
+              other.knockbackTimer = 0;
+              other.knockbackVx = 0;
+              other.knockbackVy = 0;
+              other.vx = 0;
+              other.vy = 0;
             }
           });
         }
@@ -1940,10 +1939,11 @@ export function triggerBarrelExplosion(barrel: Enemy) {
         const barrelDmg = Math.max(35, Math.round(28 + slashDmg * 2.5));
         callbacks.hitEnemy(other, barrelDmg);
         other.addPostureDamage(65);
-        other.knockbackTimer = 0.45;
-        const ang = Math.atan2(edy, edx);
-        other.knockbackVx = Math.cos(ang) * 950;
-        other.knockbackVy = Math.sin(ang) * 950;
+        other.knockbackTimer = 0;
+        other.knockbackVx = 0;
+        other.knockbackVy = 0;
+        other.vx = 0;
+        other.vy = 0;
       }
     }
   } else {

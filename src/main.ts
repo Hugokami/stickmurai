@@ -3604,10 +3604,11 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
       finalDmg = Math.max(execFloor, Math.round((e.maxHp || 100) * 0.15));
       finalDmg = Math.min(finalDmg, Math.max(execFloor, Math.round((e.maxHp || 100) * 0.25)));
       e.stunTimer = 2.0;
-      e.knockbackTimer = 0.45;
-      const kbAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
-      e.knockbackVx = Math.cos(kbAngle) * 900;
-      e.knockbackVy = Math.sin(kbAngle) * 900;
+      e.knockbackTimer = 0;
+      e.knockbackVx = 0;
+      e.knockbackVy = 0;
+      e.vx = 0;
+      e.vy = 0;
       globals.floatingTexts.push(FloatingText.acquire(e.x, e.y - 65, `BOSS STAGGERED! 💥 -${finalDmg}`, 'neon-#ffd700', 34));
     } else if (e.isTrainingDummy) {
       finalDmg = 500;
@@ -3718,10 +3719,11 @@ function hitEnemy(e: Enemy, dmg = 1, killedByClient = false, isProc = false) {
         if (odx * odx + ody * ody < 350 * 350) {
           staggeredCount++;
           other.addPostureDamage(32);
-          other.knockbackTimer = 0.4;
-          const kAng = Math.atan2(ody, odx);
-          other.knockbackVx = Math.cos(kAng) * 600;
-          other.knockbackVy = Math.sin(kAng) * 600;
+          other.knockbackTimer = 0;
+          other.knockbackVx = 0;
+          other.knockbackVy = 0;
+          other.vx = 0;
+          other.vy = 0;
           const satyrDmg = Math.max(18, Math.round(18 + getCurrentSlashDamage() * 1.2));
           hitEnemy(other, satyrDmg, false, true);
         }
@@ -5588,12 +5590,11 @@ function update(realDt: number) {
           if (typeof enemy.addPostureDamage === 'function') {
             enemy.addPostureDamage(60);
           }
-          const kbAngle = Math.atan2(enemy.y - globals.player.y, enemy.x - globals.player.x);
-          enemy.knockbackTimer = 0.45;
-          enemy.knockbackVx = Math.cos(kbAngle) * 1900;
-          enemy.knockbackVy = Math.sin(kbAngle) * 1900;
-          enemy.vx = enemy.knockbackVx;
-          enemy.vy = enemy.knockbackVy;
+          enemy.knockbackTimer = 0;
+          enemy.knockbackVx = 0;
+          enemy.knockbackVy = 0;
+          enemy.vx = 0;
+          enemy.vy = 0;
           enemy.setState('idle');
           hitEnemy(enemy, Math.max(15, Math.round(15 + getCurrentSlashDamage() * 1.8)));
         }
@@ -5601,12 +5602,11 @@ function update(realDt: number) {
     } else if (clash.timer <= 0 || clash.enemy.state === 'dead') {
       // DRAW / Expiry
       if (clash.enemy && clash.enemy.state !== 'dead') {
-        const kbAngle = Math.atan2(clash.enemy.y - globals.player.y, clash.enemy.x - globals.player.x);
-        clash.enemy.knockbackTimer = 0.25;
-        clash.enemy.knockbackVx = Math.cos(kbAngle) * 700;
-        clash.enemy.knockbackVy = Math.sin(kbAngle) * 700;
-        clash.enemy.vx = clash.enemy.knockbackVx;
-        clash.enemy.vy = clash.enemy.knockbackVy;
+        clash.enemy.knockbackTimer = 0;
+        clash.enemy.knockbackVx = 0;
+        clash.enemy.knockbackVy = 0;
+        clash.enemy.vx = 0;
+        clash.enemy.vy = 0;
         clash.enemy.setState('idle');
       }
       globals.floatingTexts.push(FloatingText.acquire(clash.x, clash.y - 50, t('clashDrawText') || "CLASH DRAW", "#94a3b8", 22));
@@ -5754,10 +5754,10 @@ function update(realDt: number) {
             }
             // Stun removed per balance requirements to prevent spam invulnerability against bosses and aggressive enemies
             e.setState('idle');
-            e.knockbackTimer = 0.35;
-            e.knockbackVx = dir * 1600;
+            e.knockbackTimer = 0;
+            e.knockbackVx = 0;
             e.knockbackVy = 0;
-            e.vx = e.knockbackVx;
+            e.vx = 0;
             e.vy = 0;
           }
 
@@ -5813,6 +5813,8 @@ function update(realDt: number) {
     }
   }
 
+  let parryIaiAngle = globals.player.dir === 1 ? 0 : Math.PI;
+  let parryChargeRatio = Math.min(1.4, Math.max(0.45, (globals.player.chargeTimer / 0.8)));
   const isParryInput = (isCharging && isAttackReleased) || (isAttackPressed && globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0);
   if (!dashAttackTriggered && isParryInput && globals.player.state !== 'dash' && globals.player.state !== 'dead') {
     globals.enemies.forEach(e => {
@@ -5832,18 +5834,26 @@ function update(realDt: number) {
         globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 110, "RIPOSTE READY!", "#ff0055", 22));
         
         // Auto-release iaijutsu even if charge bar is not full, damage scaled with charge time
-        const chargeRatio = Math.min(1.4, Math.max(0.45, (globals.player.chargeTimer / 0.8)));
-        let iaiAngle = Math.atan2(dy, dx);
+        parryChargeRatio = Math.min(1.4, Math.max(0.45, (globals.player.chargeTimer / 0.8)));
+        parryIaiAngle = Math.atan2(dy, dx);
         if (globals.selectedHero === 'aetherion') {
           if (globals.useMobileIaijutsuAimAngle) {
-            iaiAngle = globals.mobileIaijutsuAimAngle;
+            parryIaiAngle = globals.mobileIaijutsuAimAngle;
           } else if (globals.joystickActive) {
-            iaiAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+            parryIaiAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
           } else {
-            iaiAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+            parryIaiAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
+          }
+        } else {
+          if (globals.useMobileIaijutsuAimAngle) {
+            parryIaiAngle = globals.mobileIaijutsuAimAngle;
+          } else if (globals.joystickActive) {
+            parryIaiAngle = Math.atan2(globals.joystickVector.y, globals.joystickVector.x);
+          } else if (!('ontouchstart' in window) && (globals.mouse.x || globals.mouse.y)) {
+            parryIaiAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
           }
         }
-        fireFullyChargedIaijutsu(iaiAngle, chargeRatio);
+        fireFullyChargedIaijutsu(parryIaiAngle, parryChargeRatio);
 
         // Deflect all incoming projectiles in radius
         globals.projectiles.forEach(proj => {
@@ -5933,10 +5943,10 @@ function update(realDt: number) {
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 70, t('perfectParryText'), "neon-#ffaa00", 34));
             
             e.setState('idle');
-            e.knockbackTimer = 0.45;
-            e.knockbackVx = -Math.cos(e.targetAngle) * 2200;
-            e.knockbackVy = -Math.sin(e.targetAngle) * 2200;
-            e.vx = e.knockbackVx; e.vy = e.knockbackVy;
+            e.knockbackTimer = 0;
+            e.knockbackVx = 0;
+            e.knockbackVy = 0;
+            e.vx = 0; e.vy = 0;
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(45);
             }
@@ -5966,10 +5976,10 @@ function update(realDt: number) {
             globals.floatingTexts.push(FloatingText.acquire(globals.player.x, globals.player.y - 60, t('parryText'), "#ffd700", 28));
 
             e.setState('idle');
-            e.knockbackTimer = 0.35;
-            e.knockbackVx = -Math.cos(e.targetAngle) * 1800;
-            e.knockbackVy = -Math.sin(e.targetAngle) * 1800;
-            e.vx = e.knockbackVx; e.vy = e.knockbackVy;
+            e.knockbackTimer = 0;
+            e.knockbackVx = 0;
+            e.knockbackVy = 0;
+            e.vx = 0; e.vy = 0;
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(25);
             }
@@ -5993,8 +6003,18 @@ function update(realDt: number) {
           }
           
           globals.player.attackCooldown = 0.2;
-          globals.player.vx = 0; globals.player.vy = 0;
-          globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, Math.atan2(dy, dx), globals.playerStats.slashSizeMult * 1.5, true, undefined, false, globals.player));
+          if (isCharging && isAttackReleased) {
+            const isFullyCharged = parryChargeRatio >= 0.95;
+            let lungePower = 1000 * (isFullyCharged ? 1.8 : 1.2);
+            if (globals.flowState === 'awakened') lungePower *= 2;
+            globals.player.vx = Math.cos(parryIaiAngle) * lungePower;
+            globals.player.vy = Math.sin(parryIaiAngle) * lungePower;
+            globals.player.chargeTimer = 0;
+            globals.player.setState('attack');
+          } else {
+            globals.player.vx = 0; globals.player.vy = 0;
+          }
+          globals.slashes.push(Slash.acquire(globals.player.x, globals.player.y, parryIaiAngle, globals.playerStats.slashSizeMult * 1.5, true, undefined, false, globals.player));
         }
       });
 
@@ -6025,6 +6045,15 @@ function update(realDt: number) {
             
             const chargeRatio = Math.min(1.4, Math.max(0.45, (globals.player.chargeTimer / 0.8)));
             fireFullyChargedIaijutsu(deflAngle, chargeRatio);
+            if (isCharging && isAttackReleased) {
+              const isFullyCharged = chargeRatio >= 0.95;
+              let lungePower = 1000 * (isFullyCharged ? 1.8 : 1.2);
+              if (globals.flowState === 'awakened') lungePower *= 2;
+              globals.player.vx = Math.cos(deflAngle) * lungePower;
+              globals.player.vy = Math.sin(deflAngle) * lungePower;
+              globals.player.chargeTimer = 0;
+              globals.player.setState('attack');
+            }
           }
         }
       });
@@ -6729,10 +6758,11 @@ function update(realDt: number) {
               triggerChainLightning(e);
             }
             if (isRiposteStrike && e.state !== 'dead' && !(e as any).deathHandled) {
-              const knockbackAngle = Math.atan2(e.y - globals.player.y, e.x - globals.player.x);
-              e.knockbackTimer = 0.5;
-              e.knockbackVx = Math.cos(knockbackAngle) * 2600;
-              e.knockbackVy = Math.sin(knockbackAngle) * 2600;
+              e.knockbackTimer = 0;
+              e.knockbackVx = 0;
+              e.knockbackVy = 0;
+              e.vx = 0;
+              e.vy = 0;
               e.setState('idle');
             }
           }
@@ -7077,10 +7107,10 @@ function update(realDt: number) {
             if (typeof (e as any).addPostureDamage === 'function') {
               (e as any).addPostureDamage(35);
             }
-            e.knockbackTimer = 0.45;
-            e.knockbackVx = Math.cos(proj.angle) * 1900;
-            e.knockbackVy = Math.sin(proj.angle) * 1900;
-            e.vx = e.knockbackVx; e.vy = e.knockbackVy;
+            e.knockbackTimer = 0;
+            e.knockbackVx = 0;
+            e.knockbackVy = 0;
+            e.vx = 0; e.vy = 0;
             triggerLightningExplosion(proj.x, proj.y);
             proj.life = 0;
           } else {
@@ -7100,10 +7130,10 @@ function update(realDt: number) {
               
               if (proj.enhancedType === 'astral_beam' || proj.enhancedType === 'astral_heavy_bullet') {
                 const isHeavy = proj.enhancedType === 'astral_heavy_bullet';
-                e.knockbackTimer = isHeavy ? 0.55 : 0.35;
-                e.knockbackVx = Math.cos(proj.angle) * (isHeavy ? 2200 : 1600);
-                e.knockbackVy = Math.sin(proj.angle) * (isHeavy ? 2200 : 1600);
-                e.vx = e.knockbackVx; e.vy = e.knockbackVy;
+                e.knockbackTimer = 0;
+                e.knockbackVx = 0;
+                e.knockbackVy = 0;
+                e.vx = 0; e.vy = 0;
 
                 if (isHeavy && typeof (e as any).addPostureDamage === 'function') {
                   (e as any).addPostureDamage(50);

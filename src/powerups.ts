@@ -852,16 +852,19 @@ export function renderShopModal() {
       
       <!-- Header -->
       <div style="position: sticky; top: -16px; background: #0c101c; z-index: 10; margin: -16px -20px 0 -20px; padding: 12px 20px 10px 20px; border-bottom: 1px solid rgba(251, 191, 36, 0.3); display: flex; justify-content: space-between; align-items: center; width: calc(100% + 40px); box-sizing: border-box;">
-        <div>
-          <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(16px, 2.5vh, 22px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5);">⛩️ WAR REQUISITION: OUTPOST ARMORY</h2>
+        <div style="min-width: 0; padding-right: 12px;">
+          <h2 style="font-family: 'Shojumaru', sans-serif; color: #fbbf24; margin: 0; font-size: clamp(15px, 2.5vh, 22px); text-shadow: 0 0 15px rgba(251, 191, 36, 0.5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">⛩️ WAR REQUISITION: OUTPOST ARMORY</h2>
           <div style="font-size: 11px; color: #94a3b8; font-family: 'Space Mono', monospace; margin-top: 2px;">
             Stage ${stageNum} Battlefield Requisition Hub
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="font-family: 'Orbitron', monospace; font-size: 15px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 14px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4); display: flex; align-items: center; gap: 6px;">
+        <div style="display: flex; align-items: center; gap: 14px; flex-shrink: 0;">
+          <div style="font-family: 'Orbitron', monospace; font-size: 15px; color: #fbbf24; font-weight: bold; background: rgba(0,0,0,0.6); padding: 5px 14px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.4); display: flex; align-items: center; gap: 6px; white-space: nowrap;">
             <img src="icons/stage_gold.png" class="hud-currency-icon" style="width: 17px; height: 17px;" alt="Gold" /> <span id="modal-currency-count">${globals.stageCurrency || 0}</span>
           </div>
+          <button id="shop-close-btn" class="modal-close-x exit-btn" aria-label="Resume Battle" title="Resume Battle" style="position: static; width: 36px; height: 36px; min-width: 36px; min-height: 36px; border: 1.5px solid #fbbf24; color: #fbbf24; background: rgba(15, 10, 5, 0.95); font-size: 18px; font-weight: 900; line-height: 1; flex-shrink: 0; box-shadow: 0 0 14px rgba(251, 191, 36, 0.35); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;">
+            ✕
+          </button>
         </div>
       </div>
 
@@ -973,9 +976,6 @@ export function renderShopModal() {
             <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-left: auto;">
               <button id="shop-refresh-btn" class="menu-btn btn-compact" style="border-color: #38bdf8; color: #38bdf8; min-height: 34px; height: 34px; width: auto; max-width: none; min-width: 130px; padding: 0 14px; font-size: 11.5px; white-space: nowrap; flex-shrink: 0;">
                 🔄 Reroll Unlocked (${costLabel})
-              </button>
-              <button id="shop-close-btn" class="menu-btn exit-btn btn-compact" style="min-height: 34px; height: 34px; width: auto; max-width: none; min-width: 90px; padding: 0 14px; font-size: 11.5px; white-space: nowrap; flex-shrink: 0;">
-                ✕ Resume Battle
               </button>
             </div>
           </div>

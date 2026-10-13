@@ -735,8 +735,18 @@ export function ensurePackedAssets(): Promise<boolean> {
       if (!res || !res.ok) {
         res = await fetch('assets.bin').catch(() => null);
       }
-      if (!res || !res.ok) return false;
-      const ab = await res.arrayBuffer();
+      let ab: ArrayBuffer | null = null;
+      if (res && res.ok) {
+        ab = await res.arrayBuffer();
+      } else if (typeof window !== 'undefined' && (window as any).__PACKED_ASSETS_BASE64__) {
+        const b64 = (window as any).__PACKED_ASSETS_BASE64__;
+        const binStr = atob(b64);
+        const len = binStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) bytes[i] = binStr.charCodeAt(i);
+        ab = bytes.buffer;
+      }
+      if (!ab) return false;
       const view = new DataView(ab);
       const magic = String.fromCharCode(view.getUint8(0), view.getUint8(1), view.getUint8(2), view.getUint8(3));
       if (magic !== 'STIK') return false;
