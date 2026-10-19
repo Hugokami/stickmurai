@@ -44,6 +44,14 @@ console.log(`\n========================================`);
 console.log(`  MURAMASA.EXE PORTAL BUNDLER [${target.toUpperCase()}]`);
 console.log(`========================================\n`);
 
+if (target === 'crazygames') {
+  execSync(`node "${path.join(__dirname, 'package-crazygames.cjs')}" ${shouldBuild ? '' : '--no-build'}`, {
+    cwd: path.resolve(__dirname, '..'),
+    stdio: 'inherit'
+  });
+  process.exit(0);
+}
+
 const ROOT_DIR = path.resolve(__dirname, '..');
 const DIST_DIR = path.join(ROOT_DIR, 'dist');
 const RELEASE_ROOT = path.join(ROOT_DIR, 'release');

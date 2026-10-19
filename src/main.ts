@@ -5721,7 +5721,8 @@ function update(realDt: number) {
     for (let i = 0; i < globals.enemies.length; i++) {
       const e = globals.enemies[i];
       if (e.state === 'dead') continue;
-      const isImminentAttack = (e.state === 'charge' && e.stateTime >= e.chargeTimeMax - ((e.isTrainingDummy ? 0.45 : 0.32) * parryWindowMult)) ||
+      const isRedIndicator = e.state === 'charge' && (e.isAimLocked || (e.stateTime / e.chargeTimeMax) >= 0.65 || Boolean(e.isTrainingDummy));
+      const isImminentAttack = (isRedIndicator && e.stateTime >= e.chargeTimeMax - ((e.isTrainingDummy ? 0.45 : 0.32) * parryWindowMult)) ||
                                (e.state === 'attack' && e.stateTime <= (e.isTrainingDummy ? 0.38 : 0.18) * parryWindowMult);
       if (isImminentAttack) {
         const dx = e.x - globals.player.x;
@@ -5822,8 +5823,11 @@ function update(realDt: number) {
       const maxDist = 260 + (e.scaleMult - 1) * 80;
       const distSq = dx * dx + dy * dy;
       const inRange = distSq < maxDist * maxDist;
-      const isAttackingOrCharging = e.state === 'attack' || (e.state === 'charge' && e.stateTime > e.chargeTimeMax * 0.35) || (inRange && e.state !== 'stun' && e.state !== 'dead');
-      if (!parryTriggered && inRange && isAttackingOrCharging) {
+      const isFromDummy = Boolean(e.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
+      const isRedIndicator = e.state === 'charge' && (e.isAimLocked || (e.stateTime / e.chargeTimeMax) >= 0.65);
+      const isActivelyAttacking = e.state === 'attack' && e.stateTime <= (0.28 * parryWindowMult);
+      const isParriable = (isRedIndicator || isActivelyAttacking || isFromDummy) && e.state !== 'dead' && e.state !== 'stun';
+      if (!parryTriggered && inRange && isParriable) {
         parryTriggered = true;
         globals.parryWindowTimer = 0.5;
         
@@ -5853,7 +5857,9 @@ function update(realDt: number) {
             parryIaiAngle = Math.atan2(globals.mouse.y - globals.height / 2, globals.mouse.x - globals.width / 2);
           }
         }
-        fireFullyChargedIaijutsu(parryIaiAngle, parryChargeRatio);
+        const iaiAngle = parryIaiAngle;
+        const chargeRatio = parryChargeRatio;
+        fireFullyChargedIaijutsu(iaiAngle, chargeRatio);
 
         // Deflect all incoming projectiles in radius
         globals.projectiles.forEach(proj => {
@@ -5875,7 +5881,6 @@ function update(realDt: number) {
           }
         });
 
-          const isFromDummy = Boolean(e.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
           const isPerfect = (e.state === 'attack' && e.stateTime < 0.18 * parryWindowMult) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08 * parryWindowMult) || isFromDummy;
           
           if (isPerfect) {
@@ -6175,11 +6180,16 @@ function update(realDt: number) {
         globals.player.vx = -Math.cos(angle) * 160;
         globals.player.vy = -Math.sin(angle) * 160;
         globals.screenShake += 3 * attackPower;
-      } else {
+      } else if (attackPower >= 1.7) {
         let lungePower = 1000 * attackPower;
         if (globals.flowState === 'awakened') lungePower *= 2; 
         globals.player.vx = Math.cos(angle) * lungePower;
         globals.player.vy = Math.sin(angle) * lungePower;
+        globals.screenShake += 3 * attackPower;
+      } else {
+        // Basic attack (normal slash): do not move the character
+        globals.player.vx = 0;
+        globals.player.vy = 0;
         globals.screenShake += 3 * attackPower;
       }
 
