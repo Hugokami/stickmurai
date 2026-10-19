@@ -93,40 +93,34 @@ test('Omnislash is buffed with heightened visuals, opacity, and un-capped boss d
   );
 });
 
-test('Parry trigger requires red indicator / imminent attack and basic slash remains stationary', () => {
+test('Parry trigger strictly requires red indicator and basic slash supports slashing while moving', () => {
   const mainTs = fs.readFileSync(path.join(__dirname, '../src/main.ts'), 'utf8');
 
-  // 1. Parry trigger requires red indicator or active attack (no yellow indicator triggers)
+  // 1. Parry trigger strictly requires red indicator (aim locked or chargeRatio >= 0.70)
   assert.match(
     mainTs,
-    /const isRedIndicator = e\.state === 'charge' && \(e\.isAimLocked \|\| \(e\.stateTime \/ e\.chargeTimeMax\) >= 0\.65\);/,
-    'Parry must strictly require red indicator phase (aim locked or chargeRatio >= 0.65)'
+    /const isRedIndicator = e\.state === 'charge' && \(e\.isAimLocked \|\| \(e\.stateTime \/ e\.chargeTimeMax\) >= 0\.70\);/,
+    'Parry must strictly require red indicator phase (aim locked or chargeRatio >= 0.70)'
   );
 
   assert.match(
     mainTs,
-    /const isActivelyAttacking = e\.state === 'attack' && e\.stateTime <= \(0\.28 \* parryWindowMult\);/,
-    'Parry must accept active attack phase within generous window'
-  );
-
-  assert.match(
-    mainTs,
-    /const isParriable = \(isRedIndicator \|\| isActivelyAttacking \|\| isFromDummy\) && e\.state !== 'dead' && e\.state !== 'stun';/,
-    'Parry must only trigger on red indicator, active attack, or dummy, excluding dead or stunned enemies'
+    /const isParriable = \(isRedIndicator \|\| isFromDummy\) && e\.state !== 'dead' && e\.state !== 'stun';/,
+    'Parry must only trigger when enemy attack indicator turns red, excluding dead or stunned enemies'
   );
 
   // 2. Mikiri Stride also requires red indicator
   assert.match(
     mainTs,
-    /const isRedIndicator = e\.state === 'charge' && \(e\.isAimLocked \|\| \(e\.stateTime \/ e\.chargeTimeMax\) >= 0\.65 \|\| Boolean\(e\.isTrainingDummy\)\);/,
+    /const isRedIndicator = e\.state === 'charge' && \(e\.isAimLocked \|\| \(e\.stateTime \/ e\.chargeTimeMax\) >= 0\.70 \|\| Boolean\(e\.isTrainingDummy\)\);/,
     'Mikiri Stride must require red indicator or dummy'
   );
 
-  // 3. Basic slash does not move character, while charged Iaijutsu lunges
+  // 3. Basic slash supports slashing while moving (retaining velocity when moving, stationary when idle)
   assert.match(
     mainTs,
-    /\} else if \(attackPower >= 1\.7\) \{[\s\S]*?let lungePower = 1000 \* attackPower;[\s\S]*?globals\.player\.vx = Math\.cos\(angle\) \* lungePower;[\s\S]*?\} else \{[\s\S]*?\/\/ Basic attack \(normal slash\): do not move the character[\s\S]*?globals\.player\.vx = 0;\s*globals\.player\.vy = 0;/s,
-    'Basic slash must keep player stationary (vx=0, vy=0) while charged Iaijutsu lunges forward'
+    /\} else if \(attackPower >= 1\.7\) \{[\s\S]*?let lungePower = 1000 \* attackPower;[\s\S]*?globals\.player\.vx = Math\.cos\(angle\) \* lungePower;[\s\S]*?\} else \{[\s\S]*?\/\/ Basic attack \(normal slash\): slash while moving/s,
+    'Basic slash must support slashing while moving while charged Iaijutsu lunges forward'
   );
 });
 

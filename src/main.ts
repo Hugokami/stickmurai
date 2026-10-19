@@ -1861,11 +1861,11 @@ function checkPlayerHit(enemy: Enemy, damageAmount = 1) {
   
   const parryWindowMult = globals.selectedHero === 'default' ? 1.35 : 1.0;
   const isParryMasterActive = globals.selectedSkill === 'parry_master' && globals.enhanceActiveTimer > 0;
-  const isSlashParryActive = globals.player.state === 'attack' && globals.player.stateTime < (0.35 * parryWindowMult);
+  const isSlashParryActive = globals.player.state === 'attack' && globals.player.stateTime < (0.12 * parryWindowMult);
   const isFromDummy = Boolean(enemy?.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
 
   if (isSlashParryActive || globals.parryWindowTimer > 0 || isParryMasterActive) {
-    const isPerfect = isSlashParryActive ? (globals.player.stateTime < (0.24 * parryWindowMult) || isFromDummy) : (globals.parryWindowTimer > 0.2 || isFromDummy);
+    const isPerfect = isSlashParryActive ? (globals.player.stateTime < (0.08 * parryWindowMult) || isFromDummy) : (globals.parryWindowTimer > 0.2 || isFromDummy);
     if (isPerfect) {
       globals.runStats.perfectParries++;
       playSynthesizedPerfectParry();
@@ -5721,9 +5721,8 @@ function update(realDt: number) {
     for (let i = 0; i < globals.enemies.length; i++) {
       const e = globals.enemies[i];
       if (e.state === 'dead') continue;
-      const isRedIndicator = e.state === 'charge' && (e.isAimLocked || (e.stateTime / e.chargeTimeMax) >= 0.65 || Boolean(e.isTrainingDummy));
-      const isImminentAttack = (isRedIndicator && e.stateTime >= e.chargeTimeMax - ((e.isTrainingDummy ? 0.45 : 0.32) * parryWindowMult)) ||
-                               (e.state === 'attack' && e.stateTime <= (e.isTrainingDummy ? 0.38 : 0.18) * parryWindowMult);
+      const isRedIndicator = e.state === 'charge' && (e.isAimLocked || (e.stateTime / e.chargeTimeMax) >= 0.70 || Boolean(e.isTrainingDummy));
+      const isImminentAttack = isRedIndicator && e.stateTime >= e.chargeTimeMax - ((e.isTrainingDummy ? 0.45 : 0.22) * parryWindowMult);
       if (isImminentAttack) {
         const dx = e.x - globals.player.x;
         const dy = e.y - globals.player.y;
@@ -5824,9 +5823,8 @@ function update(realDt: number) {
       const distSq = dx * dx + dy * dy;
       const inRange = distSq < maxDist * maxDist;
       const isFromDummy = Boolean(e.isTrainingDummy || (globals.enemies.length === 1 && (globals.enemies[0] as any)?.isTrainingDummy));
-      const isRedIndicator = e.state === 'charge' && (e.isAimLocked || (e.stateTime / e.chargeTimeMax) >= 0.65);
-      const isActivelyAttacking = e.state === 'attack' && e.stateTime <= (0.28 * parryWindowMult);
-      const isParriable = (isRedIndicator || isActivelyAttacking || isFromDummy) && e.state !== 'dead' && e.state !== 'stun';
+      const isRedIndicator = e.state === 'charge' && (e.isAimLocked || (e.stateTime / e.chargeTimeMax) >= 0.70);
+      const isParriable = (isRedIndicator || isFromDummy) && e.state !== 'dead' && e.state !== 'stun';
       if (!parryTriggered && inRange && isParriable) {
         parryTriggered = true;
         globals.parryWindowTimer = 0.5;
@@ -5881,7 +5879,7 @@ function update(realDt: number) {
           }
         });
 
-          const isPerfect = (e.state === 'attack' && e.stateTime < 0.18 * parryWindowMult) || (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08 * parryWindowMult) || isFromDummy;
+          const isPerfect = (e.state === 'charge' && e.stateTime > e.chargeTimeMax - 0.08 * parryWindowMult) || isFromDummy;
           
           if (isPerfect) {
             globals.runStats.perfectParries++;
@@ -6187,9 +6185,27 @@ function update(realDt: number) {
         globals.player.vy = Math.sin(angle) * lungePower;
         globals.screenShake += 3 * attackPower;
       } else {
-        // Basic attack (normal slash): do not move the character
-        globals.player.vx = 0;
-        globals.player.vy = 0;
+        // Basic attack (normal slash): slash while moving (retain movement velocity if moving, or stay stationary if idle)
+        let moveX = 0;
+        let moveY = 0;
+        if (globals.keys[globals.keyMaps.moveUp]) moveY -= 1;
+        if (globals.keys[globals.keyMaps.moveDown]) moveY += 1;
+        if (globals.keys[globals.keyMaps.moveLeft]) moveX -= 1;
+        if (globals.keys[globals.keyMaps.moveRight]) moveX += 1;
+        if (globals.joystickActive) {
+          moveX = globals.joystickVector.x;
+          moveY = globals.joystickVector.y;
+        }
+        const moveDistSq = moveX * moveX + moveY * moveY;
+        if (moveDistSq > 0.0025) {
+          const moveSpeed = 400 * globals.playerStats.moveSpeedMult * ((globals.flowState as string) === 'awakened' ? 1.5 : 1.0);
+          const invLen = 1 / Math.sqrt(moveDistSq);
+          globals.player.vx = moveX * invLen * moveSpeed;
+          globals.player.vy = moveY * invLen * moveSpeed;
+        } else {
+          globals.player.vx = 0;
+          globals.player.vy = 0;
+        }
         globals.screenShake += 3 * attackPower;
       }
 

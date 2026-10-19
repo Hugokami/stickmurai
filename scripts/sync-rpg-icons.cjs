@@ -26,6 +26,7 @@ const REQUIRED_ICONS = [
   'fc1142.png',
   'fc1150.png',
   'fc1155.png',
+  'fc1157.png',
   'fc1170.png',
   'fc1191.png',
   'fc1207.png',

@@ -888,7 +888,7 @@ export class Enemy extends Entity {
         this.vy = (pdy / dist) * moveSpeed;
         this.dir = pdx < 0 ? -1 : 1;
         this.targetAngle = Math.atan2(pdy, pdx);
-        this.isAimLocked = chargeRatio >= 0.65;
+        this.isAimLocked = chargeRatio >= 0.70;
 
         // Immediate detonation if contact made during arming countdown
         if (dist < 40 && this.stateTime > 0.25) {
@@ -904,8 +904,8 @@ export class Enemy extends Entity {
       }
 
       this.vx = 0; this.vy = 0;
-      // Track target during first 65% of charge, then lock in aim for fair telegraph reaction!
-      if (chargeRatio < 0.65) {
+      // Track target during first 70% of charge, then lock in aim and flash red for tight telegraph reaction!
+      if (chargeRatio < 0.70) {
         this.targetAngle = Math.atan2(dy - this.rangedMuzzleOffsetY, dx);
         this.isAimLocked = false;
       } else {

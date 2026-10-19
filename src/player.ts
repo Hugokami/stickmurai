@@ -513,16 +513,18 @@ export class Player extends Entity {
 
     const isAttackHeld = globals.mouse.down || globals.mobileAttackDown;
 
-    if (this.state !== 'dash' && this.state !== 'attack' && this.state !== 'dead') {
-      if (isAttackHeld && this.attackCooldown <= 0) {
-        this.chargeTimer += dt * (globals.playerStats.iaijutsuChargeSpeed || 1.0);
-        if (this.chargeTimer > 0.3) {
-          this.setState('charge');
-          this.vx = 0; this.vy = 0; // stop moving while charging
-        }
-      } else {
-        if (this.state !== 'charge') {
-          this.chargeTimer = 0;
+    if (this.state !== 'dash' && this.state !== 'dead') {
+      if (this.state !== 'attack' && this.state !== 'shoot') {
+        if (isAttackHeld && this.attackCooldown <= 0) {
+          this.chargeTimer += dt * (globals.playerStats.iaijutsuChargeSpeed || 1.0);
+          if (this.chargeTimer > 0.3) {
+            this.setState('charge');
+            this.vx = 0; this.vy = 0; // stop moving while charging
+          }
+        } else {
+          if (this.state !== 'charge') {
+            this.chargeTimer = 0;
+          }
         }
       }
 
@@ -541,20 +543,32 @@ export class Player extends Entity {
         
         if (globals.joystickActive) { this.vx = globals.joystickVector.x * speed; this.vy = globals.joystickVector.y * speed; }
 
-        if (this.vx !== 0 || this.vy !== 0) {
-          this.setState('walk');
-          const len = Math.hypot(this.vx, this.vy);
-          this.vx = (this.vx / len) * speed; this.vy = (this.vy / len) * speed;
+        if (this.state !== 'attack' && this.state !== 'shoot') {
+          if (this.vx !== 0 || this.vy !== 0) {
+            this.setState('walk');
+            const moveDistSq = this.vx * this.vx + this.vy * this.vy;
+            const invLen = 1 / Math.sqrt(moveDistSq);
+            this.vx = (this.vx * invLen) * speed; this.vy = (this.vy * invLen) * speed;
+          } else {
+            this.setState('idle');
+          }
         } else {
-          this.setState('idle');
+          // Slash while moving: update velocity without overriding attack animation state
+          const moveDistSq = this.vx * this.vx + this.vy * this.vy;
+          if (moveDistSq > 0.0025) {
+            const invLen = 1 / Math.sqrt(moveDistSq);
+            this.vx = (this.vx * invLen) * speed; this.vy = (this.vy * invLen) * speed;
+          }
         }
       }
 
-      if (globals.joystickActive && (this.vx !== 0 || this.vy !== 0)) {
-        this.dir = this.vx < 0 ? -1 : 1;
-      } else if (!globals.joystickActive) {
-        const screenX = globals.width / 2;
-        if (globals.mouse.x < screenX) this.dir = -1; else this.dir = 1;
+      if (this.state !== 'attack' && this.state !== 'shoot') {
+        if (globals.joystickActive && (this.vx !== 0 || this.vy !== 0)) {
+          this.dir = this.vx < 0 ? -1 : 1;
+        } else if (!globals.joystickActive) {
+          const screenX = globals.width / 2;
+          if (globals.mouse.x < screenX) this.dir = -1; else this.dir = 1;
+        }
       }
     }
 
