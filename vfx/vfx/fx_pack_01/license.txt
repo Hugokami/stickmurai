@@ -1,0 +1,18 @@
+LICENSE — fx_pack_01
+================
+
+These assets were produced with AI-assisted generation (disclosed on the store
+page as "AI Assisted, Graphics").
+
+You MAY:
+  - Use these assets in unlimited personal and commercial games/projects.
+  - Modify, recolor, and combine them.
+
+You MAY NOT:
+  - Resell or redistribute the assets as a standalone asset pack.
+  - Claim authorship of the original pack.
+
+NOTE ON COPYRIGHT: purely AI-generated images may not be eligible for copyright
+protection in some jurisdictions (e.g. current US Copyright Office guidance).
+This license grants you usage rights to ship the assets in your projects; it does
+not warrant exclusive ownership. Consult counsel for high-stakes use.

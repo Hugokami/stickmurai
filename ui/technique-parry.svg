@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 88" width="160" height="88" fill="none">
+  <defs>
+    <filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- Background Card -->
+  <rect width="160" height="88" rx="6" fill="#0f0c06"/>
+  <rect width="158" height="86" x="1" y="1" rx="5" fill="none" stroke="rgba(255, 210, 0, 0.25)" stroke-width="1"/>
+  
+  <!-- Ground Line -->
+  <line x1="8" y1="74" x2="152" y2="74" stroke="rgba(255, 210, 0, 0.25)" stroke-width="1" stroke-dasharray="4,3"/>
+
+  <!-- Deflection Center at (82, 38) -->
+  <!-- Outer Shockwave Ring -->
+  <circle cx="82" cy="38" r="26" fill="none" stroke="#ff9100" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.6" filter="url(#goldGlow)"/>
+  <!-- Inner Shockwave Ring -->
+  <circle cx="82" cy="38" r="15" fill="none" stroke="#ffd200" stroke-width="2" filter="url(#goldGlow)"/>
+  
+  <!-- High Speed Deflection Radial Sparks -->
+  <line x1="82" y1="38" x2="108" y2="22" stroke="#ffffff" stroke-width="2" stroke-linecap="round" filter="url(#goldGlow)"/>
+  <line x1="82" y1="38" x2="114" y2="38" stroke="#ffd200" stroke-width="2.5" stroke-linecap="round" filter="url(#goldGlow)"/>
+  <line x1="82" y1="38" x2="106" y2="54" stroke="#ff9100" stroke-width="2" stroke-linecap="round"/>
+  <line x1="82" y1="38" x2="96" y2="18" stroke="#ffea00" stroke-width="1.8" stroke-linecap="round"/>
+  <line x1="82" y1="38" x2="98" y2="60" stroke="#ff6d00" stroke-width="1.8" stroke-linecap="round"/>
+  
+  <!-- Impact 4-point Star Flash -->
+  <polygon points="82,28 85,35 92,38 85,41 82,48 79,41 72,38 79,35" fill="#ffffff" filter="url(#goldGlow)"/>
+  <circle cx="82" cy="38" r="3" fill="#ffd200"/>
+
+  <!-- Incoming Rebounding Enemy Blade Fragment -->
+  <line x1="126" y1="24" x2="98" y2="34" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" opacity="0.85"/>
+  <line x1="104" y1="32" x2="132" y2="44" stroke="#ff1744" stroke-width="2" stroke-linecap="round" stroke-dasharray="3,3" opacity="0.6"/>
+
+  <!-- Stickman in Sturdy Defensive Guard Stance -->
+  <!-- Head -->
+  <circle cx="62" cy="30" r="6" fill="#ffffff"/>
+  <!-- Torso (braced solid) -->
+  <line x1="62" y1="36" x2="64" y2="56" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <!-- Shield/Guard Katana raised vertically -->
+  <line x1="63" y1="42" x2="80" y2="40" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <line x1="80" y1="16" x2="82" y2="62" stroke="#ffffff" stroke-width="3" stroke-linecap="round" filter="url(#goldGlow)"/>
+  <!-- Off Hand supporting grip -->
+  <line x1="63" y1="44" x2="76" y2="46" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+  <!-- Front Braced Leg -->
+  <line x1="64" y1="56" x2="76" y2="64" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <line x1="76" y1="64" x2="80" y2="74" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <!-- Back Planted Leg -->
+  <line x1="64" y1="56" x2="52" y2="64" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <line x1="52" y1="64" x2="42" y2="74" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+</svg>
